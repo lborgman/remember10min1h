@@ -1,13 +1,17 @@
-# Project Title
+# Flashcards 4 Internet
 
-Simple overview of use/purpose.
+This is a web app for those of us that tries to learn from 
+things we find on the Internet.
+
+https://rem10m1h.web.app/
 
 ## Description
 
-An in-depth paragraph about your project and overview of use.
+Please see the description in the web app.
 
 ## Getting Started
 
+Just open the web app. 
 ### Dependencies
 
 * Describe any prerequisites, libraries, OS version, etc., needed before installing program.
