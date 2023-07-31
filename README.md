@@ -1,6 +1,6 @@
 # Flashcards 4 Internet
 
-This is a web app for those of us that tries to learn from 
+This is a progressive web app (PWA) for those of us that tries to learn from 
 things we find on the Internet.
 
 https://rem10m1h.web.app/
@@ -11,44 +11,32 @@ Please see the description in the web app.
 
 ## Getting Started
 
-Just open the web app. 
+Just open the web link. 
 ### Dependencies
 
-* Describe any prerequisites, libraries, OS version, etc., needed before installing program.
-* ex. Windows 10
+Since this is a Progressive web app [PWA](https://en.wikipedia.org/wiki/Progressive_web_app)
+you need an uptodate web browser.
+I believe it will run in most web browsers in any OS,
+but I am developing and testing with Google Chrome (on MS Windows).
 
-### Installing
+However one (important) feature can only be used on Android.
+The ability to share a web page to this app can only be implemented on Android at the moment.
 
-* How/where to download your program
-* Any modifications needed to be made to files/folders
+### Installing and running
 
-### Executing program
-
-* How to run the program
-* Step-by-step bullets
-```
-code blocks for commands
-```
+Just open the web link.
 
 ## Help
 
-Any advise for common problems or issues.
-```
-command to run if program contains helper info
-```
+Please see the web link.
 
 ## Authors
 
-Contributors names and contact info
-
-ex. Dominique Pizzie  
-ex. [@DomPizzie](https://twitter.com/dompizzie)
+For contact see the web link.
 
 ## Version History
 
-* 0.2
-    * Various bug fixes and optimizations
-    * See [commit change]() or See [release history]()
+(No realease yet)
 * 0.1
     * Initial Release
 
@@ -58,9 +46,5 @@ This project is licensed under the [NAME HERE] License - see the LICENSE.md file
 
 ## Acknowledgments
 
-Inspiration, code snippets, etc.
-* [awesome-readme](https://github.com/matiassingers/awesome-readme)
-* [PurpleBooth](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2)
-* [dbader](https://github.com/dbader/readme-template)
-* [zenorocha](https://gist.github.com/zenorocha/4526327)
-* [fvcproductions](https://gist.github.com/fvcproductions/1bfc2d4aecb01a834b46)
+The mindmaps uses jsMind:
+* [jsMind](https://github.com/hizzgdev/jsmind#readme)
