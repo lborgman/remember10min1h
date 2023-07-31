@@ -1,0 +1,49 @@
+// https://github.com/material-components/material-components-web/issues/7770
+@use "@material/theme" with ( // $primary: #fcb8ab,
+  $primary: red,
+  $secondary: #feeae6,
+  $on-primary: #442b2d,
+  $on-secondary: #442b2d,
+  $surface: #FFFBFA,
+  $on-surface: #442C2E,
+  $background: #FFFFFF,
+  // $on-background: #442C2E,
+
+  // https://codelabs.developers.google.com/codelabs/mdc-103-web#2
+  /*
+  $mdc-theme-primary: #FEDBD0,
+  $mdc-theme-on-primary: #442C2E,
+  $mdc-theme-secondary: #FEEAE6,
+  $mdc-theme-on-secondary: #442C2E,
+  $mdc-theme-surface: #FFFBFA,
+  $mdc-theme-on-surface: #442C2E,
+  $mdc-theme-background: #FFFFFF,
+  $mdc-theme-on-background: #442C2E,
+  */
+);
+
+@use "@material/button/mdc-button";
+@use "@material/ripple/mdc-ripple";
+@use '@material/dialog/mdc-dialog';
+@use '@material/floating-label/mdc-floating-label';
+@use '@material/line-ripple/mdc-line-ripple';
+@use '@material/notched-outline/mdc-notched-outline';
+@use '@material/textfield/mdc-text-field';
+@use '@material/tab/mdc-tab';
+@use '@material/tab-bar/mdc-tab-bar';
+@use '@material/tab-indicator/mdc-tab-indicator';
+@use '@material/tab-scroller/mdc-tab-scroller';
+@use '@material/radio/mdc-radio';
+@use '@material/form-field/mdc-form-field';
+@use '@material/data-table/mdc-data-table';
+@use '@material/icon-button/mdc-icon-button';
+@use '@material/checkbox/mdc-checkbox';
+@use '@material/layout-grid/mdc-layout-grid';
+@use '@material/list/mdc-list';
+
+// https://github.com/material-components/material-components-web/issues/6398
+@use '@material/textfield';
+
+.mdc-text-field {
+  @include textfield.label-color(blue);
+}

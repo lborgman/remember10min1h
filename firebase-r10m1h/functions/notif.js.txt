@@ -1,0 +1,19 @@
+const localVer = "0.0.001";
+console.log("notif HERE 1");
+// const ourUtil = require("./modules/util.js");
+console.log("notif HERE 2");
+import { initializeApp } from 'firebase-admin/app';
+console.log("notif HERE 3");
+// const functions = require('firebase-functions');
+import { functions } from  'firebase-functions';
+console.log("notif HERE 4");
+
+const app = initializeApp();
+console.log("notif HERE 5");
+
+// new syntax?
+// https://miyauchi.dev/posts/fcm-push-message/
+// exports.notif = functions.https.onRequest(async (request, response) => 
+export const notifFCM = functions.https.onRequest(async (request, response) => {
+    console.log("testfcm starting");
+});

@@ -1,0 +1,1 @@
+sass --load-path=node_modules sass\colors.scss public\css\sass-colors.css

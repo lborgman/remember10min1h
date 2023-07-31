@@ -1,0 +1,516 @@
+const localVer = "0.0.1";
+
+/* @license Copyright 2023 Lennart Borgman (lennart.borgman@gmail.com) All rights reserved. */
+
+// import { auth, messaging, storage } from "firebase-admin";
+const admin = require("firebase-admin");
+// import { inspect } from "util";
+const util = require("util");
+// import { resolve as _resolve } from "path";
+const path = require("path");
+// import { readFileSync, writeFileSync } from "fs";
+const fs = require("fs");
+
+// import axios from "axios";
+const axios = require("axios");
+
+// https://stackoverflow.com/questions/24378272/node-js-how-to-get-the-ip-address-of-http-server-listening-on-a-specific-port/27724073
+
+
+function ui(v) { return util.inspect(v, false, 1, true) }
+
+function isJsonVal(val) {
+    const type = typeof val;
+    if (type === "string") return true;
+    if (type === "object") return true;
+    if (type === "boolean") return true;
+    if (type === "number" && !isNaN(val)) return true;
+    return false;
+}
+
+// const _generateFirestoreDocId = generateFirestoreDocId;
+// export { _generateFirestoreDocId as generateFirestoreDocId };
+exports.generateFirestoreDocId = generateFirestoreDocId;
+function generateFirestoreDocId(collName) {
+    // https://stackoverflow.com/questions/46844907/firestore-is-it-possible-to-get-the-id-before-it-was-added
+    // const db = firebase.firestore();
+    // const ref = db.collection('your_collection_name').doc();
+    // FIXME: Is this official?
+    console.log(`generateFirestoreDocId(${collName})`.bgCyan)
+    const secCollRef = firestore.collection(collName);
+    const ref = secCollRef.doc();
+    return ref.id;
+}
+
+// const _addToSecurityLog = addToSecurityLog;
+// export { _addToSecurityLog as addToSecurityLog };
+exports.addToSecurityLog = addToSecurityLog;
+async function addToSecurityLog(secrec) {
+    const subject = secrec.subject || "NO SUBJECT"
+    try {
+        const collName = "security-log";
+        const genId = generateFirestoreDocId(collName);
+        const time = new Date().toISOString();
+        const id = `${time} ${subject} ${genId}`
+        const secCollRef = firestore.collection(collName);
+        await secCollRef.doc(id).set(secrec);
+    } catch (err) {
+        console.error(`Could not add to security log: ${err}`)
+    }
+}
+
+
+function getStack() {
+    try {
+        throw Error();
+    } catch (e) {
+        const arrStack = e.stack.split("\n")
+        // arrStack.shift();
+        // arrStack.shift();
+        arrStack.splice(1, 1);
+        const parentDir = _resolve(__dirname, "..");
+        const thisDir = __dirname;
+        return arrStack
+            .map(val => val.replace(thisDir, ""))
+            .map(val => val.replace(parentDir, ""))
+            .map(val => val.replace(/^\\s*at /, "  "))
+            ;
+    }
+}
+const _getStack = getStack;
+export { _getStack as getStack };
+
+let savedStack;
+function saveStack(skipLevels) {
+    savedStack = getStack();
+    if (skipLevels) {
+        for (let i = 0; i <= skipLevels; i++) {
+            savedStack.shift();
+        }
+    }
+}
+const _saveStack = saveStack;
+export { _saveStack as saveStack };
+
+function getSavedStack() { return savedStack; }
+const _getSavedStack = getSavedStack;
+export { _getSavedStack as getSavedStack };
+
+function saveStackAndThrow(errMsg) {
+    saveStack(2);
+    throw Error(errMsg);
+}
+const _saveStackAndThrow = saveStackAndThrow;
+export { _saveStackAndThrow as saveStackAndThrow };
+
+function removeTokensFromObject(obj) {
+    // throw Error("dummy dummy dummy dummy")
+    const keys = Object.keys(obj)
+    for (const key of keys) {
+        const val = obj[key];
+        if (typeof val === "string") {
+            if (val.indexOf("\n") === -1) {
+                // console.log("before".bgGreen, obj[key])
+                if (val.length > 200) obj[key] = "...";
+                // console.log("after".bgRed, obj[key])
+            }
+        }
+    }
+}
+
+function respondNNN(response, nnn, respObj, err) {
+    console.log(`enter respond ${nnn} ---------------------------`.bgRed)
+
+    const errInsp = inspect(err, false, null, true);
+
+    const errInspSplit = errInsp.split("\n");
+
+    const re = new RegExp("at\\s*\\(?.*[\\\\/]");
+    const errInspSplitMap = errInspSplit.map(val => val.replace(re, "("));
+    respObj.error = errInspSplitMap;
+    console.error("respObj.error", respObj.error)
+
+    respondWithAllowOrigin(response, nnn, respObj);
+}
+function respond500(response, respObj, err) {
+    respondNNN(response, 500, respObj, err);
+}
+function respond400(response, respObj, err) {
+    respondNNN(response, 400, respObj, err);
+}
+const _respond400 = respond400;
+export { _respond400 as respond400 };
+const _respond500 = respond500;
+export { _respond500 as respond500 };
+
+function respondWithAllowOrigin(response, status, respObj) {
+    if (typeof response !== "object") throw Error("typeof response is not object");
+    if (typeof status !== "number") throw Error("typeof status is not number");
+    if (typeof respObj !== "object") throw Error("typeof resObj is not object");
+
+    try {
+        if (typeof respObj === "object") removeTokensFromObject(respObj);
+    } catch (err) {
+        console.log("respondWithAllowOrigin err", err)
+        if (typeof respObj === "object") respObj.respondError = err.toString();
+    }
+    // console.log("respondWithAllowOrigin", status, answer)
+    // https://stackoverflow.com/questions/7042340/error-cant-set-headers-after-they-are-sent-to-the-client
+    response.setHeader("Access-Control-Allow-Origin", "*");
+    // response.end(JSON.stringify({euroPerMBs2t:euroPerMBs2t()}));
+
+    const answer = respObj.answer;
+    if (answer) {
+        let notJsonKeyVal = "";
+        const astr = JSON.stringify(answer, (k, v) => {
+            // console.log("k, v".red, k, v)
+            if (!isJsonVal(v)) {
+                console.log("NOT VALID".bgRed, k, v);
+                notJsonKeyVal += `"${k}":"${v}", `;
+            }
+            return v;
+        });
+        // console.log("notJsonKeyVal".bgBlue, notJsonKeyVal.bgRed)
+        if (notJsonKeyVal.length > 0) {
+            respObj.error = "JSON is not valid: " + notJsonKeyVal;
+            response.status(500).send(respObj);
+            response.end();
+            return;
+        }
+    }
+
+    response.status(status).send(respObj);
+    response.end();
+}
+const _respondWithAllowOrigin = respondWithAllowOrigin;
+export { _respondWithAllowOrigin as respondWithAllowOrigin };
+
+// exports.promGetUserEmail = async (idToken) => {
+export async function promGetUserRecord(idToken) {
+    try {
+        const decodedToken = await auth().verifyIdToken(idToken);
+        const uid = decodedToken.uid;
+        const userRecord = await auth().getUser(uid);
+        return userRecord;
+    } catch (err) {
+        throw Error(err);
+    }
+}
+
+export async function isAdmin(email) {
+    return email === "lennart.borgman@gmail.com";
+}
+
+export function canBeValidEmail(email) {
+    /*
+    From https://www.regular-expressions.info/email.html
+    Can't translate this to JavaScript. What is wrong???
+    const reStr =
+        "\\A(?=[a-z0-9@.!#$%&'*+/=?^_`{|}~-]{6,254}\\z)"
+        + "(?=[a-z0-9.!#$%&'*+/=?^_`{|}~-]{1,64}@)"
+        + "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*"
+        + "@ (?:(?=[a-z0-9-]{1,63}\\.)[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+"
+        + "(?=[a-z0-9-]{1,63}\\z)[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\z";
+    const re = new RegExp(reStr);
+    */
+    // https://stackoverflow.com/questions/46155/how-to-validate-an-email-address-in-javascript
+    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(email);
+}
+
+
+// exports.copyJsonObject = obj => { return JSON.parse(JSON.stringify(obj)); }
+
+let webJsonIf;
+export function getWebJsonIf() {
+    if (webJsonIf) return webJsonIf;
+    const absPath = _resolve(__dirname, './webjsonif.mjs');
+    const txt = readFileSync(absPath, "utf8");
+    let ok = false;
+    let txtMsj;
+    try {
+        const absPath2 = _resolve(__dirname, '../../public/js/msj/webjsonif.mjs');
+        txtMsj = readFileSync(absPath2, "utf8");
+        ok = (txt === txtMsj);
+    } catch (err) {
+        ok = true;
+    }
+    if (!ok) {
+        console.log("trying to fix server webJsonIf.mjs copy".red)
+        writeFileSync(absPath, txtMsj)
+        ok = true;
+        console.log("fixed server webJsonIf.mjs copy".green)
+        // } else { if (txtMsj) console.log("webJsonIf.mjs copy is ok".green)
+    }
+
+    const lines = txt.split(/\r\n/).filter(line => !line.match("NOTJSON"))
+    const txt2 = lines.join("\n");
+    let json2;
+    try {
+        json2 = JSON.parse(txt2);
+    } catch (err) {
+        const errTxt = err.toString();
+        console.log(errTxt.bgRed)
+        const posTxt = errTxt.replace(/[^\d]/g, "")
+        // console.log(posTxt.bgRed)
+        const pos = parseInt(posTxt);
+        const before = txt2.substring(pos - 200, pos);
+        const fail = txt2.substring(pos, pos + 1);
+        const after = txt2.substring(pos + 1, pos + 100);
+        console.log(before.bgGreen, fail.bgRed, after.bgGreen)
+        throw err;
+    }
+    webJsonIf = Object.freeze(json2);
+    return webJsonIf;
+}
+
+/**
+ * Get parameters from the request object, both url and post dito.
+ * Sanitize them with path.basename().
+ * Check iff those parameters are present.
+ * 
+ * @param {Request} request
+ * @param {Object} wanted, wanted named parameters with value undefined
+ * @param {Object} trace, actual parameters
+ */
+export function getAndValidateParameters(request, response, wanted, trace, paramsName) {
+    // console.log("getAndValidateParameters".red, JSON.stringify(wanted).yellow);
+    function errResp(answer) {
+        console.log("getAndValidateParameters errResp".bgRed, { answer });
+        respondWithAllowOrigin(response, 400, {
+            badRequestReason: answer,
+            // wanted, trace,
+        });
+        return false;
+    }
+    function copyVal2trace(val) {
+        // FIXME: Why is val null in deployed, but not in localhost???
+        if (val === null) return val;
+        if (typeof val !== "string") return val;
+        if (val.indexOf("\n") !== -1) return val;
+        if (val.length > 150) return "...";
+        return val;
+    }
+
+    // if (!request instanceof Request) throw Error("Parameter 1 is not Request");
+    if (typeof wanted !== "object") return errResp("Parameter 2 is not object");
+
+    // Check before
+    for (const ent of Object.entries(wanted)) {
+        const [k, v] = ent;
+        if (v === true) continue;
+        if (v === false) continue;
+        if (typeof v !== "function") {
+            return errResp("Wanted key's value is not true/false/function: " + k + "=" + v);
+        }
+    }
+
+    // Collect
+    trace.q = {}
+    // if (typeof val === "string" && val.length > 200) obj[key] = "...";
+    function checkAndGet(key, val) {
+        // FIXME: function
+        // wanted[key] = typeof val !== "string" ? val : path.basename(val);
+        if (typeof val !== "string") {
+            wanted[key] = val;
+        } else {
+            if (val.slice(0, 8) === "https://") {
+                // FIXME: safe https?
+                wanted[key] = new URL(val).href;
+            } else {
+                // FIXME: Safe?
+                // wanted[key] = path.basename(val);
+                wanted[key] = val;
+            }
+        }
+    }
+    for (const ent of Object.entries(request.query)) {
+        const [k, v] = ent;
+        if (!Object.prototype.hasOwnProperty.call(wanted, k)) return errResp("Unrecognized q-parameter: " + k);
+        trace.where = "q k=" + k + ", v=" + copyVal2trace(v);
+        checkAndGet(k, v);
+        trace.q[k] = copyVal2trace(v);
+    }
+    trace.b = {}
+    for (const ent of Object.entries(request.body)) {
+        const [k, v] = ent;
+        if (k === "paramsNameCheck") {
+            if (typeof paramsName === "undefined") continue;
+            if (v === paramsName) {
+                continue;
+            }
+            // throw Error(`paramsName: ${paramsName} !== ${v}`);
+            return errResp(`paramsName: ${paramsName} !== ${v}`);
+        }
+        if (!Object.prototype.hasOwnProperty.call(wanted, k)) return errResp("Unrecognized b-parameter: " + k);
+        trace.where = "b k=" + k + ", v=" + copyVal2trace(v);
+        checkAndGet(k, v);
+        trace.b[k] = copyVal2trace(v);
+    }
+    // Check after
+    for (const ent of Object.entries(wanted)) {
+        const [k, v] = ent;
+        if (v === true) { return errResp("Parameter " + k + " value is not given"); }
+        if (typeof v === "function") {
+            const ok = v(undefined);
+            if (!ok) { return errResp("Parameter " + k + " must have a value") }
+        }
+    }
+    // trace.where = "Exiting getAndValidateParameters";
+    // console.log("exit getAndValidateParameters".green, JSON.stringify(wanted).yellow);
+    return true;
+}
+
+function throwWStack(msg) {
+    saveStack();
+    // console.log("savedStack".bgRed, util.inspect(savedStack, { showHidden: false, depth: null, colors: true }));
+    throw Error(msg);
+}
+
+export function GT(a, b) {
+    if (isNaN(a)) throwWStack("a isNaN");
+    if (isNaN(b)) throwWStack("b isNaN");
+    return a > b;
+}
+
+export async function sendFCM(fcmToken, data) {
+    // This registration token comes from the client FCM SDKs.
+    if (!fcmToken) throw Error("no fcmToken");
+    const registrationToken = fcmToken;
+    console.log({ registrationToken });
+
+    const message = {
+        data: data,
+        // token: registrationToken,
+        // tokens: [registrationToken],
+    };
+
+    // Send a message to the device corresponding to the provided
+    // registration token.
+    console.log('FCM :::::::: sending message:'.yellow, JSON.stringify(message.data));
+    try {
+        // message.token = registrationToken;
+        // const response = await admin.messaging(appId).send(message);
+
+        message.tokens = [registrationToken];
+        const response = await messaging().sendMulticast(message);
+
+        console.log(ui(message));
+
+        console.log('FCM :::::::: Successfully sent message:'.green, response);
+        return true;
+    } catch (error) {
+        console.log('FCM :::::::: Error sending message:'.red, error);
+        return false;
+
+    }
+}
+
+const _userExists = userExists;
+export { _userExists as userExists };
+async function userExists(email) {
+    try {
+        await auth().getUserByEmail(email);
+        return true;
+    } catch (err) {
+        return false;
+    }
+}
+
+
+const _listCachedFiles = listCachedFiles;
+export { _listCachedFiles as listCachedFiles };
+async function listCachedFiles(userEmail) {
+    const prefix = "tmpspeech/" + userEmail;
+    // const prefix = "tmpspeech"; // ok
+    const files = await listFiles(prefix);
+    return files;
+}
+
+
+const _ourGetFiles = ourGetFiles;
+export { _ourGetFiles as ourGetFiles };
+async function ourGetFiles(query) {
+    console.log("ourGetFiles".bgCyan, query)
+    const items = await storage().bucket().getFiles(query);
+    console.log("ourGetFiles, got items".bgCyan)
+    const files = items[0];
+    return files;
+}
+async function listFiles(prefix) {
+    // console.log("util.listFiles ----------------------".bgRed)
+    // https://firebase.google.com/docs/storage/web/list-files
+    // FIXME: looks like it was the browser side...
+    /*
+        // Create a reference under which you want to list
+        const storageRef = admin.storage().bucket().ref();
+        // const storage= admin.storage();
+        // const storageRef  = storage.ref();
+        const listRef = storageRef.child(prefix);
+    
+        // try {
+    
+        // Find all the prefixes and items.
+        const res = await listRef.listAll();
+        // res.prefixes.forEach(function(folderRef) { });
+        // res.items.forEach(function (itemRef) { });
+    */
+
+    // https://stackoverflow.com/questions/53757582/firebase-storage-list-files-in-a-specific-directory
+    // console.log("prefix".bgGreen, prefix)
+    const query = {
+        directory: prefix
+    };
+    const prefixLen = prefix.length + 1;
+
+    const items = await storage().bucket().getFiles(query);
+    // console.log("----------------------".bgGreen)
+    // console.log(util.inspect(items, false, 1, true))
+    const items0 = items[0];
+    // console.log("----------------------".bgGreen)
+    // console.log(util.inspect(items0, false, 1, true))
+    const files = items0.map(itemRef => {
+        // console.log("----------------------".bgRed)
+        const name = itemRef.name.substring(prefixLen)
+        const size = itemRef.metadata.size;
+        const updated = itemRef.metadata.updated;
+        const mediaLink = itemRef.metadata.mediaLink;
+        const rec = { name, size, updated, mediaLink }
+        // console.log(util.inspect(rec, false, 1, true));
+        return rec;
+    }).filter(rec => rec.name.substr(-11) === "-words.json");
+    // console.log(util.inspect(files, false, null, true))
+    return files;
+
+    // } catch (err) { throw err; }
+}
+
+const _promNetworkSeemsOk = promNetworkSeemsOk;
+export { _promNetworkSeemsOk as promNetworkSeemsOk };
+async function promNetworkSeemsOk() {
+    // https://stackoverflow.com/questions/58795113/is-there-some-url-that-does-not-hide-behind-cors
+    const notCachedURL = "https://jsonplaceholder.typicode.com/";
+    // const resp = await fetch(notCachedURL, { method: "HEAD" })
+    console.log("promNetworkSeemsOk before axios.get".bgCyan);
+    const resp = await axios({ url: notCachedURL, method: "HEAD" })
+    console.log("promNetworkSeemsOk after axios.get".bgCyan);
+    const status = resp.status;
+    const statusText = resp.statusText;
+    console.log("promNetworkSeemsOk ".bgCyan, { statusText }, { status });
+    // return resp.ok;
+    return status === 200;
+}
+
+const _waitSeconds = waitSeconds;
+export { _waitSeconds as waitSeconds };
+function waitSeconds(sec) {
+    console.log("start wait", sec)
+    return new Promise(resolve => {
+        function ready() {
+            console.log("ready wait", sec)
+            resolve(sec);
+        }
+        setTimeout(ready, sec * 1000);
+    })
+}
+
