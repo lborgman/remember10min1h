@@ -246,7 +246,7 @@ async function mkDivOneCustomClip(objCustomClip) {
     // const keyRec = await get1Reminder(objCustomClip.key); // FIX-ME: provider
     const key = objCustomClip.key;
     const provider = objCustomClip.provider;
-    const keyRec = await getOurCustomRenderer().getCustomRec(key, provider);
+    const keyRec = await (await getOurCustomRenderer()).getCustomRec(key, provider);
 
     const eltTitle = mkElt("span", undefined, keyRec.title)
     const divClipInner = mkElt("div", { class: "jsmind-test-custom-clip-inner" }, eltTitle);
