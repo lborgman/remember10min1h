@@ -1,7 +1,10 @@
 "use strict";
 
 let strPrefix = "jsmindmap-";
-export function setDBprefix(prefix) { strPrefix = prefix; }
+export function setDBprefix(prefix) {
+    strPrefix = prefix;
+    console.warn("setDBprefix", prefix);
+}
 
 export async function DBgetAllMindmaps() {
     const all = [];

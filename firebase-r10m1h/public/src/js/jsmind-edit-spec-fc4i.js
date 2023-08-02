@@ -25,7 +25,8 @@ addProviderFc4i();
 // modJsEditCommon.pageSetup();
 
 export function dialogMindMapsFc4i(info, arrMindmapsHits) {
-    dialogMindMaps(mkEltLinkMindmapFc4i, info, arrMindmapsHits);
+    // dialogMindMaps(mkEltLinkMindmapFc4i, info, arrMindmapsHits);
+    dialogMindMaps("/fc4i-mindmaps.html", info, arrMindmapsHits);
 }
 export function ourDialogMindmaps(info, arrMindmapsHits) {
     dialogMindMapsFc4i(info, arrMindmapsHits);

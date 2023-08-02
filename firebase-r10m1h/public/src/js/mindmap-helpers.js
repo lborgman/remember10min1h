@@ -79,20 +79,27 @@ createOurCustomRenderer();
 
 
 
-function showMindmapFc4i(key) {
+function OLDshowMindmapFc4i(key) {
     const url = new URL("/fc4i-mindmaps.html", location);
     url.searchParams.set("mindmap", key);
     location.href = url; // FIX-ME:
 }
+function showMindmap(linkMindmapsPage,key) {
+    const url = new URL(linkMindmapsPage, location);
+    url.searchParams.set("mindmap", key);
+    location.href = url; // FIX-ME:
+}
 
-async function createAndShowNewMindmapFc4i() {
+// async function createAndShowNewMindmapFc4i() 
+async function createAndShowNewMindmap(linkMindmapsPage) {
     const objDataMind = await dialogCreateMindMap();
     if (!objDataMind) return;
     const keyName = objDataMind.meta.name;
     console.log({ objDataMind, keyName });
     const dbMindmaps = await getDbMindmaps();
     dbMindmaps.DBsetMindmap(keyName, objDataMind);
-    showMindmapFc4i(keyName);
+    // showMindmapFc4i(keyName);
+    showMindmap(linkMindmapsPage,keyName);
 }
 
 async function getMindmap(key) {
@@ -367,7 +374,12 @@ function mkEltLinkMindmapA(urlPath, topic, mkey, mhits) {
     return eltA;
 }
 
-async function dialogMindMaps(funMkEltLinkMindmap, info, arrMindmapsHits) {
+// async function dialogMindMaps(funMkEltLinkMindmap, info, arrMindmapsHits)
+async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits) {
+    const toLink = typeof linkMindmapsPage;
+    if (toLink !== "string") throw Error(`urlHtml typeof should be string, got ${toLink}`);
+    // const eltA = funMkEltLinkMindmap(topic, m.key, m.hits);
+    const funMkEltLinkMindmap = (topic, mKey, mHits) => mkEltLinkMindmapA(linkMindmapsPage, topic, mKey, mHits);
     const modMdc = await import("/src/js/mod/util-mdc.js");
     const dbMindmaps = await getDbMindmaps();
 
@@ -445,8 +457,6 @@ async function dialogMindMaps(funMkEltLinkMindmap, info, arrMindmapsHits) {
             }
         }));
 
-        // const eltA = mkEltLinkMindmapFc4i(topic, m.key, m.hits);
-        // const funMkEltLinkMindmap = mkEltLinkMindmapFc4i;
         const eltA = funMkEltLinkMindmap(topic, m.key, m.hits);
 
         const eltTopic = mkElt("span", undefined, topic);
@@ -462,7 +472,8 @@ async function dialogMindMaps(funMkEltLinkMindmap, info, arrMindmapsHits) {
     if (showNew) {
         const liNew = modMdc.mkMDCmenuItem("New mindmap");
         liNew.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            await createAndShowNewMindmapFc4i();
+            // await createAndShowNewMindmapFc4i();
+            await createAndShowNewMindmap(linkMindmapsPage);
         }));
         // arrLiMenu.push(liNew);
 
@@ -470,7 +481,8 @@ async function dialogMindMaps(funMkEltLinkMindmap, info, arrMindmapsHits) {
         const eltIcon = modMdc.mkMDCicon("add");
         const btnFab = modMdc.mkMDCfab(eltIcon, "Create new mindmap", true);
         btnFab.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            await createAndShowNewMindmapFc4i();
+            // await createAndShowNewMindmapFc4i();
+            await createAndShowNewMindmap(linkMindmapsPage);
         }));
         btnFab.style.marginLeft = "40px";
         eltTitle.appendChild(btnFab);

@@ -1355,7 +1355,8 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
         const btnFab = modMdc.mkMDCfab(eltIcon, "Create new mindmap", true);
         btnFab.classList.add("fab-add-mindmap-1");
         btnFab.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            await createAndShowNewMindmapFc4i();
+            // await createAndShowNewMindmapFc4i();
+            await createAndShowNewMindmap("/fc4i-mindmaps.html");
         }));
         divMM.appendChild(btnFab);
         const detMM = mkElt("details", { class: "mdc-card" }, [sumMM, divMM]);
