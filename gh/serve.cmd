@@ -1,0 +1,1 @@
+http-server . -o jsmind-edit-gh.html

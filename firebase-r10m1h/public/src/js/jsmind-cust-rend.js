@@ -18,6 +18,7 @@ export class providerDetails {
         checkType(providerRec.getRec, "function");
         checkType(providerRec.showRec, "function");
         if (providerRec.getRec.length != 1) throw Error("getRec function should take 1 argument");
+        if (providerRec.showRec.length != 1) throw Error("showRec function should take 1 argument");
         this.#name = providerRec.name;
         this.#longName = providerRec.longName;
         this.#img = providerRec.img;
@@ -28,6 +29,7 @@ export class providerDetails {
     get longName() { return this.#longName; }
     get img() { return this.#img; }
     get getRec() { return this.#getRec; }
+    get showRec() { return this.#showRec; }
 }
 export class CustomRenderer4jsMind {
     #providers = {};
@@ -48,6 +50,9 @@ export class CustomRenderer4jsMind {
     getProviderNames() { return Object.keys(this.#providers); }
     getCustomRec(key, provider) {
         return this.#providers[provider].getRec(key);
+    }
+    showCustomRec(key, provider) {
+        this.#providers[provider].showRec(key);
     }
     // getOurCustomRenderer().getCustomRec(key, provider);
 
@@ -1124,6 +1129,8 @@ export class CustomRenderer4jsMind {
         this.editNodeDialog(eltJmnode);
     }
 }
+const cr4j = new CustomRenderer4jsMind();
+console.log({cr4j});
 
 function addJmnodeBgAndText(eltJmnode) {
     const eltTxt = mkElt("div", { class: "jmnode-text" });

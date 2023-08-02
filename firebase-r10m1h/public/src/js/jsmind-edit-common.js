@@ -2,6 +2,10 @@
 
 console.log("here is jsmind-edit-common.js");
 
+async function getDraggableNodes() {
+    // return await import("/ext/jsmind/new-jsmind.draggable-nodes.js");
+    return await import("new-jsmind.draggable-nodes");
+}
 
 const theMirrorWays = [
     "none",
@@ -326,7 +330,8 @@ export function basicInit4jsmind() {
 
     // await thePromiseDOMready;
     async function startDraggable() {
-        modJsmindDraggable = await import("/ext/jsmind/new-jsmind.draggable-nodes.js");
+        // modJsmindDraggable = await import("/ext/jsmind/new-jsmind.draggable-nodes.js");
+        modJsmindDraggable = await getDraggableNodes();
         // console.log({ modJsmindDraggable });
     }
     errorHandlerAsyncEvent(startDraggable());
@@ -542,7 +547,8 @@ export async function pageSetup() {
         // mind = getEmptyMap(mindmapKey);
     }
 
-    const modJmDrag = await import("/ext/jsmind/new-jsmind.draggable-nodes.js");
+    // const modJmDrag = await import("/ext/jsmind/new-jsmind.draggable-nodes.js");
+    const modJmDrag = await getDraggableNodes();
     modJmDrag.setupNewDragging();
 
     const nowBefore = Date.now();
@@ -747,13 +753,13 @@ export async function pageSetup() {
     function focusSelectedNode() {
         // FIX-ME: What is wrong with jmDisplayed here???
         try {
-        const selectedNode = jmDisplayed?.get_selected_node();
-        if (selectedNode) {
-            const selectedElt = getDOMeltFromNode(selectedNode);
-            selectedElt.focus();
-        }
-        } catch(err) {
-            console.log("*** focusSelectedNode", {err});
+            const selectedNode = jmDisplayed?.get_selected_node();
+            if (selectedNode) {
+                const selectedElt = getDOMeltFromNode(selectedNode);
+                selectedElt.focus();
+            }
+        } catch (err) {
+            console.log("*** focusSelectedNode", { err });
         }
     }
     function hideContextMenu() {
@@ -808,7 +814,11 @@ export async function pageSetup() {
                 const go = await modMdc.mkMDCdialogConfirm(`Show entry in ${prov}?`);
                 console.log({ go });
                 if (!go) return;
-                showKeyInFc4i(objCustom.key);
+                // showKeyInFc4i(objCustom.key);
+                debugger;
+                const render = await getOurCustomRenderer();
+                // if (!render instanceof CustomRenderer4jsMind) throw Error(`Not a custom renderer`);
+                render.showCustomRec(objCustom.key, objCustom.provider);
             }, 100);
         };
     });
@@ -983,7 +993,8 @@ export async function pageSetup() {
 
         const liTestDragBetween = mkMenuItem("test move between",
             async () => {
-                const m = await import("/ext/jsmind/new-jsmind.draggable-nodes.js");
+                // const m = await import("/ext/jsmind/new-jsmind.draggable-nodes.js");
+                const m = await getDraggableNodes();
                 m.startTrackingPointer()
             });
         liTestDragBetween.classList.add("test-item");
@@ -999,7 +1010,8 @@ export async function pageSetup() {
 
         const liTestSvgDrawLine = mkMenuItem("Test svg draw line",
             async () => {
-                const modJsmindDraggable = await import("/ext/jsmind/new-jsmind.draggable-nodes.js");
+                // const modJsmindDraggable = await import("/ext/jsmind/new-jsmind.draggable-nodes.js");
+                const modJsmindDraggable = await getDraggableNodes();
                 modJsmindDraggable.testSvgLine();
             }
         );

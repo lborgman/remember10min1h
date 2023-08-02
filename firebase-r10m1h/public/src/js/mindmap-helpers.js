@@ -45,6 +45,7 @@ async function getNextMindmapKey() { return "mm-" + new Date().toISOString(); }
 let theCustomRenderer;
 async function getOurCustomRenderer() {
     theCustomRenderer = theCustomRenderer || await createOurCustomRenderer();
+    // if (!theCustomRenderer instanceof CustomRenderer4jsMind) throw Error(`Not a custom renderer`);
     return theCustomRenderer;
 }
 async function createOurCustomRenderer() {
