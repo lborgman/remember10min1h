@@ -4,6 +4,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <!-- This page © Copyright 2023, Lennart Borgman -->
+    <meta name="author" content="Lennart Borgman">
+    <meta name="description" content="Mindmaps built on jsMind with editing additions">
+    <!-- <link rel="manifest" href="manifest.json"> -->
+    <meta name="theme-color" content="#c0ca33">
+
+    <title>Mindmaps</title>
+    <!-- <link rel="icon" type="image/svg+xml" href="/img/rem10m1h.svg"> -->
+
+
+
+
     <!-- for MWC, https://github.com/material-components/material-web -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
@@ -31,17 +43,25 @@
     -->
 
     <script>
-        const basx = "https://cdn.statically.io/gh/lborgman/remember10min1h/master/firebase-r10m1h/public/";
-        const base = "https://cdn.jsdelivr.net/gh/lborgman/remember10min1h@master/firebase-r10m1h/public/";
-        const theMap = {
-            "util-mdc": base + "src/js/mod/util-mdc.js",
-            "db-mindmaps": base + "src/js/db-mindmaps.js",
-            "is-displayed": base + "src/js/is-displayed.js",
-            "jsmind-edit-spec-jsmindedit": base + "src/js/jsmind-edit-spec-jsmindedit.js",
-            "jsmind-edit-common": base + "src/js/jsmind-edit-common.js",
-            "jsmind-cust-rend": base + "src/js/jsmind-cust-rend.js",
-            "new-jsmind.draggable-nodes": base + "ext/jsmind/new-jsmind.draggable-nodes.js",
+        // const basx = "https://cdn.statically.io/gh/lborgman/remember10min1h/master/firebase-r10m1h/public";
+        const cdnBaseURL = "https://cdn.jsdelivr.net/gh/lborgman/remember10min1h@master/firebase-r10m1h/public";
+        // Log CDN urls to console to make it easier to purge CDN cache (only for jsDelivr)
+        function logCDNurl(url) { console.log("CDN: ", url); }
+        function getCDNurl(url) {
+            if (!url.startsWith("/")) console.error("url does not start with /", url);
+            return cdnBaseURL + url;
         }
+        const theMap = {
+            "is-displayed": getCDNurl("/src/js/is-displayed.js"),
+            "db-mindmaps": getCDNurl("/src/js/db-mindmaps.js"),
+            "jsmind-cust-rend": getCDNurl("/src/js/jsmind-cust-rend.js"),
+            "jsmind-edit-common": getCDNurl("/src/js/jsmind-edit-common.js"),
+            "jsmind-edit-spec-jsmindedit": getCDNurl("/src/js/jsmind-edit-spec-jsmindedit.js"),
+            "new-jsmind.draggable-nodes": getCDNurl("/ext/jsmind/new-jsmind.draggable-nodes.js"),
+            "util-mdc": getCDNurl("/src/js/mod/util-mdc.js"),
+        }
+        Object.keys(theMap).forEach(key => logCDNurl(theMap[key]));
+        
         const importMap = {
             "imports": theMap,
         }
@@ -50,12 +70,14 @@
         im.textContent = JSON.stringify(importMap);
         document.currentScript.after(im);
 
-        const srcError = base + "src/js/error.js";
+        // const srcError = cdnBaseURL + "/src/js/error.js";
+        const srcError = getCDNurl("/src/js/error.js");
         const ie = document.createElement("script");
         ie.src = srcError;
         document.currentScript.after(ie);
 
-        const srcMMH = base + "src/js/mindmap-helpers.js";
+        // const srcMMH = cdnBaseURL + "src/js/mindmap-helpers.js";
+        const srcMMH = getCDNurl("/src/js/mindmap-helpers.js");
         const iMMH = document.createElement("script");
         iMMH.src = srcMMH;
         document.currentScript.after(iMMH);
@@ -78,6 +100,7 @@
 </head>
 
 <body>
+    <!--
     <script>
         setTimeout(() => {
             const style =
@@ -94,12 +117,10 @@
             document.body.appendChild(myVer);
         }, 1000);
     </script>
+    -->
+
     <!-- <script src="/ext/mdc/material-components-web.js"></script> -->
     <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
-    <div id="jsmind_container" class="jsmind_container"></div>
-
-    <!-- Mirror must be display:block for rendering -->
-    <div id="jsmind-draggable-container4mirror" style="left: -1000px;"></div>
 
     <!-- <script src="/src/js/fc4i-mindmaps.js"></script> -->
     <script>
@@ -118,6 +139,13 @@
             modJsEditCommon.pageSetup();
         })();
     </script>
+
+    <div id="jsmind_container" class="jsmind_container"></div>
+
+    <!-- Mirror must be display:block for rendering -->
+    <!-- <div id="jsmind-draggable-container4mirror" style="left: -1000px;"></div> -->
+
+
 </body>
 
 </html>

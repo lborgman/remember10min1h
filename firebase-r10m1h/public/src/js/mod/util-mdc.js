@@ -2102,7 +2102,8 @@ export function mkMDCicon(iconMaterialName) {
 // The font icons does not work offline (and does not scale well).
 // Here is an alternative.
 export function mkMDCsvgIcon(iconMaterialName) {
-    const src = `/ext/mdc/icon/${iconMaterialName}_FILL0_wght400_GRAD0_opsz48.svg`;
+    const srcRel = `/ext/mdc/icon/${iconMaterialName}_FILL0_wght400_GRAD0_opsz48.svg`;
+    const src = new URL(srcRel, import.meta.url);
     let elt = mkElt("img", {
         class: "sized-mdc-svg-icon",
         src
