@@ -25,10 +25,14 @@
                 https://cdn.statically.io/gh/jcubic/static/master/js/lzjb.js
                 https://cdn.jsdelivr.net/gh/jcubic/static@master/js/lzjb.js
 
+        jsDelivr can purge the cache!
+            https://www.jsdelivr.com/tools/purge
+
     -->
 
     <script>
-        const base = "https://cdn.statically.io/gh/lborgman/remember10min1h/master/firebase-r10m1h/public/";
+        const basx = "https://cdn.statically.io/gh/lborgman/remember10min1h/master/firebase-r10m1h/public/";
+        const base = "https://cdn.jsdelivr.net/gh/lborgman/remember10min1h@master/firebase-r10m1h/public/";
         const theMap = {
             "util-mdc": base + "src/js/mod/util-mdc.js",
             "db-mindmaps": base + "src/js/db-mindmaps.js",
@@ -90,7 +94,8 @@
             document.body.appendChild(myVer);
         }, 1000);
     </script>
-    <script src="/ext/mdc/material-components-web.js"></script>
+    <!-- <script src="/ext/mdc/material-components-web.js"></script> -->
+    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
     <div id="jsmind_container" class="jsmind_container"></div>
 
     <!-- Mirror must be display:block for rendering -->
