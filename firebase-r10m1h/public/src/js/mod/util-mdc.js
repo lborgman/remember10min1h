@@ -2103,8 +2103,28 @@ export function mkMDCicon(iconMaterialName) {
 // Here is an alternative.
 export function mkMDCsvgIcon(iconMaterialName) {
     const srcRel = `/ext/mdc/icon/${iconMaterialName}_FILL0_wght400_GRAD0_opsz48.svg`;
-    const src = new URL(srcRel, import.meta.url).href;
-    console.log("mkMDCsvgIcon", import.meta.url, { srcRel, src });
+
+    const importMetaUrl = import.meta.url;
+    const urlIM = new URL(importMetaUrl);
+
+    const onJsdelivr = importMetaUrl.search("jsdelivr") != -1;
+    const onStatically = importMetaUrl.search("statically") != -1;
+    const onOrig = !(onJsdelivr || onStatically);
+    const origModPathname = '/src/js/mod/util-mdc.js';
+    const lenOrigPathname = origModPathname.length;
+
+    let src;
+    if (onOrig) {
+        const pathNameIM = urlIM.pathname;
+        if (origModPathname != pathNameIM) {
+            throw Error(`origModPathname (${origModPathname}) != pathnameIM (${pathNameIM})`);
+        }
+        src = srcRel;
+    } else {
+        src = importMetaUrl.slice(0, - origModPathname.length) + srcRel;
+    }
+    // const src = new URL(srcRel.slice(1), import.meta.url).href;
+    console.log("mkMDCsvgIcon", import.meta.url, { srcRel, src, importMetaUrl });
     let elt = mkElt("img", {
         class: "sized-mdc-svg-icon",
         src
@@ -2119,7 +2139,7 @@ export function mkMDCsvgIcon(iconMaterialName) {
             // elt.innerHTML = `<svg height="100%" width="100%"> ${text} </svg>`;
             elt.innerHTML = text2;
         } else {
-            alert(`HTTP-Error: ${response.status} (${src})`);
+            // alert(`HTTP-Error: ${response.status} (${src})`);
             console.error(`HTTP-Error: ${response.status} (${src})`);
             return;
         }
