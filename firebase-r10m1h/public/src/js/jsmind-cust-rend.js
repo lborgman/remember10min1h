@@ -101,7 +101,8 @@ export class CustomRenderer4jsMind {
         console.log({ node }, node.data.shapeEtc, nodeLink);
         if (nodeLink && nodeLink.length > 0) {
             // item link
-            const modMdc = await import("/src/js/mod/util-mdc.js");
+            // import("/src/js/mod/util-mdc.js");
+            const modMdc = await import("util-mdc");
             const iconLink = modMdc.mkMDCicon("link");
             const eltA = mkElt("a", { href: nodeLink, class: "jsmind-plain-link" }, iconLink);
             const eltA2 = modMdc.mkMDCbuttonA(nodeLink, "", "raised", iconLink);
@@ -164,7 +165,8 @@ export class CustomRenderer4jsMind {
     // async updatePlainLink(node, eltJmnode) { debugger; }
 
     async editNodeDialog(eltJmnode) {
-        const modMdc = await import("/src/js/mod/util-mdc.js");
+        // import("/src/js/mod/util-mdc.js");
+        const modMdc = await import("util-mdc");
 
         function somethingToSave() {
             return JSON.stringify(initialShapeEtc) != JSON.stringify(currentShapeEtc);
@@ -1130,7 +1132,7 @@ export class CustomRenderer4jsMind {
     }
 }
 const cr4j = new CustomRenderer4jsMind();
-console.log({cr4j});
+console.log({ cr4j });
 
 function addJmnodeBgAndText(eltJmnode) {
     const eltTxt = mkElt("div", { class: "jmnode-text" });

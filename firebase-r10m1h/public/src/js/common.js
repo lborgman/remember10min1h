@@ -25,7 +25,8 @@ const themePrimary = ["mdc-theme--primary-bg", "mdc-theme--on-primary"];
 
 async function checkUnusedTags() {
     if (!document.getElementById("page-home")) return;
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
 
     // Non-existant tags?
     const dbFc4i = await getDbFc4i();
@@ -74,7 +75,8 @@ async function updateDivSearchTheTags() {
 
 
 async function promptForUpdate() {
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
     function hidePrompt() {
         // divPrompt.parentElement.removeChild(divPrompt);
         dlgPrompt.remove();
@@ -190,7 +192,8 @@ const setupServiceWorker = async () => {
                 eltKA.textContent = `${evt.data.counterValue} (${evt.data.total})`;
                 break;
             default:
-                const modMdc = await import("/src/js/mod/util-mdc.js");
+                // import("/src/js/mod/util-mdc.js");
+                const modMdc = await import("util-mdc");
                 modMdc.mkMDCsnackbar(evt.data.text, 10 * 1000);
         }
     }));
@@ -297,7 +300,8 @@ const setupServiceWorker = async () => {
 
 // https://web.dev/async-clipboard/
 async function isClipboardPermissionStateOk() {
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
     // There seems to be no max number of skipping prompt here.
     // The permissions systems seems like a mess!
     const queryOpts = { name: 'clipboard-read', allowWithoutGesture: false };
@@ -369,7 +373,8 @@ async function getNotificationPermissions() {
     }
 }
 async function checkNotificationPermissions() {
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
     const grantedNotification = await getNotificationPermissions();
 
     // console.log({ grantedNotification });
@@ -408,7 +413,8 @@ async function checkNotificationPermissions() {
 
 
 async function setupForInstall() {
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
     // https://web.dev/customize-install/#criteria
     // Initialize deferredPrompt for use later to show browser install prompt.
     let deferredPrompt;
@@ -498,7 +504,8 @@ async function addDebugDiv() {
 
 let mainMenu;
 async function getMenu() {
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
     if (mainMenu) return mainMenu;
     const menu = await mkMenu();
     if (!mainMenu) {
@@ -538,12 +545,7 @@ async function getMenu() {
         eltSearchCheck.appendChild(btnReminders);
         btnReminders.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             // console.warn("clicked search check");
-            // 
             dialog10min1hour(eltFocusedBefore);
-            // return;
-            // askForReminders();
-            // const modMdc = await import("/src/js/mod/util-mdc.js");
-            // modMdc.mkMDCsnackbar("Looking for expired reminders...");
         }));
         btnReminders.addEventListener("focus", errorHandlerAsyncEvent(async evt => {
             // console.log("btnSearchCheck focus", evt, evt.relatedTarget);
@@ -592,12 +594,8 @@ async function justShowKey(key) {
     }
 }
 async function showKeyToRemember(key, timerInfo) {
-    // const modMdc = await import("/src/js/mod/util-mdc.js");
     const secMain = clearMainSection("page-show-key");
-    // secMain.appendChild(mkElt("span", undefined, "this is showKey"));
     const dbFc4i = await getDbFc4i();
-    // const db = await dbFc4i.getDb();
-    // const keyRec = await db.get(idbStoreName, key);
     const keyRec = await dbFc4i.getDbKey(key);
     console.log({ keyRec });
     const style = [
@@ -651,7 +649,8 @@ function mkImageThumb(blob) {
 }
 
 async function appendRem(rem, toDiv) {
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
     const card = modMdc.mkMDCcard();
     card.classList.add("subject-card");
 
@@ -763,7 +762,8 @@ async function displayMatchingReminders(searchFor, minConf, maxConf, requiredTag
         console.log({ allMatchingKeys });
         if (divSearchBanner.oldKeys != strKeys) {
             // refresh"
-            const modMdc = await import("/src/js/mod/util-mdc.js");
+            // import("/src/js/mod/util-mdc.js");
+            const modMdc = await import("util-mdc");
             const btnRefresh = document.getElementById("cant-refresh");
             if (btnRefresh) return;
             const newBtnRefresh = modMdc.mkMDCbutton("Refresh", "raised");
@@ -939,9 +939,8 @@ function getHomeSearchValuesFromElts(inpSearch, sliSearchConfidence, divTagsRequ
 }
 
 async function goHome() {
-    // if (document.getElementById("div-home")) return;
-    // https://www.inc.com/jeff-haden/need-to-learn-faster-neuroscience-says-these-7-memory-retention-skill-acquisition-strategies-work-best.html
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
     const secMain = clearMainSection("page-home");
 
     // for (let key in detsOutput) delete detsOutput[key];
@@ -1090,7 +1089,8 @@ function showDebug() {
 // }
 
 async function showIntro() {
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
     const secMain = clearMainSection("page-about");
     secMain.appendChild(
         mkElt("h1", undefined, `About ${visibleAppTitle} (ver ${swVersion})`)
@@ -1363,7 +1363,8 @@ async function showSharedTo() {
     const secMain = clearMainSection("page-shared-to");
 }
 async function mkMenu() {
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
 
     const liHome = modMdc.mkMDCmenuItem("Home");
     liHome.addEventListener("click", evt => { goHome(); });
@@ -1429,7 +1430,8 @@ async function mkMenu() {
     liGetReminders.addEventListener("click", evt => { OLDdisplayRemindersDialog(); });
     liGetReminders.classList.add("test-item");
     async function OLDdisplayRemindersDialog() {
-        const modMdc = await import("/src/js/mod/util-mdc.js");
+        // import("/src/js/mod/util-mdc.js");
+        const modMdc = await import("util-mdc");
         const dbFc4i = await getDbFc4i();
         let savedValue = await dbFc4i.getSavedDialogValue();
         const initialAutoReminders = savedValue ? savedValue.autoReminders : true;
@@ -1628,7 +1630,8 @@ async function mkMenu() {
         const btnCheckNow = modMdc.mkMDCbutton("Get now", "raised");
         btnCheckNow.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             askForReminders();
-            const modMdc = await import("/src/js/mod/util-mdc.js");
+            // import("/src/js/mod/util-mdc.js");
+            const modMdc = await import("util-mdc");
             modMdc.mkMDCsnackbar("Looking for expired reminders...");
             closeDialog();
         }));
@@ -1664,7 +1667,8 @@ async function mkMenu() {
     liTestTimer.classList.add("test-item");
 
     async function testTimer() {
-        const modMdc = await import("/src/js/mod/util-mdc.js");
+        // import("/src/js/mod/util-mdc.js");
+        const modMdc = await import("util-mdc");
         const inpInt = mkElt("input", { type: "text" });
         inpInt.value = 10;
         const keySubmitted = "TEST_TIMER-submitted"
@@ -1975,7 +1979,6 @@ async function mkMenu() {
 
         async function showImportResult() {
             // goHome
-            // const modMdc = await import("/src/js/mod/util-mdc.js");
             // FIX-ME det-sum
             const divImported = mkElt("div", { class: "div-all-imported" });
             const detImported = mkElt("details", undefined, [
@@ -2273,7 +2276,8 @@ async function setAutoRemindersOnHtml(on) {
 }
 
 async function deleteEntry(key, card) {
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
     card.style.outline = "4px dotted yellowgreen";
     const dlg = modMdc.mkMDCdialogConfirm("Delete this subject?", "Yes", "No");
     const answer = await dlg;
@@ -2641,7 +2645,8 @@ async function checkNotifyShort() {
     if (nowIso < earliestDateIso) return;
     askForNotifySpecific(earliestKey, 1000, earliestAfterMinutes, earliestLbl, true);
     // deleteShortTimer(earliestKey);
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
     modMdc.mkMDCsnackbar("checkNotifyShort", 4000);
 }
 
@@ -2656,7 +2661,8 @@ document.addEventListener("resize", evt => restartCheckNotifyShort("resize"));
 document.addEventListener("touchend", evt => restartCheckNotifyShort("resize"));
 
 async function mkDivManualReminders(getCreatedEltTime) {
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
     function afterMinutes(minutes, lbl) {
         const key = getCreatedEltTime();
         const atDate = new Date(Date.now() + minutes * minMs);
@@ -2718,7 +2724,8 @@ async function mkDivManualReminders(getCreatedEltTime) {
 // Clipboard images
 async function getClipboardImages() {
     console.log("getClipboardImages");
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
 
     if (!await isClipboardPermissionStateOk()) {
         return;

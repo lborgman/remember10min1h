@@ -2,6 +2,7 @@ console.log("here is fc4i-import-maps");
 
 const importMap = {
     imports: {
+        "util-mdc": "/src/js/mod/util-mdc.js",
         "db-mindmaps": "/src/js/db-mindmaps.js",
         "jsmind-edit-common": "/src/js/jsmind-edit-common.js",
         "jsmind-cust-rend": "/src/js/jsmind-cust-rend.js",

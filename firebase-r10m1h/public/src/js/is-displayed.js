@@ -68,7 +68,8 @@ async function mkSliderInContainer(eltCont, min, max, now, step, label, onChange
     let sli = eltCont.querySelector("div.mdc-slider");
     if (!sli) {
         try {
-            const modMdc = await import("/src/js/mod/util-mdc.js");
+            // import("/src/js/mod/util-mdc.js");
+            const modMdc = await import("util-mdc");
             sli = await modMdc.mkMDCslider(min, max, now, step, label, onChange, onInput, disable);
             sli.classList.add("mdc-my-slider-colors-fix");
             await AddBeforeWhenContainerIsDisplayed(eltCont, sli);

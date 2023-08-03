@@ -85,7 +85,7 @@ function OLDshowMindmapFc4i(key) {
     url.searchParams.set("mindmap", key);
     location.href = url; // FIX-ME:
 }
-function showMindmap(linkMindmapsPage,key) {
+function showMindmap(linkMindmapsPage, key) {
     const url = new URL(linkMindmapsPage, location);
     url.searchParams.set("mindmap", key);
     location.href = url; // FIX-ME:
@@ -100,7 +100,7 @@ async function createAndShowNewMindmap(linkMindmapsPage) {
     const dbMindmaps = await getDbMindmaps();
     dbMindmaps.DBsetMindmap(keyName, objDataMind);
     // showMindmapFc4i(keyName);
-    showMindmap(linkMindmapsPage,keyName);
+    showMindmap(linkMindmapsPage, keyName);
 }
 
 async function getMindmap(key) {
@@ -109,7 +109,8 @@ async function getMindmap(key) {
 }
 
 async function dialogCreateMindMap() {
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
     const dbMindmaps = await getDbMindmaps();
 
     const title = mkElt("h2", undefined, "Create new mindmap");
@@ -204,7 +205,8 @@ async function getMindmapsHits(customKey) {
 
 
 async function pasteCustomClipDialog() {
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
     const arrClip = fetchJsmindCopied4Mindmap();
     if (!arrClip) debugger;
 
@@ -242,7 +244,8 @@ async function pasteCustomClipDialog() {
 }
 
 async function mkDivOneCustomClip(objCustomClip) {
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
     // const keyRec = await get1Reminder(objCustomClip.key); // FIX-ME: provider
     const key = objCustomClip.key;
     const provider = objCustomClip.provider;
@@ -272,7 +275,8 @@ async function mkDivOneCustomClip(objCustomClip) {
 }
 
 async function dialogShowCustomClipboard() {
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
     const arrClip = fetchJsmindCopied4Mindmap();
     console.log({ arrCopied4Mindmap: arrClip });
     const body = mkElt("div", { id: "jsmind-test-custom-clipboard" });
@@ -289,7 +293,8 @@ async function dialogShowCustomClipboard() {
 }
 
 async function dialogAdded2CustomClipboard(objAdded) {
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
     const divObjAdded = await mkDivOneCustomClip(objAdded);
     const btnRemove = divObjAdded.lastElementChild;
     if (btnRemove.tagName != "BUTTON") throw Error(`Not button remove: ${btnRemove.tagName}`);
@@ -345,7 +350,8 @@ async function dialogFindInMindMaps(key) {
     const arrMindmapsHits = await getMindmapsHits(key);
     console.log({ arrMindmapsHits });
     if (arrMindmapsHits.length == 0) {
-        const modMdc = await import("/src/js/mod/util-mdc.js");
+        // import("/src/js/mod/util-mdc.js");
+        const modMdc = await import("util-mdc");
         modMdc.mkMDCdialogAlert("Not found in any mindmap");
         // alert("not found in any mindmap");
         return;
@@ -381,7 +387,8 @@ async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits) {
     if (toLink !== "string") throw Error(`urlHtml typeof should be string, got ${toLink}`);
     // const eltA = funMkEltLinkMindmap(topic, m.key, m.hits);
     const funMkEltLinkMindmap = (topic, mKey, mHits) => mkEltLinkMindmapA(linkMindmapsPage, topic, mKey, mHits);
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
     const dbMindmaps = await getDbMindmaps();
 
     const showNew = !arrMindmapsHits;

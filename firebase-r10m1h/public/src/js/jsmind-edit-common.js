@@ -45,7 +45,8 @@ function switchDragTouchAccWay(newWay) {
 // https://hackernoon.com/how-to-embed-single-photos-from-google-photos-on-your-website-and-notion-page
 // https://jumpshare.com/blog/how-to-embed-google-drive-video/
 async function dialogMirrorWay() {
-    const modMdc = await import("/src/js/mod/util-mdc.js");
+    // import("/src/js/mod/util-mdc.js");
+    const modMdc = await import("util-mdc");
     const notWorking = ["useCanvas", "jsmind",];
     const altWays = theMirrorWays.filter(alt => !notWorking.includes(alt));
     console.log({ altWays });
@@ -461,7 +462,8 @@ export async function pageSetup() {
     const idSearchInputs = "jsmind-search-inputs";
     addJsmindButtons();
     async function addJsmindButtons() {
-        const modMdc = await import("/src/js/mod/util-mdc.js");
+        // import("/src/js/mod/util-mdc.js");
+        const modMdc = await import("util-mdc");
 
         btnJsmindDebug = modMdc.mkMDCiconButton("adb", "Debug log", 40);
         btnJsmindDebug.id = idBtnJsmindDebug;
@@ -569,7 +571,8 @@ export async function pageSetup() {
     // oldSecondJmnodesFixing();
 
     async function setNodeHitsFromArray(arrIdHits, hitType) {
-        const modMdc = await import("/src/js/mod/util-mdc.js");
+        // import("/src/js/mod/util-mdc.js");
+        const modMdc = await import("util-mdc");
         // const arrHits = nodehits.split(",");
         console.log({ arrHits: arrIdHits });
         arrIdHits.forEach(id => {
@@ -731,7 +734,8 @@ export async function pageSetup() {
 
     async function getDivContextMenu() {
         if (!divContextMenu) {
-            const modMdc = await import("/src/js/mod/util-mdc.js");
+            // import("/src/js/mod/util-mdc.js");
+            const modMdc = await import("util-mdc");
             divContextMenu = modMdc.mkMDCmenuDiv();
             divContextMenu.classList.add("is-menu-div");
             document.body.appendChild(divContextMenu);
@@ -810,7 +814,8 @@ export async function pageSetup() {
                 const strCustom = eltCustom.dataset.jsmindCustom;
                 const objCustom = JSON.parse(strCustom);
                 const prov = objCustom.provider;
-                const modMdc = await import("/src/js/mod/util-mdc.js");
+                // import("/src/js/mod/util-mdc.js");
+                const modMdc = await import("util-mdc");
                 const go = await modMdc.mkMDCdialogConfirm(`Show entry in ${prov}?`);
                 console.log({ go });
                 if (!go) return;
@@ -898,7 +903,8 @@ export async function pageSetup() {
 
 
     async function mkContextMenu() {
-        const modMdc = await import("/src/js/mod/util-mdc.js");
+        // import("/src/js/mod/util-mdc.js");
+        const modMdc = await import("util-mdc");
         let toJmDisplayed;
         try {
             toJmDisplayed = typeof jmDisplayed;
