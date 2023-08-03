@@ -46,7 +46,7 @@
         // const basx = "https://cdn.statically.io/gh/lborgman/remember10min1h/master/firebase-r10m1h/public";
         const cdnBaseURL = "https://cdn.jsdelivr.net/gh/lborgman/remember10min1h@master/firebase-r10m1h/public";
         // Log CDN urls to console to make it easier to purge CDN cache (only for jsDelivr)
-        function logCDNurl(url) { console.log("CDN: ", url); }
+        function logCDNurl(url) { console.log("%cCDN: ", "background: yellowgreen; color: black", url); }
         function getCDNurl(url) {
             if (!url.startsWith("/")) console.error("url does not start with /", url);
             return cdnBaseURL + url;

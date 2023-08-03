@@ -2103,7 +2103,8 @@ export function mkMDCicon(iconMaterialName) {
 // Here is an alternative.
 export function mkMDCsvgIcon(iconMaterialName) {
     const srcRel = `/ext/mdc/icon/${iconMaterialName}_FILL0_wght400_GRAD0_opsz48.svg`;
-    const src = new URL(srcRel, import.meta.url);
+    const src = new URL(srcRel, import.meta.url).href;
+    console.log("mkMDCsvgIcon", import.meta.url, { srcRel, src });
     let elt = mkElt("img", {
         class: "sized-mdc-svg-icon",
         src
