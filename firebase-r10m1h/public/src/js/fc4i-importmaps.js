@@ -2,6 +2,7 @@ console.log("here is fc4i-import-maps");
 
 const importMap = {
     imports: {
+        "is-displayed": "/src/js/is-displayed.js",
         "acc-colors": "/src/acc-colors.js",
         "db-mindmaps": "/src/js/db-mindmaps.js",
         "db-fc4i": "/src/js/db-fc4i.js",

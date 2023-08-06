@@ -167,6 +167,7 @@ export class CustomRenderer4jsMind {
         const idThemeChoices = "theme-choices";
         const modMdc = await import("util-mdc");
         const modJsEditCommon = await import("jsmind-edit-common");
+        const modIsDisplayed = await import("is-displayed");
 
         function somethingToSave() {
             return JSON.stringify(initialShapeEtc) != JSON.stringify(currentShapeEtc);
@@ -698,7 +699,7 @@ export class CustomRenderer4jsMind {
                 if (val == undefined) return;
                 setInShapeEtc(val, objShEtc, currentShapeEtc);
             }
-            sli = await mkSliderInContainer(eltCont, min, max, initVal, step, title, funChange);
+            sli = await modIsDisplayed.mkSliderInContainer(eltCont, min, max, initVal, step, title, funChange);
             ctrlsSliders[pathShEtc] = sli;
         }
         /////////////////////////////////////

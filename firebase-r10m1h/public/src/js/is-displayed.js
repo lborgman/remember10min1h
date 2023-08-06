@@ -64,7 +64,7 @@ async function waitUntilDisplayed(elt, msMax) {
 }
 
 
-async function mkSliderInContainer(eltCont, min, max, now, step, label, onChange, onInput, disable) {
+export async function mkSliderInContainer(eltCont, min, max, now, step, label, onChange, onInput, disable) {
     let sli = eltCont.querySelector("div.mdc-slider");
     if (!sli) {
         try {
