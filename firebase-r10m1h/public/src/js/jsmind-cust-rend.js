@@ -181,7 +181,7 @@ export class CustomRenderer4jsMind {
             console.warn("applyToCopied", changed);
             requestSetStateBtnSave();
             requestUpdateCopiesSizes();
-            applyShapeEtc(currentShapeEtc, eltCopied);
+            modJsEditCommon.applyShapeEtc(currentShapeEtc, eltCopied);
         }
 
         const onCtrlsGrpChg = {
@@ -359,7 +359,7 @@ export class CustomRenderer4jsMind {
             // FIX-ME:
             setupBorderTab();
             const currentShape = currentShapeEtc.shape;
-            if (!shapeCanHaveBorder(currentShape)) {
+            if (!modJsEditCommon.shapeCanHaveBorder(currentShape)) {
                 divBorder.classList.add("cannot-border");
             } else {
                 divBorder.classList.remove("cannot-border");
@@ -1057,8 +1057,8 @@ export class CustomRenderer4jsMind {
                 console.log("setTimeout in save", { eltJmnode });
                 // FIX-ME: set size once again to trigger a reflow. (Bug in jsMind.)
                 this.THEjmDisplayed.set_node_background_image(node_ID_copied, undefined, currTemp.width, currTemp.height);
-                await fixJmnodeProblem(eltJmnode);
-                applyNodeShapeEtc(node_copied, eltJmnode);
+                await modJsEditCommon.fixJmnodeProblem(eltJmnode);
+                modJsEditCommon.applyNodeShapeEtc(node_copied, eltJmnode);
                 DBrequestSaveThisMindmap(this.THEjmDisplayed);
 
                 // FIX-ME: use lastElementChild instead???

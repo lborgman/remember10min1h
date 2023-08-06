@@ -250,16 +250,16 @@ export function clearShapes(eltShape) {
     arrShapeClasses.forEach(oldShape => { eltShape.classList.remove(oldShape) });
 }
 
-function shapeCanHaveBorder(shapeName) {
+export function shapeCanHaveBorder(shapeName) {
     return !shapeName?.startsWith("jsmind-shape-clip-");
 }
 
-function applyNodeShapeEtc(node, eltJmnode) {
+export function applyNodeShapeEtc(node, eltJmnode) {
     const shapeEtc = node.data.shapeEtc;
     if (!shapeEtc) return;
     applyShapeEtc(shapeEtc, eltJmnode);
 }
-function applyShapeEtc(shapeEtc, eltJmnode) {
+export function applyShapeEtc(shapeEtc, eltJmnode) {
     const eltShape = eltJmnode.querySelector(".jmnode-bg");
     if (!eltShape) {
         if (eltJmnode.childElementCount > 1) {
@@ -1401,7 +1401,7 @@ function getJmnodesFromJm(jmDisplayed) {
 }
 
 
-async function fixJmnodeProblem(eltJmnode) {
+export async function fixJmnodeProblem(eltJmnode) {
     // console.log("fixJmnodeProblem", eltJmnode);
     const customRenderer = await getOurCustomRenderer();
     customRenderer.fixLeftRightChildren(eltJmnode);
