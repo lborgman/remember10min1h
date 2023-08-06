@@ -101,7 +101,6 @@ export class CustomRenderer4jsMind {
         console.log({ node }, node.data.shapeEtc, nodeLink);
         if (nodeLink && nodeLink.length > 0) {
             // item link
-            // import("/src/js/mod/util-mdc.js");
             const modMdc = await import("util-mdc");
             const iconLink = modMdc.mkMDCicon("link");
             const eltA = mkElt("a", { href: nodeLink, class: "jsmind-plain-link" }, iconLink);
@@ -500,7 +499,7 @@ export class CustomRenderer4jsMind {
         });
         const pContrast = mkElt("p");
         async function checkColorContrast() {
-            const modContrast = await import("/src/acc-colors.js");
+            const modContrast = await import("acc-colors");
             const contrast = modContrast.colorContrast(inpFgColor.value, inpBgColor.value);
             console.warn("checkColorContrast", contrast);
             if (contrast > 4.5) {
@@ -794,7 +793,7 @@ export class CustomRenderer4jsMind {
         let allThemesContrastsChecked = false;
         async function checkThemesContrast(divThemeChoices) {
             if (allThemesContrastsChecked) return;
-            const modContrast = await import("/src/acc-colors.js");
+            const modContrast = await import("acc-colors");
             setTimeout(() => {
                 try {
                     const markWithOutline = false;

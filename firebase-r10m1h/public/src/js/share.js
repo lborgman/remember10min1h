@@ -183,7 +183,6 @@ function checkRecordFields(record) {
 }
 
 async function dialog10min1hour(eltPrevFocused) {
-    // import("/src/js/mod/util-mdc.js");
     const modMdc = await import("util-mdc");
     let key;
     if (document.getElementById("page-home")) {
@@ -239,7 +238,6 @@ async function dialog10min1hour(eltPrevFocused) {
         // const msDelay = 10 * minMs;
         // sendSpecificReminderRequest(msDelay);
         askForNotifySpecific(key, msDelay);
-        // import("/src/js/mod/util-mdc.js");
         const modMdc = await import("util-mdc");
         modMdc.mkMDCsnackbar("Will send reminder in 10 minutes", 6000);
         dlg.mdc.close();
@@ -251,7 +249,6 @@ async function dialog10min1hour(eltPrevFocused) {
         // const msDelay = 60 * minMs;
         // sendSpecificReminderRequest(msDelay);
         askForNotifySpecific(key, msDelay);
-        // import("/src/js/mod/util-mdc.js");
         const modMdc = await import("util-mdc");
         modMdc.mkMDCsnackbar("Will send reminder in 1 hour", 6000);
         dlg.mdc.close();
@@ -262,7 +259,6 @@ async function dialog10min1hour(eltPrevFocused) {
     const fieldMinutes = modMdc.mkMDCtextFieldOutlined("After minutes", inpMinutes);
     const btnMinutes = modMdc.mkMDCbutton("Remind", "raised");
     btnMinutes.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-        // import("/src/js/mod/util-mdc.js");
         const modMdc = await import("util-mdc");
         const raw = inpMinutes.value;
         // FIX-ME: Any possible security flaws??
@@ -353,7 +349,6 @@ async function dialog10min1hour(eltPrevFocused) {
         const onlyMatched = chkOnlyMatched.checked;
         console.log({ chkOnlyMatched, onlyMatched });
         askForReminders(onlyMatched);
-        // import("/src/js/mod/util-mdc.js");
         const modMdc = await import("util-mdc");
         modMdc.mkMDCsnackbar("Looking for expired reminders...");
         dlg.mdc.close();
@@ -386,7 +381,6 @@ async function dialog10min1hour(eltPrevFocused) {
 }
 
 async function mkEltInputRemember(record, headerTitle, saveNewNow) {
-    // import("/src/js/mod/util-mdc.js");
     const modMdc = await import("util-mdc");
     const divPasteImage = mkElt("div", { class: "div-paste-image" });
     function addImageCard(toDiv, blob, extraClass, debugInfo) {
@@ -1146,7 +1140,7 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
         return detTags;
     }
     async function mkEltFlashcards() {
-        const modFlashcards = await import("/src/js/mod/flashcards.js");
+        const modFlashcards = await import("flashcards");
         // const icoQA = modMdc.mkMDCicon("question_answer");
         const icoQA = modMdc.mkMDCicon("quiz");
         icoQA.classList.add("mdc-theme--primary");

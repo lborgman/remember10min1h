@@ -68,8 +68,8 @@
     <!-- <script type="module" src="/src/js/jsmind-edit-spec-fc4i.js"></script> -->
     <script>
         (async () => {
-            const modEditFc4iMM = await import("/src/js/jsmind-edit-spec-fc4i.js");
-            const modJsEditCommon = await import("/src/js/jsmind-edit-common.js");
+            const modEditFc4iMM = await import("jsmind-edit-spec-fc4i");
+            const modJsEditCommon = await import("jsmind-edit-common");
             modJsEditCommon.basicInit4jsmind();
             modJsEditCommon.setMindmapDialog(modEditFc4iMM.ourDialogMindmaps);
             modJsEditCommon.pageSetup();

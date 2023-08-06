@@ -3,7 +3,6 @@
 console.log("here is jsmind-edit-common.js");
 
 async function getDraggableNodes() {
-    // return await import("/ext/jsmind/new-jsmind.draggable-nodes.js");
     return await import("new-jsmind.draggable-nodes");
 }
 
@@ -45,7 +44,6 @@ function switchDragTouchAccWay(newWay) {
 // https://hackernoon.com/how-to-embed-single-photos-from-google-photos-on-your-website-and-notion-page
 // https://jumpshare.com/blog/how-to-embed-google-drive-video/
 async function dialogMirrorWay() {
-    // import("/src/js/mod/util-mdc.js");
     const modMdc = await import("util-mdc");
     const notWorking = ["useCanvas", "jsmind",];
     const altWays = theMirrorWays.filter(alt => !notWorking.includes(alt));
@@ -331,7 +329,6 @@ export function basicInit4jsmind() {
 
     // await thePromiseDOMready;
     async function startDraggable() {
-        // modJsmindDraggable = await import("/ext/jsmind/new-jsmind.draggable-nodes.js");
         modJsmindDraggable = await getDraggableNodes();
         // console.log({ modJsmindDraggable });
     }
@@ -461,7 +458,6 @@ export async function pageSetup() {
     const idSearchInputs = "jsmind-search-inputs";
     addJsmindButtons();
     async function addJsmindButtons() {
-        // import("/src/js/mod/util-mdc.js");
         const modMdc = await import("util-mdc");
 
         btnJsmindDebug = modMdc.mkMDCiconButton("adb", "Debug log", 40);
@@ -548,7 +544,6 @@ export async function pageSetup() {
         // mind = getEmptyMap(mindmapKey);
     }
 
-    // const modJmDrag = await import("/ext/jsmind/new-jsmind.draggable-nodes.js");
     const modJmDrag = await getDraggableNodes();
     modJmDrag.setupNewDragging();
 
@@ -570,7 +565,6 @@ export async function pageSetup() {
     // oldSecondJmnodesFixing();
 
     async function setNodeHitsFromArray(arrIdHits, hitType) {
-        // import("/src/js/mod/util-mdc.js");
         const modMdc = await import("util-mdc");
         // const arrHits = nodehits.split(",");
         console.log({ arrHits: arrIdHits });
@@ -733,7 +727,6 @@ export async function pageSetup() {
 
     async function getDivContextMenu() {
         if (!divContextMenu) {
-            // import("/src/js/mod/util-mdc.js");
             const modMdc = await import("util-mdc");
             divContextMenu = modMdc.mkMDCmenuDiv();
             divContextMenu.classList.add("is-menu-div");
@@ -813,7 +806,6 @@ export async function pageSetup() {
                 const strCustom = eltCustom.dataset.jsmindCustom;
                 const objCustom = JSON.parse(strCustom);
                 const prov = objCustom.provider;
-                // import("/src/js/mod/util-mdc.js");
                 const modMdc = await import("util-mdc");
                 const go = await modMdc.mkMDCdialogConfirm(`Show entry in ${prov}?`);
                 console.log({ go });
@@ -902,7 +894,6 @@ export async function pageSetup() {
 
 
     async function mkContextMenu() {
-        // import("/src/js/mod/util-mdc.js");
         const modMdc = await import("util-mdc");
         let toJmDisplayed;
         try {
@@ -998,7 +989,6 @@ export async function pageSetup() {
 
         const liTestDragBetween = mkMenuItem("test move between",
             async () => {
-                // const m = await import("/ext/jsmind/new-jsmind.draggable-nodes.js");
                 const m = await getDraggableNodes();
                 m.startTrackingPointer()
             });
@@ -1015,7 +1005,6 @@ export async function pageSetup() {
 
         const liTestSvgDrawLine = mkMenuItem("Test svg draw line",
             async () => {
-                // const modJsmindDraggable = await import("/ext/jsmind/new-jsmind.draggable-nodes.js");
                 const modJsmindDraggable = await getDraggableNodes();
                 modJsmindDraggable.testSvgLine();
             }
