@@ -1,7 +1,7 @@
 console.log("Here is jsmind-edit-spec-fc4i.js");
 
-const modDb = await import("/src/js/db-fc4i.js");
-const modJsEditCommon = await import("/src/js/jsmind-edit-common.js");
+// const modDb = await import("db-fc4i");
+// const modJsEditCommon = await import("jsmind-edit-common");
 
 function showKeyInFc4i(keyFc4i) {
     const objUrl = new URL("/", location);

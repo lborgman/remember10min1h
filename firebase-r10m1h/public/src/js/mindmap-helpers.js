@@ -4,10 +4,9 @@
 console.log("here is mindmap-helpers.js");
 
 
-// async function getDbMindmaps() { return await import("/src/js/db-mindmaps.js") }
 async function getDbMindmaps() { return await import("db-mindmaps") }
-async function getDbFc4i() { return await import("/src/js/db-fc4i.js"); }
-// async function getJsmindCust() { return await import("/src/js/jsmind-cust-rend.js") }
+// async function getDbFc4i() { return await import("/src/js/db-fc4i.js"); }
+async function getDbFc4i() { return await import("db-fc4i"); }
 async function getJsmindCust() { return await import("jsmind-cust-rend"); }
 async function getJsmindEditCommon() { return await import("jsmind-edit-common"); }
 

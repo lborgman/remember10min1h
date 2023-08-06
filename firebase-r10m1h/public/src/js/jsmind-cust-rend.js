@@ -165,8 +165,9 @@ export class CustomRenderer4jsMind {
     // async updatePlainLink(node, eltJmnode) { debugger; }
 
     async editNodeDialog(eltJmnode) {
-        // import("/src/js/mod/util-mdc.js");
+        const idThemeChoices = "theme-choices";
         const modMdc = await import("util-mdc");
+        const modJsEditCommon = await import("jsmind-edit-common");
 
         function somethingToSave() {
             return JSON.stringify(initialShapeEtc) != JSON.stringify(currentShapeEtc);
@@ -374,7 +375,7 @@ export class CustomRenderer4jsMind {
             if (tname != "shape") throw Error(`evt.target.name != shape (${tname})`);
             const tval = target.value;
             const eltShape = eltCopied.querySelector(".jmnode-bg");
-            clearShapes(eltShape);
+            modJsEditCommon.clearShapes(eltShape);
             if (tval.length == 0) {
                 currentShapeEtc.shape = undefined;
             } else {
@@ -385,7 +386,7 @@ export class CustomRenderer4jsMind {
         if (themeClass) jmnodesShapes.classList.add(themeClass);
         const eltCopiedNoShape = eltCopied.cloneNode(true);
         const divCopiedNoShape = eltCopiedNoShape.querySelector(".jmnode-bg");
-        clearShapes(divCopiedNoShape);
+        modJsEditCommon.clearShapes(divCopiedNoShape);
         // delete eltCopied.style.border;
         eltCopiedNoShape.style.border = null;
         eltCopiedNoShape.style.boxShadow = null;
@@ -445,7 +446,7 @@ export class CustomRenderer4jsMind {
                 jmnodesShapes.appendChild(clipping);
             }
             appendAlt(mkShapeAlt());
-            arrShapeClasses.forEach(cls => appendAlt(mkShapeAlt(cls)));
+            modJsEditCommon.arrShapeClasses.forEach(cls => appendAlt(mkShapeAlt(cls)));
             setDialogShapeName(initialShapeEtc.shape);
         }, 500);
 
@@ -472,51 +473,12 @@ export class CustomRenderer4jsMind {
                 .forEach(clipping => { updateSize(clipping) });
         }
 
-        /*
-        const divThemes = mkElt("div", { id: "jsmind-test-div-themes" });
-        const detThemes = mkElt("details", undefined, [
-            mkElt("summary", undefined, "Check jsMind themes color contrasts"),
-            divThemes
-        ]);
-        detThemes.style.marginTop = "20px";
-        const arrFormThemes = getMatchesInCssRules(/\.(theme-[^.#\s]*)/);
-        function mkThemeAlt(cls) {
-            return mkElt("jmnodes", { class: cls },
-                mkElt("jmnode", undefined, cls.substring(6))
-            );
-        }
-        arrFormThemes.forEach(cls => {
-            divThemes.appendChild(mkThemeAlt(cls));
-        });
-        const modContrast = await import("/src/acc-colors.js");
-        setTimeout(() => {
-            divThemes.querySelectorAll("jmnode").forEach(jmnode => {
-                const s = getComputedStyle(jmnode);
-                const fgColor = s.color;
-                const bgColor = s.backgroundColor;
-                const contrast = modContrast.colorContrast(fgColor, bgColor);
-                if (contrast < 7) jmnode.style.outline = "1px dotted red";
-                if (contrast < 4.5) jmnode.style.outline = "4px dotted red";
-                if (contrast < 3.0) jmnode.style.outline = "6px dotted red";
-                if (contrast < 2.5) jmnode.style.outline = "8px dotted red";
-                if (contrast < 2.0) jmnode.style.outline = "10px dotted red";
-                const fgHex = to6HexColor(fgColor);
-                const fgHexCorrect = getCorrectTextColor(bgColor);
-                if (fgHex !== fgHexCorrect) {
-                    jmnode.style.outlineColor = "black";
-                }
-                if (contrast < 4.5) {
-                    // console.log(jmnode.textContent, { fgColor, bgColor, fgHexCorrect, fgHex, contrast });
-                }
-            }, 1000);
-        })
-        */
 
         const inpBgColor = mkElt("input", { type: "color" });
         const inpFgColor = mkElt("input", { type: "color" });
         promCompStyleCopied.then(style => {
-            inpBgColor.value = RGBToHex(style.backgroundColor);
-            inpFgColor.value = RGBToHex(style.color);
+            inpBgColor.value =modJsEditCommon.to6HexColor(style.backgroundColor);
+            inpFgColor.value =modJsEditCommon.to6HexColor(style.color);
             checkColorContrast();
         });
         // let bgColorChanged;
@@ -701,7 +663,7 @@ export class CustomRenderer4jsMind {
         function mkCtrlColor(pathShEtc, defaultColor) {
             const objShEtc = getShapeEtcGrpMbr(pathShEtc);
             const initColor = getFromShapeEtc(objShEtc, initialShapeEtc) || defaultColor;
-            const initHex6 = to6HexColor(initColor);
+            const initHex6 = modJsEditCommon.to6HexColor(initColor);
             const inpColor = mkElt("input", { type: "color", value: initHex6 });
             // const funGrp = onCtrlsGrpChg[objShEtc.grpName];
             inpColor.addEventListener("input", (evt) => {
@@ -765,7 +727,7 @@ export class CustomRenderer4jsMind {
         console.log({ oldTheme: oldThemeCls });
         setupThemeChoices(oldThemeCls);
         function setupThemeChoices(oldThemeCls) {
-            const arrFormThemes = getMatchesInCssRules(/\.(theme-[^.#\s]*)/);
+            const arrFormThemes = modJsEditCommon.getMatchesInCssRules(/\.(theme-[^.#\s]*)/);
             function mkThemeAlt(cls) {
                 const themeName = cls.substring(6);
                 // console.log("mkThemeAlt", { cls, themeName });
@@ -1173,5 +1135,34 @@ function fixLeftRightChildren(eltJmnode) {
             eltJmnode.classList.add("is-right");
         }
         if (node.expanded) eltJmnode.classList.add("is-expanded");
+    }
+}
+
+function getJsmindTheme(eltJmnodes) {
+    checkTagName(eltJmnodes, "JMNODES");
+    const themes = [...eltJmnodes.classList].filter(cls => cls.startsWith("theme-"));
+    if (themes.length > 1) {
+        const err = `There seems to be several JsMind themes`
+        console.error(err, eltJmnodes, themes);
+        throw Error(err);
+    }
+    return themes[0];
+}
+function setJsmindTheme(eltJmnodes, theme) {
+    checkTagName(eltJmnodes, "JMNODES");
+    const strJsmindThemeStart = "theme-"
+    if (!theme.startsWith(strJsmindThemeStart)) Error(`${theme} is not a jsmind theme`);
+    const arrCls = [...eltJmnodes.classList];
+    arrCls.forEach(cls => {
+        if (cls.startsWith(strJsmindThemeStart)) eltJmnodes.classList.remove(cls)
+    });
+    eltJmnodes.classList.add(theme);
+}
+
+function checkTagName(elt, expectName) {
+    const tn = elt.nodeName;
+    if (elt.nodeName !== expectName) {
+        console.error(`Expected DOM elt ${expectName}, got ${tn}`, elt);
+        throw Error(`Expected DOM elt ${expectName}, got ${tn}`);
     }
 }

@@ -61,7 +61,7 @@
             "util-mdc": getCDNurl("/src/js/mod/util-mdc.js"),
         }
         Object.keys(theMap).forEach(key => logCDNurl(theMap[key]));
-        
+
         const importMap = {
             "imports": theMap,
         }
@@ -81,6 +81,14 @@
         const iMMH = document.createElement("script");
         iMMH.src = srcMMH;
         document.currentScript.after(iMMH);
+
+        // <!-- <link rel="stylesheet" href="css/rem10m1h.css"> -->
+        const srcCss = getCDNurl("/css/rem10m1h.css");
+        const iCss = document.createElement("link");
+        iCss.rel = "stylesheet";
+        iCss.href = srcCss;
+        document.currentScript.after(iCss);
+
     </script>
 
 
@@ -100,43 +108,34 @@
 </head>
 
 <body>
-    <!--
-    <script>
-        setTimeout(() => {
-            const style =
-                `
-        position:fixed; bottom:0; right:0;
-        display: flex; justify-content: center;
-        width:fit-content; height:25px;
-        padding:2px 10px;
-        background:black; color:yellow;
-        opacity:0.5;
-        z-index:10;
-        `;
-            const myVer = mkElt("div", { id: "jsmind-test-my-ver", style }, "New version");
-            document.body.appendChild(myVer);
-        }, 1000);
-    </script>
-    -->
 
-    <!-- <script src="/ext/mdc/material-components-web.js"></script> -->
     <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
 
     <!-- <script src="/src/js/fc4i-mindmaps.js"></script> -->
     <script>
-        console.log("jsmind-edit.html");
+        console.log("here is jsmind-edit-gh.html");
         (async () => {
-            // debugger;
-            // const modEditFc4iMM = await import("/src/js/jsmind-edit-spec-fc4i.js");
+            const modDb = await import("db-mindmaps");
+            modDb.setDBprefix("ghedit-");
 
-            // const modJsmindEdit = await import("/src/js/jsmind-edit-spec-jsmindedit.js");
-            const modJsmindEdit = await import("jsmind-edit-spec-jsmindedit");
-            // const modJsEditCommon = await import("/src/js/jsmind-edit-common.js");
             const modJsEditCommon = await import("jsmind-edit-common");
-
+            console.log("Before .basicInit4jsmind");
             modJsEditCommon.basicInit4jsmind();
-            modJsEditCommon.setMindmapDialog(modJsmindEdit.ourDialogMindmaps);
+
+            console.log("Before .setMindmapDialog");
+            function ghDialogMindmaps(info, arrMindmapsHits) {
+                // dialogMindMaps("/jsmind-edit.html", info, arrMindmapsHits);
+                dialogMindMaps(location.pathname, info, arrMindmapsHits);
+            }
+            // modJsEditCommon.setMindmapDialog(modJsmindEdit.ourDialogMindmaps);
+            modJsEditCommon.setMindmapDialog(ghDialogMindmaps);
+
+            console.log("Before .pageSetup");
             modJsEditCommon.pageSetup();
+
+            const u = new URL(location);
+            const p = u.searchParams;
+            if (!p.get("mindmap")) ghDialogMindmaps();
         })();
     </script>
 

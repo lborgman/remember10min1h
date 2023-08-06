@@ -242,8 +242,8 @@ function getposPointHandle() {
 }
 /////////////////////////////////////////////////////
 
-let arrShapeClasses = getMatchesInCssRules(/\.(jsmind-shape-[^.:#\s]*)/);
-function clearShapes(eltShape) {
+export const arrShapeClasses = getMatchesInCssRules(/\.(jsmind-shape-[^.:#\s]*)/);
+export function clearShapes(eltShape) {
     if (eltShape.tagName != "DIV" || !eltShape.classList.contains("jmnode-bg")) {
         throw Error('Not <jmnode><div class="jmnode-bg"');
     }
@@ -362,7 +362,6 @@ export function setMindmapDialog(fun) {
 
 checkTheDragTouchAccWay();
 
-const idThemeChoices = "theme-choices"; // FIX-ME???
 
 export async function pageSetup() {
     // let useCanvas = true;
@@ -1514,26 +1513,7 @@ function fixProblemsAndUpdateCustomAndShapes(jmDisplayed) {
 }
 
 // https://css-tricks.com/converting-color-spaces-in-javascript/
-function RGBToHex(rgb) {
-    return standardizeColorTo6Hex(rgb);
-    // Choose correct separator
-    let sep = rgb.indexOf(",") > -1 ? "," : " ";
-    // Turn "rgb(r,g,b)" into [r,g,b]
-    rgb = rgb.substr(4).split(")")[0].split(sep);
-
-    let r = (+rgb[0]).toString(16),
-        g = (+rgb[1]).toString(16),
-        b = (+rgb[2]).toString(16);
-
-    if (r.length == 1)
-        r = "0" + r;
-    if (g.length == 1)
-        g = "0" + g;
-    if (b.length == 1)
-        b = "0" + b;
-
-    return "#" + r + g + b;
-}
+// function RGBToHex(rgb) { return standardizeColorTo6Hex(rgb); }
 
 // https://stackoverflow.com/questions/1573053/javascript-function-to-convert-color-names-to-hex-codes/47355187#47355187
 function standardizeColorTo6Hex(strColor) {
@@ -1541,29 +1521,8 @@ function standardizeColorTo6Hex(strColor) {
     ctx.fillStyle = strColor;
     return ctx.fillStyle;
 }
-function to6HexColor(color) {
+export function to6HexColor(color) {
     return standardizeColorTo6Hex(color);
-    if (color.substring(0, 1) === "#") {
-        if (color.length === 7) {
-            hex = color.substring(1);
-            // console.log("from 7", hex);
-        } else if (color.length === 4) {
-            const h1 = color.substr(1, 1);
-            const h2 = color.substr(2, 1);
-            const h3 = color.substr(3, 1);
-            hex = h1 + h1 + h2 + h2 + h3 + h3;
-            // console.log("from 4", hex);
-        } else {
-            throw Error(`Expected 3 or 6 hex digits: ${color}`);
-        }
-        return "#" + hex;
-    } else if (color.substring(0, 4) === "rgb(") {
-        const hex = RGBToHex(color);
-        // console.log("from rgb", hex);
-        return hex;
-    } else {
-        throw Error(`Expected color beginning with # or rgb(): ${color}`);
-    }
 }
 
 
@@ -1577,7 +1536,7 @@ function to6HexColor(color) {
 
 
 
-function getMatchesInCssRules(re) {
+export function getMatchesInCssRules(re) {
     const selectors = new Set();
     // const re = new RegExp('\\.' + pattern.replace(/([^\s])\*/, '$1[^ ]+'), 'g')
     for (let i = 0, len = document.styleSheets.length; i < len; i++) {
@@ -1676,33 +1635,6 @@ function getJmnodesMain() { return getJmnodesIn(idContainer); }
 
 
 
-function checkTagName(elt, expectName) {
-    const tn = elt.nodeName;
-    if (elt.nodeName !== expectName) {
-        console.error(`Expected DOM elt ${expectName}, got ${tn}`, elt);
-        throw Error(`Expected DOM elt ${expectName}, got ${tn}`);
-    }
-}
-function getJsmindTheme(eltJmnodes) {
-    checkTagName(eltJmnodes, "JMNODES");
-    const themes = [...eltJmnodes.classList].filter(cls => cls.startsWith("theme-"));
-    if (themes.length > 1) {
-        const err = `There seems to be several JsMind themes`
-        console.error(err, eltJmnodes, themes);
-        throw Error(err);
-    }
-    return themes[0];
-}
-function setJsmindTheme(eltJmnodes, theme) {
-    checkTagName(eltJmnodes, "JMNODES");
-    const strJsmindThemeStart = "theme-"
-    if (!theme.startsWith(strJsmindThemeStart)) Error(`${theme} is not a jsmind theme`);
-    const arrCls = [...eltJmnodes.classList];
-    arrCls.forEach(cls => {
-        if (cls.startsWith(strJsmindThemeStart)) eltJmnodes.classList.remove(cls)
-    });
-    eltJmnodes.classList.add(theme);
-}
 
 function addDebugLog(msg) {
     // const divDebugLogLog = mkElt("div", { id: "jsmind-test-div-debug-log-log" });
