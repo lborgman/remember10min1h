@@ -680,143 +680,153 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                 return;
             }
             debugPasteLine(`addPasteButton event 2`);
-            try {
-                // https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/read
-                // https://web.dev/async-clipboard/
-                function alertNoImages() {
-                    debugPasteLine(`addPasteButton alertNoImages`);
-                    const bodyAlert = mkElt("div", { id: "alert-no-images" }, [
-                        mkElt("h2", undefined, "No images found on clipboard."),
-                        mkElt("details", undefined, [
-                            mkElt("summary", undefined, "Why?"),
-                            mkElt("p", undefined, [
-                                "The clipboard images may have timed out. ",
-                                "Or you have not put any images there yet. "
-                            ]),
-                            mkElt("p", undefined, [
-                                mkElt("i", undefined, "Notice: "),
-                                "You must put images there, not image links!"
-                            ])
-                        ]),
-                        mkElt("details", undefined, [
-                            mkElt("summary", undefined, "How do you get an image to the clipboard? "),
-                            mkElt("p", undefined, [
-                                "One simple way is to right click on an image in your web browser. ",
-                                "(Long press on a mobile.) ",
-                            ]),
-                            mkElt("p", undefined, [
-                                "However if you have an image in for example Google Photos ",
-                                "on your Android mobile it is unfortunately not that simple. ",
-                                "There is today (in the beginning of 2023) no direct way to ",
-                                "put that image on the clipboard. 🤔",
-                            ]),
-                            mkElt("p", undefined, [
-                                "As a reasonably safe alternative I use this app: ",
-                                mkElt("a", { href: "https://scrapbook-pwa.web.app/#/images" }, "Scapbook PWA"),
-                                " (That app is, like this app you are using now, a PWA. ",
-                                "Essentially a web page. ",
-                                "With the added capability to show app as targets when you share a link or image.)"
-                            ]),
-                        ]),
-                    ]);
-                    modMdc.mkMDCdialogAlert(bodyAlert);
-                }
-
-                let clipboardContents;
-                debugPasteLine(`addPasteButton 3`);
+            await getImagesFromClipboard();
+            async function getImagesFromClipboard() {
                 try {
-                    clipboardContents = await navigator.clipboard.read();
-                    debugPasteLine(`addPasteButton 4`);
+                    // https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/read
+                    // https://web.dev/async-clipboard/
+
+                    let clipboardContents;
+                    debugPasteLine(`addPasteButton 3`);
+                    try {
+                        clipboardContents = await navigator.clipboard.read();
+                        debugPasteLine(`addPasteButton 4`);
+                    } catch (err) {
+                        const errName = err.name;
+                        const errMessage = err.message
+                        debugPasteLine(`addPasteButton 5, ${errName}, ${errMessage}`);
+                        console.error(errName, errMessage);
+                        if (errName == "NotAllowedError") {
+                            handleClipboardReadNotAllowed();
+                            return;
+                        }
+                        debugPasteLine(`addPasteButton 6`);
+                        // Chrome: errMessage == No valid data on clipboard
+                        if (errName == "DataError") { handleNoImagesFound(); return; }
+                        debugger;
+                        alert(`unknown error: ${errName}, ${errMessage}`);
+                        return;
+                    }
+
+
+                    let foundImages = false;
+                    debugPasteLineOn = true;
+                    debugPasteLine(`addPasteButton 7`);
+                    for (const item of clipboardContents) {
+                        debugPasteLine(`addPasteButton 7a`);
+                        const itemTypes = item.types;
+                        console.log("addPasteButton 7a", { item, itemTypes });
+                        debugPasteLine(`addPasteButton 7a1`);
+                        const imageTypes = itemTypes.filter(t => t.startsWith("image/"));
+                        const isArray = Array.isArray(imageTypes);
+                        console.log({ imageTypes, isArray });
+                        const imageTypesLength = imageTypes.length;
+                        debugPasteLine(`addPasteButton 7a2, ${imageTypes}, ${typeof imageTypes}, ${isArray}, ${imageTypesLength}`);
+                        if (imageTypes.length == 0) {
+                            debugPasteLine(`addPasteButton 7b`);
+                            continue;
+                        }
+                        const it0 = imageTypes[0];
+                        debugPasteLine(`addPasteButton 7c, ${imageTypes.length}, ${it0}, ${JSON.toString(it0)}`);
+                        const blob = await item.getType(imageTypes[0]);
+                        debugPasteLine(`addPasteButton 7d, typeof blob=${typeof blob}, ${blob}`);
+                        if (blob == null) {
+                            // You do not get here on Windows 10, but on Android, 2023-01-16
+                            debugPasteLine(`addPasteButton 7d1, blob==null`);
+                            continue;
+                        }
+                        foundImages = true;
+                        const img = new Image();
+                        img.src = URL.createObjectURL(blob);
+                        // const div = btn.closest(".div-images");
+                        const toDiv = divPasteImage;
+                        await handleIncomingImage(blob, toDiv);
+                    }
+                    if (!foundImages) { handleNoImagesFound(); return; }
                 } catch (err) {
                     const errName = err.name;
                     const errMessage = err.message
-                    debugPasteLine(`addPasteButton 5, ${errName}, ${errMessage}`);
                     console.error(errName, errMessage);
-                    if (errName == "NotAllowedError") {
-                        modMdc.mkMDCdialogAlert("Please allow reading clipboard");
-                        return;
-                    }
-                    debugPasteLine(`addPasteButton 6`);
-                    // Chrome: errMessage == No valid data on clipboard
-                    if (errName == "DataError") { alertNoImages(); return; }
-                    debugger;
-                    alert(`unknown error: ${errName}, ${errMessage}`);
-                    return;
+                    debugPasteLine(`addPasteButton err 1, ${errName}, ${errMessage}`);
                 }
-
-
-                let foundImages = false;
-                debugPasteLineOn = true;
-                debugPasteLine(`addPasteButton 7`);
-                for (const item of clipboardContents) {
-                    debugPasteLine(`addPasteButton 7a`);
-                    const itemTypes = item.types;
-                    console.log("addPasteButton 7a", { item, itemTypes });
-                    debugPasteLine(`addPasteButton 7a1`);
-                    const imageTypes = itemTypes.filter(t => t.startsWith("image/"));
-                    const isArray = Array.isArray(imageTypes);
-                    console.log({ imageTypes, isArray });
-                    const imageTypesLength = imageTypes.length;
-                    debugPasteLine(`addPasteButton 7a2, ${imageTypes}, ${typeof imageTypes}, ${isArray}, ${imageTypesLength}`);
-                    if (imageTypes.length == 0) {
-                        debugPasteLine(`addPasteButton 7b`);
-                        continue;
-                    }
-                    const it0 = imageTypes[0];
-                    debugPasteLine(`addPasteButton 7c, ${imageTypes.length}, ${it0}, ${JSON.toString(it0)}`);
-                    const blob = await item.getType(imageTypes[0]);
-                    debugPasteLine(`addPasteButton 7d, typeof blob=${typeof blob}, ${blob}`);
-                    if (blob == null) {
-                        // You do not get here on Windows 10, but on Android, 2023-01-16
-                        debugPasteLine(`addPasteButton 7d1, blob==null`);
-                        continue;
-                    }
-                    foundImages = true;
-                    const img = new Image();
-                    img.src = URL.createObjectURL(blob);
-                    // const div = btn.closest(".div-images");
-                    const toDiv = divPasteImage;
-                    await handleIncomingImage(blob, toDiv);
-                    async function handleIncomingImage(blobIn, toDiv) {
-                        debugPasteLine(`addPasteButton 8, handleIncomingImage`);
-                        console.warn({ blobIn });
-
-                        // const origSize = blobIn.size;
-                        const startDate = new Date();
-                        const blobOut = await modClipboardImages.resizeImage(blobIn);
-                        const msElapsed = (new Date()) - startDate;
-                        const sizeIn = blobIn.size;
-                        const typeIn = blobIn.type;
-                        const sizeOut = blobOut.size;
-                        const typeOut = blobOut.type;
-                        const shrinked = sizeOut / sizeIn;
-
-                        // FIX-ME: lastQuality
-                        // const msg = `${typeIn} (*${shrinked.toFixed(3)}, ${lastQuality.toFixed(3)}q, ${msElapsed}ms) => ${typeOut}, ${(sizeOut / 1000).toFixed()}kB`;
-                        const msg = `${typeIn} (*${shrinked.toFixed(3)}, ${msElapsed}ms) => ${typeOut}, ${(sizeOut / 1000).toFixed()}kB`;
-                        console.log(msg);
-
-                        // const eltSnackbar = modMdc.mkMDCsnackbar(msg, 10 * 1000);
-                        // eltSnackbar.style.color = "yellow";
-                        const eltNewImage = addImageCard(toDiv, blobOut, "blob-to-store", msg);
-                        setTimeout(() => {
-                            const bcr = eltNewImage.getBoundingClientRect();
-                            if (bcr.bottom < window.innerHeight) return;
-                            eltNewImage.scrollIntoView({
-                                behavior: "smooth",
-                                block: "nearest"
-                            }, 10);
-                        });
-                        restartButtonStateTimer();
-                    }
-                }
-                if (!foundImages) { alertNoImages(); return; }
-            } catch (err) {
-                const errName = err.name;
-                const errMessage = err.message
-                console.error(errName, errMessage);
-                debugPasteLine(`addPasteButton err 1, ${errName}, ${errMessage}`);
             }
+
+
+            async function handleIncomingImage(blobIn, toDiv) {
+                debugPasteLine(`addPasteButton 8, handleIncomingImage`);
+                console.warn({ blobIn });
+
+                // const origSize = blobIn.size;
+                const startDate = new Date();
+                const blobOut = await modClipboardImages.resizeImage(blobIn);
+                const msElapsed = (new Date()) - startDate;
+                const sizeIn = blobIn.size;
+                const typeIn = blobIn.type;
+                const sizeOut = blobOut.size;
+                const typeOut = blobOut.type;
+                const shrinked = sizeOut / sizeIn;
+
+                // FIX-ME: lastQuality
+                // const msg = `${typeIn} (*${shrinked.toFixed(3)}, ${lastQuality.toFixed(3)}q, ${msElapsed}ms) => ${typeOut}, ${(sizeOut / 1000).toFixed()}kB`;
+                const msg = `${typeIn} (*${shrinked.toFixed(3)}, ${msElapsed}ms) => ${typeOut}, ${(sizeOut / 1000).toFixed()}kB`;
+                console.log(msg);
+
+                // const eltSnackbar = modMdc.mkMDCsnackbar(msg, 10 * 1000);
+                // eltSnackbar.style.color = "yellow";
+                const eltNewImage = addImageCard(toDiv, blobOut, "blob-to-store", msg);
+                setTimeout(() => {
+                    const bcr = eltNewImage.getBoundingClientRect();
+                    if (bcr.bottom < window.innerHeight) return;
+                    eltNewImage.scrollIntoView({
+                        behavior: "smooth",
+                        block: "nearest"
+                    }, 10);
+                });
+                restartButtonStateTimer();
+            }
+            function handleNoImagesFound() {
+                debugPasteLine(`addPasteButton alertNoImages`);
+                const bodyAlert = mkElt("div", { id: "alert-no-images" }, [
+                    mkElt("h2", undefined, "No images found on clipboard."),
+                    mkElt("details", undefined, [
+                        mkElt("summary", undefined, "Why?"),
+                        mkElt("p", undefined, [
+                            "The clipboard images may have timed out. ",
+                            "Or you have not put any images there yet. "
+                        ]),
+                        mkElt("p", undefined, [
+                            mkElt("i", undefined, "Notice: "),
+                            "You must put images there, not image links!"
+                        ])
+                    ]),
+                    mkElt("details", undefined, [
+                        mkElt("summary", undefined, "How do you get an image to the clipboard? "),
+                        mkElt("p", undefined, [
+                            "One simple way is to right click on an image in your web browser. ",
+                            "(Long press on a mobile.) ",
+                        ]),
+                        mkElt("p", undefined, [
+                            "However if you have an image in for example Google Photos ",
+                            "on your Android mobile it is unfortunately not that simple. ",
+                            "There is today (in the beginning of 2023) no direct way to ",
+                            "put that image on the clipboard. 🤔",
+                        ]),
+                        mkElt("p", undefined, [
+                            "As a reasonably safe alternative I use this app: ",
+                            mkElt("a", { href: "https://scrapbook-pwa.web.app/#/images" }, "Scapbook PWA"),
+                            " (That app is, like this app you are using now, a PWA. ",
+                            "Essentially a web page. ",
+                            "With the added capability to show app as targets when you share a link or image.)"
+                        ]),
+                    ]),
+                ]);
+                modMdc.mkMDCdialogAlert(bodyAlert);
+            }
+            function handleClipboardReadNotAllowed() {
+                modMdc.mkMDCdialogAlert("Please allow reading clipboard");
+            }
+
+
         }));
         const divImages = mkElt("div", { class: "div-images" });
         divImages.appendChild(btn);
