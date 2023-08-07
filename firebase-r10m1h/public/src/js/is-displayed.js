@@ -28,7 +28,7 @@ async function AddBeforeWhenContainerIsDisplayed(eltContainer, eltNew, eltBefore
 }
 
 
-async function waitUntilDisplayed(elt, msMax) {
+export async function waitUntilDisplayed(elt, msMax) {
     const isDisplayed = () => {
         const dispJq = isDisplayedJq(elt);
         const dispOP = isDisplayedOffsetParent(elt);

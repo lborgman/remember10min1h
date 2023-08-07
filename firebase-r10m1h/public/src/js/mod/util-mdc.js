@@ -2124,7 +2124,7 @@ export function mkMDCsvgIcon(iconMaterialName) {
         src = importMetaUrl.slice(0, - origModPathname.length) + srcRel;
     }
     // const src = new URL(srcRel.slice(1), import.meta.url).href;
-    console.log("mkMDCsvgIcon", import.meta.url, { srcRel, src, importMetaUrl });
+    // console.log("mkMDCsvgIcon", import.meta.url, { srcRel, src, importMetaUrl });
     let elt = mkElt("img", {
         class: "sized-mdc-svg-icon",
         src

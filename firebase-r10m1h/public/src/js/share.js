@@ -218,7 +218,8 @@ async function dialog10min1hour(eltPrevFocused) {
         }
     }
     // console.log({ key });
-    const rec = key ? await getDbKey(key) : undefined;
+    const modDbFc4i = await import("db-fc4i");
+    const rec = key ? await modDbFc4i.getDbKey(key) : undefined;
     const title = rec?.title;
     let dlg;
 
@@ -382,6 +383,7 @@ async function dialog10min1hour(eltPrevFocused) {
 
 async function mkEltInputRemember(record, headerTitle, saveNewNow) {
     const modMdc = await import("util-mdc");
+    const modIsDisplayed = await import("is-displayed");
     const divPasteImage = mkElt("div", { class: "div-paste-image" });
     function addImageCard(toDiv, blob, extraClass, debugInfo) {
         const btnDeleteImage = modMdc.mkMDCiconButton("delete_forever");
@@ -450,7 +452,7 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
     sliConfidence.classList.add("confidence-slider");
     sliConfidence.classList.add("mdc-my-slider-colors-fix");
     const indStatus = mkStatusIndicator(5, "height");
-    waitUntilDisplayed(sliConfidence).then(async () => {
+    modIsDisplayed.waitUntilDisplayed(sliConfidence).then(async () => {
         const mdc = await sliConfidence.myPromMdc;
         mdc.setDisabled(true);
     });
@@ -467,7 +469,7 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
     const btnEditConfidence = modMdc.mkMDCiconButton("edit");
     btnEditConfidence.classList.add("btn-edit-item-confidence");
     btnEditConfidence.addEventListener("click", evt => {
-        waitUntilDisplayed(sliConfidence).then(async () => {
+        modIsDisplayed.waitUntilDisplayed(sliConfidence).then(async () => {
             const mdc = await sliConfidence.myPromMdc;
             const val = mdc.getValue();
             const q =
@@ -668,6 +670,7 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
         // btn.classList.add("mdc-theme-secondary");
         btn.classList.add("btn-add-image");
         btn.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            const modClipboardImages = await import("clipboard-images");
             debugPasteLine(`addPasteButton event 0`);
             const clipboardAccessOk = await isClipboardPermissionStateOk();
             if (clipboardAccessOk == false) {
@@ -740,11 +743,12 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                     alert(`unknown error: ${errName}, ${errMessage}`);
                     return;
                 }
+
+
                 let foundImages = false;
                 debugPasteLineOn = true;
                 debugPasteLine(`addPasteButton 7`);
                 for (const item of clipboardContents) {
-                    // if (!item.types.includes('image/png')) { throw new Error('Clipboard contains non-image data.'); }
                     debugPasteLine(`addPasteButton 7a`);
                     const itemTypes = item.types;
                     console.log("addPasteButton 7a", { item, itemTypes });
@@ -777,85 +781,21 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                         debugPasteLine(`addPasteButton 8, handleIncomingImage`);
                         console.warn({ blobIn });
 
-                        // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob
-                        // Switch to OffscreenCanvas!
-                        // https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas
-                        // shrink image:
-                        // https://stackoverflow.com/questions/70921457/how-can-i-resize-an-image-in-angular-using-the-canvas
-                        let lastQuality;
-                        async function resizeImage(imageBlob) {
-                            return new Promise((resolve) => {
-                                const image = new Image();
-                                let imageBlobSize;
-                                image.onload = async () => {
-                                    const natW = image.naturalWidth;
-                                    const natH = image.naturalHeight;
-                                    console.log({ image, natW, natH });
-                                    debugPasteLine(`imageOnload natW: ${natW}, natH: ${natH}`);
-                                    const canvas = document.createElement('canvas');
-                                    canvas.height = natH;
-                                    canvas.width = natW;
-                                    const ctx = canvas.getContext('2d');
-                                    if (ctx != null) {
-                                        // ctx.drawImage(image, 0, 0, 640, 480);  // <-- draw the right image!
-                                        ctx.drawImage(image, 0, 0, natW, natH);  // <-- draw the right image!
-                                    }
-                                    // .toBlog(callback, type, quality)
-                                    // const blob = canvas.toDataURL('image/png', 0.5);
-                                    // resolve(blob);   // <-- call it here!
-                                    let retBlob;
-                                    let blobSize = Number.POSITIVE_INFINITY;
-                                    const maxBlobSize = 40 * 1000;
-                                    let n = 0;
-                                    const nMax = 10;
-                                    // let quality = 0.5; // FIX-ME: better start value?
-                                    let quality = (() => {
-                                        // in png, 2 000 000 => const maxBlobSize = 40 * 1000;
-                                        // if (imageBlobSize > 2 * 1000 * 1000) return 0.1; // 3s
-                                        // if (imageBlobSize > 2 * 1000 * 1000) return 0.07; // 2.5s
-                                        // if (imageBlobSize > 2 * 1000 * 1000) return 0.05; // 1.5-2s
-                                        if (imageBlobSize > 2 * 1000 * 1000) return 0.04; // < 1s
-                                        // png, 400 000
-                                        if (imageBlobSize > 400 * 1000) return 0.4;
-                                        return 0.5;
-                                    })();
-                                    while (++n < nMax && blobSize > maxBlobSize) {
-                                        // https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas/convertToBlob
-                                        retBlob = await new Promise((resolveToBlob) => {
-                                            canvas.toBlob(blob => resolveToBlob(blob), 'image/webp', quality);
-                                        });
-                                        blobSize = retBlob.size;
-                                        lastQuality = quality;
-                                        console.log({ retBlob, blobSize, quality });
-                                        debugPasteLine(`resize-loop  retBlob:${retBlob}, blobSize:${blobSize}, quality:${quality}`);
-                                        quality *= 0.7;
-                                    }
-                                    resolve(retBlob);
-                                };
-                                imageBlobSize = imageBlob.size;
-                                const imageBlobType = imageBlob.type;
-                                console.log({ imageBlob, imageBlobSize, imageBlobType });
-                                // debugPasteLineOn = true;
-                                debugPasteLine(`imageBlob, imageBlobSize: ${imageBlobSize}, imageBlobType: ${imageBlobType} }`);
-                                const urlBlobHelper = URL.createObjectURL(imageBlob);
-                                // const urlBg = `url(${urlBlobHelper})`;
-                                // image.src = imageURL;
-                                image.src = urlBlobHelper
-                            });
-                        }
-
-                        const origSize = blobIn.size;
-                        // addImageCard(toDiv, blobIn, undefined, `Original image (not used, ${(origSize / 1000).toFixed()}kB)`);
+                        // const origSize = blobIn.size;
                         const startDate = new Date();
-                        const blobOut = await resizeImage(blobIn);
+                        const blobOut = await modClipboardImages.resizeImage(blobIn);
                         const msElapsed = (new Date()) - startDate;
                         const sizeIn = blobIn.size;
                         const typeIn = blobIn.type;
                         const sizeOut = blobOut.size;
                         const typeOut = blobOut.type;
                         const shrinked = sizeOut / sizeIn;
-                        const msg = `${typeIn} (*${shrinked.toFixed(3)}, ${lastQuality.toFixed(3)}q, ${msElapsed}ms) => ${typeOut}, ${(sizeOut / 1000).toFixed()}kB`;
+
+                        // FIX-ME: lastQuality
+                        // const msg = `${typeIn} (*${shrinked.toFixed(3)}, ${lastQuality.toFixed(3)}q, ${msElapsed}ms) => ${typeOut}, ${(sizeOut / 1000).toFixed()}kB`;
+                        const msg = `${typeIn} (*${shrinked.toFixed(3)}, ${msElapsed}ms) => ${typeOut}, ${(sizeOut / 1000).toFixed()}kB`;
                         console.log(msg);
+
                         // const eltSnackbar = modMdc.mkMDCsnackbar(msg, 10 * 1000);
                         // eltSnackbar.style.color = "yellow";
                         const eltNewImage = addImageCard(toDiv, blobOut, "blob-to-store", msg);
@@ -1349,8 +1289,6 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
             " Mindmaps"
         ]);
         const divMM = mkDivCustomCopy4Mindmaps();
-        // const btnAdd = modFlashcards.mkBtnAddFlashcard(eltCards, restartButtonStateTimer);
-        // fab-add-flash
         const eltIcon = modMdc.mkMDCicon("add");
         const btnFab = modMdc.mkMDCfab(eltIcon, "Create new mindmap", true);
         btnFab.classList.add("fab-add-mindmap-1");

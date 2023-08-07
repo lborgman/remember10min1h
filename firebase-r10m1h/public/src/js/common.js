@@ -1861,6 +1861,7 @@ async function mkMenu() {
 
 
     async function importItems(callBackProgress) {
+        const modDbFc4i = await import("db-fc4i");
         let theFile;
         if ("NOshowOpenFilePicker" in window) {
             let fileHandle;
@@ -1931,7 +1932,7 @@ async function mkMenu() {
         for (let j = 0, len = arrJson.length; j < len; j++) {
             const obj = arrJson[j];
             const key = obj.key;
-            const oldObj = await getDbKey(key);
+            const oldObj = await modDbFc4i.getDbKey(key);
             callBackProgress();
             // FIX-ME: merge?
             if (oldObj) {
@@ -1976,13 +1977,13 @@ async function mkMenu() {
             const sortedImports = importedKeys.sort().reverse();
             for (let j = 0, len = sortedImports.length; j < len; j++) {
                 const key = sortedImports[j];
-                const rem = await getDbKey(key);
+                const rem = await modDbFc4i.getDbKey(key);
                 appendRem(rem, divImported);
             }
             const sortedNotImports = notImportedKeys.sort().reverse();
             for (let j = 0, len = sortedNotImports.length; j < len; j++) {
                 const key = sortedNotImports[j];
-                const rem = await getDbKey(key);
+                const rem = await modDbFc4i.getDbKey(key);
                 appendRem(rem, divNotImported);
             }
 
@@ -2154,12 +2155,13 @@ async function mkMenu() {
         ]);
         const dlg = await modMdc.mkMDCdialogAlert(body, "Close");
         async function getJson4download(funBackKey) {
+            const modDbFc4i = await import("db-fc4i");
             for (let i = 0, len = arrKeys.length; i < len; i++) {
                 // const t = arrKeys[i];
                 // const k = t.dataset.keyRecord;
                 const k = arrKeys[i];
                 // console.log(k);
-                const obj = await getDbKey(k);
+                const obj = await modDbFc4i.getDbKey(k);
                 // console.log({ obj });
                 const images = obj.images;
                 if (images && images.length > 0) {
