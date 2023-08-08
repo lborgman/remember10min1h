@@ -702,7 +702,7 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                         handleClipboardReadNotAllowed();
                         break;
                     case "DataError":
-                        alertNoImagesFound();
+                        modClipboardImages.alertNoImagesFound();
                         break;
                     default:
                         debugger;

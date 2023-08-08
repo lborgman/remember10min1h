@@ -477,8 +477,8 @@ export class CustomRenderer4jsMind {
         const inpBgColor = mkElt("input", { type: "color" });
         const inpFgColor = mkElt("input", { type: "color" });
         promCompStyleCopied.then(style => {
-            inpBgColor.value =modJsEditCommon.to6HexColor(style.backgroundColor);
-            inpFgColor.value =modJsEditCommon.to6HexColor(style.color);
+            inpBgColor.value = modJsEditCommon.to6HexColor(style.backgroundColor);
+            inpFgColor.value = modJsEditCommon.to6HexColor(style.color);
             checkColorContrast();
         });
         // let bgColorChanged;
@@ -544,10 +544,65 @@ export class CustomRenderer4jsMind {
         // inpLink.value = strLink;
         const tfLink = modMdc.mkMDCtextField("Link", inpLink, strLink);
 
+        let blobBg;
+        const btnAddBg = modMdc.mkMDCbutton("Add background image", "raised");
+        btnAddBg.addEventListener("click", evt => {
+            addBg();
+        })
+        const divBg = mkElt("div", undefined, [
+            mkElt("div", { style: "color:red;" }, "Not ready!"),
+            btnAddBg,
+        ]);
+        async function addBg(blob) {
+            const modClipboardImages = await import("clipboard-images");
+            const clipboardAccessOk = await modClipboardImages.isClipboardPermissionStateOk();
+            if (clipboardAccessOk == false) {
+                // debugPasteLine(`addPasteButton event 1`);
+                modClipboardImages.alertHowToUnblockPermissions();
+                return;
+            }
+            const resultImageBlobs = await modClipboardImages.getImagesFromClipboard();
+            if (Array.isArray(resultImageBlobs)) {
+                if (resultImageBlobs.length == 0) {
+                    modClipboardImages.alertNoImagesFound();
+                } else {
+                    const toDiv = divPasteImage;
+                    for (const blob of resultImageBlobs) {
+                        await handleIncomingImage(blob, toDiv);
+                    }
+                }
+            } else {
+                // Should be an error object
+                const err = resultImageBlobs;
+                console.log({ err });
+                if (!err instanceof Error) {
+                    debugger;
+                    throw Error(`resultImages is not instanceof Error`);
+                }
+                switch (err.name) {
+                    case "NotAllowedError":
+                        // handleClipboardReadNotAllowed();
+                        modClipboardImages.alertHowToUnblockPermissions();
+                        break;
+                    case "DataError":
+                        modClipboardImages.alertNoImagesFound();
+                        break;
+                    default:
+                        debugger;
+                        throw Error(`Unknown error name: ${err.name}, ${err.message}`);
+                }
+            }
+
+            btnAddBg.style.display = "none";
+        }
+        function removeBg(blob) {
+            btnAddBg.style.display = null;
+        }
         const divNormalContent = mkElt("div", { class: "normal-content" }, [
             "edit jmnode",
             tafTopic,
             tfLink,
+            divBg,
         ]);
 
         let providerName = "NOT CUSTOM PROVIDED";
