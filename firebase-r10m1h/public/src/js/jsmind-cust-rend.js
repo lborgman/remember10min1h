@@ -548,9 +548,11 @@ export class CustomRenderer4jsMind {
         const btnAddBg = modMdc.mkMDCbutton("Add background image", "raised");
         btnAddBg.addEventListener("click", evt => {
             addBg();
-        })
+        });
+        const divPasteImage = mkElt("div");
         const divBg = mkElt("div", undefined, [
             mkElt("div", { style: "color:red;" }, "Not ready!"),
+            divPasteImage,
             btnAddBg,
         ]);
         async function addBg(blob) {

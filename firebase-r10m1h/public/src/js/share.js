@@ -385,19 +385,23 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
     const modMdc = await import("util-mdc");
     const modIsDisplayed = await import("is-displayed");
     const divPasteImage = mkElt("div", { class: "div-paste-image" });
-    function addImageCard(toDiv, blob, extraClass, debugInfo) {
+    function addImageCard(toDiv, blob, extraClass, debugInfo, funCheckSave) {
+        const toFun = typeof funCheckSave ;
+        if (toFun != "function") throw Error(`funCheckSave is not funtion (${toFun})`);
         const btnDeleteImage = modMdc.mkMDCiconButton("delete_forever");
         btnDeleteImage.classList.add("image-delete");
         btnDeleteImage.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             // FIX-ME: ask
             eltImg.remove();
-            restartButtonStateTimer();
+            funCheckSave();
+            // restartButtonStateTimer();
         }));
         const eltImg = mkElt("span", { class: "image-bg-contain image-bg-size mdc-card" }, btnDeleteImage);
         if (debugInfo) {
             eltImg.style.position = "relative"
             const divDebug = mkElt("div", { class: "div-image-bg-debug" }, debugInfo);
             eltImg.appendChild(divDebug);
+            setTimeout(()=> divDebug.remove(), 10 * 1000);
         }
         const urlBlob = URL.createObjectURL(blob);
         const urlBg = `url(${urlBlob})`;
@@ -596,71 +600,6 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
         if (!debugPasteLineOn) return;
         divPasteDebug.appendChild(mkElt("div", undefined, txt));
     }
-    function OLDaddImageInput() {
-        if (record) {
-            const images = record.images;
-            if (images) {
-                images.forEach(imageBlob => {
-                    addImageCard(divPasteImage, imageBlob, "blob-to-store");
-                });
-            }
-        }
-        // I do not know if this could be useful??
-        // document.addEventListener('paste', pasteImageHandler);
-        function pasteImageHandler(evt) {
-            // modMdc.mkMDCsnackbar("pasteImageHandler", 10 * 1000);
-            debugPasteLine("evt 1");
-            // Get the data of clipboard
-            const clipboardItems = evt.clipboardData.items;
-            debugPasteLine("evt 2");
-            const items = [].slice.call(clipboardItems).filter(function (item) {
-                // Filter the image items only
-                return item.type.indexOf('image') !== -1;
-            });
-            debugPasteLine("evt 3");
-            if (items.length === 0) { return; }
-
-            debugPasteLine("evt 4");
-            // const item = items[0];
-            // On Windows length is 1, but on Android it is 2???
-            const item = items[items.length - 1];
-            debugPasteLine(`evt 5, items.length=${items.length}, testing length-1`);
-            // Get the blob of image
-            const fileBlob = item.getAsFile();
-            console.log({ fileBlob });
-            debugPasteLine("evt 6");
-
-            const target = evt.target;
-            console.log({ target });
-            const divPaste = target.closest(".div-paste-image");
-            // const eltImage = divPaste.querySelector("img");
-            // eltImage.src = URL.createObjectURL(fileBlob);
-            const iconWastebasket = modMdc.mkMDCicon("delete_forever");
-            const btnDelete = modMdc.mkMDCbutton(iconWastebasket);
-            btnDelete.classList.add("image-delete");
-            const eltBgImage = mkElt("span", { class: "image-bg-cover" }, btnDelete);
-            eltBgImage.classList.add("image-bg-size");
-            // const bgStyle = eltBgImage.style;
-            // bgStyle.width = "200px";
-            // bgStyle.height = "200px";
-            // bgStyle.display = "inline-block";
-            debugPasteLine("evt 7");
-            const urlBlobHelper = URL.createObjectURL(fileBlob);
-            debugPasteLine("evt 8");
-            eltBgImage.style.backgroundImage = `url(${urlBlobHelper})`;
-            divPaste.appendChild(eltBgImage);
-        }
-        const eltInput = mkElt("input", { type: "text" });
-        eltInput.addEventListener("paste", pasteImageHandler);
-
-        // If span is used then an <img> is also inserted in that span
-        // const eltSpan = mkElt("span", { contenteditable: true }, "Paste image here");
-        // eltSpan.addEventListener("paste", pasteImageHandler);
-
-        // eltRemember.appendChild(divPasteImage);
-        // eltRemember.appendChild(divPasteDebug);
-        return divPasteDebug;
-    }
 
     function mkDivPasteButton() {
         // const btn = modMdc.mkMDCbutton("Add image", "raised");
@@ -686,8 +625,9 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                 } else {
                     const toDiv = divPasteImage;
                     for (const blob of resultImageBlobs) {
-                        await handleIncomingImage(blob, toDiv);
+                        await handleIncomingImage(blob, toDiv, () => {});
                     }
+                    restartButtonStateTimer();
                 }
             } else {
                 // Should be an error object
@@ -711,28 +651,32 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
             }
 
 
-            async function handleIncomingImage(blobIn, toDiv) {
+            async function handleIncomingImage(blobIn, toDiv, funCheckSave) {
+                const toFun = typeof funCheckSave ;
+                if (toFun != "function") throw Error(`funCheckSave is not funtion (${toFun})`);
                 debugPasteLine(`addPasteButton 8, handleIncomingImage`);
                 console.warn({ blobIn });
 
-                // const origSize = blobIn.size;
-                const startDate = new Date();
-                const blobOut = await modClipboardImages.resizeImage(blobIn);
-                const msElapsed = (new Date()) - startDate;
-                const sizeIn = blobIn.size;
-                const typeIn = blobIn.type;
-                const sizeOut = blobOut.size;
-                const typeOut = blobOut.type;
-                const shrinked = sizeOut / sizeIn;
+                const maxBlobSize = 40 * 1000;
+                const {
+                    blobOut,
+                    shrinked,
+                    msElapsed,
+                    typeIn,
+                    typeOut,
+                    quality
+                } = await modClipboardImages.resizeImage(blobIn, maxBlobSize);
 
                 // FIX-ME: lastQuality
-                // const msg = `${typeIn} (*${shrinked.toFixed(3)}, ${lastQuality.toFixed(3)}q, ${msElapsed}ms) => ${typeOut}, ${(sizeOut / 1000).toFixed()}kB`;
-                const msg = `${typeIn} (*${shrinked.toFixed(3)}, ${msElapsed}ms) => ${typeOut}, ${(sizeOut / 1000).toFixed()}kB`;
+                const tS = shrinked.toFixed(3)
+                const tQ = quality.toFixed(2);
+                const sizeOut = blobOut.size;
+                const tIn = typeIn.slice(6);
+                const tOut = typeOut.slice(6);
+                const msg = `${tIn} (*${tS}, ~${tQ}, ${msElapsed}ms) => ${tOut}, ${(sizeOut / 1000).toFixed()}kB`;
                 console.log(msg);
 
-                // const eltSnackbar = modMdc.mkMDCsnackbar(msg, 10 * 1000);
-                // eltSnackbar.style.color = "yellow";
-                const eltNewImage = addImageCard(toDiv, blobOut, "blob-to-store", msg);
+                const eltNewImage = addImageCard(toDiv, blobOut, "blob-to-store", msg, funCheckSave);
                 setTimeout(() => {
                     const bcr = eltNewImage.getBoundingClientRect();
                     if (bcr.bottom < window.innerHeight) return;
@@ -741,7 +685,7 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                         block: "nearest"
                     }, 10);
                 });
-                restartButtonStateTimer();
+                // restartButtonStateTimer();
             }
             function handleClipboardReadNotAllowed() {
                 modMdc.mkMDCdialogAlert("Please allow reading clipboard");
@@ -768,7 +712,7 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                 const images = record.images;
                 if (images) {
                     images.forEach(imageBlob => {
-                        addImageCard(divImages, imageBlob, "blob-to-store");
+                        addImageCard(divImages, imageBlob, "blob-to-store", undefined, restartButtonStateTimer);
                     });
                 }
             }

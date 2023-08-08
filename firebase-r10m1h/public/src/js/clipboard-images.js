@@ -7,7 +7,7 @@ function debugPasteLine(txt) {
     console.log("DEBUG", txt);
 }
 
-export async function resizeImage(imageBlobIn) {
+export async function resizeImage(imageBlobIn, maxBlobSize) {
     // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob
     // Switch to OffscreenCanvas!
     // https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas
@@ -15,6 +15,7 @@ export async function resizeImage(imageBlobIn) {
     // https://stackoverflow.com/questions/70921457/how-can-i-resize-an-image-in-angular-using-the-canvas
     let lastQuality;
 
+    const startDate = new Date();
     return new Promise((resolve) => {
         const image = new Image();
         let imageBlobSize;
@@ -36,7 +37,7 @@ export async function resizeImage(imageBlobIn) {
             // resolve(blob);   // <-- call it here!
             let retImageBlob;
             let blobSize = Number.POSITIVE_INFINITY;
-            const maxBlobSize = 40 * 1000;
+            // const maxBlobSize = 40 * 1000;
             let n = 0;
             const nMax = 10;
             // let quality = 0.5; // FIX-ME: better start value?
@@ -61,7 +62,21 @@ export async function resizeImage(imageBlobIn) {
                 debugPasteLine(`resize-loop  retBlob:${retImageBlob}, blobSize:${blobSize}, quality:${quality}`);
                 quality *= 0.7;
             }
-            resolve(retImageBlob);
+
+            const msElapsed = (new Date()) - startDate;
+            const sizeIn = imageBlobIn.size;
+            const typeIn = imageBlobIn.type;
+            const sizeOut = retImageBlob.size;
+            const typeOut = retImageBlob.type;
+            const shrinked = sizeOut / sizeIn;
+            resolve({
+                blobOut: retImageBlob,
+                shrinked,
+                msElapsed,
+                typeIn,
+                typeOut,
+                quality
+            });
         };
         imageBlobSize = imageBlobIn.size;
         const imageBlobType = imageBlobIn.type;
