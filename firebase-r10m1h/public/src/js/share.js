@@ -596,7 +596,7 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
         if (!debugPasteLineOn) return;
         divPasteDebug.appendChild(mkElt("div", undefined, txt));
     }
-    function addImageInput() {
+    function OLDaddImageInput() {
         if (record) {
             const images = record.images;
             if (images) {
@@ -680,7 +680,37 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                 return;
             }
             debugPasteLine(`addPasteButton event 2`);
-            await getImagesFromClipboard();
+            const resultImageBlobs = await getImagesFromClipboard();
+            if (Array.isArray(resultImageBlobs)) {
+                if (resultImageBlobs.length == 0) {
+                    handleNoImagesFound();
+                } else {
+                    for (let blob of resultImageBlobs) {
+                        const toDiv = divPasteImage;
+                        await handleIncomingImage(blob, toDiv);
+                    }
+                }
+            } else {
+                // Should be an error object
+                const err = resultImageBlobs;
+                console.log({ err });
+                if (!err instanceof Error) {
+                    debugger;
+                    throw Error(`resultImages is not instanceof Error`);
+                }
+                switch (err.name) {
+                    case "NotAllowedError":
+                        handleClipboardReadNotAllowed();
+                        break;
+                    case "DataError":
+                        handleNoImagesFound();
+                        break;
+                    default:
+                        debugger;
+                        throw Error(`Unknown error name: ${err.name}, ${err.message}`);
+                }
+            }
+            return;
             async function getImagesFromClipboard() {
                 try {
                     // https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/read
@@ -695,6 +725,7 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                         const errName = err.name;
                         const errMessage = err.message
                         debugPasteLine(`addPasteButton 5, ${errName}, ${errMessage}`);
+                        return err;
                         console.error(errName, errMessage);
                         if (errName == "NotAllowedError") {
                             handleClipboardReadNotAllowed();
@@ -709,7 +740,8 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                     }
 
 
-                    let foundImages = false;
+                    // let foundImages = false;
+                    const foundImages = [];
                     debugPasteLineOn = true;
                     debugPasteLine(`addPasteButton 7`);
                     for (const item of clipboardContents) {
@@ -735,19 +767,22 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                             debugPasteLine(`addPasteButton 7d1, blob==null`);
                             continue;
                         }
-                        foundImages = true;
-                        const img = new Image();
-                        img.src = URL.createObjectURL(blob);
-                        // const div = btn.closest(".div-images");
-                        const toDiv = divPasteImage;
-                        await handleIncomingImage(blob, toDiv);
+                        // foundImages = true;
+                        // const img = new Image();
+                        // img.src = URL.createObjectURL(blob);
+
+                        // const toDiv = divPasteImage;
+                        // await handleIncomingImage(blob, toDiv);
+                        foundImages.push(blob);
                     }
-                    if (!foundImages) { handleNoImagesFound(); return; }
+                    // if (!foundImages) { handleNoImagesFound(); return; }
+                    return foundImages;
                 } catch (err) {
                     const errName = err.name;
                     const errMessage = err.message
                     console.error(errName, errMessage);
                     debugPasteLine(`addPasteButton err 1, ${errName}, ${errMessage}`);
+                    return err;
                 }
             }
 

@@ -66,4 +66,4 @@ node_modules/
 .env
 
 # The output Workbox file
-sw-workbox.js
+firebase-r10m1h/public/sw-workbox.js
