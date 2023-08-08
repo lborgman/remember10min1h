@@ -295,43 +295,6 @@ const setupServiceWorker = async () => {
     }
 }
 
-// https://web.dev/async-clipboard/
-async function isClipboardPermissionStateOk() {
-    const modMdc = await import("util-mdc");
-    // There seems to be no max number of skipping prompt here.
-    // The permissions systems seems like a mess!
-    const queryOpts = { name: 'clipboard-read', allowWithoutGesture: false };
-    const permissionStatus = await navigator.permissions.query(queryOpts);
-    console.log({ permissionStatus });
-
-    switch (permissionStatus.state) {
-        case 'granted':
-        case 'prompt': // Something seems to have changed 2023-06-29
-            return true;
-            break;
-        // case 'prompt':
-        case 'denied':
-            // FIX-ME: tell user how to reset
-            const aUnblock = mkElt("a", {
-                target: "blank",
-                href: "https://www.getbeamer.com/help/how-to-unblock-notification-permissions-on-any-browser"
-            }, "How to fix it");
-            // alert("tell user how to fix");
-            const body = mkElt("div", undefined, [
-                mkElt("h1", undefined, "Can't read clipboard"),
-                mkElt("p", undefined, [
-                    "This can be fixed the same way as explained here: ",
-                    aUnblock
-                ])
-            ]);
-            modMdc.mkMDCdialogAlert(body);
-            return false;
-        // debugger;
-        default:
-            debugger;
-            throw Error(`Unknown permission state: ${permissionStatus.state}`);
-    }
-}
 
 
 async function getNotificationPermissions() {
@@ -2707,8 +2670,9 @@ async function mkDivManualReminders(getCreatedEltTime) {
 async function getClipboardImages() {
     console.log("getClipboardImages");
     const modMdc = await import("util-mdc");
+            const modClipboardImages = await import("clipboard-images");
 
-    if (!await isClipboardPermissionStateOk()) {
+    if (!await modClipboardImages.isClipboardPermissionStateOk()) {
         return;
     }
 

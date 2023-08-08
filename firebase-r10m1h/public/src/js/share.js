@@ -672,21 +672,20 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
         btn.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             const modClipboardImages = await import("clipboard-images");
             debugPasteLine(`addPasteButton event 0`);
-            const clipboardAccessOk = await isClipboardPermissionStateOk();
+            const clipboardAccessOk = await modClipboardImages.isClipboardPermissionStateOk();
             if (clipboardAccessOk == false) {
-                console.warn({ clipboardAccessOk });
-                debugger;
                 debugPasteLine(`addPasteButton event 1`);
+                modClipboardImages.alertHowToUnblockPermissions();
                 return;
             }
             debugPasteLine(`addPasteButton event 2`);
-            const resultImageBlobs = await getImagesFromClipboard();
+            const resultImageBlobs = await modClipboardImages.getImagesFromClipboard();
             if (Array.isArray(resultImageBlobs)) {
                 if (resultImageBlobs.length == 0) {
-                    handleNoImagesFound();
+                    modClipboardImages.alertNoImagesFound();
                 } else {
-                    for (let blob of resultImageBlobs) {
-                        const toDiv = divPasteImage;
+                    const toDiv = divPasteImage;
+                    for (const blob of resultImageBlobs) {
                         await handleIncomingImage(blob, toDiv);
                     }
                 }
@@ -703,86 +702,11 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                         handleClipboardReadNotAllowed();
                         break;
                     case "DataError":
-                        handleNoImagesFound();
+                        alertNoImagesFound();
                         break;
                     default:
                         debugger;
                         throw Error(`Unknown error name: ${err.name}, ${err.message}`);
-                }
-            }
-            return;
-            async function getImagesFromClipboard() {
-                try {
-                    // https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/read
-                    // https://web.dev/async-clipboard/
-
-                    let clipboardContents;
-                    debugPasteLine(`addPasteButton 3`);
-                    try {
-                        clipboardContents = await navigator.clipboard.read();
-                        debugPasteLine(`addPasteButton 4`);
-                    } catch (err) {
-                        const errName = err.name;
-                        const errMessage = err.message
-                        debugPasteLine(`addPasteButton 5, ${errName}, ${errMessage}`);
-                        return err;
-                        console.error(errName, errMessage);
-                        if (errName == "NotAllowedError") {
-                            handleClipboardReadNotAllowed();
-                            return;
-                        }
-                        debugPasteLine(`addPasteButton 6`);
-                        // Chrome: errMessage == No valid data on clipboard
-                        if (errName == "DataError") { handleNoImagesFound(); return; }
-                        debugger;
-                        alert(`unknown error: ${errName}, ${errMessage}`);
-                        return;
-                    }
-
-
-                    // let foundImages = false;
-                    const foundImages = [];
-                    debugPasteLineOn = true;
-                    debugPasteLine(`addPasteButton 7`);
-                    for (const item of clipboardContents) {
-                        debugPasteLine(`addPasteButton 7a`);
-                        const itemTypes = item.types;
-                        console.log("addPasteButton 7a", { item, itemTypes });
-                        debugPasteLine(`addPasteButton 7a1`);
-                        const imageTypes = itemTypes.filter(t => t.startsWith("image/"));
-                        const isArray = Array.isArray(imageTypes);
-                        console.log({ imageTypes, isArray });
-                        const imageTypesLength = imageTypes.length;
-                        debugPasteLine(`addPasteButton 7a2, ${imageTypes}, ${typeof imageTypes}, ${isArray}, ${imageTypesLength}`);
-                        if (imageTypes.length == 0) {
-                            debugPasteLine(`addPasteButton 7b`);
-                            continue;
-                        }
-                        const it0 = imageTypes[0];
-                        debugPasteLine(`addPasteButton 7c, ${imageTypes.length}, ${it0}, ${JSON.toString(it0)}`);
-                        const blob = await item.getType(imageTypes[0]);
-                        debugPasteLine(`addPasteButton 7d, typeof blob=${typeof blob}, ${blob}`);
-                        if (blob == null) {
-                            // You do not get here on Windows 10, but on Android, 2023-01-16
-                            debugPasteLine(`addPasteButton 7d1, blob==null`);
-                            continue;
-                        }
-                        // foundImages = true;
-                        // const img = new Image();
-                        // img.src = URL.createObjectURL(blob);
-
-                        // const toDiv = divPasteImage;
-                        // await handleIncomingImage(blob, toDiv);
-                        foundImages.push(blob);
-                    }
-                    // if (!foundImages) { handleNoImagesFound(); return; }
-                    return foundImages;
-                } catch (err) {
-                    const errName = err.name;
-                    const errMessage = err.message
-                    console.error(errName, errMessage);
-                    debugPasteLine(`addPasteButton err 1, ${errName}, ${errMessage}`);
-                    return err;
                 }
             }
 
@@ -818,44 +742,6 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                     }, 10);
                 });
                 restartButtonStateTimer();
-            }
-            function handleNoImagesFound() {
-                debugPasteLine(`addPasteButton alertNoImages`);
-                const bodyAlert = mkElt("div", { id: "alert-no-images" }, [
-                    mkElt("h2", undefined, "No images found on clipboard."),
-                    mkElt("details", undefined, [
-                        mkElt("summary", undefined, "Why?"),
-                        mkElt("p", undefined, [
-                            "The clipboard images may have timed out. ",
-                            "Or you have not put any images there yet. "
-                        ]),
-                        mkElt("p", undefined, [
-                            mkElt("i", undefined, "Notice: "),
-                            "You must put images there, not image links!"
-                        ])
-                    ]),
-                    mkElt("details", undefined, [
-                        mkElt("summary", undefined, "How do you get an image to the clipboard? "),
-                        mkElt("p", undefined, [
-                            "One simple way is to right click on an image in your web browser. ",
-                            "(Long press on a mobile.) ",
-                        ]),
-                        mkElt("p", undefined, [
-                            "However if you have an image in for example Google Photos ",
-                            "on your Android mobile it is unfortunately not that simple. ",
-                            "There is today (in the beginning of 2023) no direct way to ",
-                            "put that image on the clipboard. 🤔",
-                        ]),
-                        mkElt("p", undefined, [
-                            "As a reasonably safe alternative I use this app: ",
-                            mkElt("a", { href: "https://scrapbook-pwa.web.app/#/images" }, "Scapbook PWA"),
-                            " (That app is, like this app you are using now, a PWA. ",
-                            "Essentially a web page. ",
-                            "With the added capability to show app as targets when you share a link or image.)"
-                        ]),
-                    ]),
-                ]);
-                modMdc.mkMDCdialogAlert(bodyAlert);
             }
             function handleClipboardReadNotAllowed() {
                 modMdc.mkMDCdialogAlert("Please allow reading clipboard");
