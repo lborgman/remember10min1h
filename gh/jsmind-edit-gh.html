@@ -74,6 +74,7 @@
 
         // const srcError = cdnBaseURL + "/src/js/error.js";
         const srcError = getCDNurl("/src/js/error.js");
+        console.log({ srcError });
         const ie = document.createElement("script");
         ie.src = srcError;
         document.currentScript.after(ie);
@@ -89,7 +90,21 @@
         const iCss = document.createElement("link");
         iCss.rel = "stylesheet";
         iCss.href = srcCss;
-        document.currentScript.after(iCss);
+        // document.currentScript.after(iCss);
+
+        // FIX-ME: CORS trouble again
+        // https://stackoverflow.com/questions/49088507/cannot-access-rules-in-external-cssstylesheet
+        // Possible to read the link srcCss???
+        // document.head.appendChild(iCss);
+        (async () => {
+            const cssResponse = await fetch(srcCss);
+            if (cssResponse.ok) {
+                const txtCss = await cssResponse.text();
+                const eStyle = document.createElement("style");
+                eStyle.textContent = txtCss;
+                document.head.appendChild(eStyle);
+            }
+        })();
 
     </script>
 
