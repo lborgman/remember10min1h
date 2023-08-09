@@ -570,7 +570,7 @@ export class CustomRenderer4jsMind {
                 } else {
                     const toDiv = divPasteImage;
                     for (const blob of resultImageBlobs) {
-                        await handleIncomingImage(blob, toDiv);
+                        await modClipboardImages.addImageCardFromBlobImage(blob, toDiv);
                     }
                 }
             } else {

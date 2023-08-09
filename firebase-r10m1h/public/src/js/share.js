@@ -384,34 +384,8 @@ async function dialog10min1hour(eltPrevFocused) {
 async function mkEltInputRemember(record, headerTitle, saveNewNow) {
     const modMdc = await import("util-mdc");
     const modIsDisplayed = await import("is-displayed");
+    const modClipboardImages = await import("clipboard-images");
     const divPasteImage = mkElt("div", { class: "div-paste-image" });
-    function addImageCard(toDiv, blob, extraClass, debugInfo, funCheckSave) {
-        const toFun = typeof funCheckSave ;
-        if (toFun != "function") throw Error(`funCheckSave is not funtion (${toFun})`);
-        const btnDeleteImage = modMdc.mkMDCiconButton("delete_forever");
-        btnDeleteImage.classList.add("image-delete");
-        btnDeleteImage.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            // FIX-ME: ask
-            eltImg.remove();
-            funCheckSave();
-            // restartButtonStateTimer();
-        }));
-        const eltImg = mkElt("span", { class: "image-bg-contain image-bg-size mdc-card" }, btnDeleteImage);
-        if (debugInfo) {
-            eltImg.style.position = "relative"
-            const divDebug = mkElt("div", { class: "div-image-bg-debug" }, debugInfo);
-            eltImg.appendChild(divDebug);
-            setTimeout(()=> divDebug.remove(), 10 * 1000);
-        }
-        const urlBlob = URL.createObjectURL(blob);
-        const urlBg = `url(${urlBlob})`;
-        // console.log({ blob, urlBlob });
-        eltImg.style.backgroundImage = urlBg;
-        eltImg.dataset.urlBlob = urlBlob;
-        if (extraClass) eltImg.classList.add(extraClass);
-        toDiv.appendChild(eltImg);
-        return eltImg;
-    }
 
     if (record) checkRecordFields(record);
 
@@ -625,7 +599,7 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                 } else {
                     const toDiv = divPasteImage;
                     for (const blob of resultImageBlobs) {
-                        await handleIncomingImage(blob, toDiv, () => {});
+                        await modClipboardImages.addImageCardFromBlobImage(blob, toDiv);
                     }
                     restartButtonStateTimer();
                 }
@@ -651,42 +625,7 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
             }
 
 
-            async function handleIncomingImage(blobIn, toDiv, funCheckSave) {
-                const toFun = typeof funCheckSave ;
-                if (toFun != "function") throw Error(`funCheckSave is not funtion (${toFun})`);
-                debugPasteLine(`addPasteButton 8, handleIncomingImage`);
-                console.warn({ blobIn });
 
-                const maxBlobSize = 40 * 1000;
-                const {
-                    blobOut,
-                    shrinked,
-                    msElapsed,
-                    typeIn,
-                    typeOut,
-                    quality
-                } = await modClipboardImages.resizeImage(blobIn, maxBlobSize);
-
-                // FIX-ME: lastQuality
-                const tS = shrinked.toFixed(3)
-                const tQ = quality.toFixed(2);
-                const sizeOut = blobOut.size;
-                const tIn = typeIn.slice(6);
-                const tOut = typeOut.slice(6);
-                const msg = `${tIn} (*${tS}, ~${tQ}, ${msElapsed}ms) => ${tOut}, ${(sizeOut / 1000).toFixed()}kB`;
-                console.log(msg);
-
-                const eltNewImage = addImageCard(toDiv, blobOut, "blob-to-store", msg, funCheckSave);
-                setTimeout(() => {
-                    const bcr = eltNewImage.getBoundingClientRect();
-                    if (bcr.bottom < window.innerHeight) return;
-                    eltNewImage.scrollIntoView({
-                        behavior: "smooth",
-                        block: "nearest"
-                    }, 10);
-                });
-                // restartButtonStateTimer();
-            }
             function handleClipboardReadNotAllowed() {
                 modMdc.mkMDCdialogAlert("Please allow reading clipboard");
             }
@@ -712,8 +651,13 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                 const images = record.images;
                 if (images) {
                     images.forEach(imageBlob => {
-                        addImageCard(divImages, imageBlob, "blob-to-store", undefined, restartButtonStateTimer);
+                        // addImageCard(divImages, imageBlob, "blob-to-store", undefined, restartButtonStateTimer);
+                        modClipboardImages.addImageCard(
+                            divImages, imageBlob, "blob-to-store",
+                            undefined, restartButtonStateTimer
+                        );
                     });
+                    // restartButtonStateTimer();
                 }
             }
         }
