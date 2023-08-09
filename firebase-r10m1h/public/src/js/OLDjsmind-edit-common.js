@@ -1,1 +1,0 @@
-console.log("this is jsmind-edit-common.js");

@@ -92,13 +92,13 @@ export class CustomRenderer4jsMind {
     fixLeftRightChildren(eltJmnode) { fixLeftRightChildren(eltJmnode); }
     async addEltNodeLink(eltJmnode) {
         const childCount = eltJmnode.childElementCount;
-        console.warn("addEltNodeLink", eltJmnode, childCount);
+        // console.warn("addEltNodeLink", eltJmnode, childCount);
         if (childCount != 2) throw Error(`childElementCound != 2, ${childCount}`);
         // debugger;
         const node_id = jsMind.my_get_nodeID_from_DOM_element(eltJmnode);
         const node = this.THEjmDisplayed.get_node(node_id);
         const nodeLink = node.data.shapeEtc?.nodeLink;
-        console.log({ node }, node.data.shapeEtc, nodeLink);
+        // console.log({ node }, node.data.shapeEtc, nodeLink);
         if (nodeLink && nodeLink.length > 0) {
             // item link
             const modMdc = await import("util-mdc");
@@ -117,7 +117,7 @@ export class CustomRenderer4jsMind {
     }
     async updateJmnodeFromCustom(eltJmnode, jmOwner) {
         const eltBefore = eltJmnode.cloneNode(true);
-        console.warn("updateJmnodeFromCustom", eltBefore, eltBefore.childElementCount);
+        // console.warn("updateJmnodeFromCustom", eltBefore, eltBefore.childElementCount);
         if (eltJmnode.childElementCount != 3) throw Error(`ChildElementCount != 3, ${eltJmnode.childElementCount}`);
 
         const tn = eltJmnode.tagName;

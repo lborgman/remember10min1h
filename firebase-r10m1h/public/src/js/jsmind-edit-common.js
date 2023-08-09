@@ -261,17 +261,14 @@ export function applyShapeEtc(shapeEtc, eltJmnode) {
     const eltShape = eltJmnode.querySelector(".jmnode-bg");
     if (!eltShape) {
         if (eltJmnode.childElementCount > 1) {
-            console.error("old custom format 2");
             // FIX-ME: just delete this???
-            debugger;
-            // return;
+            console.error("old custom format 2");
             let htmlRendererImg = mkElt("div", { class: "jsmind-render-img" });
             const OLDhtmlRendererImg = eltJmnode.lastElementChild;
             OLDhtmlRendererImg.remove();
             const customData = htmlTopic.dataset.jsmindCustom;
             delete htmlTopic.dataset.jsmindCustom;
             htmlRendererImg.dataset.jsmindCustom = customData;
-            // FIX-ME: ??? background-image
         }
     }
 
@@ -380,6 +377,7 @@ export async function pageSetup() {
 
     const idDivHits = "jsmind-div-hits";
 
+    /*
     let h2cCanvas;
     let promH2cCanvas;
     // const heightDivH2c = 300;
@@ -390,6 +388,7 @@ export async function pageSetup() {
         heightDivH2c: 300,
         widthDivH2c: 200,
     }
+    */
 
     const optionsJmDisplay = {
         // container: 'jsmind_container',
@@ -1127,42 +1126,7 @@ export async function pageSetup() {
         return jm;
     }
 
-    addScrollIntoViewOnSelect();
-    function addScrollIntoViewOnSelect() {
-        jmDisplayed.add_event_listener(function (t, d) {
-            // console.log({ t, d });
-            if (t !== jsMind.event_type.select) return;
-            const id = d.node;
-            const n = jmDisplayed.get_node(id);
-            // const elt = n._data.view.element;
-            const elt = jsMind.my_get_DOM_element_from_node(n);
-
-            // FIX-ME: test .scrollIntoView - problem with vertical
-            // https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
-            const scrollOpt = {
-                behavior: "smooth",
-                block: "nearest"
-            };
-            // console.log({scrollOpt})
-            elt.scrollIntoView(scrollOpt);
-            return;
-
-            const cr = elt.getBoundingClientRect(elt);
-            const crLeft = cr.left;
-            const crRight = cr.right;
-            // console.log({ t, d, id, elt, cr });
-            const eltScroll = jsMindContainer.firstElementChild;
-            if (crLeft < 0) {
-                eltScroll.scrollBy(crLeft, 0);
-            } else {
-                const overRight = crRight - jsMindContainer.clientWidth;
-                if (overRight > 0) {
-                    eltScroll.scrollBy(overRight, 0);
-                }
-            }
-            // FIX-ME: vertical
-        });
-    }
+    addScrollIntoViewOnSelect(jmDisplayed);
     function jsmindSearchNodes(strSearch) {
         // console.log("jsmindSearch", { strSearch });
         /*
@@ -1641,4 +1605,24 @@ function addDebugLog(msg) {
         const row = mkElt("div", { class: "debug-row" }, [entry, counter])
         divDebugLogLog.appendChild(row);
     }
+}
+
+export function addScrollIntoViewOnSelect(jmDisp) {
+    jmDisp.add_event_listener(function (t, d) {
+        // console.log({ t, d });
+        if (t !== jsMind.event_type.select) return;
+        const id = d.node;
+        const n = jmDisp.get_node(id);
+        // const elt = n._data.view.element;
+        const elt = jsMind.my_get_DOM_element_from_node(n);
+
+        // FIX-ME: test .scrollIntoView - problem with vertical
+        // https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
+        const scrollOpt = {
+            behavior: "smooth",
+            block: "nearest"
+        };
+        // console.log({scrollOpt})
+        elt.scrollIntoView(scrollOpt);
+    });
 }
