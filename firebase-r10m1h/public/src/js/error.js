@@ -6,6 +6,40 @@
 // var theSWcacheVersion = "> " + theEasyCapEdVersion;
 var theSWcacheVersion = "Fix this! (not known yet)";
 
+// https://dev.to/somedood/promises-and-events-some-pitfalls-and-workarounds-elp
+/** When awaited, this function blocks until the `event` fires once. */
+// function blockUntilEvent(target: EventTarget, event: string)
+function blockUntilEvent(target, event, msTimeout) {
+    return new Promise(resolve => {
+        let tmr = setTimeout(() => {
+            if (!tmr) return;
+            // https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener#matching_event_listeners_for_removal
+            target.removeEventListener(event, funResolve);
+        }, msTimeout);
+        function funResolve() {
+            if (tmr) {
+                clearTimeout(tmr);
+                tmr = undefined;
+            }
+            console.log("blockUntilEvent, resolve: ", event);
+            resolve();
+        }
+        target.addEventListener(
+            event,
+            funResolve,
+            {
+                // For simplicity, we will assume passive listeners.
+                // Feel free to expose this as a configuration option.
+                passive: true,
+                // It is important to only trigger this listener once
+                // so that we don't leak too many listeners.
+                once: true,
+            },
+        );
+    }
+    );
+}
+
 const thePromiseDOMready = new Promise(function (resolve) {
     if (document.readyState === "complete") return resolve();
     document.addEventListener("DOMContentLoaded", resolve);

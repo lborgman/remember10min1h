@@ -1,7 +1,6 @@
 "use strict";
 console.log("here is common.js");
 
-let swVersion;
 let theExpanderWay = "setTimeout"; // ok
 // theExpanderWay = "await"; // ok
 // theExpanderWay = "justAdd"; // no expanding
@@ -757,6 +756,8 @@ function showDebug() {
 
 async function showIntro() {
     const modMdc = await import("util-mdc");
+    const modPWA = await import("pwa");
+    const swVersion = await modPWA.getSWversion();
     const secMain = clearMainSection("page-about");
     secMain.appendChild(
         mkElt("h1", undefined, `About ${visibleAppTitle} (ver ${swVersion})`)

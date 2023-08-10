@@ -1,5 +1,5 @@
 "use strict";
-console.log("this is db-fc4i.js");
+console.log("here is db-fc4i.js");
 
 // https://github.com/jakearchibald/idb
 const dbName = "rem10m1h";

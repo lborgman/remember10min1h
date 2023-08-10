@@ -1,6 +1,7 @@
 console.log("here is pwa.js");
 
 const idDebugSection = "debug-section";
+let swVersion;
 let instWorkbox;
 getWorkbox();
 addDebugSWinfo();
@@ -196,6 +197,7 @@ async function setupServiceWorker() {
             swVersion = ver;
             // console.log('Service Worker version:', swVersion);
             addDebugRow(`Service Worker version: ${swVersion}`);
+            console.warn(`Service Worker version: ${swVersion}`);
             theSWcacheVersion = swVersion;
         }
         return swRegistration;
@@ -213,13 +215,13 @@ async function setupForInstall() {
     let deferredPrompt;
 
     window.addEventListener('beforeinstallprompt', (e) => {
-        // console.log(`'beforeinstallprompt' event was fired.`);
+        console.warn(`'beforeinstallprompt' event was fired.`);
         // Prevent the mini-infobar from appearing on mobile
         e.preventDefault();
         // Stash the event so it can be triggered later.
         deferredPrompt = e;
         // Update UI notify the user they can install the PWA
-        showInstallPromotion();
+        createEltInstallPromotion();
     });
 
     window.addEventListener('appinstalled', () => {
@@ -264,10 +266,12 @@ async function setupForInstall() {
     function hideInstallPromotion() {
         divInstallPromotion.style.display = "none";
     }
-    async function showInstallPromotion() {
+    async function createEltInstallPromotion() {
+        console.warn("createEltInstallPromotion START")
         await promiseDOMready();
         document.body.appendChild(divInstallPromotion);
         divInstallPromotion.style.display = null;
+        console.warn("createEltInstallPromotion END, display = null")
     }
 
 }
@@ -307,3 +311,5 @@ export async function getWorkbox() {
     }
     if (instWorkbox) return instWorkbox
 }
+
+export async function getSWversion() { return swVersion; }
