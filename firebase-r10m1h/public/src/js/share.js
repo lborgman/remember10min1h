@@ -138,14 +138,16 @@ function seconds2ymdhms(sec) {
     return { yy, mo, dd, hh, mi, ss }
 }
 async function askForReminders(onlyMatched) {
-    const wb = await getWorkbox();
+    const modPWA = await import("pwa");
+    const wb = await modPWA.getWorkbox();
     const matchValues = onlyMatched ? getHomeSearchValues() : undefined;
     wb.messageSW({ type: "CHECK_NOTIFY", msDelay: 2000, matchValues });
 }
 async function askForNotifySpecific(key, msDelay, afterMinutes, lbl, isShort) {
     // const msDelay = 10 * 1000;
     // const idEntry = "dummy";
-    const wb = await getWorkbox();
+    const modPWA = await import("pwa");
+    const wb = await modPWA.getWorkbox();
     wb.messageSW({ type: "NOTIFY_SPECIFIC", msDelay, key, afterMinutes, lbl, isShort });
 }
 

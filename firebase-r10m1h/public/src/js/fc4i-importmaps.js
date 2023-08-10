@@ -1,4 +1,4 @@
-console.log("here is fc4i-import-maps");
+console.log("here is fc4i-importmaps");
 
 const importMap = {
     imports: {
@@ -13,6 +13,7 @@ const importMap = {
         "jsmind-cust-rend": "/src/js/jsmind-cust-rend.js",
         "my-svg": "/src/js/mod/my-svg.js",
         "new-jsmind.draggable-nodes": "/ext/jsmind/new-jsmind.draggable-nodes.js",
+        "pwa": "/src/js/mod/pwa.js",
         "util-mdc": "/src/js/mod/util-mdc.js",
     }
 };
@@ -20,3 +21,4 @@ const im = document.createElement('script');
 im.type = 'importmap';
 im.textContent = JSON.stringify(importMap);
 document.currentScript.after(im);
+console.log("END fc4i-importmaps");
