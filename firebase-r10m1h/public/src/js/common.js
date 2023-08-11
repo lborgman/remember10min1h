@@ -1288,29 +1288,10 @@ async function mkMenu() {
     liImport.addEventListener("click", evt => { importItems(); })
     liImport.classList.add("test-item");
 
-    // Blobs => base64 (for our images)
-    // https://stackoverflow.com/questions/27232604/json-stringify-or-how-to-serialize-binary-data-as-base64-encoded-json
-    const blobToBase64 = (blob) => {
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(blob);
-            reader.onloadend = function () {
-                resolve(reader.result);
-            };
-        });
-    };
-
-    // https://dev.to/ionic/converting-a-base64-string-to-a-blob-in-javascript-35kl
-    // FIX-ME: rename
-    const base64webpToBlob = async (base64Data) => {
-        const base64Response = await fetch(base64Data);
-        const blob = await base64Response.blob();
-        return blob;
-    }
-
 
     async function importItems(callBackProgress) {
         const modDbFc4i = await import("db-fc4i");
+        const modClipboardImages = await import("clipboard-images");
         let theFile;
         if ("NOshowOpenFilePicker" in window) {
             let fileHandle;
@@ -1395,7 +1376,7 @@ async function mkMenu() {
             if (images) {
                 for (let i = 0, len = images.length; i < len; i++) {
                     const b64 = images[i];
-                    const blob = await base64webpToBlob(b64);
+                    const blob = await modClipboardImages.base64webpToBlob(b64);
                     images[i] = blob;
                 }
             }
@@ -1614,11 +1595,12 @@ async function mkMenu() {
                 // console.log({ obj });
                 const images = obj.images;
                 if (images && images.length > 0) {
+                    const modClipboardImages = await import("clipboard-images");
                     // console.log({ images });
                     for (let j = 0, leni = images.length; j < leni; j++) {
                         const blob = images[j];
                         // blob 64
-                        const base64 = await blobToBase64(blob);
+                        const base64 = await modClipboardImages.blobToBase64(blob);
                         // console.log({ base64 });
                         images[j] = base64;
                     }

@@ -291,3 +291,24 @@ export async function addImageCardFromBlobImage(blobIn, toDiv, funCheckSave) {
     // restartButtonStateTimer();
     if (funCheckSave) funCheckSave();
 }
+
+// Blobs => base64 (for our images)
+// https://stackoverflow.com/questions/27232604/json-stringify-or-how-to-serialize-binary-data-as-base64-encoded-json
+export const blobToBase64 = (blob) => {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = function () {
+            resolve(reader.result);
+        };
+    });
+};
+
+// https://dev.to/ionic/converting-a-base64-string-to-a-blob-in-javascript-35kl
+// FIX-ME: rename
+export const base64webpToBlob = async (base64Data) => {
+    const base64Response = await fetch(base64Data);
+    const blob = await base64Response.blob();
+    return blob;
+}
+
