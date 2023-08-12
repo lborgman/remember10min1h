@@ -556,7 +556,7 @@ export class CustomRenderer4jsMind {
             btnAddBg,
         ]);
         async function addBg(blob) {
-            const modClipboardImages = await import("clipboard-images");
+            const modClipboardImages = await import("images");
             const clipboardAccessOk = await modClipboardImages.isClipboardPermissionStateOk();
             if (clipboardAccessOk == false) {
                 // debugPasteLine(`addPasteButton event 1`);

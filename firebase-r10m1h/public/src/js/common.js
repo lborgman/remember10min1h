@@ -1291,7 +1291,7 @@ async function mkMenu() {
 
     async function importItems(callBackProgress) {
         const modDbFc4i = await import("db-fc4i");
-        const modClipboardImages = await import("clipboard-images");
+        const modClipboardImages = await import("images");
         let theFile;
         if ("NOshowOpenFilePicker" in window) {
             let fileHandle;
@@ -1595,7 +1595,7 @@ async function mkMenu() {
                 // console.log({ obj });
                 const images = obj.images;
                 if (images && images.length > 0) {
-                    const modClipboardImages = await import("clipboard-images");
+                    const modClipboardImages = await import("images");
                     // console.log({ images });
                     for (let j = 0, leni = images.length; j < leni; j++) {
                         const blob = images[j];
@@ -2138,7 +2138,7 @@ async function mkDivManualReminders(getCreatedEltTime) {
 async function getClipboardImages() {
     console.log("getClipboardImages");
     const modMdc = await import("util-mdc");
-            const modClipboardImages = await import("clipboard-images");
+            const modClipboardImages = await import("images");
 
     if (!await modClipboardImages.isClipboardPermissionStateOk()) {
         return;

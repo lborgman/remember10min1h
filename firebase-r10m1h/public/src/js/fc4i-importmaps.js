@@ -3,10 +3,10 @@ console.log("here is fc4i-importmaps");
 const importMap = {
     imports: {
         "acc-colors": "/src/acc-colors.js",
-        "clipboard-images": "/src/js/clipboard-images.js",
         "db-mindmaps": "/src/js/db-mindmaps.js",
         "db-fc4i": "/src/js/db-fc4i.js",
         "flashcards": "/src/js/mod/flashcards.js",
+        "images": "/src/js/images.js",
         "is-displayed": "/src/js/is-displayed.js",
         "jsmind-edit-common": "/src/js/jsmind-edit-common.js",
         "jsmind-edit-spec-fc4i": "/src/js/jsmind-edit-spec-fc4i.js",

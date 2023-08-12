@@ -386,7 +386,7 @@ async function dialog10min1hour(eltPrevFocused) {
 async function mkEltInputRemember(record, headerTitle, saveNewNow) {
     const modMdc = await import("util-mdc");
     const modIsDisplayed = await import("is-displayed");
-    const modClipboardImages = await import("clipboard-images");
+    const modClipboardImages = await import("images");
     const divPasteImage = mkElt("div", { class: "div-paste-image" });
 
     if (record) checkRecordFields(record);
@@ -585,7 +585,7 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
         // btn.classList.add("mdc-theme-secondary");
         btn.classList.add("btn-add-image");
         btn.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            const modImages = await import("clipboard-images");
+            const modImages = await import("images");
             debugPasteLine(`addPasteButton event 0`);
             const clipboardAccessOk = await modImages.isClipboardPermissionStateOk();
             if (clipboardAccessOk == false) {

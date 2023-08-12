@@ -1,4 +1,4 @@
-console.warn("here is clipboard-images.js");
+console.warn("here is images.js");
 
 let debugPasteLineOn = true;
 debugPasteLineOn = false;
