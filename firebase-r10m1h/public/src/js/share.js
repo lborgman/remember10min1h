@@ -585,23 +585,26 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
         // btn.classList.add("mdc-theme-secondary");
         btn.classList.add("btn-add-image");
         btn.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            const modClipboardImages = await import("clipboard-images");
+            const modImages = await import("clipboard-images");
             debugPasteLine(`addPasteButton event 0`);
-            const clipboardAccessOk = await modClipboardImages.isClipboardPermissionStateOk();
+            const clipboardAccessOk = await modImages.isClipboardPermissionStateOk();
             if (clipboardAccessOk == false) {
                 debugPasteLine(`addPasteButton event 1`);
-                modClipboardImages.alertHowToUnblockPermissions();
+                modImages.alertHowToUnblockPermissions();
                 return;
             }
             debugPasteLine(`addPasteButton event 2`);
-            const resultImageBlobs = await modClipboardImages.getImagesFromClipboard();
+            const resultImageBlobs = await modImages.getImagesFromClipboard();
             if (Array.isArray(resultImageBlobs)) {
                 if (resultImageBlobs.length == 0) {
-                    modClipboardImages.alertNoImagesFound();
+                    modImages.alertNoImagesFound();
                 } else {
                     const toDiv = divPasteImage;
+                    const maxBlobOutSize = 40 * 1000;
                     for (const blob of resultImageBlobs) {
-                        await modClipboardImages.addImageCardFromBlobImage(blob, toDiv);
+                        const eltImgCard = await modImages.mkImageCardFromBigImage(blob, toDiv, maxBlobOutSize);
+                        modImages.addFunOnRemoveImageCard(eltImgCard, restartButtonStateTimer);
+                        toDiv.appendChild(eltImgCard);
                     }
                     restartButtonStateTimer();
                 }
@@ -618,7 +621,7 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                         handleClipboardReadNotAllowed();
                         break;
                     case "DataError":
-                        modClipboardImages.alertNoImagesFound();
+                        modImages.alertNoImagesFound();
                         break;
                     default:
                         debugger;
@@ -652,12 +655,15 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
             if (record) {
                 const images = record.images;
                 if (images) {
-                    images.forEach(imageBlob => {
-                        // addImageCard(divImages, imageBlob, "blob-to-store", undefined, restartButtonStateTimer);
-                        modClipboardImages.addImageCard(
-                            divImages, imageBlob, "blob-to-store",
-                            undefined, restartButtonStateTimer
+                    images.forEach(async imageBlob => {
+                        // mkImageCard(divImages, imageBlob, "blob-to-store", undefined, restartButtonStateTimer);
+                        const eltImageCard = await modClipboardImages.mkImageCard(
+                            imageBlob, "blob-to-store",
+                            undefined,
+                            // restartButtonStateTimer
                         );
+                        modClipboardImages.addFunOnRemoveImageCard(eltImageCard, restartButtonStateTimer)
+                        divImages.appendChild(eltImageCard);
                     });
                     // restartButtonStateTimer();
                 }

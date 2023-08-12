@@ -216,22 +216,19 @@ export async function alertNoImagesFound() {
     modMdc.mkMDCdialogAlert(bodyAlert);
 }
 
-export async function addImageCard(toDiv, blob, extraClass, debugInfo, funCheckSave) {
+export async function mkImageCard(blob, extraClass, debugInfo) {
     const modMdc = await import("util-mdc");
     const eltImg = mkElt("span", { class: "image-bg-contain image-bg-size mdc-card" });
-    if (funCheckSave) {
-        const toFun = typeof funCheckSave;
-        if (toFun != "function") throw Error(`funCheckSave is not funtion (${toFun})`);
-        const btnDeleteImage = modMdc.mkMDCiconButton("delete_forever");
-        btnDeleteImage.classList.add("image-delete");
-        btnDeleteImage.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            // FIX-ME: ask
-            eltImg.remove();
-            // restartButtonStateTimer();
-            funCheckSave();
-        }));
-        eltImg.appendChild(btnDeleteImage);
-    }
+    // const toFun = typeof funCheckSave;
+    // if (toFun != "function") throw Error(`funCheckSave is not funtion (${toFun})`);
+    const btnDeleteImage = modMdc.mkMDCiconButton("delete_forever");
+    btnDeleteImage.classList.add("image-delete");
+    btnDeleteImage.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+        // FIX-ME: ask
+        eltImg.remove();
+        // if (funCheckSave) funCheckSave();
+    }));
+    eltImg.appendChild(btnDeleteImage);
     if (debugInfo) {
         eltImg.style.position = "relative"
         const divDebug = mkElt("div", { class: "div-image-bg-debug" }, debugInfo);
@@ -244,19 +241,15 @@ export async function addImageCard(toDiv, blob, extraClass, debugInfo, funCheckS
     eltImg.style.backgroundImage = urlBg;
     eltImg.dataset.urlBlob = urlBlob;
     if (extraClass) eltImg.classList.add(extraClass);
-    toDiv.appendChild(eltImg);
+    // toDiv.appendChild(eltImg);
     return eltImg;
 }
 
-export async function addImageCardFromBlobImage(blobIn, toDiv, funCheckSave) {
-    if (funCheckSave) {
-        const toFun = typeof funCheckSave;
-        if (toFun != "function") throw Error(`funCheckSave is not funtion (${toFun})`);
-    }
-    debugPasteLine(`addPasteButton 8, addImageCardFromBlobImage`);
+export async function mkImageCardFromBigImage(blobIn, toDiv, maxBlobOutSize) {
+    debugPasteLine(`addPasteButton 8, mkImageCardFromBigImage`);
     console.warn({ blobIn });
 
-    const maxBlobSize = 40 * 1000;
+    const maxBlobSize = maxBlobOutSize;
     const {
         blobOut,
         shrinked,
@@ -273,23 +266,25 @@ export async function addImageCardFromBlobImage(blobIn, toDiv, funCheckSave) {
     const tIn = typeIn.slice(6);
     const tOut = typeOut.slice(6);
     const msg = `${tIn} *${tS},~${tQ},${msElapsed}ms=> ${tOut},${(sizeOut / 1000).toFixed()}kB`;
-    console.log(msg);
+    // console.log(msg);
 
-    // const eltNewImage = addImageCard(toDiv, blobOut, "blob-to-store", msg, funCheckSave);
-    const eltNewImage = await addImageCard(toDiv, blobOut, "blob-to-store", msg);
-    const btnDel = eltNewImage.querySelector(".image-delete");
-    // btnDel.addEventListener("click", evt => restartButtonStateTimer());
-    if (funCheckSave) { btnDel.addEventListener("click", evt => funCheckSave()); }
+    const eltImageCard = await mkImageCard(blobOut, "blob-to-store", msg);
+    toDiv.appendChild(eltImageCard);
+    // const btnDel = eltNewImage.querySelector(".image-delete");
     setTimeout(() => {
-        const bcr = eltNewImage.getBoundingClientRect();
+        const bcr = eltImageCard.getBoundingClientRect();
         if (bcr.bottom < window.innerHeight) return;
-        eltNewImage.scrollIntoView({
+        eltImageCard.scrollIntoView({
             behavior: "smooth",
             block: "nearest"
         }, 10);
     });
-    // restartButtonStateTimer();
-    if (funCheckSave) funCheckSave();
+    return eltImageCard;
+}
+
+export function addFunOnRemoveImageCard(eltImageCard, funOnRemove) {
+    const btnDeleteImage = eltImageCard.querySelector(".image-delete");
+    btnDeleteImage.addEventListener("click", evt => funOnRemove(evt));
 }
 
 // Blobs => base64 (for our images)

@@ -569,8 +569,10 @@ export class CustomRenderer4jsMind {
                     modClipboardImages.alertNoImagesFound();
                 } else {
                     const toDiv = divPasteImage;
+                    const maxBlobOutSize = 20 * 1000;
                     for (const blob of resultImageBlobs) {
-                        await modClipboardImages.addImageCardFromBlobImage(blob, toDiv);
+                        const eltImg = await modClipboardImages.mkImageCardFromBigImage(blob, toDiv, maxBlobOutSize);
+                        toDiv.appendChild(eltImg);
                     }
                 }
             } else {
