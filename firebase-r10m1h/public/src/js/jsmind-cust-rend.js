@@ -556,22 +556,22 @@ export class CustomRenderer4jsMind {
             btnAddBg,
         ]);
         async function addBg(blob) {
-            const modClipboardImages = await import("images");
-            const clipboardAccessOk = await modClipboardImages.isClipboardPermissionStateOk();
+            const modImages = await import("images");
+            const clipboardAccessOk = await modImages.isClipboardPermissionStateOk();
             if (clipboardAccessOk == false) {
-                // debugPasteLine(`addPasteButton event 1`);
-                modClipboardImages.alertHowToUnblockPermissions();
+                modImages.alertHowToUnblockPermissions();
                 return;
             }
-            const resultImageBlobs = await modClipboardImages.getImagesFromClipboard();
+            const resultImageBlobs = await modImages.getImagesFromClipboard();
             if (Array.isArray(resultImageBlobs)) {
                 if (resultImageBlobs.length == 0) {
-                    modClipboardImages.alertNoImagesFound();
+                    modImages.alertNoImagesFound();
                 } else {
                     const toDiv = divPasteImage;
-                    const maxBlobOutSize = 20 * 1000;
+                    const maxBlobSize = 20 * 1000;
                     for (const blob of resultImageBlobs) {
-                        const eltImg = await modClipboardImages.mkImageCardFromBigImage(blob, toDiv, maxBlobOutSize);
+                        const eltImg = await modImages.mkImageCardFromBigImage(blob, maxBlobSize);
+                        modImages.addFunOnRemoveImageCard(eltImg, removeBg);
                         toDiv.appendChild(eltImg);
                     }
                 }
@@ -586,10 +586,10 @@ export class CustomRenderer4jsMind {
                 switch (err.name) {
                     case "NotAllowedError":
                         // handleClipboardReadNotAllowed();
-                        modClipboardImages.alertHowToUnblockPermissions();
+                        modImages.alertHowToUnblockPermissions();
                         break;
                     case "DataError":
-                        modClipboardImages.alertNoImagesFound();
+                        modImages.alertNoImagesFound();
                         break;
                     default:
                         debugger;

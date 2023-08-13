@@ -1,4 +1,5 @@
-console.warn("here is images.js");
+// FIX-ME: Something is wrong with the next line if it is on line 1???
+console.log("here is images.js");
 
 let debugPasteLineOn = true;
 debugPasteLineOn = false;
@@ -32,15 +33,11 @@ export async function resizeImage(imageBlobIn, maxBlobSize) {
                 // ctx.drawImage(image, 0, 0, 640, 480);  // <-- draw the right image!
                 ctx.drawImage(image, 0, 0, natW, natH);  // <-- draw the right image!
             }
-            // .toBlog(callback, type, quality)
-            // const blob = canvas.toDataURL('image/png', 0.5);
-            // resolve(blob);   // <-- call it here!
-            let retImageBlob;
-            let blobSize = Number.POSITIVE_INFINITY;
-            // const maxBlobSize = 40 * 1000;
+            let retImageBlob = imageBlobIn;
+            // let blobSize = Number.POSITIVE_INFINITY;
+            let blobSize = retImageBlob.size;
             let n = 0;
             const nMax = 10;
-            // let quality = 0.5; // FIX-ME: better start value?
             let quality = (() => {
                 // in png, 2 000 000 => const maxBlobSize = 40 * 1000;
                 // if (imageBlobSize > 2 * 1000 * 1000) return 0.1; // 3s
@@ -51,6 +48,7 @@ export async function resizeImage(imageBlobIn, maxBlobSize) {
                 if (imageBlobSize > 400 * 1000) return 0.4;
                 return 0.5;
             })();
+            lastQuality = quality;
             while (++n < nMax && blobSize > maxBlobSize) {
                 // https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas/convertToBlob
                 retImageBlob = await new Promise((resolveToBlob) => {
@@ -84,8 +82,6 @@ export async function resizeImage(imageBlobIn, maxBlobSize) {
         // debugPasteLineOn = true;
         debugPasteLine(`imageBlob, imageBlobSize: ${imageBlobSize}, imageBlobType: ${imageBlobType} }`);
         const urlBlobHelper = URL.createObjectURL(imageBlobIn);
-        // const urlBg = `url(${urlBlobHelper})`;
-        // image.src = imageURL;
         image.src = urlBlobHelper
     });
 }
@@ -245,7 +241,7 @@ export async function mkImageCard(blob, extraClass, debugInfo) {
     return eltImg;
 }
 
-export async function mkImageCardFromBigImage(blobIn, toDiv, maxBlobOutSize) {
+export async function mkImageCardFromBigImage(blobIn, maxBlobOutSize) {
     debugPasteLine(`addPasteButton 8, mkImageCardFromBigImage`);
     console.warn({ blobIn });
 
@@ -262,6 +258,7 @@ export async function mkImageCardFromBigImage(blobIn, toDiv, maxBlobOutSize) {
     // FIX-ME: lastQuality
     const tS = shrinked.toFixed(3)
     const tQ = quality.toFixed(2);
+    // const tQ = lastQuality.toFixed(2);
     const sizeOut = blobOut.size;
     const tIn = typeIn.slice(6);
     const tOut = typeOut.slice(6);
@@ -269,7 +266,7 @@ export async function mkImageCardFromBigImage(blobIn, toDiv, maxBlobOutSize) {
     // console.log(msg);
 
     const eltImageCard = await mkImageCard(blobOut, "blob-to-store", msg);
-    toDiv.appendChild(eltImageCard);
+    // toDiv.appendChild(eltImageCard);
     // const btnDel = eltNewImage.querySelector(".image-delete");
     setTimeout(() => {
         const bcr = eltImageCard.getBoundingClientRect();
