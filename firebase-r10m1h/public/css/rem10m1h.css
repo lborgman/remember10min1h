@@ -1326,6 +1326,35 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
     right: 0;
 }
 
+#my-dialog-content:has(#jsmind-ednode) {
+    display: flex;
+}
+#jsmind-ednode {
+    display: grid;
+    grid-template-rows: min-content 40% 1fr;
+    grid-template-rows: min-content 1fr;
+    flex-grow: 1;
+    NOborder: 1px dotted red;
+    NObackground: orange;
+}
+#jsmind-ednode > * {
+    min-height: 0;
+}
+#jsmind-ednode-parts {
+    display: grid;
+    grid-template-rows: 40% min-content 1fr;
+    NOborder: 2px dashed blueviolet;
+    NObackground: aqua;
+}
+#jsmind-ednode-parts > * {
+    /* https://css-tricks.com/preventing-a-grid-blowout/ */
+    min-width: 0;
+    NObackground: red;
+    NOborder: 2px dotted yellow;
+}
+#jsmind-ednode-parts div.tab-elts {
+    overflow-y: auto;
+}
 #jsmind-ednode div.normal-content {
     Xbackground: red;
     display: flex;

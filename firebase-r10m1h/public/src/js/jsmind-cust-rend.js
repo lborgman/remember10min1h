@@ -900,7 +900,7 @@ export class CustomRenderer4jsMind {
         });
 
         const tabBar = modMdc.mkMdcTabBarSimple(tabRecs, contentElts, onActivateMore);
-        const divParts = mkElt("div", undefined, [
+        const divParts = mkElt("div", { id: "jsmind-ednode-parts" }, [
             divCopied,
             tabBar,
             contentElts,
