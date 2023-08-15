@@ -3,6 +3,7 @@
     "name": "Flashcards 4 Internet with Reminders",
     "share_target": {
         "action": "index.html",
+        "enctype": "application/x-www-form-urlencoded",
         "method": "GET",
         "params": {
             "title": "title",
