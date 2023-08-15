@@ -1333,6 +1333,7 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
     display: grid;
     grid-template-rows: min-content 40% 1fr;
     grid-template-rows: min-content 1fr;
+    /* https://stackoverflow.com/questions/72137185/make-children-full-height-of-parent-flex-box-css */
     flex-grow: 1;
     NOborder: 1px dotted red;
     NObackground: orange;
