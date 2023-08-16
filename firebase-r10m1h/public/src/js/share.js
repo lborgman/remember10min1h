@@ -1030,8 +1030,10 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
         }
 
 
-        const btnUrl = modMdc.mkMDCiconButton("link");
-        btnUrl.classList.add("icon-button-40");
+        const icon = modMdc.mkMDCicon("link");
+        const btnUrl = modMdc.mkMDCbutton("Show links", "raised", icon);
+        btnUrl.title = "Show links found in Your notes";
+        // btnUrl.classList.add("icon-button-40");
         btnUrl.classList.add(...themePrimary);
         const s = [
             "display: flex",
@@ -1291,13 +1293,36 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
         const strUrl = record ? record.url : "";
         const tfURL = modMdc.mkMDCtextField("Link", inpURL, strUrl);
 
-        const aURL = modMdc.mkMDCiconButton("link");
+        const aURLorig = modMdc.mkMDCiconButton("link");
+        aURLorig.classList.add("icon-button-40");
+        aURLorig.classList.add(...themePrimary);
+
+        const btnURL2 = modMdc.mkMDCiconButton("link");
+        btnURL2.classList.add("icon-button-40");
+        btnURL2.classList.add(...themePrimary);
+        const aURL2 = mkElt("a", {href:"#"}, btnURL2);
+        aURL2.addEventListener("click", evt => { console.log("click aURL2"); });
+        btnURL2.addEventListener("click", evt => {
+            console.log("click btnURL2");
+            aURL2.href = inpURL.value;
+        });
+        aURL2.addEventListener("contextmenu", evt => { console.log("contextmenu aURL2"); });
+        btnURL2.addEventListener("contextmenu", evt => {
+            console.log("contextmenu btnURL2");
+            aURL2.href = inpURL.value;
+        });
+
+        const icon = modMdc.mkMDCicon("link");
+        const aURL = modMdc.mkMDCbuttonA("#", undefined, "raised", icon);
+        aURL.title = "Go to this item source page (new)";
         aURL.classList.add("icon-button-40");
         aURL.classList.add(...themePrimary);
         aURL.addEventListener("click", evt => {
             const url = inpURL.value;
-            window.open(url);
+            // window.open(url);
+            aURL.href = url;
         });
+        // aURL.addEventListener("contextmenu", evt => { aURL.href = inpURL.value; });
 
         // FIX-ME: move to util-mdc.js
         function setMDCiconButton(iconButton, iconName) {
@@ -1308,7 +1333,8 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
             lastChild.textContent = iconName;
         }
 
-        const btnViewURL = modMdc.mkMDCiconButton("visibility");
+        const btnViewURL = modMdc.mkMDCiconButton("visibility_off");
+        btnViewURL.title = "View source link";
         btnViewURL.classList.add("icon-button-40");
         btnViewURL.addEventListener("click", evt => {
             const isDisplayed = !divURLlocked.classList.contains("display-none");
@@ -1336,6 +1362,7 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
             }
         }
         const btnEditURL = modMdc.mkMDCiconButton("edit");
+        btnEditURL.title = "Edit source link";
         btnEditURL.classList.add("icon-button-40");
         btnEditURL.addEventListener("click", evt => {
             console.log("clicked btnEditURL");
@@ -1349,7 +1376,11 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
             setURLvisible(true);
         });
         // const divURLright = mkElt("div", { class: "div-url-right-buttons" }, [aURL, btnEditURL]);
-        const divURLbtns = mkElt("div", { class: "div-url-top-buttons" }, [aURL, btnViewURL, btnEditURL]);
+        const divURLbtns = mkElt("div", { class: "div-url-top-buttons" }, [
+            aURL,
+            aURLorig,
+            aURL2,
+            btnViewURL, btnEditURL]);
 
         const divURLlockedValue = mkElt("div", { class: "div-url-locked-value" }, inpURL.value);
         const divURLlocked = mkElt("div", { class: "div-url-locked display-none" }, [
