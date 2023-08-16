@@ -233,6 +233,14 @@ export function mkMDCiconButton(icon, ariaLabel, sizePx) {
     iconButtonRipple.unbounded = true;
     return btn;
 }
+export function setMDCiconButton(iconButton, iconName) {
+    if (!iconButton.classList.contains("mdc-icon-button")) {
+        console.error("classList does not contain mdc-icon-button", iconButton);
+    }
+    const lastChild = iconButton.lastChild;
+    lastChild.textContent = iconName;
+}
+
 
 // https://material.io/develop/web/components/input-controls/text-field/
 export function mkMDCtextFieldTextarea(id, rows, cols) {

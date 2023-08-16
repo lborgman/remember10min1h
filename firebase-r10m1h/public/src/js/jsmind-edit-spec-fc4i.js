@@ -3,10 +3,11 @@ console.log("Here is jsmind-edit-spec-fc4i.js");
 // const modDb = await import("db-fc4i");
 // const modJsEditCommon = await import("jsmind-edit-common");
 
-function showKeyInFc4i(keyFc4i) {
+function getLink2KeyInFc4i(keyFc4i) {
     const objUrl = new URL("/", location);
     objUrl.searchParams.set("showkey", keyFc4i)
-    location = objUrl;
+    // location = objUrl;
+    return objUrl.href;
 }
 
 async function addProviderFc4i() {
@@ -17,7 +18,7 @@ async function addProviderFc4i() {
         longName: "Flashcard 4 Internet",
         img: linkRendImg,
         getRec: dbFc4i.get1Reminder,
-        showRec: showKeyInFc4i,
+        getRecLink: getLink2KeyInFc4i,
     });
 }
 addProviderFc4i();

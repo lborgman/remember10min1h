@@ -1748,14 +1748,15 @@ jmnode.selected {
     position: absolute;
     bottom: -4;
     left: -4;
-    background: red;
-    border: 1px solid black;
-    border-radius: 4px;
-    width: 48px;
-    height: 48px;
+    NObackground: red;
+}
+.jsmind-renderer-img > button {
+    background-size: cover;
+    color: white;
+    border: 1px solid white;
+    NOborder-radius: 4px;
     width: 40px;
     height: 40px;
-    background-size: cover
 }
 .is-left .jsmind-renderer-img {
     left: unset;
@@ -1769,15 +1770,19 @@ jmnode.selected {
     position: absolute;
     bottom: -8;
     left: -4;
-    background: yellowgreen;
-    background: skyblue;
-    border: 1px solid black;
-    border-radius: 4px;
-    border-radius: 40%;
+    NObackground: yellowgreen;
+    NObackground: skyblue;
+    NOborder: 1px solid black;
+    NOborder-radius: 4px;
+    NOborder-radius: 40%;
     NOwidth: 48px;
     NOheight: 48px;
     background-size: cover
 
+}
+.jsmind-plain-link > button {
+    background: skyblue;
+    border: 1px solid blue;
 }
 
 

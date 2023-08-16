@@ -1294,10 +1294,12 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
         const tfURL = modMdc.mkMDCtextField("Link", inpURL, strUrl);
 
         const aURLorig = modMdc.mkMDCiconButton("link");
+        aURLorig.title = "Go to this item source page (aURLorig)";
         aURLorig.classList.add("icon-button-40");
         aURLorig.classList.add(...themePrimary);
 
         const btnURL2 = modMdc.mkMDCiconButton("link");
+        btnURL2.title = "Go to this item source page (btnURL2)";
         btnURL2.classList.add("icon-button-40");
         btnURL2.classList.add(...themePrimary);
         const aURL2 = mkElt("a", {href:"#"}, btnURL2);
@@ -1314,27 +1316,15 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
 
         const icon = modMdc.mkMDCicon("link");
         const aURL = modMdc.mkMDCbuttonA("#", undefined, "raised", icon);
-        aURL.title = "Go to this item source page (new)";
+        aURL.title = "Go to this item source page (aURL)";
         aURL.classList.add("icon-button-40");
         aURL.classList.add(...themePrimary);
-        aURL.addEventListener("click", evt => {
-            const url = inpURL.value;
-            // window.open(url);
-            aURL.href = url;
-        });
+        aURL.addEventListener("click", evt => { aURL.href = inpURL.value; });
         // aURL.addEventListener("contextmenu", evt => { aURL.href = inpURL.value; });
 
-        // FIX-ME: move to util-mdc.js
-        function setMDCiconButton(iconButton, iconName) {
-            if (!iconButton.classList.contains("mdc-icon-button")) {
-                console.error("classList does not contain mdc-icon-button", iconButton);
-            }
-            const lastChild = iconButton.lastChild;
-            lastChild.textContent = iconName;
-        }
 
         const btnViewURL = modMdc.mkMDCiconButton("visibility_off");
-        btnViewURL.title = "View source link";
+        btnViewURL.title = "View/hide source link";
         btnViewURL.classList.add("icon-button-40");
         btnViewURL.addEventListener("click", evt => {
             const isDisplayed = !divURLlocked.classList.contains("display-none");
@@ -1349,16 +1339,16 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                 setURLeditable(false);
             }
             const newIcon = on ? "visibility" : "visibility_off";
-            setMDCiconButton(btnViewURL, newIcon);
+            modMdc.setMDCiconButton(btnViewURL, newIcon);
         }
         function setURLeditable(on) {
             if (!on) {
                 divURLlockedValue.removeAttribute("contenteditable")
-                setMDCiconButton(btnEditURL, "edit");
+                modMdc.setMDCiconButton(btnEditURL, "edit");
             } else {
                 // divURLlockedValue.setAttribute("contenteditable", true)
                 divURLlockedValue.setAttribute("contenteditable", "plaintext-only")
-                setMDCiconButton(btnEditURL, "edit_off");
+                modMdc.setMDCiconButton(btnEditURL, "edit_off");
             }
         }
         const btnEditURL = modMdc.mkMDCiconButton("edit");

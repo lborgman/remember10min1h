@@ -3,7 +3,7 @@
 console.log("here is jsmind-cust-rend.js");
 
 export class providerDetails {
-    #name; #longName; #img; #getRec; #showRec;
+    #name; #longName; #img; #getRec; #getRecLink;
     constructor(providerRec) {
         // console.warn("providerRec.constructor", providerRec);
         const len = Object.keys(providerRec).length;
@@ -16,20 +16,20 @@ export class providerDetails {
         checkType(providerRec.longName, "string");
         checkType(providerRec.img, "string");
         checkType(providerRec.getRec, "function");
-        checkType(providerRec.showRec, "function");
+        checkType(providerRec.getRecLink, "function");
         if (providerRec.getRec.length != 1) throw Error("getRec function should take 1 argument");
-        if (providerRec.showRec.length != 1) throw Error("showRec function should take 1 argument");
+        if (providerRec.getRecLink.length != 1) throw Error("showRec function should take 1 argument");
         this.#name = providerRec.name;
         this.#longName = providerRec.longName;
         this.#img = providerRec.img;
         this.#getRec = providerRec.getRec;
-        this.#showRec = providerRec.showRec;
+        this.#getRecLink = providerRec.getRecLink;
     }
     get name() { return this.#name; }
     get longName() { return this.#longName; }
     get img() { return this.#img; }
     get getRec() { return this.#getRec; }
-    get showRec() { return this.#showRec; }
+    get getRecLink() { return this.#getRecLink; }
 }
 export class CustomRenderer4jsMind {
     #providers = {};
@@ -102,13 +102,17 @@ export class CustomRenderer4jsMind {
         if (nodeLink && nodeLink.length > 0) {
             // item link
             const modMdc = await import("util-mdc");
+
+            /*
             const iconLink = modMdc.mkMDCicon("link");
-            const eltA = mkElt("a", { href: nodeLink, class: "jsmind-plain-link" }, iconLink);
+            // const eltA = mkElt("a", { href: nodeLink, class: "jsmind-plain-link" }, iconLink);
             const eltA2 = modMdc.mkMDCbuttonA(nodeLink, "", "raised", iconLink);
             eltA2.classList.add("icon-button-40");
             eltA2.classList.add("jsmind-plain-link");
+            */
 
             const iconBtn = modMdc.mkMDCiconButton("link");
+            iconBtn.title = "Visit web page";
             iconBtn.classList.add("icon-button-40");
             const eltA3 = mkElt("a", { href: nodeLink, class: "jsmind-plain-link" }, iconBtn);
 
@@ -116,6 +120,30 @@ export class CustomRenderer4jsMind {
         }
     }
     async updateJmnodeFromCustom(eltJmnode, jmOwner) {
+        async function fixRenderImg(eltDiv) {
+            const modMdc = await import("util-mdc");
+            const eltParent = eltDiv.parentElement;
+            eltDiv.remove();
+            const btnURL = modMdc.mkMDCiconButton("link");
+            btnURL.title = "Go to this item in Fc4i";
+            btnURL.classList.add("icon-button-40");
+            // btnURL.classList.add(...themePrimary);
+
+
+            const strCustom = eltDiv.dataset.jsmindCustom;
+            const objCustom = JSON.parse(strCustom);
+            const provider = objCustom.provider;
+            const key = objCustom.key;
+
+            const linkProvider = await theCustomRenderer.#providers[provider].getRecLink(key);
+            const aURL = mkElt("a", { href: linkProvider }, btnURL);
+            aURL.classList.add("jsmind-renderer-img");
+            aURL.dataset.jsmindCustom = strCustom;
+            const bgImg = theCustomRenderer.getLinkRendererImage(provider);
+            btnURL.style.backgroundImage = `url(${bgImg})`;
+            eltParent.appendChild(aURL);
+        }
+
         const eltBefore = eltJmnode.cloneNode(true);
         // console.warn("updateJmnodeFromCustom", eltBefore, eltBefore.childElementCount);
         if (eltJmnode.childElementCount != 3) throw Error(`ChildElementCount != 3, ${eltJmnode.childElementCount}`);
@@ -127,11 +155,13 @@ export class CustomRenderer4jsMind {
             return;
         }
 
-        const htmlRendererImg = eltJmnode.lastElementChild;
+        const divRendererImg = eltJmnode.lastElementChild;
+        const tnDiv = divRendererImg.tagName;
+        if (tnDiv != "DIV") throw Error(`Expected div, but element is ${tnDiv}`);
         // console.log("htmlRenderingImg", htmlRendererImg);
-        const strCustom = htmlRendererImg.dataset.jsmindCustom;
+        const strCustom = divRendererImg.dataset.jsmindCustom;
         if (!strCustom) throw Error("No jsmindCustom key found on <jmnode>");
-        fixRenderImg(htmlRendererImg);
+        await fixRenderImg(divRendererImg);
         const objCustom = JSON.parse(strCustom)
         // const keyRec = await get1Reminder(objCustom.key);
         const provider = objCustom.provider;
@@ -1164,13 +1194,6 @@ function addJmnodeBgAndText(eltJmnode) {
     return { eltTxt, eltBg };
 }
 
-function fixRenderImg(eltImg) {
-    eltImg.classList.add("jsmind-renderer-img");
-    const strCustom = eltImg.dataset.jsmindCustom;
-    const objCustom = JSON.parse(strCustom);
-    const bgImg = theCustomRenderer.getLinkRendererImage(objCustom.provider);
-    eltImg.style.backgroundImage = `url(${bgImg})`;
-}
 
 function fixLeftRightChildren(eltJmnode) {
     const node_id = jsMind.my_get_nodeID_from_DOM_element(eltJmnode);
