@@ -1344,6 +1344,8 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
 #jsmind-ednode-parts {
     display: grid;
     grid-template-rows: 40% min-content 1fr;
+    /* https://css-tricks.com/animating-css-grid-how-to-examples/ */
+    transition: 1s;
     NOborder: 2px dashed blueviolet;
     NObackground: aqua;
 }

@@ -289,14 +289,17 @@ export class CustomRenderer4jsMind {
         */
         const jmnodesCopied = mkElt("jmnodes", undefined, eltCopied);
         if (themeClass) jmnodesCopied.classList.add(themeClass);
-        const divCopied = mkElt("div", undefined, [
+        const divEdnodeCopied = mkElt("div", undefined, [
             jmnodesCopied
         ]);
-        divCopied.style.position = "relative";
-        divCopied.style.height = "200px";
-        divCopied.style.width = "100%";
+        const paddingDivEdnodeCopied = 8;
+        divEdnodeCopied.style.position = "relative";
+        // divEdnodeCopied.style.height = "200px";
+        divEdnodeCopied.style.width = "100%";
+        divEdnodeCopied.style.backgroundColor = "black";
+        divEdnodeCopied.style.padding = `${paddingDivEdnodeCopied}px`;
         // https://stackoverflow.com/questions/59010779/pointer-event-issue-pointercancel-with-pressure-input-pen
-        divCopied.style.touchAction = "none";
+        divEdnodeCopied.style.touchAction = "none";
 
         const lblBorderColor = mkCtrlColor("border.color", "black");
 
@@ -930,20 +933,20 @@ export class CustomRenderer4jsMind {
         });
 
         const tabBar = modMdc.mkMdcTabBarSimple(tabRecs, contentElts, onActivateMore);
-        const divParts = mkElt("div", { id: "jsmind-ednode-parts" }, [
-            divCopied,
+        const divEdnodeParts = mkElt("div", { id: "jsmind-ednode-parts" }, [
+            divEdnodeCopied,
             tabBar,
             contentElts,
             // detThemes,
         ])
         const body = mkElt("div", { id: "jsmind-ednode" }, [
             mkElt("h2", undefined, "Edit node"),
-            divParts,
+            divEdnodeParts,
         ]);
 
 
         // The workaround:
-        const thumbSize = "50";
+        const thumbSize = "30";
         const style = [
             `width:${thumbSize}px`,
             `height:${thumbSize}px`,
@@ -956,11 +959,22 @@ export class CustomRenderer4jsMind {
         // if (confirm("thumb absolute?")) thumb.style.position = "absolute";
         thumb.style.position = "absolute";
         // console.log({ thumb });
-        divCopied.appendChild(thumb);
+        divEdnodeCopied.appendChild(thumb);
         let bcrC, bcrT;
         let newBcrC;
         thumb.style.visibility = "hidden";
         // thumb.style.display = "none";
+        // let bcrOrigDivCopied;
+        function adjustDivCopiedHeight() {
+            const bcrT = thumb.getBoundingClientRect();
+            const bcrD = divEdnodeCopied.getBoundingClientRect();
+            const newH = bcrT.bottom - bcrD.top + 20;
+            // grid-template-rows: 40% min-content 1fr;
+            divEdnodeParts.style.gridTemplateRows = `${newH}px min-content 1fr`;
+        }
+        // throttle or debounce??
+        const debounceAdjustDivCopiedHeight = debounce(adjustDivCopiedHeight, 1000);
+
         setTimeout(async () => {
             const eltMutations = thumb.parentElement.parentElement.parentElement
             const resMu = await wait4mutations(eltMutations, 500);
@@ -981,6 +995,10 @@ export class CustomRenderer4jsMind {
             }
             thumb.style.visibility = "visible";
             newBcrC = eltCopied.getBoundingClientRect();
+            // bcrOrigDivCopied = divEdnodeCopied.getBoundingClientRect();
+            // console.log({ bcrOrigDivCopied });
+            // adjustDivCopiedHeight();
+            debounceAdjustDivCopiedHeight();
         },
             // 100 - too small, strange things happens!
             // 500
@@ -1017,12 +1035,15 @@ export class CustomRenderer4jsMind {
         };
 
         let n = 0;
+        // jsmind-ednode-parts
+        console.log({ divEdnodeParts, divEdnodeCopied });
         function onThumbMove(evts) {
             const target = evts.target;
             const evt = evts[0] || evts;
             const nowX = evt.clientX;
             const nowY = evt.clientY;
             if (thumb.style.position == "fixed") {
+                debugger;
                 thumb.style.left = nowX - thumbShiftX + 'px';
                 thumb.style.top = nowY - thumbShiftY + 'px';
             } else if (thumb.style.position == "absolute") {
@@ -1036,8 +1057,10 @@ export class CustomRenderer4jsMind {
             const diffLeft = nowX - thumbStartX;
             const diffTop = nowY - thumbStartY;
             // return;
-            eltCopied.style.width = bcrC.width + diffLeft + "px";
-            eltCopied.style.height = bcrC.height + diffTop + "px";
+            eltCopied.style.width = bcrC.width + diffLeft - paddingDivEdnodeCopied + "px";
+            eltCopied.style.height = bcrC.height + diffTop - paddingDivEdnodeCopied + "px";
+            eltCopied.style.outline = "1px dotted white";
+            adjustDivCopiedHeight();
         };
 
         thumb.onpointerdown = onThumbDown;
