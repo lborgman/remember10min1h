@@ -227,6 +227,7 @@ export class CustomRenderer4jsMind {
             if (clsName.match(/^theme-[a-z0-9]*$/)) themeClass = clsName;
         })
         const eltCopied = eltJmnode.cloneNode(true);
+        eltCopied.style.outline = "1px dotted white";
         const bcrOrig = eltJmnode.getBoundingClientRect();
         eltCopied.style.top = 0;
         eltCopied.style.left = 0;
@@ -960,7 +961,7 @@ export class CustomRenderer4jsMind {
         thumb.style.position = "absolute";
         // console.log({ thumb });
         divEdnodeCopied.appendChild(thumb);
-        let bcrC, bcrT;
+        let bcrCd, bcrT;
         let newBcrC;
         thumb.style.visibility = "hidden";
         // thumb.style.display = "none";
@@ -979,17 +980,17 @@ export class CustomRenderer4jsMind {
             const eltMutations = thumb.parentElement.parentElement.parentElement
             const resMu = await wait4mutations(eltMutations, 500);
             // console.log({ resMu });
-            bcrC = eltCopied.getBoundingClientRect();
+            bcrCd = eltCopied.getBoundingClientRect();
             bcrT = thumb.getBoundingClientRect();
             // thumb.style.display = "block";
             if (thumb.style.position == "fixed") {
-                thumb.style.left = bcrC.left + bcrC.width - bcrT.width / 2 + "px";
-                thumb.style.top = bcrC.top + bcrC.height + - bcrT.height / 2 + "px";
+                thumb.style.left = bcrCd.left + bcrCd.width - bcrT.width / 2 + "px";
+                thumb.style.top = bcrCd.top + bcrCd.height + - bcrT.height / 2 + "px";
             } else if (thumb.style.position == "absolute") {
                 // const bcrDiv = divCopied.getBoundingClientRect();
                 const bcrJmnodes = jmnodesCopied.getBoundingClientRect();
-                thumb.style.left = bcrC.right - bcrT.width / 2 - bcrJmnodes.left + "px";
-                thumb.style.top = bcrC.bottom - bcrT.height / 2 - bcrJmnodes.top + "px";
+                thumb.style.left = bcrCd.right - bcrT.width / 2 - bcrJmnodes.left + "px";
+                thumb.style.top = bcrCd.bottom - bcrT.height / 2 - bcrJmnodes.top + "px";
             } else {
                 debugger;
             }
@@ -1012,7 +1013,7 @@ export class CustomRenderer4jsMind {
             evts.preventDefault(); // prevent selection start (browser action)
 
             const bcrThumb = thumb.getBoundingClientRect();
-            bcrC = eltCopied.getBoundingClientRect();
+            // const bcrCd = eltCopied.getBoundingClientRect();
             const evt = evts[0] || evts;
             thumbStartX = evt.clientX;
             thumbStartY = evt.clientY;
@@ -1040,27 +1041,50 @@ export class CustomRenderer4jsMind {
         function onThumbMove(evts) {
             const target = evts.target;
             const evt = evts[0] || evts;
-            const nowX = evt.clientX;
-            const nowY = evt.clientY;
+            const nowClientX = evt.clientX;
+            const nowClientY = evt.clientY;
+            const padd = paddingDivEdnodeCopied;
             if (thumb.style.position == "fixed") {
                 debugger;
-                thumb.style.left = nowX - thumbShiftX + 'px';
-                thumb.style.top = nowY - thumbShiftY + 'px';
+                thumb.style.left = nowClientX - thumbShiftX + 'px';
+                thumb.style.top = nowClientY - thumbShiftY + 'px';
             } else if (thumb.style.position == "absolute") {
                 // const bcrDiv = divCopied.getBoundingClientRect();
                 const bcrJmnodes = jmnodesCopied.getBoundingClientRect();
-                thumb.style.left = nowX - thumbShiftX - bcrJmnodes.left + 'px';
-                thumb.style.top = nowY - thumbShiftY - bcrJmnodes.top + 'px';
+
+
+                thumb.style.left = nowClientX - thumbShiftX - bcrJmnodes.left + padd + 'px';
+                thumb.style.top = nowClientY - thumbShiftY - bcrJmnodes.top + padd + 'px';
             } else {
                 debugger;
             }
-            const diffLeft = nowX - thumbStartX;
-            const diffTop = nowY - thumbStartY;
+            // const diffLeft = nowX - thumbStartX;
+            // const diffTop = nowY - thumbStartY;
             // return;
-            eltCopied.style.width = bcrC.width + diffLeft - paddingDivEdnodeCopied + "px";
-            eltCopied.style.height = bcrC.height + diffTop - paddingDivEdnodeCopied + "px";
-            eltCopied.style.outline = "1px dotted white";
-            adjustDivCopiedHeight();
+            // const bcrC = eltCopied.getBoundingClientRect();
+
+            // from setTimeout:
+            //     thumb.style.left = bcrCd.right - bcrT.width / 2 - bcrJmnodes.left + "px";
+            //     thumb.style.top = bcrCd.bottom - bcrT.height / 2 - bcrJmnodes.top + "px";
+
+            const thumbClientLeft = nowClientX - thumbShiftX;
+            const thumbClientTop = nowClientY - thumbShiftY;
+
+            const bcrC2 = eltCopied.getBoundingClientRect();
+            // const bcrT2 = thumb.getBoundingClientRect();
+            // console.log("thumbTop, bcrCd.top", thumbClientTop, bcrCd.top, bcrC2, bcrT2);
+            // FIX-ME: bcrCd.top != bcrC2.top ????? Chrome bug or just timing?
+
+            // eltCopied.style.width = bcrC.width + diffLeft - padd + "px";
+            //     thumb.style.left = bcrCd.right - bcrT.width / 2 - bcrJmnodes.left + "px";
+            eltCopied.style.width = thumbClientLeft - bcrC2.left + padd + bcrT.width / 2 + "px";
+
+            // eltCopied.style.height = bcrC.height + diffTop - padd + "px";
+            //     thumb.style.top = bcrCd.bottom - bcrT.height / 2 - bcrJmnodes.top + "px";
+            eltCopied.style.height = thumbClientTop - bcrC2.top + padd + bcrT.height / 2 + "px";
+
+            // adjustDivCopiedHeight();
+            debounceAdjustDivCopiedHeight();
         };
 
         thumb.onpointerdown = onThumbDown;

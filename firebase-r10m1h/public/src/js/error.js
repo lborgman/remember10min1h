@@ -1218,6 +1218,11 @@ function waitSeconds(sec) {
   throttle: Guaranteeing a constant flow of executions every X milliseconds.
           Like checking every 200ms your scroll position to trigger a CSS animation.
 
+  * If the function is debounced, the bouncer will make everyone that turns up to wait in line.
+  Then, after 5 minutes, everyone in line can come in at once.
+  * If the function is throttled, the bouncer will let the 1st person who shows up in.
+  If anyone else shows up in the next 5 minutes, they will be turned away.
+
   FIX-ME: I think I mixed them up.
     debounce() with execute at the end is what I want here.
     My change to throttleTO() seems to convert it to a debounce()-version.
@@ -1250,6 +1255,7 @@ function throttleRA(fn) {
     }
 }
 
+// From https://garden.bradwoods.io/notes/javascript/performance/debounce-throttle
 function debounce(callback, waitMS = 200) {
     let timeoutId;
 
@@ -1264,3 +1270,17 @@ function debounce(callback, waitMS = 200) {
     };
 };
 
+function throttle (func, waitMS = 200) {
+    let isWait = false;
+    
+    return function(...args) {
+        if (!isWait) {
+            func.call(this, ...args);
+            isWait = true;
+            
+            setTimeout(() => {
+               isWait = false;
+            }, waitMS);
+        }
+    }
+}
