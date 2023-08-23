@@ -9,6 +9,8 @@ checkPWA();
 setupForInstall();
 setupServiceWorker();
 
+const styleInstallEvents = "background:red; color:blue";
+
 function addDebugRow(txt) {
     console.log("checkPWA DEBUG: ", txt);
     const secDebug = document.getElementById(idDebugSection);
@@ -207,6 +209,15 @@ async function setupServiceWorker() {
     }
 }
 
+export function getDisplayMode() {
+    let displayMode = 'browser';
+    const mqStandAlone = '(display-mode: standalone)';
+    if (navigator.standalone || window.matchMedia(mqStandAlone).matches) {
+        displayMode = 'standalone';
+    }
+    return displayMode;
+}
+
 async function setupForInstall() {
     console.log("setupForInstall");
     const modMdc = await import("util-mdc");
@@ -214,14 +225,17 @@ async function setupForInstall() {
     // Initialize deferredPrompt for use later to show browser install prompt.
     let deferredPrompt;
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-        console.warn(`'beforeinstallprompt' event was fired.`);
+    window.addEventListener('beforeinstallprompt', (evt) => {
+        console.warn(`**** beforeinstallprompt' event was fired.`);
         // Prevent the mini-infobar from appearing on mobile
-        e.preventDefault();
+        evt.preventDefault();
         // Stash the event so it can be triggered later.
-        deferredPrompt = e;
+        deferredPrompt = evt;
+
         // Update UI notify the user they can install the PWA
-        createEltInstallPromotion();
+        // This is only nessacary if standalone!
+        // Otherwise the builtin browser install prompt can be used.
+        if (getDisplayMode() != "browser") { createEltInstallPromotion(); }
     });
 
     window.addEventListener('appinstalled', () => {
@@ -236,9 +250,10 @@ async function setupForInstall() {
     const divInstallPromotion = mkElt("dialog", { id: "div-please-install" }, [
         mkElt("h2", undefined, "Please install this app"),
         mkElt("p", undefined, [
-            "If you do that you can share from other apps to this app.",
+            `This will add an icon to your home screen (or desktop).
+            If relevant it also make it possible to share from other apps to this app.`,
         ]),
-        mkElt("p", undefined, ["navigator.platform: ", navigator.platform]),
+        // mkElt("p", undefined, ["navigator.platform: ", navigator.platform]),
         mkElt("p", undefined, ["navigator.userAgentData.platform: ", navigator.userAgentData?.platform]),
     ]);
     divInstallPromotion.style.display = "none";
@@ -258,20 +273,27 @@ async function setupForInstall() {
 
     const btnLater = modMdc.mkMDCbutton("Later", "outlined");
     btnLater.addEventListener("click", (evt) => {
+        console.log("%c*** divInstallPromotion btnLater event .remove", styleInstallEvents);
         divInstallPromotion.remove();
     });
 
     divInstallPromotion.appendChild(btnInstall);
     divInstallPromotion.appendChild(btnLater);
+    function showInstallPromotion() {
+        console.log("%cshowInstallPromotion", styleInstallEvents);
+        divInstallPromotion.style.display = "block";
+    }
     function hideInstallPromotion() {
+        console.log("%chideInstallPromotion", styleInstallEvents);
         divInstallPromotion.style.display = "none";
     }
     async function createEltInstallPromotion() {
-        console.warn("createEltInstallPromotion START")
+        console.log("%c**** createEltInstallPromotion START", styleInstallEvents);
         await promiseDOMready();
         document.body.appendChild(divInstallPromotion);
         divInstallPromotion.style.display = null;
-        console.warn("createEltInstallPromotion END, display = null")
+        console.log("%c**** createEltInstallPromotion END, display = null", styleInstallEvents);
+        showInstallPromotion();
     }
 
 }

@@ -4,10 +4,41 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- 
-        Add a dynamic manifest.json to make this a PWA.
-        https://dev.to/progressier/create-a-pwa-app-manifest-dynamically-1b4b
-    -->
+
+    <!-- This page © Copyright 2023, Lennart Borgman -->
+    <meta name="author" content="Lennart Borgman">
+    <meta name="description" content="Mindmaps web page that you can manipulate on your phone">
+    <!-- <link rel="manifest" href="manifest.json"> -->
+    <meta name="theme-color" content="#c0ca33">
+
+    <title>Mindmaps (Jsmind + editing)</title>
+    <link rel="icon" type="image/svg+xml" href="/img/rem10m1h.svg">
+
+    <script>
+        // Add a dynamic manifest.json to make this a PWA.
+        // https://dev.to/progressier/create-a-pwa-app-manifest-dynamically-1b4b
+
+        //for brevity, we're not including the isDesktop function here
+        // let iconUrl = isDesktop() ? '/desktop.png' : '/mobile.png';
+        let iconUrl = "/img/rem10m1h.svg";
+        let manifest = {
+            name: "Mindmaps (Jsmind with added editing)",
+            icons: [{
+                src: iconUrl,
+                sizes: "any",
+                type: "image/svg+xml"
+            }]
+        };
+        const strManifest = JSON.stringify(manifest);
+        console.log({ strManifest });
+        let content = encodeURIComponent(JSON.stringify(manifest));
+        let url = "data:application/manifest+json," + content;
+        let element = document.createElement('link');
+        element.setAttribute('rel', 'manifest');
+        element.setAttribute('href', url);
+        document.querySelector('head').appendChild(element);
+        console.log("Added dynamic manifest.json", { element });
+    </script>
 
     <!-- for MWC, https://github.com/material-components/material-web -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
