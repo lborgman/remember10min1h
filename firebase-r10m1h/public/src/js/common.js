@@ -19,7 +19,8 @@ async function checkUnusedTags() {
     const modMdc = await import("util-mdc");
 
     // Non-existant tags?
-    const dbFc4i = await getDbFc4i();
+    // const dbFc4i = await getDbFc4i();
+    const dbFc4i = await import("db-fc4i");
     const allTags = await dbFc4i.getDbTagsArr();
     const divReqTags = document.getElementById("div-search-the-tags");
     const visibleTags = [...divReqTags.querySelectorAll(".tag-in-our-tags")]
@@ -43,7 +44,8 @@ async function updateDivSearchTheTags() {
             return chk;
         })
         .map(lbl => lbl.textContent.substr(1));
-    const dbFc4i = await getDbFc4i();
+    // const dbFc4i = await getDbFc4i();
+    const dbFc4i = await import("db-fc4i");
     const arrAllTags = await dbFc4i.getDbTagsArr();
     const arrUnusedTags = await dbFc4i.getUnusedTags();
     divSearchTheTags.textContent = "";
@@ -246,7 +248,8 @@ function clearMainSection(newPageId) {
 }
 async function justShowKey(key) {
     const secMain = clearMainSection("page-show-key");
-    const dbFc4i = await getDbFc4i();
+    // const dbFc4i = await getDbFc4i();
+    const dbFc4i = await import("db-fc4i");
     // const db = await dbFc4i.getDb();
     // const keyRec = await db.get(idbStoreName, key);
     const keyRec = await dbFc4i.getDbKey(key);
@@ -264,7 +267,8 @@ async function justShowKey(key) {
 }
 async function showKeyToRemember(key, timerInfo) {
     const secMain = clearMainSection("page-show-key");
-    const dbFc4i = await getDbFc4i();
+    // const dbFc4i = await getDbFc4i();
+    const dbFc4i = await import("db-fc4i");
     const keyRec = await dbFc4i.getDbKey(key);
     console.log({ keyRec });
     const style = [
@@ -371,7 +375,8 @@ const detsOutput = {}
 // let divActiveNewest;
 let divActive;
 async function displayMatchingReminders(searchFor, minConf, maxConf, requiredTags, cantRefresh) {
-    const dbFc4i = await getDbFc4i();
+    // const dbFc4i = await getDbFc4i();
+    const dbFc4i = await import("db-fc4i");
     if (![false, true, undefined].includes(cantRefresh)) {
         console.error(`cantRefresh: ${cantRefresh}`);
         throw Error(`cantRefresh: ${cantRefresh}`);
@@ -423,7 +428,8 @@ async function displayMatchingReminders(searchFor, minConf, maxConf, requiredTag
     async function checkSearchNeedsRefresh() {
         // doSearch(true);
         const last = divSearchBanner.lastSearch;
-        const dbFc4i = await getDbFc4i();
+        // const dbFc4i = await getDbFc4i();
+        const dbFc4i = await import("db-fc4i");
         const allMatchingItems = await dbFc4i.getDbMatching(last.searchFor, last.minConf, last.maxConf, last.requiredTags);
         const allMatchingKeys = allMatchingItems.map(rec => rec.key);
         const strKeys = allMatchingKeys.join(";");
@@ -658,7 +664,8 @@ async function goHome() {
         restartSearchTimer();
     });
 
-    const dbFc4i = await getDbFc4i();
+    // const dbFc4i = await getDbFc4i();
+    const dbFc4i = await import("db-fc4i");
     const numItems = await dbFc4i.countAllReminders();
     await updateDivSearchTheTags();
     // await checkUnusedTags();
@@ -935,7 +942,8 @@ async function showIntro() {
 }
 
 async function showAddedNew(sharedParams) {
-    const dbFc4i = await getDbFc4i();
+    // const dbFc4i = await getDbFc4i();
+    const dbFc4i = await import("db-fc4i");
     const secMain = clearMainSection("page-added-new");
     const oldRec = sharedParams?.url ? await dbFc4i.getViaUrl(sharedParams.url) : undefined;
     // console.log({ oldRec });
@@ -1074,6 +1082,7 @@ async function mkMenu() {
         const modJEfc4i = await import("/src/js/jsmind-edit-spec-fc4i.js");
         modJEfc4i.dialogMindMapsFc4i();
     }));
+    const liMindmapsA = modMdc.mkMDCmenuItem(mkElt("a", { href: "/mm4i/mm4i.html" }, "Mindmaps"));
 
     const liJsmindEdit = modMdc.mkMDCmenuItem("Jsmind-edit");
     liJsmindEdit.classList.add("test-item");
@@ -1438,7 +1447,8 @@ async function mkMenu() {
         const arrKeys2 = [...eltsKey].map(elt => elt.dataset.keyRecord);
         const setKeys = new Set(arrKeys2);
         const arrKeys = [...setKeys];
-        const dbFc4i = await getDbFc4i();
+        // const dbFc4i = await getDbFc4i();
+        const dbFc4i = await import("db-fc4i");
         const numAllItems = await dbFc4i.countAllReminders();
         let pExport;
         const fnPrefix = "fc4i";
@@ -1625,6 +1635,7 @@ async function mkMenu() {
         liNew,
         // liGetReminders,
         liMindmaps,
+        liMindmapsA,
         liAskPersistent,
         liExportImport,
     ];
@@ -1678,7 +1689,8 @@ const getQueryParams = (query) => {
 
 async function setFirstAutoRemindersOnHtml() {
     await promiseDOMready();
-    const dbFc4i = await getDbFc4i();
+    // const dbFc4i = await getDbFc4i();
+    const dbFc4i = await import("db-fc4i");
     const recReminders = await dbFc4i.getSavedDialogValue();
     // console.log({ recReminders });
     if (recReminders) setAutoRemindersOnHtml(recReminders.autoReminders);
@@ -1701,7 +1713,8 @@ async function deleteEntry(key, card) {
     if (!answer) return false;
 
     // const key = rem.key;
-    const dbFc4i = await getDbFc4i();
+    // const dbFc4i = await getDbFc4i();
+    const dbFc4i = await import("db-fc4i");
     // const db = await dbFc4i.getDb();
     // const res = await db.delete(idbStoreName, key);
     // const res = await dbFc4i.deleteKey(key);
@@ -1807,7 +1820,8 @@ const mainCommon = async () => {
                 addDebugRow(`URL parameters: NONE`);
                 (async () => {
                     // const arrAll = [...await getAllReminders()];
-                    const dbFc4i = await getDbFc4i();
+                    // const dbFc4i = await getDbFc4i();
+                    const dbFc4i = await import("db-fc4i");
                     const numItems = await dbFc4i.countAllReminders();
                     if (numItems > 0) {
                         goHome();
@@ -2045,7 +2059,8 @@ async function checkNotifyShort() {
     console.log("%ccheckNotifyShort", "color:red");
 
     // FIX-ME: move to db-fc4i.js
-    const dbFc4i = await getDbFc4i();
+    // const dbFc4i = await getDbFc4i();
+    const dbFc4i = await import("db-fc4i");
     const objNextShort = await dbFc4i.getNextShortTimer();
 
     if (!objNextShort) return;
@@ -2138,7 +2153,7 @@ async function mkDivManualReminders(getCreatedEltTime) {
 async function getClipboardImages() {
     console.log("getClipboardImages");
     const modMdc = await import("util-mdc");
-            const modClipboardImages = await import("images");
+    const modClipboardImages = await import("images");
 
     if (!await modClipboardImages.isClipboardPermissionStateOk()) {
         return;

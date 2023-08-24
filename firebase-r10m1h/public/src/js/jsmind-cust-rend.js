@@ -2,6 +2,14 @@
 
 console.log("here is jsmind-cust-rend.js");
 
+function checkType(variable, wantType) {
+    const hasType = typeof variable;
+    if (hasType != wantType) {
+        const msg = `Want type ${wantType}, but got type ${hasType}`;
+        throw Error(msg);
+    }
+}
+
 export class providerDetails {
     #name; #longName; #img; #getRec; #getRecLink;
     constructor(providerRec) {

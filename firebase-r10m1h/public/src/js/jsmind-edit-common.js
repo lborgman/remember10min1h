@@ -540,7 +540,8 @@ export async function pageSetup() {
     // debugger;
     if (!mind) {
         return;
-        // mind = getEmptyMap(mindmapKey);
+        // mind = getEmptyMap(mindmapKey); "mindmaps"
+        // dialogMindmaps
     }
 
     const modJmDrag = await getDraggableNodes();
@@ -919,6 +920,16 @@ export async function pageSetup() {
             li.classList.add("jsmind-menu-no-selected-node");
         }
 
+        function mkMenuItemA(lbl, url) {
+            const eltA = mkElt("a", {href:url}, lbl);
+            const li = modMdc.mkMDCmenuItem(eltA);
+            li.addEventListener("click", evt => {
+                evt.preventDefault();
+                evt.stopPropagation();
+                hideContextMenu();
+            });
+            return li;
+        }
         function mkMenuItem(lbl, fun) {
             const li = modMdc.mkMDCmenuItem(lbl);
             li.addEventListener("click", evt => {
@@ -953,6 +964,8 @@ export async function pageSetup() {
         const liDragAccessibility = mkMenuItem("Drag accessiblity", dialogDragAccessibility);
 
         const liMindmaps = funMindmapDialog ? mkMenuItem("Mindmaps", funMindmapDialog) : undefined;
+        const liMindmapsA = mkMenuItemA("Mindmaps", "/mm4i/mm4i.html");
+        console.log({liMindmapsA});
 
         // const idScreenMirrorPoint = "jsmindtest-screen-mirror-point";
         // const idScreenMirrorColor = "jsmindtest-screen-mirror-color";
@@ -1104,6 +1117,7 @@ export async function pageSetup() {
             liTestConvertToCustom,
             liDragAccessibility,
             liMindmaps,
+            liMindmapsA,
 
             liTestTouch,
             liTestMouse,

@@ -11,6 +11,7 @@ const importMap = {
         "jsmind-edit-common": "/src/js/jsmind-edit-common.js",
         "jsmind-edit-spec-fc4i": "/src/js/jsmind-edit-spec-fc4i.js",
         "jsmind-cust-rend": "/src/js/jsmind-cust-rend.js",
+        "mindmap-helpers": "/src/js/mindmap-helpers.js",
         "my-svg": "/src/js/mod/my-svg.js",
         "new-jsmind.draggable-nodes": "/ext/jsmind/new-jsmind.draggable-nodes.js",
         "pwa": "/src/js/mod/pwa.js",

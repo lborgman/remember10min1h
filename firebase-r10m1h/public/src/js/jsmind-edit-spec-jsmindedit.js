@@ -8,11 +8,11 @@ const modJsEditCommon = await import("jsmind-edit-common");
 
 modDb.setDBprefix("jsmindedit-");
 
-export function dialogMindMapsJsmindEdit(info, arrMindmapsHits) {
+export function OLDdialogMindMapsJsmindEdit(info, arrMindmapsHits) {
     // dialogMindMaps(mkEltLinkMindmapJsmindEdit, info, arrMindmapsHits);
     dialogMindMaps("/jsmind-edit.html", info, arrMindmapsHits);
 }
-export function ourDialogMindmaps(info, arrMindmapsHits) {
+export function OLDourDialogMindmaps(info, arrMindmapsHits) {
     dialogMindMapsJsmindEdit(info, arrMindmapsHits);
 }
 

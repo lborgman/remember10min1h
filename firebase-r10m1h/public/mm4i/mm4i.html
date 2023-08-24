@@ -4,41 +4,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-
     <!-- This page © Copyright 2023, Lennart Borgman -->
     <meta name="author" content="Lennart Borgman">
     <meta name="description" content="Mindmaps web page that you can manipulate on your phone">
-    <!-- <link rel="manifest" href="manifest.json"> -->
+    <link rel="manifest" href="manifest-mm4i.json">
     <meta name="theme-color" content="#c0ca33">
 
-    <title>Mindmaps (Jsmind + editing)</title>
+    <title>Mindmaps 4 Internet</title>
     <link rel="icon" type="image/svg+xml" href="/img/rem10m1h.svg">
 
-    <script>
-        // Add a dynamic manifest.json to make this a PWA.
-        // https://dev.to/progressier/create-a-pwa-app-manifest-dynamically-1b4b
-
-        //for brevity, we're not including the isDesktop function here
-        // let iconUrl = isDesktop() ? '/desktop.png' : '/mobile.png';
-        let iconUrl = "/img/rem10m1h.svg";
-        let manifest = {
-            name: "Mindmaps (Jsmind with added editing)",
-            icons: [{
-                src: iconUrl,
-                sizes: "any",
-                type: "image/svg+xml"
-            }]
-        };
-        const strManifest = JSON.stringify(manifest);
-        console.log({ strManifest });
-        let content = encodeURIComponent(JSON.stringify(manifest));
-        let url = "data:application/manifest+json," + content;
-        let element = document.createElement('link');
-        element.setAttribute('rel', 'manifest');
-        element.setAttribute('href', url);
-        document.querySelector('head').appendChild(element);
-        console.log("Added dynamic manifest.json", { element });
-    </script>
 
     <!-- for MWC, https://github.com/material-components/material-web -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,16 +25,15 @@
     <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.css">
     <!-- <link rel="stylesheet" href="/ext/mdc/14.0.0/material-components-web.css"> -->
 
-    <link rel="stylesheet" href="css/rem10m1h.css">
-    <link id="jsmind-my-colors" rel="stylesheet" href="css/var-colors.css">
+    <link rel="stylesheet" href="/css/rem10m1h.css">
+    <link id="jsmind-my-colors" rel="stylesheet" href="/css/var-colors.css">
 
 
-    <script src="src/js/fc4i-importmaps.js"></script>
+    <script src="/src/js/fc4i-importmaps.js"></script>
 
 
-
-    <script src="src/js/error.js"></script>
-    <script src="src/js/umd/idb.js"></script>
+    <script src="/src/js/error.js"></script>
+    <script src="/src/js/umd/idb.js"></script>
     <!-- <script src="./src/js/is-displayed.js"></script> -->
 
 
@@ -94,19 +67,23 @@
         }, 1000);
     </script>
     <script src="/ext/mdc/material-components-web.js"></script>
+    <script>import("pwa");</script>
+
     <div id="jsmind_container" class="jsmind_container"></div>
 
     <!-- Mirror must be display:block for rendering -->
     <div id="jsmind-draggable-container4mirror" style="left: -1000px;"></div>
 
     <!-- <script src="/src/js/fc4i-mindmaps.js"></script> -->
+    <!-- <script src="/src/js/jsmind-edit-spec-fc4i.js"></script> -->
+
+    <!-- <script type="module" src="/src/js/jsmind-edit-spec-fc4i.js"></script> -->
     <script>
-        console.log("jsmind-edit.html");
         (async () => {
-            const modJsmindEdit = await import("/src/js/jsmind-edit-spec-jsmindedit.js");
-            const modJsEditCommon = await import("/src/js/jsmind-edit-common.js");
+            const modEditFc4iMM = await import("jsmind-edit-spec-fc4i");
+            const modJsEditCommon = await import("jsmind-edit-common");
             modJsEditCommon.basicInit4jsmind();
-            modJsEditCommon.setMindmapDialog(modJsmindEdit.ourDialogMindmaps);
+            modJsEditCommon.setMindmapDialog(modEditFc4iMM.ourDialogMindmaps);
             modJsEditCommon.pageSetup();
         })();
     </script>

@@ -5,11 +5,12 @@ console.log("here is mindmap-helpers.js");
 
 
 async function getDbMindmaps() { return await import("db-mindmaps") }
-async function getDbFc4i() { return await import("db-fc4i"); }
-async function getJsmindCust() { return await import("jsmind-cust-rend"); }
+// async function getDbFc4i() { return await import("db-fc4i"); }
+// async function getJsmindCust() { return await import("jsmind-cust-rend"); }
 async function getJsmindEditCommon() { return await import("jsmind-edit-common"); }
 
-getJsmindCust();
+// getJsmindCust();
+import("jsmind-cust-rend");
 
 function OLDthrottleTO(fn, msDelay) {
     let timeoutId;
@@ -49,28 +50,22 @@ async function getOurCustomRenderer() {
 async function createOurCustomRenderer() {
     console.warn("createOurCustomRenderer");
     // addDebugLog("createOurCustomRenderer");
-    const modCustom = await getJsmindCust();
+    // const modCustom = await getJsmindCust();
+    const modCustom = await import("jsmind-cust-rend");
     theCustomRenderer = new modCustom.CustomRenderer4jsMind();
     return theCustomRenderer;
 }
 function setOurCustomRendererJm(jmDisplayed) {
     theCustomRenderer.setJm(jmDisplayed);
 }
-async function ourCustomRendererAddProvider(providerRec) {
-    const modCustom = await getJsmindCust();
+export async function ourCustomRendererAddProvider(providerRec) {
+    // const modCustom = await getJsmindCust();
+    const modCustom = await import("jsmind-cust-rend");
     const prov = new modCustom.providerDetails(providerRec)
     // console.warn("prov", prov);
     // theCustomRenderer.addProvider(prov);
     const custRend = await getOurCustomRenderer();
     custRend.addProvider(prov);
-}
-
-function checkType(variable, wantType) {
-    const hasType = typeof variable;
-    if (hasType != wantType) {
-        const msg = `Want type ${wantType}, but got type ${hasType}`;
-        throw Error(msg);
-    }
 }
 
 createOurCustomRenderer();
@@ -374,7 +369,7 @@ function mkEltLinkMindmapA(urlPath, topic, mkey, mhits) {
 }
 
 // async function dialogMindMaps(funMkEltLinkMindmap, info, arrMindmapsHits)
-async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits) {
+export async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits) {
     const toLink = typeof linkMindmapsPage;
     if (toLink !== "string") throw Error(`urlHtml typeof should be string, got ${toLink}`);
     // const eltA = funMkEltLinkMindmap(topic, m.key, m.hits);

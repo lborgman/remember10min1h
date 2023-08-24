@@ -731,7 +731,8 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                 }
                 const divAllTags = mkElt("div", { class: "tags-list" });
 
-                const dbFc4i = await getDbFc4i();
+                // const dbFc4i = await getDbFc4i();
+                const dbFc4i = await import("db-fc4i");
                 let arrAllTags = await dbFc4i.getDbTagsArr();
                 const arrUnusedTags = await dbFc4i.getUnusedTags();
 
@@ -763,7 +764,8 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                                     console.log("transitionend", tag);
 
                                     // const tags = await getDbTagsArr();
-                                    const dbFc4i = await getDbFc4i();
+                                    // const dbFc4i = await getDbFc4i();
+                                    const dbFc4i = await import("db-fc4i");
                                     const tags = await dbFc4i.getDbTagsArr();
 
                                     console.log({ tags });
@@ -820,7 +822,8 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                 }
 
                 async function refreshArrAllTags() {
-                    const dbFc4i = await getDbFc4i();
+                    // const dbFc4i = await getDbFc4i();
+                    const dbFc4i = await import("db-fc4i");
                     const arrAllTags = await dbFc4i.getDbTagsArr();
                     return arrAllTags;
                 }
@@ -1253,7 +1256,8 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
         // const db = await getDb();
         // We now use val.key as db key
         // const res = await db.put(idbStoreName, val);
-        const dbFc4i = await getDbFc4i();
+        // const dbFc4i = await getDbFc4i();
+        const dbFc4i = await import("db-fc4i");
         const res = await dbFc4i.setDbKey(key, val);
         console.warn("saveNow", { res });
         myRemember.setSaveButtonState(false);
@@ -1302,7 +1306,7 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
         btnURL2.title = "Go to this item source page (btnURL2)";
         btnURL2.classList.add("icon-button-40");
         btnURL2.classList.add(...themePrimary);
-        const aURL2 = mkElt("a", {href:"#"}, btnURL2);
+        const aURL2 = mkElt("a", { href: "#" }, btnURL2);
         aURL2.addEventListener("click", evt => { console.log("click aURL2"); });
         btnURL2.addEventListener("click", evt => {
             console.log("click btnURL2");
