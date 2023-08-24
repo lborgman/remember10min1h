@@ -4,10 +4,10 @@
 console.log("here is mindmap-helpers.js");
 
 
-async function getDbMindmaps() { return await import("db-mindmaps") }
+// async function getDbMindmaps() { return await import("db-mindmaps") }
 // async function getDbFc4i() { return await import("db-fc4i"); }
 // async function getJsmindCust() { return await import("jsmind-cust-rend"); }
-async function getJsmindEditCommon() { return await import("jsmind-edit-common"); }
+// async function getJsmindEditCommon() { return await import("jsmind-edit-common"); }
 
 // getJsmindCust();
 import("jsmind-cust-rend");
@@ -35,7 +35,8 @@ async function DBsaveNowThisMindmap(jmDisplayed) {
     const objDataMind = jmDisplayed.get_data("node_array");
     const keyName = objDataMind.meta.name;
     if (!keyName) throw Error("Current mindmap has no meta.key");
-    const dbMindmaps = await getDbMindmaps();
+    // const dbMindmaps = await getDbMindmaps();
+    const dbMindmaps = await import("db-mindmaps");
     dbMindmaps.DBsetMindmap(keyName, objDataMind);
 }
 
@@ -90,20 +91,23 @@ async function createAndShowNewMindmap(linkMindmapsPage) {
     if (!objDataMind) return;
     const keyName = objDataMind.meta.name;
     console.log({ objDataMind, keyName });
-    const dbMindmaps = await getDbMindmaps();
+    // const dbMindmaps = await getDbMindmaps();
+    const dbMindmaps = await import("db-mindmaps");
     dbMindmaps.DBsetMindmap(keyName, objDataMind);
     // showMindmapFc4i(keyName);
     showMindmap(linkMindmapsPage, keyName);
 }
 
 async function getMindmap(key) {
-    const dbMindmaps = await getDbMindmaps();
+    // const dbMindmaps = await getDbMindmaps();
+    const dbMindmaps = await import("db-mindmaps");
     return dbMindmaps.DBgetMindmap(key);
 }
 
 async function dialogCreateMindMap() {
     const modMdc = await import("util-mdc");
-    const dbMindmaps = await getDbMindmaps();
+    // const dbMindmaps = await getDbMindmaps();
+    const dbMindmaps = await import("db-mindmaps");
 
     const title = mkElt("h2", undefined, "Create new mindmap");
     const nextKey = await getNextMindmapKey();
@@ -163,7 +167,8 @@ async function dialogCreateMindMap() {
 
 
 async function getMindmapsHits(customKey) {
-    const dbMindmaps = await getDbMindmaps();
+    // const dbMindmaps = await getDbMindmaps();
+    const dbMindmaps = await import("db-mindmaps");
     const provider = "fc4i"; // FIX-ME:
     const searchedTopic = (await getOurCustomRenderer()).customData2jsmindTopic(customKey, provider);
     const promArrMindmaps = (await dbMindmaps.DBgetAllMindmaps())
@@ -375,7 +380,8 @@ export async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits) {
     // const eltA = funMkEltLinkMindmap(topic, m.key, m.hits);
     const funMkEltLinkMindmap = (topic, mKey, mHits) => mkEltLinkMindmapA(linkMindmapsPage, topic, mKey, mHits);
     const modMdc = await import("util-mdc");
-    const dbMindmaps = await getDbMindmaps();
+    // const dbMindmaps = await getDbMindmaps();
+    const dbMindmaps = await import("db-mindmaps");
 
     const showNew = !arrMindmapsHits;
 
@@ -445,7 +451,8 @@ export async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits) {
                 eltLi.style.opacity = 0;
                 eltLi.style.height = 0;
                 eltLi.style.scale = 0;
-                const dbMindmaps = await getDbMindmaps();
+                // const dbMindmaps = await getDbMindmaps();
+                const dbMindmaps = await import("db-mindmaps");
                 dbMindmaps.DBremoveMindmap(m.key);
                 setTimeout(() => eltLi.remove(), 1000);
             }
