@@ -59,6 +59,7 @@
             "jsmind-cust-rend": getCDNurl("/src/js/jsmind-cust-rend.js"),
             "jsmind-edit-common": getCDNurl("/src/js/jsmind-edit-common.js"),
             "jsmind-edit-spec-jsmindedit": getCDNurl("/src/js/jsmind-edit-spec-jsmindedit.js"),
+            "mindmap-helpers": getCDNurl("/src/js/mindmap-helpers.js"),
             "new-jsmind.draggable-nodes": getCDNurl("/ext/jsmind/new-jsmind.draggable-nodes.js"),
             "util-mdc": getCDNurl("/src/js/mod/util-mdc.js"),
         }
@@ -79,11 +80,12 @@
         ie.src = srcError;
         document.currentScript.after(ie);
 
-        // const srcMMH = cdnBaseURL + "src/js/mindmap-helpers.js";
+        /*
         const srcMMH = getCDNurl("/src/js/mindmap-helpers.js");
         const iMMH = document.createElement("script");
         iMMH.src = srcMMH;
         document.currentScript.after(iMMH);
+        */
 
         // <!-- <link rel="stylesheet" href="css/rem10m1h.css"> -->
         const srcCss = getCDNurl("/css/rem10m1h.css");
@@ -139,20 +141,12 @@
             console.log("Before .basicInit4jsmind");
             modJsEditCommon.basicInit4jsmind();
 
-            console.log("Before .setMindmapDialog");
-            function ghDialogMindmaps(info, arrMindmapsHits) {
-                // dialogMindMaps("/jsmind-edit.html", info, arrMindmapsHits);
-                dialogMindMaps(location.pathname, info, arrMindmapsHits);
-            }
-            // modJsEditCommon.setMindmapDialog(modJsmindEdit.ourDialogMindmaps);
-            modJsEditCommon.setMindmapDialog(ghDialogMindmaps);
-
             console.log("Before .pageSetup");
             modJsEditCommon.pageSetup();
 
-            const u = new URL(location);
-            const p = u.searchParams;
-            if (!p.get("mindmap")) ghDialogMindmaps();
+            // const u = new URL(location);
+            // const p = u.searchParams;
+            // if (!p.get("mindmap")) ghDialogMindmaps();
         })();
     </script>
 
