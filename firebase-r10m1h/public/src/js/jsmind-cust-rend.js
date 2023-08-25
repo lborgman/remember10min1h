@@ -2,6 +2,8 @@
 
 console.log("here is jsmind-cust-rend.js");
 
+let theCustomRenderer;
+
 function checkType(variable, wantType) {
     const hasType = typeof variable;
     if (hasType != wantType) {
@@ -96,7 +98,7 @@ export class CustomRenderer4jsMind {
         // return this.linkRendererImg;
         return this.#providers[providerName].img;
     }
-    addJmnodeBgAndText(eltJmnode) { return addJmnodeBgAndText(eltJmnode) }
+    // addJmnodeBgAndText(eltJmnode) { return addJmnodeBgAndText(eltJmnode) }
     fixLeftRightChildren(eltJmnode) { fixLeftRightChildren(eltJmnode); }
     async addEltNodeLink(eltJmnode) {
         const childCount = eltJmnode.childElementCount;
@@ -1240,7 +1242,7 @@ export class CustomRenderer4jsMind {
 const cr4j = new CustomRenderer4jsMind();
 console.log({ cr4j });
 
-function addJmnodeBgAndText(eltJmnode) {
+export function addJmnodeBgAndText(eltJmnode) {
     const eltTxt = mkElt("div", { class: "jmnode-text" });
     eltTxt.classList.add("multiline-ellipsis");
     const eltBg = mkElt("div", { class: "jmnode-bg" });
@@ -1303,3 +1305,26 @@ function checkTagName(elt, expectName) {
         throw Error(`Expected DOM elt ${expectName}, got ${tn}`);
     }
 }
+
+export async function getOurCustomRenderer() {
+    theCustomRenderer = theCustomRenderer || await createOurCustomRenderer();
+    return theCustomRenderer;
+}
+async function createOurCustomRenderer() {
+    console.warn("createOurCustomRenderer");
+    // const modCustom = await import("jsmind-cust-rend");
+    theCustomRenderer = new CustomRenderer4jsMind();
+    return theCustomRenderer;
+}
+export function setOurCustomRendererJm(jmDisplayed) {
+    theCustomRenderer.setJm(jmDisplayed);
+}
+export async function ourCustomRendererAddProvider(providerRec) {
+    // const modCustom = await import("jsmind-cust-rend");
+    // const prov = new modCustom.providerDetails(providerRec)
+    const prov = new providerDetails(providerRec)
+    const custRend = await getOurCustomRenderer();
+    custRend.addProvider(prov);
+}
+
+createOurCustomRenderer();

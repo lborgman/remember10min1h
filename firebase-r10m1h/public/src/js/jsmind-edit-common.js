@@ -1,9 +1,21 @@
 "use strict";
 
-console.log("here is jsmind-edit-common.js");
+console.log("here is jsmind-edit-common.js", import.meta);
+if (document.currentScript) console.error("document.currentScript", document.currentScript);
 
 async function getDraggableNodes() {
     return await import("new-jsmind.draggable-nodes");
+}
+
+let theCustomRenderer;
+async function setCustomRenderer() {
+    if (theCustomRenderer) return;
+    const modCustRend = await import("jsmind-cust-rend");
+    theCustomRenderer = await modCustRend.getOurCustomRenderer();
+}
+
+function getCustomRenderer() {
+    return theCustomRenderer;
 }
 
 const theMirrorWays = [
@@ -359,6 +371,7 @@ checkTheDragTouchAccWay();
 
 export async function pageSetup() {
     // let useCanvas = true;
+    setCustomRenderer();
     // let useCanvas = false;
     // useCanvas = confirm("Use canvas?");
 
@@ -538,12 +551,10 @@ export async function pageSetup() {
         mind = await modMMhelpers.getMindmap(mindmapKey);
     }
     if (!mind) {
-        debugger;
-        // dialogMindmaps
         if (funMindmapsDialog) {
             funMindmapsDialog();
         } else {
-            modMMhelpers.dialogMindMaps(location.pathname);
+            dialogMindMaps(location.pathname);
         }
         return;
     }
@@ -554,7 +565,8 @@ export async function pageSetup() {
     const nowBefore = Date.now();
     const jmDisplayed = displayMindMap(mind, optionsJmDisplay);
 
-    modMMhelpers.setOurCustomRendererJm(jmDisplayed);
+    const modCustRend = await import("jsmind-cust-rend");
+    modCustRend.setOurCustomRendererJm(jmDisplayed);
     switchDragTouchAccWay(theDragTouchAccWay);
 
     const nowAfter = Date.now();
@@ -667,12 +679,12 @@ export async function pageSetup() {
                     const eltJmnode = jsMind.my_get_DOM_element_from_node(updated_node);
                     // debugger;
                     const isPlainNode = eltJmnode.childElementCount == 0;
-                    theCustomRenderer.addJmnodeBgAndText(eltJmnode);
+                    getCustomRenderer().addJmnodeBgAndText(eltJmnode);
                     // const isCustomNode = topic.search(" data-jsmind-custom=") > 0;
                     if (!isPlainNode) {
-                        theCustomRenderer.updateJmnodeFromCustom(eltJmnode);
+                        getCustomRenderer().updateJmnodeFromCustom(eltJmnode);
                     } else {
-                        theCustomRenderer.addEltNodeLink(eltJmnode);
+                        getCustomRenderer().addEltNodeLink(eltJmnode);
                     }
                 }
                 break;
@@ -691,11 +703,11 @@ export async function pageSetup() {
                     const moved_node = jmDisplayed.get_node(id_moved);
                     const eltJmnode = jsMind.my_get_DOM_element_from_node(moved_node);
                     const isPlainNode = eltJmnode.childElementCount == 0;
-                    theCustomRenderer.addJmnodeBgAndText(eltJmnode);
+                    getCustomRenderer().addJmnodeBgAndText(eltJmnode);
                     if (!isPlainNode) {
-                        theCustomRenderer.updateJmnodeFromCustom(eltJmnode);
+                        getCustomRenderer().updateJmnodeFromCustom(eltJmnode);
                     } else {
-                        theCustomRenderer.addEltNodeLink(eltJmnode);
+                        getCustomRenderer().addEltNodeLink(eltJmnode);
                     }
                     // const before_id = datadata[1];
                     // const parent_id = datadata[2];
@@ -800,7 +812,7 @@ export async function pageSetup() {
             const node_id = jsMind.my_get_nodeID_from_DOM_element(eltJmnode);
             jmDisplayed.toggle_node(node_id);
             eltJmnode.classList.toggle("is-expanded");
-            DBrequestSaveThisMindmap(theCustomRenderer.THEjmDisplayed);
+            DBrequestSaveThisMindmap(getCustomRenderer().THEjmDisplayed);
         }
         if (target.dataset.jsmindCustom) {
             setTimeout(async () => {
@@ -1316,10 +1328,10 @@ export async function pageSetup() {
         }
 
         const provider = objCustomCopied.provider;
-        if (!theCustomRenderer.getProviderNames().includes(provider)) throw Error(`Provider ${provider} is unknown`);
+        if (!getCustomRenderer().getProviderNames().includes(provider)) throw Error(`Provider ${provider} is unknown`);
         const providerKey = objCustomCopied.key;
 
-        const strTopic = theCustomRenderer.customData2jsmindTopic(providerKey, provider);
+        const strTopic = getCustomRenderer().customData2jsmindTopic(providerKey, provider);
 
         console.log("eltJmnode", eltJmnode, strTopic);
         if (jmOwner) {
@@ -1331,14 +1343,14 @@ export async function pageSetup() {
             // fixRenderImg(eltRendererImg);
             // const modCustom = await getJsmindCust();
             // modCustom.addJmnodeBgAndText(eltJmnode);
-            // theCustomRenderer.updateJmnodeFromCustom(eltJmnode, jmOwner);
+            // getCustomRenderer().updateJmnodeFromCustom(eltJmnode, jmOwner);
         } else {
             const s = eltJmnode.style;
             s.height = s.height || "140px";
             s.width = s.width || "140px";
-            const eltCustom = theCustomRenderer.jsmindTopic2customElt(strTopic);
+            const eltCustom = getCustomRenderer().jsmindTopic2customElt(strTopic);
             eltJmnode.appendChild(eltCustom);
-            theCustomRenderer.updateJmnodeFromCustom(eltJmnode, jmOwner);
+            getCustomRenderer().updateJmnodeFromCustom(eltJmnode, jmOwner);
         }
     }
 }
@@ -1374,8 +1386,9 @@ function getJmnodesFromJm(jmDisplayed) {
 
 export async function fixJmnodeProblem(eltJmnode) {
     // console.log("fixJmnodeProblem", eltJmnode);
-    const modMMhelpers = await import("mindmap-helpers");
-    const customRenderer = await modMMhelpers.getOurCustomRenderer();
+    // const modMMhelpers = await import("mindmap-helpers");
+    const modCustRend = await import("jsmind-cust-rend");
+    const customRenderer = await modCustRend.getOurCustomRenderer();
     customRenderer.fixLeftRightChildren(eltJmnode);
     /*
     if (eltJmnode.getAttribute("nodeid") !== "root") {
@@ -1407,9 +1420,12 @@ export async function fixJmnodeProblem(eltJmnode) {
     const eltRendererImg = eltJmnode.lastElementChild;
     const eltTopic = eltJmnode.firstElementChild;
 
-    const modCustom = await getJsmindCust();
+    // const modCustRend = await import("jsmind-cust-rend");
     // const { eltTxt, eltBg } = modCustom.addJmnodeBgAndText(eltJmnode);
-    const { eltTxt, eltBg } = theCustomRenderer.addJmnodeBgAndText(eltJmnode);
+    // const { eltTxt, eltBg } = getCustomRenderer().addJmnodeBgAndText(eltJmnode);
+    // const { eltTxt, eltBg } = modCustRend.getOurCustomRenderer().addJmnodeBgAndText(eltJmnode);
+    // const { eltTxt, eltBg } = theCustomRenderer().addJmnodeBgAndText(eltJmnode);
+    const { eltTxt, eltBg } = modCustRend.addJmnodeBgAndText(eltJmnode);
 
     if (isPlainNode) {
         const txt = eltJmnode.textContent;
@@ -1460,9 +1476,9 @@ function fixOldCustomAndUpdate(eltJmnode) {
     const isOldCustom = childLast.classList.contains("jsmind-renderer-img");
     if (strCustom) {
         // if (!isOldCustom) { fixRenderImg(childLast); }
-        theCustomRenderer.updateJmnodeFromCustom(eltJmnode);
+        getCustomRenderer().updateJmnodeFromCustom(eltJmnode);
     } else {
-        theCustomRenderer.addEltNodeLink(eltJmnode);
+        getCustomRenderer().addEltNodeLink(eltJmnode);
     }
 }
 
@@ -1644,4 +1660,146 @@ export function addScrollIntoViewOnSelect(jmDisp) {
         // console.log({scrollOpt})
         elt.scrollIntoView(scrollOpt);
     });
+}
+
+function mkEltLinkMindmapA(urlPath, topic, mkey, mhits) {
+    const url = new URL(urlPath, location);
+    url.searchParams.set("mindmap", mkey);
+    if (mhits) {
+        const hits = mhits.map(h => h.id);
+        console.log({ hits })
+        url.searchParams.set("nodehits", hits);
+    }
+    const eltA = mkElt("a", undefined, topic);
+    eltA.href = url;
+    return eltA;
+}
+
+export async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits) {
+    const toLink = typeof linkMindmapsPage;
+    if (toLink !== "string") throw Error(`urlHtml typeof should be string, got ${toLink}`);
+    // const eltA = funMkEltLinkMindmap(topic, m.key, m.hits);
+    const funMkEltLinkMindmap = (topic, mKey, mHits) => mkEltLinkMindmapA(linkMindmapsPage, topic, mKey, mHits);
+    const modMdc = await import("util-mdc");
+    // const dbMindmaps = await getDbMindmaps();
+    const dbMindmaps = await import("db-mindmaps");
+
+    const showNew = !arrMindmapsHits;
+
+    const eltTitle = mkElt("h2", undefined, "Mindmaps");
+    info = info || "";
+
+    arrMindmapsHits = arrMindmapsHits || await dbMindmaps.DBgetAllMindmaps();
+    const arrToShow = arrMindmapsHits.map(mh => {
+        const key = mh.key;
+        const j = mh.jsmindmap;
+        const hits = mh.hits;
+        let topic;
+        switch (j.format) {
+            case "node_tree":
+                topic = j.data.topic;
+                break;
+            case "node_array":
+                topic = j.data[0].topic;
+                break;
+            case "freemind":
+                const s = j.data;
+                topic = s.match(/<node .*?TEXT="([^"]*)"/)[1];
+                break;
+            default:
+                throw Error(`Unknown mindmap format: ${j.format}`);
+        }
+        // console.log({ m, key, j, name });
+        let name = topic;
+        if (topic.startsWith("<")) {
+            // FIX-ME: use DOMParser? It may be synchronous.
+            // https://stackoverflow.com/questions/63869394/parse-html-as-a-plain-text-via-javascript
+            const elt = document.createElement("div");
+            elt.innerHTML = topic;
+            const txt = elt.textContent;
+            name = txt;
+            const child1 = elt.firstElementChild;
+            // const custom = child1.dataset["jsmind-custom"];
+            const strCustom = child1.dataset.jsmindCustom;
+            if (strCustom) {
+                // console.log({ txt, strCustom })
+                // ourCustomRenderer
+                const objCustom = JSON.parse(strCustom);
+                topic = (async () => {
+                    const key = objCustom.key;
+                    const provider = objCustom.provider;
+                    const modCustRend = await import("jsmind-cust-rend");
+                    const keyRec = await (await modCustRend.getOurCustomRenderer()).getCustomRec(key, provider);
+                    return keyRec.title;
+                })();
+            }
+        }
+        return { key, topic, hits };
+    });
+    const arrPromLiMenu = arrToShow.map(async m => {
+        // https://stackoverflow.com/questions/43033988/es6-decide-if-object-or-promise
+        const topic = await Promise.resolve(m.topic);
+        const btnDelete = await modMdc.mkMDCiconButton("delete_forever");
+        btnDelete.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            evt.stopPropagation();
+            const eltQdelete = mkElt("span", undefined, ["Delete ", mkElt("b", undefined, topic)]);
+            const answerIsDelete = await modMdc.mkMDCdialogConfirm(eltQdelete);
+            if (answerIsDelete) {
+                console.log("*** del mm");
+                const eltLi = btnDelete.closest("li");
+                eltLi.style.backgroundColor = "red";
+                eltLi.style.opacity = 1;
+                eltLi.style.transition = "opacity 1s, height 1s, scale 1s";
+                eltLi.style.opacity = 0;
+                eltLi.style.height = 0;
+                eltLi.style.scale = 0;
+                // const dbMindmaps = await getDbMindmaps();
+                const dbMindmaps = await import("db-mindmaps");
+                dbMindmaps.DBremoveMindmap(m.key);
+                setTimeout(() => eltLi.remove(), 1000);
+            }
+        }));
+
+        const eltA = funMkEltLinkMindmap(topic, m.key, m.hits);
+
+        const eltTopic = mkElt("span", undefined, topic);
+        // const eltMm = mkElt("div", undefined, [eltTopic, btnDelete]);
+        const eltMm = mkElt("div", undefined, [eltA, btnDelete]);
+        const li = modMdc.mkMDCmenuItem(eltMm);
+        li.addEventListener("click", evt => {
+            closeDialog();
+        });
+        return li;
+    });
+    const arrLiMenu = await Promise.all(arrPromLiMenu);
+    if (showNew) {
+        const liNew = modMdc.mkMDCmenuItem("New mindmap");
+        liNew.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            // await createAndShowNewMindmapFc4i();
+            await createAndShowNewMindmap(linkMindmapsPage);
+        }));
+        // arrLiMenu.push(liNew);
+
+        // function mkMDCfab(eltIcon, title, mini, extendTitle)
+        const eltIcon = modMdc.mkMDCicon("add");
+        const btnFab = modMdc.mkMDCfab(eltIcon, "Create new mindmap", true);
+        btnFab.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            // await createAndShowNewMindmapFc4i();
+            await createAndShowNewMindmap(linkMindmapsPage);
+        }));
+        btnFab.style.marginLeft = "40px";
+        eltTitle.appendChild(btnFab);
+    }
+    const ul = modMdc.mkMDCmenuUl(arrLiMenu);
+    ul.classList.add("mindmap-list");
+    const body = mkElt("div", { id: "div-dialog-mindmaps" }, [
+        eltTitle,
+        info,
+        ul,
+    ]);
+
+    const btnClose = modMdc.mkMDCdialogButton("Close", "close", true);
+    const eltActions = modMdc.mkMDCdialogActions([btnClose]);
+    const dlg = await modMdc.mkMDCdialog(body, eltActions);
+    function closeDialog() { dlg.mdc.close(); }
 }

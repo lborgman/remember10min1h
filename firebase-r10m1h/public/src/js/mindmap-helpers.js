@@ -42,50 +42,12 @@ async function DBsaveNowThisMindmap(jmDisplayed) {
 
 async function getNextMindmapKey() { return "mm-" + new Date().toISOString(); }
 
-let theCustomRenderer;
-export async function getOurCustomRenderer() {
-    theCustomRenderer = theCustomRenderer || await createOurCustomRenderer();
-    // if (!theCustomRenderer instanceof CustomRenderer4jsMind) throw Error(`Not a custom renderer`);
-    return theCustomRenderer;
-}
-async function createOurCustomRenderer() {
-    console.warn("createOurCustomRenderer");
-    // addDebugLog("createOurCustomRenderer");
-    // const modCustom = await getJsmindCust();
-    const modCustom = await import("jsmind-cust-rend");
-    theCustomRenderer = new modCustom.CustomRenderer4jsMind();
-    return theCustomRenderer;
-}
-export function setOurCustomRendererJm(jmDisplayed) {
-    theCustomRenderer.setJm(jmDisplayed);
-}
-export async function ourCustomRendererAddProvider(providerRec) {
-    // const modCustom = await getJsmindCust();
-    const modCustom = await import("jsmind-cust-rend");
-    const prov = new modCustom.providerDetails(providerRec)
-    // console.warn("prov", prov);
-    // theCustomRenderer.addProvider(prov);
-    const custRend = await getOurCustomRenderer();
-    custRend.addProvider(prov);
-}
-
-createOurCustomRenderer();
-
-
-
-
-function OLDshowMindmapFc4i(key) {
-    const url = new URL("/fc4i-mindmaps.html", location);
-    url.searchParams.set("mindmap", key);
-    location.href = url; // FIX-ME:
-}
 function showMindmap(linkMindmapsPage, key) {
     const url = new URL(linkMindmapsPage, location);
     url.searchParams.set("mindmap", key);
     location.href = url; // FIX-ME:
 }
 
-// async function createAndShowNewMindmapFc4i() 
 async function createAndShowNewMindmap(linkMindmapsPage) {
     const objDataMind = await dialogCreateMindMap();
     if (!objDataMind) return;
@@ -352,6 +314,7 @@ async function dialogFindInMindMaps(key) {
     dialogMindMaps(info, arrMindmapsHits);
 }
 
+/*
 function mkEltLinkMindmapFc4i(topic, mkey, mhits) {
     const urlPath = "/fc4i-mindmaps.html";
     return mkEltLinkMindmapA(urlPath, topic, mkey, mhits);
@@ -360,147 +323,9 @@ function mkEltLinkMindmapJsmindEdit(topic, mkey, mhits) {
     const urlPath = "/jsmind-edit.html";
     return mkEltLinkMindmapA(urlPath, topic, mkey, mhits);
 }
-function mkEltLinkMindmapA(urlPath, topic, mkey, mhits) {
-    const url = new URL(urlPath, location);
-    url.searchParams.set("mindmap", mkey);
-    if (mhits) {
-        const hits = mhits.map(h => h.id);
-        console.log({ hits })
-        url.searchParams.set("nodehits", hits);
-    }
-    const eltA = mkElt("a", undefined, topic);
-    eltA.href = url;
-    return eltA;
-}
+*/
 
 // async function dialogMindMaps(funMkEltLinkMindmap, info, arrMindmapsHits)
-export async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits) {
-    const toLink = typeof linkMindmapsPage;
-    if (toLink !== "string") throw Error(`urlHtml typeof should be string, got ${toLink}`);
-    // const eltA = funMkEltLinkMindmap(topic, m.key, m.hits);
-    const funMkEltLinkMindmap = (topic, mKey, mHits) => mkEltLinkMindmapA(linkMindmapsPage, topic, mKey, mHits);
-    const modMdc = await import("util-mdc");
-    // const dbMindmaps = await getDbMindmaps();
-    const dbMindmaps = await import("db-mindmaps");
-
-    const showNew = !arrMindmapsHits;
-
-    const eltTitle = mkElt("h2", undefined, "Mindmaps");
-    info = info || "";
-
-    arrMindmapsHits = arrMindmapsHits || await dbMindmaps.DBgetAllMindmaps();
-    const arrToShow = arrMindmapsHits.map(mh => {
-        const key = mh.key;
-        const j = mh.jsmindmap;
-        const hits = mh.hits;
-        let topic;
-        switch (j.format) {
-            case "node_tree":
-                topic = j.data.topic;
-                break;
-            case "node_array":
-                topic = j.data[0].topic;
-                break;
-            case "freemind":
-                const s = j.data;
-                topic = s.match(/<node .*?TEXT="([^"]*)"/)[1];
-                break;
-            default:
-                throw Error(`Unknown mindmap format: ${j.format}`);
-        }
-        // console.log({ m, key, j, name });
-        let name = topic;
-        if (topic.startsWith("<")) {
-            // FIX-ME: use DOMParser? It may be synchronous.
-            // https://stackoverflow.com/questions/63869394/parse-html-as-a-plain-text-via-javascript
-            const elt = document.createElement("div");
-            elt.innerHTML = topic;
-            const txt = elt.textContent;
-            name = txt;
-            const child1 = elt.firstElementChild;
-            // const custom = child1.dataset["jsmind-custom"];
-            const strCustom = child1.dataset.jsmindCustom;
-            if (strCustom) {
-                // console.log({ txt, strCustom })
-                // ourCustomRenderer
-                const objCustom = JSON.parse(strCustom);
-                topic = (async () => {
-                    const key = objCustom.key;
-                    const provider = objCustom.provider;
-                    const keyRec = await (await getOurCustomRenderer()).getCustomRec(key, provider);
-                    return keyRec.title;
-                })();
-            }
-        }
-        return { key, topic, hits };
-    });
-    const arrPromLiMenu = arrToShow.map(async m => {
-        // https://stackoverflow.com/questions/43033988/es6-decide-if-object-or-promise
-        const topic = await Promise.resolve(m.topic);
-        const btnDelete = await modMdc.mkMDCiconButton("delete_forever");
-        btnDelete.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            evt.stopPropagation();
-            const eltQdelete = mkElt("span", undefined, ["Delete ", mkElt("b", undefined, topic)]);
-            const answerIsDelete = await modMdc.mkMDCdialogConfirm(eltQdelete);
-            if (answerIsDelete) {
-                console.log("*** del mm");
-                const eltLi = btnDelete.closest("li");
-                eltLi.style.backgroundColor = "red";
-                eltLi.style.opacity = 1;
-                eltLi.style.transition = "opacity 1s, height 1s, scale 1s";
-                eltLi.style.opacity = 0;
-                eltLi.style.height = 0;
-                eltLi.style.scale = 0;
-                // const dbMindmaps = await getDbMindmaps();
-                const dbMindmaps = await import("db-mindmaps");
-                dbMindmaps.DBremoveMindmap(m.key);
-                setTimeout(() => eltLi.remove(), 1000);
-            }
-        }));
-
-        const eltA = funMkEltLinkMindmap(topic, m.key, m.hits);
-
-        const eltTopic = mkElt("span", undefined, topic);
-        // const eltMm = mkElt("div", undefined, [eltTopic, btnDelete]);
-        const eltMm = mkElt("div", undefined, [eltA, btnDelete]);
-        const li = modMdc.mkMDCmenuItem(eltMm);
-        li.addEventListener("click", evt => {
-            closeDialog();
-        });
-        return li;
-    });
-    const arrLiMenu = await Promise.all(arrPromLiMenu);
-    if (showNew) {
-        const liNew = modMdc.mkMDCmenuItem("New mindmap");
-        liNew.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            // await createAndShowNewMindmapFc4i();
-            await createAndShowNewMindmap(linkMindmapsPage);
-        }));
-        // arrLiMenu.push(liNew);
-
-        // function mkMDCfab(eltIcon, title, mini, extendTitle)
-        const eltIcon = modMdc.mkMDCicon("add");
-        const btnFab = modMdc.mkMDCfab(eltIcon, "Create new mindmap", true);
-        btnFab.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            // await createAndShowNewMindmapFc4i();
-            await createAndShowNewMindmap(linkMindmapsPage);
-        }));
-        btnFab.style.marginLeft = "40px";
-        eltTitle.appendChild(btnFab);
-    }
-    const ul = modMdc.mkMDCmenuUl(arrLiMenu);
-    ul.classList.add("mindmap-list");
-    const body = mkElt("div", { id: "div-dialog-mindmaps" }, [
-        eltTitle,
-        info,
-        ul,
-    ]);
-
-    const btnClose = modMdc.mkMDCdialogButton("Close", "close", true);
-    const eltActions = modMdc.mkMDCdialogActions([btnClose]);
-    const dlg = await modMdc.mkMDCdialog(body, eltActions);
-    function closeDialog() { dlg.mdc.close(); }
-}
 
 
 
