@@ -1,5 +1,7 @@
 "use strict";
-console.log("here is db-fc4i.js");
+console.log("here is module db-fc4i.js");
+if (document.currentScript) throw Error("import .currentScript"); // is module
+if (!import.meta.url) throw Error("!import.meta.url"); // is module
 
 // https://github.com/jakearchibald/idb
 const dbName = "rem10m1h";

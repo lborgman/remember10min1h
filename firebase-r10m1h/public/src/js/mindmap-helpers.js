@@ -1,7 +1,9 @@
 "use strict";
 // FIX-ME: Put minmaps in localStorage for now
 
-console.log("here is mindmap-helpers.js");
+console.log("here is module mindmap-helpers.js");
+if (document.currentScript) throw Error("import .currentScript"); // is module
+if (!import.meta.url) throw Error("!import.meta.url"); // is module
 
 
 // async function getDbMindmaps() { return await import("db-mindmaps") }

@@ -1,5 +1,7 @@
 "use strict";
-console.log("here is is-displayed.js");
+console.log("here is module is-displayed.js");
+if (document.currentScript) throw Error("import .currentScript"); // is module
+if (!import.meta.url) throw Error("!import.meta.url"); // is module
 
 // https://stackoverflow.com/questions/19669786/check-if-element-is-visible-in-dom
 // https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/offsetParent

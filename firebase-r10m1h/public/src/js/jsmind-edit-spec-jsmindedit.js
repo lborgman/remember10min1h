@@ -1,4 +1,6 @@
-console.log("Here is jsmind-edit-spec-jsmindedit.js");
+console.log("Here is module jsmind-edit-spec-jsmindedit.js");
+if (document.currentScript) throw Error("import .currentScript"); // is module
+if (!import.meta.url) throw Error("!import.meta.url"); // is module
 
 // const modDb = await import("db-fc4i");
 // const modDb = await import("db-mindmaps");

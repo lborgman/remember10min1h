@@ -1,6 +1,8 @@
 "use strict";
 
-console.log("here is jsmind-cust-rend.js");
+console.log("here is module jsmind-cust-rend.js");
+if (document.currentScript) throw Error("import .currentScript"); // is module
+if (!import.meta.url) throw Error("!import.meta.url"); // is module
 
 let theCustomRenderer;
 

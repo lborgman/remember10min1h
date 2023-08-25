@@ -10,7 +10,9 @@
  Just surrounded by (() => {...})()
 */
 
-console.log("here is new-jsmind.draggable-nodes.js");
+console.log("here is module new-jsmind.draggable-nodes.js");
+if (document.currentScript) throw Error("import .currentScript"); // is module
+if (!import.meta.url) throw Error("!import.meta.url"); // is module
 
 // ChatGPT: Not bad, but it checks for below...
 function isPointAboveLine1(pointA, pointB, pointC) {

@@ -1,7 +1,8 @@
 "use strict";
 
-console.log("here is jsmind-edit-common.js", import.meta);
-if (document.currentScript) console.error("document.currentScript", document.currentScript);
+console.log("here is module jsmind-edit-common.js", import.meta);
+if (document.currentScript) throw Error("import .currentScript"); // is module
+if (!import.meta.url) throw Error("!import.meta.url"); // is module
 
 async function getDraggableNodes() {
     return await import("new-jsmind.draggable-nodes");

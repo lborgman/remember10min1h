@@ -1,4 +1,6 @@
-console.log("here is pwa.js");
+console.log("here is module pwa.js");
+if (document.currentScript) throw Error("import .currentScript"); // is module
+if (!import.meta.url) throw Error("!import.meta.url"); // is module
 
 const idDebugSection = "debug-section";
 let swVersion;
