@@ -43,7 +43,7 @@ async function DBsaveNowThisMindmap(jmDisplayed) {
 async function getNextMindmapKey() { return "mm-" + new Date().toISOString(); }
 
 let theCustomRenderer;
-async function getOurCustomRenderer() {
+export async function getOurCustomRenderer() {
     theCustomRenderer = theCustomRenderer || await createOurCustomRenderer();
     // if (!theCustomRenderer instanceof CustomRenderer4jsMind) throw Error(`Not a custom renderer`);
     return theCustomRenderer;
@@ -56,7 +56,7 @@ async function createOurCustomRenderer() {
     theCustomRenderer = new modCustom.CustomRenderer4jsMind();
     return theCustomRenderer;
 }
-function setOurCustomRendererJm(jmDisplayed) {
+export function setOurCustomRendererJm(jmDisplayed) {
     theCustomRenderer.setJm(jmDisplayed);
 }
 export async function ourCustomRendererAddProvider(providerRec) {
@@ -98,7 +98,7 @@ async function createAndShowNewMindmap(linkMindmapsPage) {
     showMindmap(linkMindmapsPage, keyName);
 }
 
-async function getMindmap(key) {
+export async function getMindmap(key) {
     // const dbMindmaps = await getDbMindmaps();
     const dbMindmaps = await import("db-mindmaps");
     return dbMindmaps.DBgetMindmap(key);

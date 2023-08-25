@@ -343,11 +343,11 @@ export function basicInit4jsmind() {
 
 }
 
-let funMindmapDialog;
+let funMindmapsDialog;
 export function setMindmapDialog(fun) {
     const funType = typeof fun;
     if (funType != "function") throw Error(`setMindmapDialog, expected "function" paramenter, got "${funType}"`);
-    funMindmapDialog = fun;
+    funMindmapsDialog = fun;
 }
 
 // pageSetup();
@@ -525,23 +525,27 @@ export async function pageSetup() {
     if (typeof mindmapKey === "string" && mindmapKey.length === 0) {
         throw Error("Parameter mindmapname should have a value (key/name of a mindmap)");
     }
+    /*
     const createMindmap = new URLSearchParams(location.search).get("createmindmap");
     if (typeof createMindmap === "string" && createMindmap.length > 0) {
         throw Error("Parameter createmindmap does not take a value");
     }
     const create = ((createMindmap != null) || (mindmapKey == null));
-    // console.log({ mindmapKey, createMindmap, create });
+    */
     let mind;
-    if (create) {
-        // mind = await dialogCreateMindMap();
-    } else {
-        mind = await getMindmap(mindmapKey);
+    const modMMhelpers = await import("mindmap-helpers");
+    if (mindmapKey) {
+        mind = await modMMhelpers.getMindmap(mindmapKey);
     }
-    // debugger;
     if (!mind) {
-        return;
-        // mind = getEmptyMap(mindmapKey); "mindmaps"
+        debugger;
         // dialogMindmaps
+        if (funMindmapsDialog) {
+            funMindmapsDialog();
+        } else {
+            modMMhelpers.dialogMindMaps(location.pathname);
+        }
+        return;
     }
 
     const modJmDrag = await getDraggableNodes();
@@ -550,7 +554,7 @@ export async function pageSetup() {
     const nowBefore = Date.now();
     const jmDisplayed = displayMindMap(mind, optionsJmDisplay);
 
-    setOurCustomRendererJm(jmDisplayed);
+    modMMhelpers.setOurCustomRendererJm(jmDisplayed);
     switchDragTouchAccWay(theDragTouchAccWay);
 
     const nowAfter = Date.now();
@@ -812,7 +816,7 @@ export async function pageSetup() {
                 if (!go) return;
                 // showKeyInFc4i(objCustom.key);
                 debugger;
-                const render = await getOurCustomRenderer();
+                const render = await modMMhelpers.getOurCustomRenderer();
                 // if (!render instanceof CustomRenderer4jsMind) throw Error(`Not a custom renderer`);
                 render.showCustomRec(objCustom.key, objCustom.provider);
             }, 100);
@@ -921,7 +925,7 @@ export async function pageSetup() {
         }
 
         function mkMenuItemA(lbl, url) {
-            const eltA = mkElt("a", {href:url}, lbl);
+            const eltA = mkElt("a", { href: url }, lbl);
             const li = modMdc.mkMDCmenuItem(eltA);
             li.addEventListener("click", evt => {
                 evt.preventDefault();
@@ -963,9 +967,9 @@ export async function pageSetup() {
         // const liTestMirror = mkMenuItem("test mirror", testStartMirror);
         const liDragAccessibility = mkMenuItem("Drag accessiblity", dialogDragAccessibility);
 
-        const liMindmaps = funMindmapDialog ? mkMenuItem("Mindmaps", funMindmapDialog) : undefined;
+        const liMindmaps = funMindmapsDialog ? mkMenuItem("Mindmaps", funMindmapsDialog) : undefined;
         const liMindmapsA = mkMenuItemA("Mindmaps", "/mm4i/mm4i.html");
-        console.log({liMindmapsA});
+        console.log({ liMindmapsA });
 
         // const idScreenMirrorPoint = "jsmindtest-screen-mirror-point";
         // const idScreenMirrorColor = "jsmindtest-screen-mirror-color";
@@ -1117,7 +1121,7 @@ export async function pageSetup() {
             liTestConvertToCustom,
             liDragAccessibility,
             liMindmaps,
-            liMindmapsA,
+            // liMindmapsA,
 
             liTestTouch,
             liTestMouse,
@@ -1370,7 +1374,8 @@ function getJmnodesFromJm(jmDisplayed) {
 
 export async function fixJmnodeProblem(eltJmnode) {
     // console.log("fixJmnodeProblem", eltJmnode);
-    const customRenderer = await getOurCustomRenderer();
+    const modMMhelpers = await import("mindmap-helpers");
+    const customRenderer = await modMMhelpers.getOurCustomRenderer();
     customRenderer.fixLeftRightChildren(eltJmnode);
     /*
     if (eltJmnode.getAttribute("nodeid") !== "root") {

@@ -27,10 +27,11 @@ addProviderFc4i();
 // modJsEditCommon.basicInit4jsmind();
 // modJsEditCommon.pageSetup();
 
-export function dialogMindMapsFc4i(info, arrMindmapsHits) {
+async function dialogMindMapsFc4i(info, arrMindmapsHits) {
     // dialogMindMaps(mkEltLinkMindmapFc4i, info, arrMindmapsHits);
     // dialogMindMaps("/fc4i-mindmaps.html", info, arrMindmapsHits);
-    dialogMindMaps("/mm4i/mm4i.html", info, arrMindmapsHits);
+    const modMMhelpers = await import("mindmap-helpers");
+    modMMhelpers.dialogMindMaps("/mm4i/mm4i.html", info, arrMindmapsHits);
 }
 export function ourDialogMindmaps(info, arrMindmapsHits) {
     dialogMindMapsFc4i(info, arrMindmapsHits);
