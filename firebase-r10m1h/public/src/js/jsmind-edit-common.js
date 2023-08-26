@@ -4,6 +4,9 @@ console.log("here is module jsmind-edit-common.js", import.meta);
 if (document.currentScript) throw Error("import .currentScript"); // is module
 if (!import.meta.url) throw Error("!import.meta.url"); // is module
 
+const modCustRend = await import("jsmind-cust-rend");
+
+
 async function getDraggableNodes() {
     return await import("new-jsmind.draggable-nodes");
 }
@@ -11,7 +14,7 @@ async function getDraggableNodes() {
 let theCustomRenderer;
 async function setCustomRenderer() {
     if (theCustomRenderer) return;
-    const modCustRend = await import("jsmind-cust-rend");
+    // const modCustRend = await import("jsmind-cust-rend");
     theCustomRenderer = await modCustRend.getOurCustomRenderer();
 }
 
@@ -369,6 +372,64 @@ export function setMindmapDialog(fun) {
 
 checkTheDragTouchAccWay();
 
+const modMdc = await import("util-mdc");
+
+function mkMenuItemA(lbl, url) {
+    const eltA = mkElt("a", { href: url }, lbl);
+    const li = modMdc.mkMDCmenuItem(eltA);
+    li.addEventListener("click", evt => {
+        // evt.preventDefault();
+        evt.stopPropagation();
+        hideContextMenu();
+    });
+    return li;
+}
+function mkMenuItem(lbl, fun) {
+    const li = modMdc.mkMDCmenuItem(lbl);
+    li.addEventListener("click", evt => {
+        evt.preventDefault();
+        evt.stopPropagation();
+        fun();
+        hideContextMenu();
+    });
+    return li;
+}
+const idContextMenu = "jsmind-context-menu";
+let divContextMenu;
+let jmDisplayed;
+
+function hideContextMenu() {
+    if (!divContextMenu) return;
+    divContextMenu.style.display = "none";
+    setTimeout(focusSelectedNode, 2000);
+}
+// FIX-ME: The node does not get DOM focus???
+function focusSelectedNode() {
+    // FIX-ME: What is wrong with jmDisplayed here???
+    try {
+        const selectedNode = jmDisplayed?.get_selected_node();
+        if (selectedNode) {
+            const selectedElt = getDOMeltFromNode(selectedNode);
+            selectedElt.focus();
+        }
+    } catch (err) {
+        console.log("*** focusSelectedNode", { err });
+    }
+}
+
+
+const extraPageMenuItems = [];
+export async function addToPageMenu(lbl, what) {
+    if (document.getElementById("jsmind-context-menu")) throw Error("Must be called before menu first display")
+    let liMenuItem;
+    if ("function" == typeof what) {
+        liMenuItem = mkMenuItem(lbl, what)
+    } else {
+        liMenuItem = mkMenuItemA(lbl, what);
+    }
+    console.warn(liMenuItem);
+    extraPageMenuItems.push(liMenuItem);
+}
 
 export async function pageSetup() {
     // let useCanvas = true;
@@ -376,8 +437,6 @@ export async function pageSetup() {
     // let useCanvas = false;
     // useCanvas = confirm("Use canvas?");
 
-    const idContextMenu = "jsmind-context-menu";
-    let divContextMenu;
 
     const idDivJmnodesMain = "jsmind_container";
     // const idDivJmnodesMirror = "jsmind-draggable-container4mirror";
@@ -564,9 +623,9 @@ export async function pageSetup() {
     modJmDrag.setupNewDragging();
 
     const nowBefore = Date.now();
-    const jmDisplayed = displayMindMap(mind, optionsJmDisplay);
+    // const jmDisplayed = displayMindMap(mind, optionsJmDisplay);
+    jmDisplayed = displayMindMap(mind, optionsJmDisplay);
 
-    const modCustRend = await import("jsmind-cust-rend");
     modCustRend.setOurCustomRendererJm(jmDisplayed);
     switchDragTouchAccWay(theDragTouchAccWay);
 
@@ -762,24 +821,6 @@ export async function pageSetup() {
     });
     function getNextNodeId() { return ++highestNodeId; }
 
-    // FIX-ME: The node does not get DOM focus???
-    function focusSelectedNode() {
-        // FIX-ME: What is wrong with jmDisplayed here???
-        try {
-            const selectedNode = jmDisplayed?.get_selected_node();
-            if (selectedNode) {
-                const selectedElt = getDOMeltFromNode(selectedNode);
-                selectedElt.focus();
-            }
-        } catch (err) {
-            console.log("*** focusSelectedNode", { err });
-        }
-    }
-    function hideContextMenu() {
-        if (!divContextMenu) return;
-        divContextMenu.style.display = "none";
-        setTimeout(focusSelectedNode, 2000);
-    }
     function hideContextMenuOnEvent(evt) {
         if (!divContextMenu) return;
         if (!targetIsJmnode(evt) && !divContextMenu.contains(evt.target)) hideContextMenu();
@@ -888,7 +929,7 @@ export async function pageSetup() {
 
     async function displayContextMenu(forElt, left, top) {
         const divMenu = await getDivContextMenu();
-        await mkContextMenu();
+        await mkPageMenu();
         divMenu.forElt = forElt;
         // Set values in integer, read them as ..px
         if (left) divMenu.style.left = left;
@@ -910,7 +951,7 @@ export async function pageSetup() {
     }
 
 
-    async function mkContextMenu() {
+    async function mkPageMenu() {
         const modMdc = await import("util-mdc");
         let toJmDisplayed;
         try {
@@ -937,26 +978,6 @@ export async function pageSetup() {
             li.classList.add("jsmind-menu-no-selected-node");
         }
 
-        function mkMenuItemA(lbl, url) {
-            const eltA = mkElt("a", { href: url }, lbl);
-            const li = modMdc.mkMDCmenuItem(eltA);
-            li.addEventListener("click", evt => {
-                evt.preventDefault();
-                evt.stopPropagation();
-                hideContextMenu();
-            });
-            return li;
-        }
-        function mkMenuItem(lbl, fun) {
-            const li = modMdc.mkMDCmenuItem(lbl);
-            li.addEventListener("click", evt => {
-                evt.preventDefault();
-                evt.stopPropagation();
-                fun();
-                hideContextMenu();
-            });
-            return li;
-        }
 
         async function pasteCustom2node() {
             // const liDelete = mkMenuItem("Delete node", deleteNode);
@@ -1127,7 +1148,7 @@ export async function pageSetup() {
             hideContextMenu();
         }
 
-        const arrEntries = [
+        const arrMenuEntries = [
             liAddChild,
             liAddSibling,
             liDelete,
@@ -1135,7 +1156,8 @@ export async function pageSetup() {
             liDragAccessibility,
             liMindmaps,
             // liMindmapsA,
-
+        ];
+        const arrMenuTestEntries = [
             liTestTouch,
             liTestMouse,
             liTestSvgDrawLine,
@@ -1144,7 +1166,9 @@ export async function pageSetup() {
             liTestPinchZoom,
             liTestPointHandle,
         ];
-        const ulMenu = modMdc.mkMDCmenuUl(arrEntries);
+        const arrMenuAll = [...arrMenuEntries, ...extraPageMenuItems, ...arrMenuTestEntries];
+
+        const ulMenu = modMdc.mkMDCmenuUl(arrMenuAll);
         const divMenu = await getDivContextMenu();
         divMenu.textContent = "";
         divMenu.appendChild(ulMenu);
@@ -1388,7 +1412,7 @@ function getJmnodesFromJm(jmDisplayed) {
 export async function fixJmnodeProblem(eltJmnode) {
     // console.log("fixJmnodeProblem", eltJmnode);
     // const modMMhelpers = await import("mindmap-helpers");
-    const modCustRend = await import("jsmind-cust-rend");
+    // const modCustRend = await import("jsmind-cust-rend");
     const customRenderer = await modCustRend.getOurCustomRenderer();
     customRenderer.fixLeftRightChildren(eltJmnode);
     /*
@@ -1729,7 +1753,7 @@ export async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits) {
                 topic = (async () => {
                     const key = objCustom.key;
                     const provider = objCustom.provider;
-                    const modCustRend = await import("jsmind-cust-rend");
+                    // const modCustRend = await import("jsmind-cust-rend");
                     const keyRec = await (await modCustRend.getOurCustomRenderer()).getCustomRec(key, provider);
                     return keyRec.title;
                 })();
