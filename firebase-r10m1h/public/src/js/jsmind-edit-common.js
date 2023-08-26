@@ -5,6 +5,7 @@ if (document.currentScript) throw Error("import .currentScript"); // is module
 if (!import.meta.url) throw Error("!import.meta.url"); // is module
 
 const modCustRend = await import("jsmind-cust-rend");
+const modMMhelpers = await import("mindmap-helpers");
 
 
 async function getDraggableNodes() {
@@ -606,7 +607,6 @@ export async function pageSetup() {
     const create = ((createMindmap != null) || (mindmapKey == null));
     */
     let mind;
-    const modMMhelpers = await import("mindmap-helpers");
     if (mindmapKey) {
         mind = await modMMhelpers.getMindmap(mindmapKey);
     }
@@ -714,7 +714,7 @@ export async function pageSetup() {
         const node_id = data.node;
         // console.log({ evt_type, type, datadata, data });
         finnishAndMirrorOperationOnNode(evt_type, node_id, datadata);
-        DBrequestSaveThisMindmap(jmDisplayed); // FIX-ME: delay
+        modMMhelpers.DBrequestSaveThisMindmap(jmDisplayed); // FIX-ME: delay
         // updateTheMirror();
     });
     async function finnishAndMirrorOperationOnNode(operation_type, operation_node_id, datadata) {
@@ -854,7 +854,7 @@ export async function pageSetup() {
             const node_id = jsMind.my_get_nodeID_from_DOM_element(eltJmnode);
             jmDisplayed.toggle_node(node_id);
             eltJmnode.classList.toggle("is-expanded");
-            DBrequestSaveThisMindmap(getCustomRenderer().THEjmDisplayed);
+            modMMhelpers.DBrequestSaveThisMindmap(getCustomRenderer().THEjmDisplayed);
         }
         if (target.dataset.jsmindCustom) {
             setTimeout(async () => {
@@ -1411,35 +1411,8 @@ function getJmnodesFromJm(jmDisplayed) {
 
 export async function fixJmnodeProblem(eltJmnode) {
     // console.log("fixJmnodeProblem", eltJmnode);
-    // const modMMhelpers = await import("mindmap-helpers");
-    // const modCustRend = await import("jsmind-cust-rend");
     const customRenderer = await modCustRend.getOurCustomRenderer();
     customRenderer.fixLeftRightChildren(eltJmnode);
-    /*
-    if (eltJmnode.getAttribute("nodeid") !== "root") {
-        console.log("old eltJmnode.draggable", eltJmnode.draggable);
-        eltJmnode.draggable = true;
-
-        const node_id = jsMind.my_get_nodeID_from_DOM_element(eltJmnode);
-        // const node = ourCustomRenderer.THEjmDisplayed.get_node(nodeId)
-        const node = customRenderer.THEjmDisplayed.get_node(node_id)
-        const isLeft = node.direction == -1;
-        if (!isLeft && node.direction != 1) throw Error(`isLeft but node.direction==${node.direction}`);
-        const hasChildren = node.children.length > 0;
-        eltJmnode.classList.remove("is-left");
-        eltJmnode.classList.remove("is-right");
-        eltJmnode.classList.remove("has-children");
-        if (hasChildren) {
-            eltJmnode.classList.add("has-children");
-            if (isLeft) {
-                eltJmnode.classList.add("is-left");
-            } else {
-                eltJmnode.classList.add("is-right");
-            }
-            if (node.expanded) eltJmnode.classList.add("is-expanded");
-        }
-    }
-    */
     const isPlainNode = eltJmnode.childElementCount == 0;
     const isNewCustomFormat = eltJmnode.childElementCount == 1;
     const eltRendererImg = eltJmnode.lastElementChild;

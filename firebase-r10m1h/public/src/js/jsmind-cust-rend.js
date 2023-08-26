@@ -4,6 +4,8 @@ console.log("here is module jsmind-cust-rend.js");
 if (document.currentScript) throw Error("import .currentScript"); // is module
 if (!import.meta.url) throw Error("!import.meta.url"); // is module
 
+const modMMhelpers = await import("mindmap-helpers");
+
 let theCustomRenderer;
 
 function checkType(variable, wantType) {
@@ -1207,7 +1209,7 @@ export class CustomRenderer4jsMind {
                 this.THEjmDisplayed.set_node_background_image(node_ID_copied, undefined, currTemp.width, currTemp.height);
                 await modJsEditCommon.fixJmnodeProblem(eltJmnode);
                 modJsEditCommon.applyNodeShapeEtc(node_copied, eltJmnode);
-                DBrequestSaveThisMindmap(this.THEjmDisplayed);
+                modMMhelpers.DBrequestSaveThisMindmap(this.THEjmDisplayed);
 
                 // FIX-ME: use lastElementChild instead???
                 // if (node_copied.data.fc4i) this.updateJmnodeFromCustom(eltJmnode);

@@ -32,7 +32,7 @@ function OLDthrottleTO(fn, msDelay) {
 
 
 const throttleSaveMindmap = throttleTO(DBsaveNowThisMindmap, 300);
-function DBrequestSaveThisMindmap(jmDisplayed) { throttleSaveMindmap(jmDisplayed); }
+export function DBrequestSaveThisMindmap(jmDisplayed) { throttleSaveMindmap(jmDisplayed); }
 async function DBsaveNowThisMindmap(jmDisplayed) {
     const objDataMind = jmDisplayed.get_data("node_array");
     const keyName = objDataMind.meta.name;
