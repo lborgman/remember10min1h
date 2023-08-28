@@ -387,6 +387,7 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
     const modMdc = await import("util-mdc");
     const modIsDisplayed = await import("is-displayed");
     const modClipboardImages = await import("images");
+    const modMMhelpers = import("mindmap-helpers");
     const divPasteImage = mkElt("div", { class: "div-paste-image" });
 
     if (record) checkRecordFields(record);
@@ -1143,11 +1144,14 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
             dialogAdded2CustomClipboard(objAdded);
         });
         const btnFind = modMdc.mkMDCbutton("Find in", "raised");
-        btnFind.addEventListener("click", evt => {
+        btnFind.addEventListener("click", async evt => {
             const key = btnFind.closest(".container-remember").dataset.key;
             console.log("clicked find", key);
             // searchMindmaps(key);
-            dialogFindInMindMaps(key);
+            const modJsEditCommon = await import("jsmind-edit-common");
+            const modEditFc4iMM = await import("jsmind-edit-spec-fc4i");
+            modEditFc4iMM.addProviderFc4i();
+            modJsEditCommon.dialogFindInMindMaps(key);
         });
         const div = mkElt("div", undefined, [
             btnAdd,

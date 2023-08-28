@@ -12,7 +12,7 @@ function getLink2KeyInFc4i(keyFc4i) {
     return objUrl.href;
 }
 
-async function addProviderFc4i() {
+export async function addProviderFc4i() {
     // const dbFc4i = await getDbFc4i();
     const dbFc4i = await import("db-fc4i");
     // const modMMhelpers = await import("mindmap-helpers");
@@ -27,18 +27,4 @@ async function addProviderFc4i() {
     });
 }
 addProviderFc4i();
-// modJsEditCommon.basicInit4jsmind();
-// modJsEditCommon.pageSetup();
 
-/*
-async function dialogMindMapsFc4i(info, arrMindmapsHits) {
-    // dialogMindMaps(mkEltLinkMindmapFc4i, info, arrMindmapsHits);
-    // dialogMindMaps("/fc4i-mindmaps.html", info, arrMindmapsHits);
-    const modMMhelpers = await import("mindmap-helpers");
-    modMMhelpers.dialogMindMaps("/mm4i/mm4i.html", info, arrMindmapsHits);
-}
-export function ourDialogMindmaps(info, arrMindmapsHits) {
-    dialogMindMapsFc4i(info, arrMindmapsHits);
-}
-
-*/

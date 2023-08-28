@@ -130,11 +130,12 @@ async function dialogCreateMindMap() {
 
 
 
-async function getMindmapsHits(customKey) {
+export async function getMindmapsHits(customKey) {
     // const dbMindmaps = await getDbMindmaps();
     const dbMindmaps = await import("db-mindmaps");
     const provider = "fc4i"; // FIX-ME:
-    const searchedTopic = (await getOurCustomRenderer()).customData2jsmindTopic(customKey, provider);
+    const modCustRend = await import("jsmind-cust-rend");
+    const searchedTopic = (await modCustRend.getOurCustomRenderer()).customData2jsmindTopic(customKey, provider);
     const promArrMindmaps = (await dbMindmaps.DBgetAllMindmaps())
         .map(m => {
             const mindmap = m.jsmindmap;
@@ -303,18 +304,6 @@ async function dialogCustomPaste2Mindmap() {
 
 
 
-async function dialogFindInMindMaps(key) {
-    const arrMindmapsHits = await getMindmapsHits(key);
-    console.log({ arrMindmapsHits });
-    if (arrMindmapsHits.length == 0) {
-        const modMdc = await import("util-mdc");
-        modMdc.mkMDCdialogAlert("Not found in any mindmap");
-        // alert("not found in any mindmap");
-        return;
-    }
-    const info = mkElt("p", undefined, "Found in these mindmaps:");
-    dialogMindMaps(info, arrMindmapsHits);
-}
 
 /*
 function mkEltLinkMindmapFc4i(topic, mkey, mhits) {
@@ -326,8 +315,6 @@ function mkEltLinkMindmapJsmindEdit(topic, mkey, mhits) {
     return mkEltLinkMindmapA(urlPath, topic, mkey, mhits);
 }
 */
-
-// async function dialogMindMaps(funMkEltLinkMindmap, info, arrMindmapsHits)
 
 
 

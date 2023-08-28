@@ -6,6 +6,7 @@ if (!import.meta.url) throw Error("!import.meta.url"); // is module
 
 const modCustRend = await import("jsmind-cust-rend");
 const modMMhelpers = await import("mindmap-helpers");
+const modMdc = await import("util-mdc");
 
 
 async function getDraggableNodes() {
@@ -61,7 +62,7 @@ function switchDragTouchAccWay(newWay) {
 // https://hackernoon.com/how-to-embed-single-photos-from-google-photos-on-your-website-and-notion-page
 // https://jumpshare.com/blog/how-to-embed-google-drive-video/
 async function dialogMirrorWay() {
-    const modMdc = await import("util-mdc");
+    // const modMdc = await import("util-mdc");
     const notWorking = ["useCanvas", "jsmind",];
     const altWays = theMirrorWays.filter(alt => !notWorking.includes(alt));
     console.log({ altWays });
@@ -373,7 +374,7 @@ export function setMindmapDialog(fun) {
 
 checkTheDragTouchAccWay();
 
-const modMdc = await import("util-mdc");
+// const modMdc = await import("util-mdc");
 
 function mkMenuItemA(lbl, url) {
     const eltA = mkElt("a", { href: url }, lbl);
@@ -433,6 +434,7 @@ export async function addToPageMenu(lbl, what) {
 }
 
 export async function pageSetup() {
+    let inpSearch;
     // let useCanvas = true;
     setCustomRenderer();
     // let useCanvas = false;
@@ -531,7 +533,7 @@ export async function pageSetup() {
     const idSearchInputs = "jsmind-search-inputs";
     addJsmindButtons();
     async function addJsmindButtons() {
-        const modMdc = await import("util-mdc");
+        // const modMdc = await import("util-mdc");
 
         btnJsmindDebug = modMdc.mkMDCiconButton("adb", "Debug log", 40);
         btnJsmindDebug.id = idBtnJsmindDebug;
@@ -581,7 +583,6 @@ export async function pageSetup() {
     function hideSearchInputs() { jsMindContainer.classList.remove("display-jsmind-search"); }
     function toggleSearchInputs() { jsMindContainer.classList.toggle("display-jsmind-search"); }
     function visibleSearchInputs() { return jsMindContainer.classList.contains("display-jsmind-search"); }
-    let inpSearch;
     const restartJsmindSearch = (() => {
         let tmr;
         return () => {
@@ -641,7 +642,7 @@ export async function pageSetup() {
     // oldSecondJmnodesFixing();
 
     async function setNodeHitsFromArray(arrIdHits, hitType) {
-        const modMdc = await import("util-mdc");
+        // const modMdc = await import("util-mdc");
         // const arrHits = nodehits.split(",");
         console.log({ arrHits: arrIdHits });
         arrIdHits.forEach(id => {
@@ -803,7 +804,7 @@ export async function pageSetup() {
 
     async function getDivContextMenu() {
         if (!divContextMenu) {
-            const modMdc = await import("util-mdc");
+            // const modMdc = await import("util-mdc");
             divContextMenu = modMdc.mkMDCmenuDiv();
             divContextMenu.classList.add("is-menu-div");
             document.body.appendChild(divContextMenu);
@@ -864,7 +865,7 @@ export async function pageSetup() {
                 const strCustom = eltCustom.dataset.jsmindCustom;
                 const objCustom = JSON.parse(strCustom);
                 const prov = objCustom.provider;
-                const modMdc = await import("util-mdc");
+                // const modMdc = await import("util-mdc");
                 const go = await modMdc.mkMDCdialogConfirm(`Show entry in ${prov}?`);
                 console.log({ go });
                 if (!go) return;
@@ -952,7 +953,7 @@ export async function pageSetup() {
 
 
     async function mkPageMenu() {
-        const modMdc = await import("util-mdc");
+        // const modMdc = await import("util-mdc");
         let toJmDisplayed;
         try {
             toJmDisplayed = typeof jmDisplayed;
@@ -1678,7 +1679,6 @@ export async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits) {
     if (toLink !== "string") throw Error(`urlHtml typeof should be string, got ${toLink}`);
     // const eltA = funMkEltLinkMindmap(topic, m.key, m.hits);
     const funMkEltLinkMindmap = (topic, mKey, mHits) => mkEltLinkMindmapA(linkMindmapsPage, topic, mKey, mHits);
-    const modMdc = await import("util-mdc");
     // const dbMindmaps = await getDbMindmaps();
     const dbMindmaps = await import("db-mindmaps");
 
@@ -1800,4 +1800,23 @@ export async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits) {
     const eltActions = modMdc.mkMDCdialogActions([btnClose]);
     const dlg = await modMdc.mkMDCdialog(body, eltActions);
     function closeDialog() { dlg.mdc.close(); }
+}
+
+export async function dialogFindInMindMaps(key, provider) {
+    const modCustRend = await import("jsmind-cust-rend");
+    const renderer = await modCustRend.getOurCustomRenderer();
+    debugger;
+    // renderer.addProvider
+    const modMMhelpers = await import("mindmap-helpers");
+    const arrMindmapsHits = await modMMhelpers.getMindmapsHits(key);
+    console.log({ arrMindmapsHits });
+    if (arrMindmapsHits.length == 0) {
+        // const modMdc = await import("util-mdc");
+        modMdc.mkMDCdialogAlert("Not found in any mindmap");
+        // alert("not found in any mindmap");
+        return;
+    }
+    const info = mkElt("p", undefined, "Found in these mindmaps:");
+    // Fix-me: path??
+    dialogMindMaps("/mm4i/mm4i.html", info, arrMindmapsHits);
 }
