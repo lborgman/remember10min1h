@@ -8,6 +8,7 @@ const modCustRend = await import("jsmind-cust-rend");
 const modMMhelpers = await import("mindmap-helpers");
 const modMdc = await import("util-mdc");
 
+const divJsmindSearch = mkElt("div", { id: "jsmind-search-div" });
 
 async function getDraggableNodes() {
     return await import("new-jsmind.draggable-nodes");
@@ -558,14 +559,24 @@ export async function pageSetup() {
         btnJsmindSearch = modMdc.mkMDCiconButton("search", "Search", 40);
         btnJsmindSearch.id = idBtnJsmindSearch;
         btnJsmindSearch.classList.add("jsmind-actions");
-        jsMindContainer.appendChild(btnJsmindSearch);
+        // jsMindContainer.appendChild(btnJsmindSearch);
+        jsMindContainer.appendChild(divJsmindSearch);
+        divJsmindSearch.appendChild(btnJsmindSearch);
         btnJsmindSearch.addEventListener("click", evt => {
             // console.log("btnJsmindSearch");
             evt.stopPropagation();
             toggleSearchInputs();
+            const eltJmnodes = getJmnodesFromJm(jmDisplayed);
+            eltJmnodes.classList.remove("showing-hits");
             if (visibleSearchInputs()) {
                 inpSearch.focus();
+                const strSearch = inpSearch.value.trim();
+                if (strSearch.length > 0) {
+                    restartJsmindSearch();
+                }
             } else {
+                const nodeEltArray = [...jsMindContainer.querySelectorAll("jmnode[nodeid]")];
+                nodeEltArray.forEach(n => n.classList.remove("jsmind-hit"));
                 const divHits = document.getElementById(idDivHits);
                 divHits?.remove();
             }
@@ -577,7 +588,8 @@ export async function pageSetup() {
         })
         divSearchInputs = mkElt("div", { id: idSearchInputs }, inpSearch);
         divSearchInputs.classList.add("jsmind-actions");
-        jsMindContainer.appendChild(divSearchInputs);
+        // jsMindContainer.appendChild(divSearchInputs);
+        divJsmindSearch.appendChild(divSearchInputs);
     }
     function displaySearchInputs() { jsMindContainer.classList.add("display-jsmind-search"); }
     function hideSearchInputs() { jsMindContainer.classList.remove("display-jsmind-search"); }
@@ -639,9 +651,10 @@ export async function pageSetup() {
 
     // FIX-ME: remove when this is fixed in jsmind.
     fixProblemsAndUpdateCustomAndShapes(jmDisplayed);
-    // oldSecondJmnodesFixing();
 
     async function setNodeHitsFromArray(arrIdHits, hitType) {
+        const eltJmnodes = getJmnodesFromJm(jmDisplayed);
+        eltJmnodes.classList.add("showing-hits");
         // const modMdc = await import("util-mdc");
         // const arrHits = nodehits.split(",");
         console.log({ arrHits: arrIdHits });
@@ -650,6 +663,18 @@ export async function pageSetup() {
             const eltNode = jsMind.my_get_DOM_element_from_node(node);
             eltNode.classList.add("jsmind-hit");
         });
+        const divHits = document.getElementById(idDivHits) ||
+            mkElt("div", { id: idDivHits, class: "mdc-card" });
+
+        if (arrIdHits.length == 0) {
+            // eltJmnodes.classList.remove("showing-hits");
+            if (hitType == "provider") {
+                divHits.textContent = "No link to provider item";
+            } else {
+                divHits.textContent = "No search hits";
+            }
+            return;
+        }
         const btnCurr = await modMdc.mkMDCbutton("wait");
         btnCurr.addEventListener("click", evt => {
             const num = getBtnCurrNum();
@@ -688,14 +713,13 @@ export async function pageSetup() {
         const eltInfo = mkElt("span", undefined, [
             "Hits: ", btnCurr,
         ])
-        const divHits = document.getElementById(idDivHits) ||
-            mkElt("div", { id: idDivHits, class: "mdc-card" });
         const divHitsInner = mkElt("div", undefined, [
             eltInfo, btnPrev, btnNext
         ]);
         divHits.textContent = "";
         divHits.appendChild(divHitsInner);
-        document.body.appendChild(divHits);
+        // document.body.appendChild(divHits);
+        divJsmindSearch.appendChild(divHits);
     }
 
     const nodehits = new URLSearchParams(location.search).get("nodehits");
@@ -1184,19 +1208,8 @@ export async function pageSetup() {
 
     addScrollIntoViewOnSelect(jmDisplayed);
     function jsmindSearchNodes(strSearch) {
-        // console.log("jsmindSearch", { strSearch });
-        /*
-        const nodeArray = jm.get_data("node_array");
-        const nodes = nodeArray.data;
-        console.log({ nodes });
-        const mathingNodes = nodes.filter(node => {
-            const topic = node.topic;
-            console.log({ topic });
-            return topic.indexOf(strSearch) >= 0;
-        });
-        */
         const nodeEltArray = [...jsMindContainer.querySelectorAll("jmnode[nodeid]")];
-        // console.log({ nodeEltArray });
+        nodeEltArray.forEach(n => n.classList.remove("jsmind-hit"));
         if (strSearch.length === 0) return;
         const searchLower = strSearch.toLocaleLowerCase();
         // FIX-ME: words
@@ -1206,8 +1219,6 @@ export async function pageSetup() {
             const topicLower = topic.toLocaleLowerCase();
             return topicLower.indexOf(searchLower) >= 0;
         });
-        nodeEltArray.forEach(n => n.classList.remove("jsmind-hit"));
-        // matchingNodes.forEach(n => n.classList.add("jsmind-hit"));
         const arrIdHits = matchingNodes.map(n => jsMind.my_get_nodeID_from_DOM_element(n));
         setNodeHitsFromArray(arrIdHits);
         console.log({ matchingNodes });
@@ -1238,9 +1249,6 @@ export async function pageSetup() {
 
     if (!hasTouchEvents()) addGrabAndScroll2jsmind();
     function addGrabAndScroll2jsmind() {
-        // const root = jmDisplayed.get_root();
-        // const eltRoot = getDOMeltFromNode(root);
-        // const jmnodes = eltRoot.closest("jmnodes");
         const jmnodes = getJmnodesFromJm(jmDisplayed);
         const jsmindInner = jmnodes.closest(".jsmind-inner");
         // const jsmindInner = jsMindContainer.firstElementChild;
@@ -1805,15 +1813,11 @@ export async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits) {
 export async function dialogFindInMindMaps(key, provider) {
     const modCustRend = await import("jsmind-cust-rend");
     const renderer = await modCustRend.getOurCustomRenderer();
-    debugger;
-    // renderer.addProvider
     const modMMhelpers = await import("mindmap-helpers");
     const arrMindmapsHits = await modMMhelpers.getMindmapsHits(key);
     console.log({ arrMindmapsHits });
     if (arrMindmapsHits.length == 0) {
-        // const modMdc = await import("util-mdc");
         modMdc.mkMDCdialogAlert("Not found in any mindmap");
-        // alert("not found in any mindmap");
         return;
     }
     const info = mkElt("p", undefined, "Found in these mindmaps:");

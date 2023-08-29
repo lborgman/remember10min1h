@@ -1329,6 +1329,7 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
 #my-dialog-content:has(#jsmind-ednode) {
     display: flex;
 }
+
 #jsmind-ednode {
     display: grid;
     grid-template-rows: min-content 40% 1fr;
@@ -1338,9 +1339,11 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
     NOborder: 1px dotted red;
     NObackground: orange;
 }
-#jsmind-ednode > * {
+
+#jsmind-ednode>* {
     min-height: 0;
 }
+
 #jsmind-ednode-parts {
     display: grid;
     grid-template-rows: 40% min-content 1fr;
@@ -1349,15 +1352,18 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
     NOborder: 2px dashed blueviolet;
     NObackground: aqua;
 }
-#jsmind-ednode-parts > * {
+
+#jsmind-ednode-parts>* {
     /* https://css-tricks.com/preventing-a-grid-blowout/ */
     min-width: 0;
     NObackground: red;
     NOborder: 2px dotted yellow;
 }
+
 #jsmind-ednode-parts div.tab-elts {
     overflow-y: auto;
 }
+
 #jsmind-ednode div.normal-content {
     Xbackground: red;
     display: flex;
@@ -1425,6 +1431,12 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
 
 #jsmind-test-menu-button {
     left: 0;
+}
+
+#jsmind-search-div {
+    position: fixed;
+    left: 40px;
+    z-index: 10;
 }
 
 #jsmind-search-button {
@@ -1752,7 +1764,8 @@ jmnode.selected {
     left: -4;
     NObackground: red;
 }
-.jsmind-renderer-img > button {
+
+.jsmind-renderer-img>button {
     background-size: cover;
     color: white;
     border: 1px solid white;
@@ -1760,14 +1773,17 @@ jmnode.selected {
     width: 40px;
     height: 40px;
 }
+
 .is-left .jsmind-renderer-img {
     left: unset;
     right: -4;
 }
+
 .is-left .jsmind-plain-link {
     left: unset;
     right: -4;
 }
+
 .jsmind-plain-link {
     position: absolute;
     bottom: -8;
@@ -1780,9 +1796,9 @@ jmnode.selected {
     NOwidth: 48px;
     NOheight: 48px;
     background-size: cover
-
 }
-.jsmind-plain-link > button {
+
+.jsmind-plain-link>button {
     background: skyblue;
     border: 1px solid blue;
 }
@@ -2472,7 +2488,7 @@ https://unused-css.com/tools/clip-path-generator (adjustable nodes!)
 
 #jsmind-div-hits {
     position: fixed;
-    left: 0;
+    left: 40;
     top: 40;
     z-index: 5;
     background: red;
@@ -2481,8 +2497,13 @@ https://unused-css.com/tools/clip-path-generator (adjustable nodes!)
     color: black;
     display: flex;
     flex-direction: row;
+    align-content: center;
+    flex-wrap: wrap;
     gap: 5px;
     padding: 2px;
+    padding-left: 4px;
+    padding-right: 4px;
+    min-height: 36px;
 }
 
 #jsmind-div-hits button {
@@ -2491,8 +2512,15 @@ https://unused-css.com/tools/clip-path-generator (adjustable nodes!)
     color: black;
 }
 
+jmnodes.showing-hits jmnode:not(.jsmind-hit)>* {
+    /* filter: grayscale(1) contrast(0.5) !important; */
+    filter: grayscale(1) contrast(0.5);
+
+}
+
 jmnode.jsmind-hit {
-    filter: grayscale(1) contrast(0.5) drop-shadow(2px 4px 6px red) !important;
+    /* filter: grayscale(1) contrast(0.5) drop-shadow(2px 4px 6px red) !important; */
+    /* filter: drop-shadow(2px 4px 6px red) !important; */
 }
 
 jmnode.jsmind-hit::after {
@@ -2508,8 +2536,10 @@ jmnode.jsmind-hit::after {
     position: absolute;
     top: 0;
     top: 40%;
+    top: -10px;
     right: 0;
     right: 40%;
+    left: -10px;
 }
 
 /******************************/
