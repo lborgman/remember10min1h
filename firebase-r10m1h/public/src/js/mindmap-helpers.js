@@ -305,16 +305,6 @@ async function dialogCustomPaste2Mindmap() {
 
 
 
-/*
-function mkEltLinkMindmapFc4i(topic, mkey, mhits) {
-    const urlPath = "/fc4i-mindmaps.html";
-    return mkEltLinkMindmapA(urlPath, topic, mkey, mhits);
-}
-function mkEltLinkMindmapJsmindEdit(topic, mkey, mhits) {
-    const urlPath = "/jsmind-edit.html";
-    return mkEltLinkMindmapA(urlPath, topic, mkey, mhits);
-}
-*/
 
 
 

@@ -451,6 +451,11 @@ export async function pageSetup() {
     // let divMirroredWrapper;
 
     const jsMindContainer = document.getElementById(idDivJmnodesMain);
+    function clearSearchHits() {
+        const nodeEltArray = [...jsMindContainer.querySelectorAll("jmnode[nodeid]")];
+        nodeEltArray.forEach(n => n.classList.remove("jsmind-hit"));
+    }
+
 
     const idDivHits = "jsmind-div-hits";
 
@@ -568,25 +573,46 @@ export async function pageSetup() {
             toggleSearchInputs();
             const eltJmnodes = getJmnodesFromJm(jmDisplayed);
             eltJmnodes.classList.remove("showing-hits");
+            clearSearchHits();
             if (visibleSearchInputs()) {
-                inpSearch.focus();
-                const strSearch = inpSearch.value.trim();
-                if (strSearch.length > 0) {
-                    restartJsmindSearch();
+                const divInputs = document.getElementById("jsmind-search-inputs");
+                if (divInputs.classList.contains("showing-provider-hits")) {
+                    setProviderNodeHits();
+                } else {
+                    inpSearch.focus();
+                    const strSearch = inpSearch.value.trim();
+                    if (strSearch.length > 0) {
+                        restartJsmindSearch();
+                    }
                 }
             } else {
-                const nodeEltArray = [...jsMindContainer.querySelectorAll("jmnode[nodeid]")];
-                nodeEltArray.forEach(n => n.classList.remove("jsmind-hit"));
                 const divHits = document.getElementById(idDivHits);
                 divHits?.remove();
             }
         });
 
+        const btnCloseProvHits = modMdc.mkMDCiconButton("close");
+        btnCloseProvHits.classList.add("icon-button-sized");
+        btnCloseProvHits.addEventListener("click", evt => {
+            const divInputs = document.getElementById("jsmind-search-inputs");
+            divInputs.classList.remove("showing-provider-hits");
+            clearSearchHits();
+            const divHits = document.getElementById(idDivHits);
+            divHits?.remove();
+            const eltJmnodes = getJmnodesFromJm(jmDisplayed);
+            eltJmnodes.classList.remove("showing-hits");
+        });
+        const eltProvHits = mkElt("div", { id: "provider-hits" }, [
+            mkElt("span", undefined, "Links to item"),
+            btnCloseProvHits
+        ]);
+
         inpSearch = mkElt("input", { type: "search", placeholder: "Search node topics" });
+        inpSearch.id = "jsmind-inp-node-search";
         inpSearch.addEventListener("input", evt => {
             restartJsmindSearch();
         })
-        divSearchInputs = mkElt("div", { id: idSearchInputs }, inpSearch);
+        divSearchInputs = mkElt("div", { id: idSearchInputs }, [inpSearch, eltProvHits]);
         divSearchInputs.classList.add("jsmind-actions");
         // jsMindContainer.appendChild(divSearchInputs);
         divJsmindSearch.appendChild(divSearchInputs);
@@ -603,7 +629,15 @@ export async function pageSetup() {
         }
     })();
     function doJsmindSearch() {
-        const strSearch = inpSearch.value;
+        const strSearch = inpSearch.value.trim();
+        if (strSearch == "") {
+            const eltJmnodes = getJmnodesFromJm(jmDisplayed);
+            eltJmnodes.classList.remove("showing-hits");
+            clearSearchHits();
+            const divHits = document.getElementById(idDivHits);
+            divHits?.remove();
+            return;
+        }
         jsmindSearchNodes(strSearch);
     }
 
@@ -646,8 +680,8 @@ export async function pageSetup() {
     console.log(`*** displayMindMap, custom rendering: ${nowAfter - nowBefore} ms`);
 
 
-    let jmMirrored;
-    let ourCustomRenderer4mirror;
+    // let jmMirrored;
+    // let ourCustomRenderer4mirror;
 
     // FIX-ME: remove when this is fixed in jsmind.
     fixProblemsAndUpdateCustomAndShapes(jmDisplayed);
@@ -655,8 +689,11 @@ export async function pageSetup() {
     async function setNodeHitsFromArray(arrIdHits, hitType) {
         const eltJmnodes = getJmnodesFromJm(jmDisplayed);
         eltJmnodes.classList.add("showing-hits");
-        // const modMdc = await import("util-mdc");
-        // const arrHits = nodehits.split(",");
+        if (hitType == "provider") {
+            jsMindContainer.classList.add("display-jsmind-search");
+            const divInputs = document.getElementById("jsmind-search-inputs");
+            divInputs.classList.add("showing-provider-hits");
+        }
         console.log({ arrHits: arrIdHits });
         arrIdHits.forEach(id => {
             const node = jmDisplayed.get_node(id);
@@ -667,7 +704,6 @@ export async function pageSetup() {
             mkElt("div", { id: idDivHits, class: "mdc-card" });
 
         if (arrIdHits.length == 0) {
-            // eltJmnodes.classList.remove("showing-hits");
             if (hitType == "provider") {
                 divHits.textContent = "No link to provider item";
             } else {
@@ -723,14 +759,12 @@ export async function pageSetup() {
     }
 
     const nodehits = new URLSearchParams(location.search).get("nodehits");
-    // console.log({ nodehits });
-    if (nodehits) {
-        setNodeHits();
-        async function setNodeHits() {
-            const arrIdHits = nodehits.split(",");
-            setNodeHitsFromArray(arrIdHits, "provider");
-        }
+    if (nodehits) { setProviderNodeHits(); }
+    async function setProviderNodeHits() {
+        const arrIdHits = nodehits.split(",");
+        setNodeHitsFromArray(arrIdHits, "provider");
     }
+
     jmDisplayed.add_event_listener((type, data) => {
         if (type !== 3) return;
         addDebugLog(`jmDisplayed, event_listener, ${type}`)
@@ -1220,7 +1254,7 @@ export async function pageSetup() {
             return topicLower.indexOf(searchLower) >= 0;
         });
         const arrIdHits = matchingNodes.map(n => jsMind.my_get_nodeID_from_DOM_element(n));
-        setNodeHitsFromArray(arrIdHits);
+        setNodeHitsFromArray(arrIdHits, "search");
         console.log({ matchingNodes });
     }
 
@@ -1593,7 +1627,7 @@ function getCorrectTextColor(color) {
     
     Color brightness is determined by the following formula: 
     ((Red value X 299) + (Green value X 587) + (Blue value X 114)) / 1000
-
+ 
 I know this could be more compact, but I think this is easier to read/explain.
     
     */
@@ -1669,10 +1703,11 @@ export function addScrollIntoViewOnSelect(jmDisp) {
     });
 }
 
-function mkEltLinkMindmapA(urlPath, topic, mkey, mhits) {
+function mkEltLinkMindmapA(urlPath, topic, mkey, mhits, provider) {
     const url = new URL(urlPath, location);
     url.searchParams.set("mindmap", mkey);
     if (mhits) {
+        url.searchParams.set("provider", provider);
         const hits = mhits.map(h => h.id);
         console.log({ hits })
         url.searchParams.set("nodehits", hits);
@@ -1682,11 +1717,12 @@ function mkEltLinkMindmapA(urlPath, topic, mkey, mhits) {
     return eltA;
 }
 
-export async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits) {
+export async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits, provider) {
     const toLink = typeof linkMindmapsPage;
     if (toLink !== "string") throw Error(`urlHtml typeof should be string, got ${toLink}`);
     // const eltA = funMkEltLinkMindmap(topic, m.key, m.hits);
-    const funMkEltLinkMindmap = (topic, mKey, mHits) => mkEltLinkMindmapA(linkMindmapsPage, topic, mKey, mHits);
+    const funMkEltLinkMindmap =
+        (topic, mKey, mHits, provider) => mkEltLinkMindmapA(linkMindmapsPage, topic, mKey, mHits, provider);
     // const dbMindmaps = await getDbMindmaps();
     const dbMindmaps = await import("db-mindmaps");
 
@@ -1716,7 +1752,7 @@ export async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits) {
                 throw Error(`Unknown mindmap format: ${j.format}`);
         }
         // console.log({ m, key, j, name });
-        let name = topic;
+        // let name = topic;
         if (topic.startsWith("<")) {
             // FIX-ME: use DOMParser? It may be synchronous.
             // https://stackoverflow.com/questions/63869394/parse-html-as-a-plain-text-via-javascript
@@ -1766,10 +1802,8 @@ export async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits) {
             }
         }));
 
-        const eltA = funMkEltLinkMindmap(topic, m.key, m.hits);
+        const eltA = funMkEltLinkMindmap(topic, m.key, m.hits, provider);
 
-        const eltTopic = mkElt("span", undefined, topic);
-        // const eltMm = mkElt("div", undefined, [eltTopic, btnDelete]);
         const eltMm = mkElt("div", undefined, [eltA, btnDelete]);
         const li = modMdc.mkMDCmenuItem(eltMm);
         li.addEventListener("click", evt => {
@@ -1812,7 +1846,7 @@ export async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits) {
 
 export async function dialogFindInMindMaps(key, provider) {
     const modCustRend = await import("jsmind-cust-rend");
-    const renderer = await modCustRend.getOurCustomRenderer();
+    // const renderer = await modCustRend.getOurCustomRenderer();
     const modMMhelpers = await import("mindmap-helpers");
     const arrMindmapsHits = await modMMhelpers.getMindmapsHits(key);
     console.log({ arrMindmapsHits });
@@ -1822,5 +1856,5 @@ export async function dialogFindInMindMaps(key, provider) {
     }
     const info = mkElt("p", undefined, "Found in these mindmaps:");
     // Fix-me: path??
-    dialogMindMaps("/mm4i/mm4i.html", info, arrMindmapsHits);
+    dialogMindMaps("/mm4i/mm4i.html", info, arrMindmapsHits, provider);
 }

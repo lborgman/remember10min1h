@@ -1077,13 +1077,6 @@ async function mkMenu() {
     liTestShareWithArgs.addEventListener("click", evt => { showTestTarget(); })
     liTestShareWithArgs.classList.add("test-item");
 
-    /*
-    const liMindmaps = modMdc.mkMDCmenuItem("Mindmaps");
-    liMindmaps.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-        const modJEfc4i = await import("/src/js/jsmind-edit-spec-fc4i.js");
-        modJEfc4i.dialogMindMapsFc4i();
-    }));
-    */
     const liMindmapsA = modMdc.mkMDCmenuItem(mkElt("a", { href: "/mm4i/mm4i.html" }, "Mindmaps"));
 
     const liJsmindEdit = modMdc.mkMDCmenuItem("Jsmind-edit");

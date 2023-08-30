@@ -1437,18 +1437,39 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
     position: fixed;
     left: 40px;
     z-index: 10;
+    --icon-button-size: 40;
 }
 
 #jsmind-search-button {
     left: 40;
 }
 
+#provider-hits {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 40px;
+    display: none;
+    background: red;
+}
+
+#jsmind-inp-node-search {
+    display: block;
+}
+
 #jsmind-search-inputs {
     left: 80;
-    width: 100px;
+    width: 150px;
     height: 40px;
-    ;
+    display: none;
     background: orange;
+}
+
+#jsmind-search-inputs.showing-provider-hits #provider-hits {
+    display: flex;
+}
+
+#jsmind-search-inputs.showing-provider-hits #jsmind-inp-node-search {
     display: none;
 }
 

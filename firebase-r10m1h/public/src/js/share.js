@@ -1151,7 +1151,7 @@ async function mkEltInputRemember(record, headerTitle, saveNewNow) {
             const modJsEditCommon = await import("jsmind-edit-common");
             const modEditFc4iMM = await import("jsmind-edit-spec-fc4i");
             modEditFc4iMM.addProviderFc4i();
-            modJsEditCommon.dialogFindInMindMaps(key);
+            modJsEditCommon.dialogFindInMindMaps(key, "fc4i");
         });
         const div = mkElt("div", undefined, [
             btnAdd,
