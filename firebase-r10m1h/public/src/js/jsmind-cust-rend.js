@@ -114,22 +114,11 @@ export class CustomRenderer4jsMind {
         const nodeLink = node.data.shapeEtc?.nodeLink;
         // console.log({ node }, node.data.shapeEtc, nodeLink);
         if (nodeLink && nodeLink.length > 0) {
-            // item link
             const modMdc = await import("util-mdc");
-
-            /*
-            const iconLink = modMdc.mkMDCicon("link");
-            // const eltA = mkElt("a", { href: nodeLink, class: "jsmind-plain-link" }, iconLink);
-            const eltA2 = modMdc.mkMDCbuttonA(nodeLink, "", "raised", iconLink);
-            eltA2.classList.add("icon-button-40");
-            eltA2.classList.add("jsmind-plain-link");
-            */
-
             const iconBtn = modMdc.mkMDCiconButton("link");
             iconBtn.title = "Visit web page";
             iconBtn.classList.add("icon-button-40");
             const eltA3 = mkElt("a", { href: nodeLink, class: "jsmind-plain-link" }, iconBtn);
-
             eltJmnode.appendChild(eltA3);
         }
     }
@@ -138,7 +127,9 @@ export class CustomRenderer4jsMind {
             const modMdc = await import("util-mdc");
             const eltParent = eltDiv.parentElement;
             eltDiv.remove();
-            const btnURL = modMdc.mkMDCiconButton("link");
+            // const btnURL = modMdc.mkMDCiconButton("link");
+            // const btnURL = modMdc.mkMDCbutton("");
+            const btnURL = modMdc.mkMDCiconButton("");
             btnURL.title = "Go to this item in Fc4i";
             btnURL.classList.add("icon-button-40");
             // btnURL.classList.add(...themePrimary);

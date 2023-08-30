@@ -17,7 +17,8 @@ export async function addProviderFc4i() {
     const dbFc4i = await import("db-fc4i");
     // const modMMhelpers = await import("mindmap-helpers");
     const modCustRend = await import("jsmind-cust-rend");
-    const linkRendImg = "/img/192.png";
+    // const linkRendImg = "/img/192.png";
+    const linkRendImg = "/img/fc4i.svg";
     modCustRend.ourCustomRendererAddProvider({
         name: "fc4i",
         longName: "Flashcard 4 Internet",

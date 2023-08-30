@@ -435,6 +435,8 @@ export async function addToPageMenu(lbl, what) {
 }
 
 export async function pageSetup() {
+    const nodeHits = new URLSearchParams(location.search).get("nodehits");
+    const nodeProvider = new URLSearchParams(location.search).get("provider");
     let inpSearch;
     // let useCanvas = true;
     setCustomRenderer();
@@ -603,8 +605,20 @@ export async function pageSetup() {
             eltJmnodes.classList.remove("showing-hits");
             inpSearch.focus();
         });
+        const eltTellProvider = mkElt("span");
+        if (nodeProvider) {
+            const render = await modCustRend.getOurCustomRenderer();
+            const src = render.getLinkRendererImage(nodeProvider);
+            const eltImg = mkElt("img", {src});
+            eltImg.style.height = "30px";
+            const span = mkElt("span", undefined, [eltImg, " link"]);
+            eltTellProvider.appendChild(span);
+            // Links to Links to 
+        } else {
+            eltTellProvider.appendChild(mkElt("span", undefined, "dummy (no provider)"));
+        }
         const eltProvHits = mkElt("div", { id: "provider-hits" }, [
-            mkElt("span", undefined, "Links to item"),
+            eltTellProvider,
             btnCloseProvHits
         ]);
 
@@ -759,10 +773,9 @@ export async function pageSetup() {
         divJsmindSearch.appendChild(divHits);
     }
 
-    const nodehits = new URLSearchParams(location.search).get("nodehits");
-    if (nodehits) { setProviderNodeHits(); }
+    if (nodeHits) { setProviderNodeHits(); }
     async function setProviderNodeHits() {
-        const arrIdHits = nodehits.split(",");
+        const arrIdHits = nodeHits.split(",");
         setNodeHitsFromArray(arrIdHits, "provider");
     }
 
@@ -930,7 +943,7 @@ export async function pageSetup() {
                 if (!go) return;
                 // showKeyInFc4i(objCustom.key);
                 debugger;
-                const render = await modMMhelpers.getOurCustomRenderer();
+                const render = await modCustRend.getOurCustomRenderer();
                 // if (!render instanceof CustomRenderer4jsMind) throw Error(`Not a custom renderer`);
                 render.showCustomRec(objCustom.key, objCustom.provider);
             }, 100);
