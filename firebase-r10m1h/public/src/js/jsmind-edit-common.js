@@ -437,7 +437,7 @@ export async function addToPageMenu(lbl, what) {
 export async function pageSetup() {
     const nodeHits = new URLSearchParams(location.search).get("nodehits");
     const nodeProvider = new URLSearchParams(location.search).get("provider");
-    let inpSearch;
+    // let inpSearch;
     // let useCanvas = true;
     setCustomRenderer();
     // let useCanvas = false;
@@ -537,9 +537,23 @@ export async function pageSetup() {
     const idBtnJsmindMenu = "jsmind-test-menu-button";
     let btnJsmindSearch;
     const idBtnJsmindSearch = "jsmind-search-button";
-    let divSearchInputs;
+    // let divSearchInputs;
     const idSearchInputs = "jsmind-search-inputs";
+
+    const inpSearch = mkElt("input", { type: "search", placeholder: "Search node topics" });
+    inpSearch.id = "jsmind-inp-node-search";
+
+    const eltProvHits = mkElt("div", { id: "provider-hits" });
+    const divSearchInputs = mkElt("div", { id: idSearchInputs }, [inpSearch, eltProvHits]);
+    // const divSearchInputs = mkElt("div", { id: idSearchInputs });
+
+    divSearchInputs.classList.add("jsmind-actions");
+    const divHits = mkElt("div", { id: idDivHits, class: "mdc-card" });
+    divHits.classList.add("display-none");
+    divSearchInputs.appendChild(divHits);
+
     addJsmindButtons();
+
     async function addJsmindButtons() {
         // const modMdc = await import("util-mdc");
 
@@ -589,7 +603,7 @@ export async function pageSetup() {
                 }
             } else {
                 const divHits = document.getElementById(idDivHits);
-                divHits?.remove();
+                divHits?.classList.add("display-none");
             }
         });
 
@@ -600,7 +614,7 @@ export async function pageSetup() {
             divInputs.classList.remove("showing-provider-hits");
             clearSearchHits();
             const divHits = document.getElementById(idDivHits);
-            divHits?.remove();
+            divHits?.classList.add("display-none");
             const eltJmnodes = getJmnodesFromJm(jmDisplayed);
             eltJmnodes.classList.remove("showing-hits");
             inpSearch.focus();
@@ -609,7 +623,7 @@ export async function pageSetup() {
         if (nodeProvider) {
             const render = await modCustRend.getOurCustomRenderer();
             const src = render.getLinkRendererImage(nodeProvider);
-            const eltImg = mkElt("img", {src});
+            const eltImg = mkElt("img", { src });
             eltImg.style.height = "30px";
             const span = mkElt("span", undefined, [eltImg, " link"]);
             eltTellProvider.appendChild(span);
@@ -617,19 +631,15 @@ export async function pageSetup() {
         } else {
             eltTellProvider.appendChild(mkElt("span", undefined, "dummy (no provider)"));
         }
-        const eltProvHits = mkElt("div", { id: "provider-hits" }, [
-            eltTellProvider,
-            btnCloseProvHits
-        ]);
+        // const eltProvHits = mkElt("div", { id: "provider-hits" }, [
+        eltProvHits.textContent = "";
+        eltProvHits.appendChild(eltTellProvider);
+        eltProvHits.appendChild(btnCloseProvHits);
+        // ]);
 
-        inpSearch = mkElt("input", { type: "search", placeholder: "Search node topics" });
-        inpSearch.id = "jsmind-inp-node-search";
         inpSearch.addEventListener("input", evt => {
             restartJsmindSearch();
         })
-        divSearchInputs = mkElt("div", { id: idSearchInputs }, [inpSearch, eltProvHits]);
-        divSearchInputs.classList.add("jsmind-actions");
-        // jsMindContainer.appendChild(divSearchInputs);
         divJsmindSearch.appendChild(divSearchInputs);
     }
     // function displaySearchInputs() { jsMindContainer.classList.add("display-jsmind-search"); }
@@ -650,7 +660,7 @@ export async function pageSetup() {
             eltJmnodes.classList.remove("showing-hits");
             clearSearchHits();
             const divHits = document.getElementById(idDivHits);
-            divHits?.remove();
+            divHits?.classList.add("display-none");
             return;
         }
         jsmindSearchNodes(strSearch);
@@ -715,8 +725,6 @@ export async function pageSetup() {
             const eltNode = jsMind.my_get_DOM_element_from_node(node);
             eltNode.classList.add("jsmind-hit");
         });
-        const divHits = document.getElementById(idDivHits) ||
-            mkElt("div", { id: idDivHits, class: "mdc-card" });
 
         if (arrIdHits.length == 0) {
             if (hitType == "provider") {
@@ -769,8 +777,8 @@ export async function pageSetup() {
         ]);
         divHits.textContent = "";
         divHits.appendChild(divHitsInner);
-        // document.body.appendChild(divHits);
-        divJsmindSearch.appendChild(divHits);
+        // divSearchInputs.appendChild(divHits);
+        divHits.classList.remove("display-none");
     }
 
     if (nodeHits) { setProviderNodeHits(); }

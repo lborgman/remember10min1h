@@ -1426,6 +1426,7 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
     position: fixed;
     top: 0;
     background: greenyellow;
+    background-color: var(--mdc-theme-primary);
     z-index: 10;
 }
 
@@ -1459,8 +1460,8 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
 
 #jsmind-search-inputs {
     left: 80;
-    width: 150px;
-    height: 40px;
+    width: 200px;
+    min-height: 40px;
     display: none;
     background: orange;
 }
@@ -2508,10 +2509,10 @@ https://unused-css.com/tools/clip-path-generator (adjustable nodes!)
 
 
 #jsmind-div-hits {
-    position: fixed;
-    left: 40;
-    top: 40;
-    z-index: 5;
+    position: static;
+    /* left: 40; */
+    /* top: 40; */
+    /* z-index: 5; */
     background: red;
     background: greenyellow;
     color: white;
@@ -2615,7 +2616,7 @@ details:not([open])>summary .for-details-open {
 }
 
 .display-none {
-    display: none;
+    display: none !important;
 }
 
 .thumb-40 {
