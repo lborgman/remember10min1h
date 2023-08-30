@@ -601,6 +601,7 @@ export async function pageSetup() {
             divHits?.remove();
             const eltJmnodes = getJmnodesFromJm(jmDisplayed);
             eltJmnodes.classList.remove("showing-hits");
+            inpSearch.focus();
         });
         const eltProvHits = mkElt("div", { id: "provider-hits" }, [
             mkElt("span", undefined, "Links to item"),
@@ -617,8 +618,8 @@ export async function pageSetup() {
         // jsMindContainer.appendChild(divSearchInputs);
         divJsmindSearch.appendChild(divSearchInputs);
     }
-    function displaySearchInputs() { jsMindContainer.classList.add("display-jsmind-search"); }
-    function hideSearchInputs() { jsMindContainer.classList.remove("display-jsmind-search"); }
+    // function displaySearchInputs() { jsMindContainer.classList.add("display-jsmind-search"); }
+    // function hideSearchInputs() { jsMindContainer.classList.remove("display-jsmind-search"); }
     function toggleSearchInputs() { jsMindContainer.classList.toggle("display-jsmind-search"); }
     function visibleSearchInputs() { return jsMindContainer.classList.contains("display-jsmind-search"); }
     const restartJsmindSearch = (() => {
