@@ -943,8 +943,8 @@ async function showIntro() {
 }
 
 async function showAddedNew(sharedParams) {
-    // const dbFc4i = await getDbFc4i();
     const dbFc4i = await import("db-fc4i");
+    const modFc4iItems = await import("fc4i-items");
     const secMain = clearMainSection("page-added-new");
     const oldRec = sharedParams?.url ? await dbFc4i.getViaUrl(sharedParams.url) : undefined;
     // console.log({ oldRec });
@@ -954,11 +954,11 @@ async function showAddedNew(sharedParams) {
             mkElt("div", { style: "color:darkred; font-style: italic;" }, "Link matched this old entry!"),
         ])
         // eltInpRem = await mkEltInputRemember(oldRec, "There was already an old entry, showing this");
-        eltInpRem = await mkEltInputRemember(oldRec, eltH);
+        eltInpRem = await modFc4iItems.mkEltInputRemember(oldRec, eltH);
     } else if (sharedParams) {
-        eltInpRem = await mkEltInputRemember(sharedParams, mkElt("i", undefined, "Added new from shared link"), true);
+        eltInpRem = await modFc4iItems.mkEltInputRemember(sharedParams, mkElt("i", undefined, "Added new from shared link"), true);
     } else {
-        eltInpRem = await mkEltInputRemember(undefined, mkElt("i", undefined, "Enter the new url to remember"));
+        eltInpRem = await modFc4iItems.mkEltInputRemember(undefined, mkElt("i", undefined, "Enter the new url to remember"));
     }
     secMain.appendChild(eltInpRem);
 }

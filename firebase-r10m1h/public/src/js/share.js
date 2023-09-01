@@ -383,7 +383,7 @@ async function dialog10min1hour(eltPrevFocused) {
     dlg = await modMdc.mkMDCdialogAlert(body, "Close");
 }
 
-async function mkEltInputRemember(record, headerTitle, saveNewNow) {
+export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
     const modMdc = await import("util-mdc");
     const modIsDisplayed = await import("is-displayed");
     const modClipboardImages = await import("images");
