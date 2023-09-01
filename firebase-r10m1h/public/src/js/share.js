@@ -28,10 +28,10 @@ function isOlderThan(dateOrString, ms) {
     const msDiff = now - thatDate;
     return msDiff > ms;
 }
-function isMoreThanAnHourAgo(dateOrString) { return isOlderThan(dateOrString, hourMs); }
-function isMoreThanADayAgo(dateOrString) { return isOlderThan(dateOrString, dayMs); }
-function isMoreThanAWeekAgo(dateOrString) { return isOlderThan(dateOrString, weekMs); }
-function isMoreThanAMonthAgo(dateOrString) { return isOlderThan(dateOrString, monthMs); }
+export function isMoreThanAnHourAgo(dateOrString) { return isOlderThan(dateOrString, hourMs); }
+export function isMoreThanADayAgo(dateOrString) { return isOlderThan(dateOrString, dayMs); }
+export function isMoreThanAWeekAgo(dateOrString) { return isOlderThan(dateOrString, weekMs); }
+export function isMoreThanAMonthAgo(dateOrString) { return isOlderThan(dateOrString, monthMs); }
 
 function getTodayBorder() {
     const d = new Date();
@@ -73,8 +73,8 @@ function getNoBorder() {
     return d.toISOString();
 }
 
-const keyAndTimes = {}
-const keyAndTimesOrder = [];
+export const keyAndTimes = {}
+export const keyAndTimesOrder = [];
 const addKeyTime = (label, timeBorder) => {
     keyAndTimes[label] = {
         timeBorder,

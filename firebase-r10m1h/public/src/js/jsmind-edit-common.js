@@ -540,11 +540,14 @@ export async function pageSetup() {
     // let divSearchInputs;
     const idSearchInputs = "jsmind-search-inputs";
 
-    const inpSearch = mkElt("input", { type: "search", placeholder: "Search node topics" });
-    inpSearch.id = "jsmind-inp-node-search";
+    const inpSearch = mkElt("input", { type: "search", placeholder: "Search nodes", id:"jsmind-inp-node-search" });
+    // const inpSearch = modMdc.mkMDCtextFieldInput( "jsmind-inp-node-search", "search");
+    // const tfSearch = modMdc.mkMDCtextFieldOutlined("Search nodes", inpSearch);
+    // const tfSearch = modMdc.mkMDCtextField("Search nodes", inpSearch);
+    const tfSearch = inpSearch;
 
     const eltProvHits = mkElt("div", { id: "provider-hits" });
-    const divSearchInputs = mkElt("div", { id: idSearchInputs }, [inpSearch, eltProvHits]);
+    const divSearchInputs = mkElt("div", { id: idSearchInputs }, [tfSearch, eltProvHits]);
     // const divSearchInputs = mkElt("div", { id: idSearchInputs });
 
     divSearchInputs.classList.add("jsmind-actions");

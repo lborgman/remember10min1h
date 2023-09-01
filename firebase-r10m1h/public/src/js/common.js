@@ -471,8 +471,9 @@ async function displayMatchingReminders(searchFor, minConf, maxConf, requiredTag
 
     const msNow = new Date().getTime();
     let nNew = 0;
-    keyAndTimesOrder.forEach(label => {
-        const rec = keyAndTimes[label];
+    const modFc4iItems = await import("fc4i-items");
+    modFc4iItems.keyAndTimesOrder.forEach(label => {
+        const rec = modFc4iItems.keyAndTimes[label];
         rec.items.length = 0;
     });
 
@@ -490,9 +491,9 @@ async function displayMatchingReminders(searchFor, minConf, maxConf, requiredTag
         }
         nNew++;
         // FIX-ME: new version
-        for (let i = 0, len = keyAndTimesOrder.length; i < len; i++) {
-            const partName = keyAndTimesOrder[i];
-            const part = keyAndTimes[partName];
+        for (let i = 0, len = modFc4iItems.keyAndTimesOrder.length; i < len; i++) {
+            const partName = modFc4iItems.keyAndTimesOrder[i];
+            const part = modFc4iItems.keyAndTimes[partName];
             const timeBorder = part.timeBorder;
             if (r.key > timeBorder) {
                 part.items.push(r);
@@ -503,10 +504,10 @@ async function displayMatchingReminders(searchFor, minConf, maxConf, requiredTag
 
         if (active) {
             const rKey = r.key;
-            const olderDay = isMoreThanADayAgo(rKey);
+            const olderDay = modFc4iItems.isMoreThanADayAgo(rKey);
             // console.log({ olderDay, rKey });
             if (!olderDay) { arrActive.push(r); return; }
-            const olderWeek = isMoreThanAWeekAgo(rKey);
+            const olderWeek = modFc4iItems.isMoreThanAWeekAgo(rKey);
             if (!olderWeek) { arrActiveDay.push(r); return; }
             arrActiveWeek.push(r);
         } else {
@@ -517,9 +518,9 @@ async function displayMatchingReminders(searchFor, minConf, maxConf, requiredTag
     // console.log({ nNew, keyAndTimes });
     // Cut tail
     let cut = true;
-    for (let len = keyAndTimesOrder.length, i = len - 1; i >= 0; i--) {
-        const label = keyAndTimesOrder[i];
-        const rec = keyAndTimes[label];
+    for (let len = modFc4iItems.keyAndTimesOrder.length, i = len - 1; i >= 0; i--) {
+        const label = modFc4iItems.keyAndTimesOrder[i];
+        const rec = modFc4iItems.keyAndTimes[label];
         const num = rec.items.length;
         // console.log(label, num);
         if (num > 0) cut = false;
@@ -527,8 +528,8 @@ async function displayMatchingReminders(searchFor, minConf, maxConf, requiredTag
         rec.cut = cut;
     }
 
-    keyAndTimesOrder.forEach(label => {
-        const rec = keyAndTimes[label];
+    modFc4iItems.keyAndTimesOrder.forEach(label => {
+        const rec = modFc4iItems.keyAndTimes[label];
         // console.log({ rec });
         const det = insertOlder(rec.items, label, rec.cut);
         // if (det) det.style.outline = "4px dotted red";

@@ -5,6 +5,7 @@ const importMap = {
         "acc-colors": "/src/acc-colors.js",
         "db-mindmaps": "/src/js/db-mindmaps.js",
         "db-fc4i": "/src/js/db-fc4i.js",
+        "fc4i-items": "/src/js/share.js",
         "flashcards": "/src/js/mod/flashcards.js",
         "images": "/src/js/images.js",
         "is-displayed": "/src/js/is-displayed.js",

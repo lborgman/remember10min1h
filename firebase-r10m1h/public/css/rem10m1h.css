@@ -1461,9 +1461,10 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
 #jsmind-search-inputs {
     left: 80;
     width: 200px;
-    min-height: 40px;
+    min-height: fit-content;
+    margin-top: 10px;
     display: none;
-    background: orange;
+    NObackground: orange;
 }
 
 #jsmind-search-inputs.showing-provider-hits #provider-hits {
@@ -2537,12 +2538,9 @@ https://unused-css.com/tools/clip-path-generator (adjustable nodes!)
 jmnodes.showing-hits jmnode:not(.jsmind-hit)>* {
     /* filter: grayscale(1) contrast(0.5) !important; */
     filter: grayscale(1) contrast(0.5);
-
 }
-
-jmnode.jsmind-hit {
-    /* filter: grayscale(1) contrast(0.5) drop-shadow(2px 4px 6px red) !important; */
-    /* filter: drop-shadow(2px 4px 6px red) !important; */
+jmnodes.showing-hits jmnode:not(.jsmind-hit) {
+    filter: grayscale(1) contrast(0.5);
 }
 
 jmnode.jsmind-hit::after {
@@ -2550,12 +2548,13 @@ jmnode.jsmind-hit::after {
     filter: none !important;
     background-color: red !important;
     color: yellow !important;
-    font-size: 18px;
-    height: 28px;
-    width: 40px;
-    padding: 2px;
-    border: 2px solid yellow;
-    position: absolute;
+    font-size: 18px !important;
+    height: 28px !important;
+    width: 40px !important;
+    padding: 2px !important;
+    border: 2px solid yellow !important;
+    border-radius: 2px !important;
+    position: absolute !important;
     top: 0;
     top: 40%;
     top: -10px;
@@ -2664,4 +2663,8 @@ button.btn-edit-item-confidence {
     /* start showing ellipsis when 3rd line is reached */
     white-space: pre-wrap;
     /* let the text wrap preserving spaces */
+}
+
+html.hide-error-popups .error-popup {
+    display: none !important;
 }

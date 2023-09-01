@@ -361,6 +361,8 @@ function alertNetworkTrouble(msg, e) {
     }
     new Popup(title, body, undefined, true, id).show();
 }
+
+var divErrInPromtForUpdate;
 function alertRealError(msg, e) {
     addTraceError("alertError", msg, e);
     // If webview just give up.
@@ -375,6 +377,12 @@ function alertRealError(msg, e) {
     if (currentErrorPopup) return;
 
     console.error("alertError, e", e);
+
+
+    if (divErrInPromtForUpdate) {
+        console.warn("divErrInProvmptForUpdate is set", divErrInPromtForUpdate);
+        debugger;
+    }
     // debugger;
 
     // Just exit here if Chrome devtools is opened.
@@ -1080,6 +1088,23 @@ async function popupDialog(title, body, severity) {
     let styleDia = "max-width:90vw; max-height:80vh; overflow:auto; color:black; ";
     switch (severity) {
         case "error":
+            {
+                const btnUpdate = mkElt("button", undefined, "Update now");
+                const styleUpdate = "background:black; color:white; padding:10px; display: none;";
+                const divUpdate = mkElt("div", { style: styleUpdate }, ["Update available ", btnUpdate]);
+                body.insertBefore(divUpdate, body.firstElementChild)
+                const modPwa = await import("pwa");
+                btnUpdate.addEventListener("click", async evt => {
+                    modPwa.updateNow();
+                });
+                if (modPwa.hasUpdate()) {
+                    divUpdate.style.display = "block";
+                } else {
+                    window.addEventListener("pwa-update-available", evt => {
+                        divUpdate.style.display = "block";
+                    });
+                }
+            }
             styleDia += "background:yellow; border:2px solid red;";
             break;
         case "warning":
@@ -1112,6 +1137,7 @@ async function popupDialog(title, body, severity) {
                 body,
                 mkElt("div", undefined, ["", closeBtn]),
             ]));
+        dialog.classList.add("error-popup");
         document.body.appendChild(dialog);
         dialog.showModal();
     } else {
@@ -1270,16 +1296,16 @@ function debounce(callback, waitMS = 200) {
     };
 };
 
-function throttle (func, waitMS = 200) {
+function throttle(func, waitMS = 200) {
     let isWait = false;
-    
-    return function(...args) {
+
+    return function (...args) {
         if (!isWait) {
             func.call(this, ...args);
             isWait = true;
-            
+
             setTimeout(() => {
-               isWait = false;
+                isWait = false;
             }, waitMS);
         }
     }

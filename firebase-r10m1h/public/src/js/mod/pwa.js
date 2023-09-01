@@ -5,6 +5,7 @@ if (!import.meta.url) throw Error("!import.meta.url"); // is module
 const idDebugSection = "debug-section";
 let swVersion;
 let instWorkbox;
+let canUpdateNow = false;
 getWorkbox();
 addDebugSWinfo();
 checkPWA();
@@ -133,6 +134,11 @@ async function setupServiceWorker() {
         // Implementing this is app-specific; some examples are:
         // https://open-ui.org/components/alert.research or
         // https://open-ui.org/components/toast.research
+
+        const evtUA = new CustomEvent("pwa-update-available");
+        window.dispatchEvent(evtUA);
+        canUpdateNow = true;
+
         const updateAccepted = await promptForUpdate();
 
         if (updateAccepted) {
@@ -311,11 +317,15 @@ async function promptForUpdate() {
 
     const wb = await getWorkbox();
     const waitingVersion = await wb.messageSW({ type: 'GET_VERSION' });
+    const divErrLine = mkElt("div");
     const dlgPrompt = mkElt("dialog", { id: "prompt4update", class: "mdc-card", open }, [
         mkElt("div", undefined, `Update available: ver ${waitingVersion}`),
+        divErrLine,
         mkElt("div", undefined, [btnSkip, btnUpdate])
     ])
     document.body.appendChild(dlgPrompt);
+
+    if (typeof divErrInPromtForUpdate !== "undefined") divErrInPromtForUpdate = divErrLine;
     return new Promise((resolve, reject) => {
         btnSkip.addEventListener("click", evt => {
             hidePrompt();
@@ -337,3 +347,22 @@ export async function getWorkbox() {
 }
 
 export async function getSWversion() { return swVersion; }
+
+/*
+export async function onUpdateAvailable(fun) {
+    const wb = await getWorkbox()
+    wb.addEventListener('waiting', evt => {
+        console.warn("update available, calling fun", fun);
+        fun();
+    });
+}
+*/
+export async function updateNow() {
+    console.log("pwa.updateNow, calling wb.messageSkipWaiting() 1");
+    const wb = await getWorkbox();
+    console.log("pwa.updateNow, calling wb.messageSkipWaiting() 2");
+    wb.messageSkipWaiting();
+}
+export function hasUpdate() {
+    return canUpdateNow;
+}
