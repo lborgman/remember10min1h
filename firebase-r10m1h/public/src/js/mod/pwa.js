@@ -308,6 +308,7 @@ async function setupForInstall() {
 
 async function promptForUpdate() {
     const modMdc = await import("util-mdc");
+    console.log("promptForUpdate 1");
     function hidePrompt() {
         // divPrompt.parentElement.removeChild(divPrompt);
         dlgPrompt.remove();
@@ -315,23 +316,31 @@ async function promptForUpdate() {
     const btnSkip = modMdc.mkMDCbutton("Skip", "raised");
     const btnUpdate = modMdc.mkMDCbutton("Update", "raised");
 
+    console.log("promptForUpdate 2");
     const wb = await getWorkbox();
+    console.log("promptForUpdate 3");
     const waitingVersion = await wb.messageSW({ type: 'GET_VERSION' });
+    console.log("promptForUpdate 4");
     const divErrLine = mkElt("div");
     const dlgPrompt = mkElt("dialog", { id: "prompt4update", class: "mdc-card", open }, [
         mkElt("div", undefined, `Update available: ver ${waitingVersion}`),
         divErrLine,
         mkElt("div", undefined, [btnSkip, btnUpdate])
     ])
+    console.log("promptForUpdate 5");
     document.body.appendChild(dlgPrompt);
+    console.log("promptForUpdate 6");
 
     if (typeof divErrInPromtForUpdate !== "undefined") divErrInPromtForUpdate = divErrLine;
+    console.log("promptForUpdate 7");
     return new Promise((resolve, reject) => {
         btnSkip.addEventListener("click", evt => {
+            console.log("promptForUpdate 8");
             hidePrompt();
             resolve(false);
         });
         btnUpdate.addEventListener("click", evt => {
+            console.log("promptForUpdate 9");
             hidePrompt();
             resolve(true);
         });

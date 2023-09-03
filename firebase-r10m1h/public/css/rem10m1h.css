@@ -2657,6 +2657,12 @@ button.btn-edit-item-confidence {
 */
 .multiline-ellipsis {
     overflow: hidden;
+    /*
+        FIX-ME:display:
+        The use of the experimental -webkit-line-clamp 
+        causes very, very strange rendering problems sometimes.
+        Maybe just use 1 line?
+    */
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;

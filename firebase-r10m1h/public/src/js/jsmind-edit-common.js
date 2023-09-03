@@ -812,7 +812,7 @@ export async function pageSetup() {
                 const id_parent = datadata[0];
                 if (id_added != datadata[1]) throw Error(`id_added (${id_added}) != datadata[1] (${datadata[1]})`);
                 const topic_added = datadata[2];
-                jmMirrored?.add_node(id_parent, id_added, topic_added);
+                // jmMirrored?.add_node(id_parent, id_added, topic_added);
                 break;
             case "update_node":
                 {
@@ -823,7 +823,8 @@ export async function pageSetup() {
                     const eltJmnode = jsMind.my_get_DOM_element_from_node(updated_node);
                     // debugger;
                     const isPlainNode = eltJmnode.childElementCount == 0;
-                    getCustomRenderer().addJmnodeBgAndText(eltJmnode);
+                    // getCustomRenderer().addJmnodeBgAndText(eltJmnode);
+                    modCustRend.addJmnodeBgAndText(eltJmnode);
                     // const isCustomNode = topic.search(" data-jsmind-custom=") > 0;
                     if (!isPlainNode) {
                         getCustomRenderer().updateJmnodeFromCustom(eltJmnode);
@@ -847,7 +848,8 @@ export async function pageSetup() {
                     const moved_node = jmDisplayed.get_node(id_moved);
                     const eltJmnode = jsMind.my_get_DOM_element_from_node(moved_node);
                     const isPlainNode = eltJmnode.childElementCount == 0;
-                    getCustomRenderer().addJmnodeBgAndText(eltJmnode);
+                    // getCustomRenderer().addJmnodeBgAndText(eltJmnode);
+                    modCustRend.addJmnodeBgAndText(eltJmnode);
                     if (!isPlainNode) {
                         getCustomRenderer().updateJmnodeFromCustom(eltJmnode);
                     } else {
