@@ -16,6 +16,7 @@ const importMap = {
         "my-svg": "/src/js/mod/my-svg.js",
         "new-jsmind.draggable-nodes": "/ext/jsmind/new-jsmind.draggable-nodes.js",
         "pwa": "/src/js/mod/pwa.js",
+        "sharing-params": "/src/js/mod/sharing-params.js",
         "util-mdc": "/src/js/mod/util-mdc.js",
     }
 };
