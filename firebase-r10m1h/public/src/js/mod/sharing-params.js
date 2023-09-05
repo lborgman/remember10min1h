@@ -48,7 +48,16 @@ if (title == undefined || title == "") { title = text; text = undefined; }
 const sharingParams = { text, title, url };
 console.log(`URL sharing parameters: title: ${title}, text: ${text}, url: ${url}`);
 
-export function getComputedSharedParams() {
+
+// Try to figure out the desired shared parameters
+export function getOurSharedParams() {
     if (!text && !title && !url) return;
     return sharingParams;
+}
+
+export function removeUrlParam(urlIn, param) {
+    if (!(urlIn instanceof URL)) { throw Error(`urlIn is not URL`); }
+    const urlOut = new URL(urlIn);
+    urlOut.searchParams.delete(param);
+    return urlOut;
 }

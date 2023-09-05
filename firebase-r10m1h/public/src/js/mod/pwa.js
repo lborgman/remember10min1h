@@ -375,3 +375,6 @@ export async function updateNow() {
 export function hasUpdate() {
     return canUpdateNow;
 }
+
+// https://web.dev/customize-install/#detect-launch-type
+// https://web.dev/manifest-updates/

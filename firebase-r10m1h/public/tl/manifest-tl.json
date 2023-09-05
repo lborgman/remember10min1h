@@ -21,7 +21,7 @@
         }
     ],
     "start_url": "/tl/text-and-link.html",
-    "scope": "/fc4i",
+    "scope": "/tl",
     "display": "standalone",
     "background_color": "olive",
     "theme_color": "olive",
