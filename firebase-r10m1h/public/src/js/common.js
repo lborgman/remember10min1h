@@ -257,7 +257,8 @@ async function justShowKey(key) {
         const eltH = mkElt("div", undefined, [
             mkElt("p", undefined, "This is the item linked in the mindmap.")
         ]);
-        const eltRem = await mkEltInputRemember(keyRec, eltH);
+        const modFc4iItems = await import("fc4i-items");
+        const eltRem = await modFc4iItems.mkEltInputRemember(keyRec, eltH);
         secMain.appendChild(eltRem);
     } else {
         secMain.appendChild(mkElt("h2", undefined, "Not found"));
@@ -309,7 +310,8 @@ async function showKeyToRemember(key, timerInfo) {
             ]),
         ]),
     ]);
-    const eltRem = await mkEltInputRemember(keyRec, eltH);
+    const modFc4iItems = await import("fc4i-items");
+    const eltRem = await modFc4iItems.mkEltInputRemember(keyRec, eltH);
     secMain.appendChild(eltRem);
 }
 function mkImageThumb(blob) {
@@ -363,7 +365,8 @@ async function appendRem(rem, toDiv) {
     det.addEventListener("toggle", async evt => {
         if (det.open) {
             if (det.childElementCount == 1) {
-                const eltRem = await mkEltInputRemember(rem);
+                const modFc4iItems = await import("fc4i-items");
+                const eltRem = await modFc4iItems.mkEltInputRemember(rem);
                 det.appendChild(eltRem);
             }
         }
@@ -953,7 +956,6 @@ async function showAddedNew(sharedParams) {
         const eltH = mkElt("div", undefined, [
             mkElt("div", { style: "color:darkred; font-style: italic;" }, "Link matched this old entry!"),
         ])
-        // eltInpRem = await mkEltInputRemember(oldRec, "There was already an old entry, showing this");
         eltInpRem = await modFc4iItems.mkEltInputRemember(oldRec, eltH);
     } else if (sharedParams) {
         eltInpRem = await modFc4iItems.mkEltInputRemember(sharedParams, mkElt("i", undefined, "Added new from shared link"), true);

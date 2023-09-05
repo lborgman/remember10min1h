@@ -47,18 +47,24 @@
     <!-- <script src="https://www.gstatic.com/firebasejs/ui/6.0.1/firebase-ui-auth.js"></script> -->
     <!-- <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/6.0.1/firebase-ui-auth.css" /> -->
     <style>
-        .div-output {
+        #info-header {
+            display: flex;
+            align-items: flex-end;
+        }
+
+        #info-fc4i {
+            font-style: italic;
+        }
+
+        #div-output {
             display: grid;
             grid-template-columns: 1fr fit-content(50px);
             gap: 20px;
             padding: 10px;
         }
+
         #text-content {
             overflow-wrap: anywhere;
-        }
-
-        .div-btn {
-            padding: 10px;
         }
     </style>
 </head>
@@ -75,6 +81,7 @@
     <!-- <script src="./src/js/is-displayed.js"></script> -->
     <!-- <script src="/src/js/share.js"></script> -->
     <header id="main-header">
+        <!-- 
         <span id="menu-container" class="one-child-fills">
             <div id="menu-backdrop"></div>
             <span id="menu-toggle" class="one-child-fills" tabindex="0">
@@ -82,14 +89,32 @@
                 <button id="menu-open" class="no-button">☰</button>
             </span>
         </span>
+        -->
+        <span></span>
         <span id="header-title"></span>
         <span id="header-search-check"></span>
     </header>
-    <p id="info">
+    <p id="info-header">
         <img src="/img/tl.svg" height="100" />
     </p>
-    <div id="output">
+    <div id="info" class="display-none">
+        <p>
+            This web page can be a share target for apps and web pages.
+            It must be "installed as a
+            <a href="https://en.wikipedia.org/wiki/Progressive_web_app">PWA</a>
+            " in your web browser.
+            (There is only support for this on Android mobiles yet.)
+        </p>
+        <p>
+            The link in the output is cleaned from
+            <a href="https://en.wikipedia.org/wiki/Click_identifier">click identifiers</a>.
+        </p>
+        <p id="info-fc4i">
+            Note: This is a part of
+            <a href="/fc4i/fc4i.html">Flashcards 4 Internet</a>.
+        </p>
     </div>
+    <div id="output"> </div>
 
     <script>
         const eltTitle = document.getElementById("header-title");
@@ -99,18 +124,24 @@
             const modMdc = await import("util-mdc");
             const modShPar = await import("sharing-params");
 
+            const eltInfoHeader = document.getElementById("info-header");
             const eltInfo = document.getElementById("info");
             const btnInfo = modMdc.mkMDCiconButton("info");
+            btnInfo.style.color = "blue";
             btnInfo.addEventListener("click", evt => {
-                showInfo();
+                // showInfo();
+                // setTimeout(() => btnInfo.remove(), 500);
+                toggleInfo();
             })
-            eltInfo.appendChild(btnInfo);
+            eltInfoHeader.appendChild(btnInfo);
 
             const sharedParams = modShPar.getOurSharedParams();
             console.log({ sharedParams });
             const divOut = document.getElementById("output")
+            function toggleInfo() {
+                eltInfo.classList.toggle("display-none");
+            }
             function showInfo() {
-                btnInfo.remove();
                 // divOut.textContent = "";
                 const p1 = mkElt("p", undefined,
                     `This web page can be a share target for apps and web pages.`);
@@ -125,10 +156,12 @@
                 eltInfo.appendChild(p2);
             }
             if (!sharedParams) {
-                showInfo();
+                btnInfo.remove();
+                // showInfo();
+                toggleInfo();
             }
             if (sharedParams) {
-                const divText = mkElt("div", {id:"text-content"});
+                const divText = mkElt("div", { id: "text-content" });
                 if (sharedParams.title) {
                     const div = mkElt("div", undefined, sharedParams.title + "\n");
                     div.style.fontWeight = "bold";
@@ -166,11 +199,7 @@
                     if (isAndroid) return;
                     modMdc.mkMDCsnackbar("copied to clipboard");
                 }));
-                // const divBtn = mkElt("div", { class: "div-btn" }, btnCopy);
-                // divTextOut.appendChild(btnCopy);
-                const divTextOut = mkElt("div", { class: "div-output mdc-card" }, [divText, btnCopy]);
-                // const divText = mkElt("div", undefined, [divTextOut, divBtn]);
-                // divOut.appendChild(divText);
+                const divTextOut = mkElt("div", { id: "div-output", class: "mdc-card" }, [divText, btnCopy]);
                 divOut.appendChild(divTextOut);
             }
         })();
