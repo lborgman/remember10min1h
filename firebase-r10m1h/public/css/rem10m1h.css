@@ -977,9 +977,16 @@ div.flashcard-conf {
     color: #b4cfe8;
 }
 
+
 li.test-item {
     background: gray;
 }
+
+body.no-test-items .test-item {
+    display: none !important;
+}
+
+
 
 .elt-tags {
     position: relative;
@@ -1413,8 +1420,9 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
 
 #jsmind-context-menu {
     opacity: 1;
-    Xbackground-color: red;
-    background-color: yellow;
+    background-color: var(--mdc-theme-primary);
+    /* https://www.smashingmagazine.com/2022/06/simplify-color-palette-css-color-mix/ */
+    background-color: color-mix(in srgb, var(--mdc-theme-primary) 70%, white);
     position: fixed;
     left: 0;
     top: calc(2.5 * var(--font-size));
@@ -1425,7 +1433,6 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
 .jsmind-actions {
     position: fixed;
     top: 0;
-    background: greenyellow;
     background-color: var(--mdc-theme-primary);
     z-index: 10;
 }
@@ -2539,6 +2546,7 @@ jmnodes.showing-hits jmnode:not(.jsmind-hit)>* {
     /* filter: grayscale(1) contrast(0.5) !important; */
     filter: grayscale(1) contrast(0.5);
 }
+
 jmnodes.showing-hits jmnode:not(.jsmind-hit) {
     filter: grayscale(1) contrast(0.5);
 }

@@ -562,6 +562,7 @@ export async function pageSetup() {
 
         btnJsmindDebug = modMdc.mkMDCiconButton("adb", "Debug log", 40);
         btnJsmindDebug.id = idBtnJsmindDebug;
+        btnJsmindDebug.classList.add("test-item");
         btnJsmindDebug.classList.add("jsmind-actions");
         jsMindContainer.appendChild(btnJsmindDebug);
         btnJsmindDebug.addEventListener("click", evt => {
