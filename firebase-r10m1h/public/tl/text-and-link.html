@@ -53,6 +53,9 @@
             gap: 20px;
             padding: 10px;
         }
+        #text-content {
+            overflow-wrap: anywhere;
+        }
 
         .div-btn {
             padding: 10px;
@@ -125,7 +128,7 @@
                 showInfo();
             }
             if (sharedParams) {
-                const divText = mkElt("div");
+                const divText = mkElt("div", {id:"text-content"});
                 if (sharedParams.title) {
                     const div = mkElt("div", undefined, sharedParams.title + "\n");
                     div.style.fontWeight = "bold";
