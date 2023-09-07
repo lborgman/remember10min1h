@@ -1438,7 +1438,7 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
     z-index: 10;
 }
 
-#jsmind-test-menu-button {
+#jsmind-menu-button {
     left: 0;
 }
 

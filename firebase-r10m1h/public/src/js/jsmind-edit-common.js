@@ -534,7 +534,7 @@ export async function pageSetup() {
 
 
     let btnJsmindMenu;
-    const idBtnJsmindMenu = "jsmind-test-menu-button";
+    const idBtnJsmindMenu = "jsmind-menu-button";
     let btnJsmindSearch;
     const idBtnJsmindSearch = "jsmind-search-button";
     // let divSearchInputs;
