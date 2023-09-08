@@ -6,13 +6,16 @@ if (!import.meta.url) throw Error("!import.meta.url"); // is module
 // https://github.com/jakearchibald/idb
 const dbName = "rem10m1h";
 const idbStoreName = "toRepeat";
+const idbStoreMm = "mindmaps";
 let ourDb;
 async function getDb() {
     if (ourDb) return ourDb;
-    ourDb = await idb.openDB(dbName, 6, {
+    console.log(`====== before idb.js upgrade, 11`);
+    ourDb = await idb.openDB(dbName, 11, {
         // upgrade(db, oldVersion, undefined, transaction, event) {
         upgrade(db) {
-            console.warn("idb.js upgrade");
+            console.log(`======== idb.js upgrade, 11`);
+            /*
             try {
                 db.deleteObjectStore(idbStoreName);
             } catch (err) {
@@ -28,6 +31,20 @@ async function getDb() {
                 keyPath: "key"
             });
             store.createIndex("url", "url");
+            */
+            if (!db.objectStoreNames.contains(idbStoreName)) {
+                console.warn(`Creating idb store ${idbStoreName}`);
+                const store = db.createObjectStore(idbStoreName, {
+                    keyPath: "key"
+                });
+                store.createIndex("url", "url");
+            }
+            if (!db.objectStoreNames.contains(idbStoreMm)) {
+                console.warn(`Creating idb store ${idbStoreMm}`);
+                const store = db.createObjectStore(idbStoreMm, {
+                    keyPath: "key"
+                });
+            }
         },
         terminated() {
             console.warn("idb.js terminated");
