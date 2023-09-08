@@ -1,80 +1,37 @@
-"use strict";
 console.log("here is module db-fc4i.js");
 if (document.currentScript) throw Error("import .currentScript"); // is module
 if (!import.meta.url) throw Error("!import.meta.url"); // is module
 
-// https://github.com/jakearchibald/idb
-const dbName = "rem10m1h";
-const idbStoreName = "toRepeat";
-const idbStoreMm = "mindmaps";
-let ourDb;
-async function getDb() {
-    if (ourDb) return ourDb;
-    console.log(`====== before idb.js upgrade, 11`);
-    ourDb = await idb.openDB(dbName, 11, {
-        // upgrade(db, oldVersion, undefined, transaction, event) {
-        upgrade(db) {
-            console.log(`======== idb.js upgrade, 11`);
-            /*
-            try {
-                db.deleteObjectStore(idbStoreName);
-            } catch (err) {
-                const errCode = err.code;
-                const errName = err.name;
-                const codeOk = errCode == 8;
-                const nameOk = errName == "NotFoundError";
-                // https://webplatform.github.io/docs/apis/indexeddb/IDBDatabase/deleteObjectStore/
-                console.error("db.deleteObjectStore", { err, errCode, codeOk, errName, nameOk });
-                if (!(codeOk && nameOk)) throw Error(`Unknown error in .deleObjectStore, ${errCode}, ${errName}`);
-            }
-            const store = db.createObjectStore(idbStoreName, {
-                keyPath: "key"
-            });
-            store.createIndex("url", "url");
-            */
-            if (!db.objectStoreNames.contains(idbStoreName)) {
-                console.warn(`Creating idb store ${idbStoreName}`);
-                const store = db.createObjectStore(idbStoreName, {
-                    keyPath: "key"
-                });
-                store.createIndex("url", "url");
-            }
-            if (!db.objectStoreNames.contains(idbStoreMm)) {
-                console.warn(`Creating idb store ${idbStoreMm}`);
-                const store = db.createObjectStore(idbStoreMm, {
-                    keyPath: "key"
-                });
-            }
-        },
-        terminated() {
-            console.warn("idb.js terminated");
-        },
-    });
-    return ourDb;
-}
+const modIdbCmn = await import("idb-common");
+async function getDb() { return modIdbCmn.getDb(); }
+
+const idbStoreFc4i = "toRepeat";
+
 export const getDbKey = async (key) => {
-    const db = await getDb();
-    const objVal = await db.get(idbStoreName, key);
-    // console.log(`get ${key}`, { objVal });
-    return objVal;
+    // const db = await modIdbCmn.getDb();
+    // const objVal = await db.get(idbStoreFc4i, key);
+    // return objVal;
+    return modIdbCmn.getDbKey(idbStoreFc4i, key);
 }
 export const setDbKey = async (key, objVal) => {
-    const db = await getDb();
-    objVal.key = key;
-    const res = await db.put(idbStoreName, objVal);
-    // console.log(`set ${key}`, { res });
-    return res;
+    // const db = await getDb();
+    // objVal.key = key;
+    // const res = await db.put(idbStoreFc4i, objVal);
+    // return res;
+    return modIdbCmn.setDbKey(idbStoreFc4i, key, objVal);
 }
 const countDbKey = async (key) => {
-    const db = await getDb();
-    const count = await db.count(idbStoreName, key);
-    console.log(`count ${key}`, { count });
-    return count;
+    // const db = await getDb();
+    // const count = await db.count(idbStoreFc4i, key);
+    // console.log(`count ${key}`, { count });
+    // return count;
+    return modIdbCmn.countDbKey(idbStoreFc4i, key);
 }
 export const deleteDbKey = async (key) => {
-    const db = await getDb();
-    const res = await db.delete(idbStoreName, key);
-    return res;
+    // const db = await getDb();
+    // const res = await db.delete(idbStoreFc4i, key);
+    // return res;
+    return modIdbCmn.deleteDbKey(idbStoreFc4i, key);
 }
 
 
@@ -131,8 +88,8 @@ export async function getViaUrl(url) {
     // const store = db.objectStore(idbStoreName);
     // const indexUrl = store.index("url");
     // return indexUrl.get(url);
-    const tx = db.transaction(idbStoreName, 'readwrite');
-    const store = tx.objectStore(idbStoreName);
+    const tx = db.transaction(idbStoreFc4i, 'readwrite');
+    const store = tx.objectStore(idbStoreFc4i);
     // const val = (await store.index("url").get('https:svt.se')) || 0;
     const indexUrl = store.index("url");
     // const val = (await indexUrl.get('https:svt.se')) || 0;
@@ -160,7 +117,7 @@ export async function get1Reminder(key) {
 }
 export async function countAllReminders() {
     const db = await getDb();
-    let num = await db.count(idbStoreName);
+    let num = await db.count(idbStoreFc4i);
     // const numAll = num;
     // if (await getDbKey(KEY_SHORT_TIMERS)) num--;
     // if (await getDbKey(KEY_REMINDER_DIALOG)) num--;
@@ -176,7 +133,7 @@ export async function countAllReminders() {
 }
 async function getAllReminders() {
     const db = await getDb();
-    const allRecs = await db.getAll(idbStoreName);
+    const allRecs = await db.getAll(idbStoreFc4i);
     const allReminders = allRecs.filter((rec) => {
         if (isSpecialKey(rec.key)) return false;
         return true;

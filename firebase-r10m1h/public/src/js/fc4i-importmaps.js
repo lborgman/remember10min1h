@@ -7,6 +7,7 @@ const importMap = {
         "db-fc4i": "/src/js/db-fc4i.js",
         "fc4i-items": "/src/js/share.js",
         "flashcards": "/src/js/mod/flashcards.js",
+        "idb-common": "/src/js/mod/idb-common.js",
         "images": "/src/js/images.js",
         "is-displayed": "/src/js/is-displayed.js",
         "jsmind-edit-common": "/src/js/jsmind-edit-common.js",
