@@ -39,7 +39,7 @@ async function DBsaveNowThisMindmap(jmDisplayed) {
     if (!keyName) throw Error("Current mindmap has no meta.key");
     // const dbMindmaps = await getDbMindmaps();
     const dbMindmaps = await import("db-mindmaps");
-    dbMindmaps.DBsetMindmap(keyName, objDataMind);
+    await dbMindmaps.DBsetMindmap(keyName, objDataMind);
 }
 
 async function getNextMindmapKey() { return "mm-" + new Date().toISOString(); }
@@ -47,17 +47,18 @@ async function getNextMindmapKey() { return "mm-" + new Date().toISOString(); }
 function showMindmap(linkMindmapsPage, key) {
     const url = new URL(linkMindmapsPage, location);
     url.searchParams.set("mindmap", key);
-    location.href = url; // FIX-ME:
+    // location.href = url; // FIX-ME:
+    location.href = url.href; // FIX-ME:
 }
 
-async function createAndShowNewMindmap(linkMindmapsPage) {
-    const objDataMind = await dialogCreateMindMap();
-    if (!objDataMind) return;
-    const keyName = objDataMind.meta.name;
-    console.log({ objDataMind, keyName });
+export async function createAndShowNewMindmap(linkMindmapsPage) {
+    const jsMindMap = await dialogCreateMindMap();
+    if (!jsMindMap) return;
+    const keyName = jsMindMap.meta.name;
+    console.log({ jsMindMap, keyName });
     // const dbMindmaps = await getDbMindmaps();
     const dbMindmaps = await import("db-mindmaps");
-    dbMindmaps.DBsetMindmap(keyName, objDataMind);
+    await dbMindmaps.DBsetMindmap(keyName, jsMindMap);
     // showMindmapFc4i(keyName);
     showMindmap(linkMindmapsPage, keyName);
 }
@@ -124,7 +125,9 @@ async function dialogCreateMindMap() {
     if (res) {
         const rootTopic = inpRoot.value.trim();
         // getEmptyMap(nextKey, rootTopic, author, version, format);
-        return getEmptyMap(nextKey.toString(), rootTopic);
+        const emptyJsmind = getEmptyMap(nextKey.toString(), rootTopic);
+        // return { jsmindmap: emptyJsmind };
+        return emptyJsmind;
     }
 }
 

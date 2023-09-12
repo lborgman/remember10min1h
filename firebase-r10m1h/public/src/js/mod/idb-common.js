@@ -67,7 +67,10 @@ export const setDbKey = async (idbStoreName, key, objVal) => {
     // console.log(`set ${key}`, { res });
     return res;
 }
-const countDbKey = async (idbStoreName, key) => {
+export const count = async (idbStoreName) => {
+    return countDbKey(idbStoreName, undefined);
+}
+export const countDbKey = async (idbStoreName, key) => {
     const db = await getDb();
     const count = await db.count(idbStoreName, key);
     console.log(`count ${key}`, { count });
@@ -77,4 +80,9 @@ export const deleteDbKey = async (idbStoreName, key) => {
     const db = await getDb();
     const res = await db.delete(idbStoreName, key);
     return res;
+}
+export const getAll = async (idbStoreName) => {
+    const db = await getDb();
+    const allRecs = await db.getAll(idbStoreName);
+    return allRecs;
 }

@@ -362,8 +362,8 @@ function alertNetworkTrouble(msg, e) {
     new Popup(title, body, undefined, true, id).show();
 }
 
-var divErrInPromtForUpdate;
 function alertRealError(msg, e) {
+    window.onbeforeunload = () => false;
     addTraceError("alertError", msg, e);
     // If webview just give up.
     if (isAndroidWebView()) return;
@@ -379,12 +379,7 @@ function alertRealError(msg, e) {
     console.error("alertError, e", e);
 
 
-    if (divErrInPromtForUpdate) {
-        console.warn("divErrInProvmptForUpdate is set", divErrInPromtForUpdate);
-        debugger;
-    }
-    // debugger;
-
+    // FIX-ME:
     // Just exit here if Chrome devtools is opened.
     // https://stackoverflow.com/questions/7798748/find-out-whether-chrome-console-is-open
     // var devtools = /./;
@@ -558,6 +553,15 @@ function alertRealError(msg, e) {
         }
     })();
     // const gitHubBugHelp = "javascript:alert('You must choose the desktop version when you come to GitHub!')";
+    const style = [
+        "overflow:auto",
+        "white-space:pre-wrap",
+        "user-select:all",
+        "background:#fffc",
+        "padding: 4px",
+        "overflow-wrap: anywhere",
+    ].join("; ");
+
     const body = mkElt("div", undefined,
         [
             divSubmit,
@@ -566,7 +570,7 @@ function alertRealError(msg, e) {
             mkElt("pre", {
                 id: "error-text",
                 // class: "copy-all",
-                style: "overflow:auto; white-space:pre-wrap; user-select:all; background:#fffc; padding: 4px;",
+                style
             },
                 // errMsg + errorStr + contextStr
                 fullErrorTxt
@@ -1097,15 +1101,22 @@ async function popupDialog(title, body, severity) {
                 btnUpdate.addEventListener("click", async evt => {
                     modPwa.updateNow();
                 });
-                if (modPwa.hasUpdate()) {
-                    divUpdate.style.display = "block";
+                // if (modPwa.hasUpdate())
+                // debugger;
+                if (modPwa.isShowingUpdatePrompt()) {
+                    console.log("?????? isShowingUpdatePrompt");
+                    window.onbeforeunload = null;
+                    setTimeout(() => divUpdate.style.display = "block", 100);
                 } else {
                     window.addEventListener("pwa-update-available", evt => {
+                        console.log("?????? pwa-update-available");
+                        window.onbeforeunload = null;
                         divUpdate.style.display = "block";
                     });
                 }
             }
             styleDia += "background:yellow; border:2px solid red;";
+            // debugger;
             break;
         case "warning":
             styleDia += "background:yellow; border:2px solid green;";
@@ -1128,6 +1139,7 @@ async function popupDialog(title, body, severity) {
         closeBtn.addEventListener("click", evt => {
             dialog.close();
             document.body.removeChild(dialog);
+            window.onbeforeunload = null;
         });
         const dialogTag = useDialog ? "dialog" : "section";
         const dialog = mkElt(dialogTag, { style: styleDia },

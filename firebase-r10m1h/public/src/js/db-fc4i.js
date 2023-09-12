@@ -116,14 +116,9 @@ export async function get1Reminder(key) {
     return getDbKey(key);
 }
 export async function countAllReminders() {
-    const db = await getDb();
-    let num = await db.count(idbStoreFc4i);
-    // const numAll = num;
-    // if (await getDbKey(KEY_SHORT_TIMERS)) num--;
-    // if (await getDbKey(KEY_REMINDER_DIALOG)) num--;
-    // if (await getDbKey(KEY_TEST_TIMER)) num--;
-    // if (await getDbKey(KEY_SW_STATUS)) num--;
-    // if (await getDbKey(KEY_TAGS)) num--;
+    // const db = await getDb();
+    // let num = await db.count(idbStoreFc4i);
+    let num = await modIdbCmn.count(idbStoreFc4i);
     for (let i = 0, len = SPECIAL_KEYS.length; i < len; i++) {
         const specialKey = SPECIAL_KEYS[i];
         if (await getDbKey(specialKey)) num--;
@@ -132,8 +127,9 @@ export async function countAllReminders() {
     return num;
 }
 async function getAllReminders() {
-    const db = await getDb();
-    const allRecs = await db.getAll(idbStoreFc4i);
+    // const db = await getDb();
+    // const allRecs = await db.getAll(idbStoreFc4i);
+    const allRecs = await modIdbCmn.getAll(idbStoreFc4i);
     const allReminders = allRecs.filter((rec) => {
         if (isSpecialKey(rec.key)) return false;
         return true;

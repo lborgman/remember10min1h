@@ -1853,7 +1853,7 @@ export async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits, pr
         const btnFab = modMdc.mkMDCfab(eltIcon, "Create new mindmap", true);
         btnFab.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             // await createAndShowNewMindmapFc4i();
-            await createAndShowNewMindmap(linkMindmapsPage);
+            await modMMhelpers.createAndShowNewMindmap(linkMindmapsPage);
         }));
         btnFab.style.marginLeft = "40px";
         eltTitle.appendChild(btnFab);

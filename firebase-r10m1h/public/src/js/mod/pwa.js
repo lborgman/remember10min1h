@@ -135,8 +135,6 @@ async function setupServiceWorker() {
         // https://open-ui.org/components/alert.research or
         // https://open-ui.org/components/toast.research
 
-        const evtUA = new CustomEvent("pwa-update-available");
-        window.dispatchEvent(evtUA);
         canUpdateNow = true;
 
         const updateAccepted = await promptForUpdate();
@@ -306,6 +304,9 @@ async function setupForInstall() {
 
 }
 
+let isPromptingForUpdate = false;
+
+let dlgPrompt;
 async function promptForUpdate() {
     const modMdc = await import("util-mdc");
     console.log("promptForUpdate 1");
@@ -322,7 +323,7 @@ async function promptForUpdate() {
     const waitingVersion = await wb.messageSW({ type: 'GET_VERSION' });
     console.log("promptForUpdate 4");
     const divErrLine = mkElt("div");
-    const dlgPrompt = mkElt("dialog", { id: "prompt4update", class: "mdc-card", open }, [
+    dlgPrompt = mkElt("dialog", { id: "prompt4update", class: "mdc-card", open }, [
         mkElt("div", undefined, `Update available: ver ${waitingVersion}`),
         divErrLine,
         mkElt("div", undefined, [btnSkip, btnUpdate])
@@ -331,9 +332,13 @@ async function promptForUpdate() {
     document.body.appendChild(dlgPrompt);
     console.log("promptForUpdate 6");
 
-    if (typeof divErrInPromtForUpdate !== "undefined") divErrInPromtForUpdate = divErrLine;
     console.log("promptForUpdate 7");
+
     return new Promise((resolve, reject) => {
+        const evtUA = new CustomEvent("pwa-update-available");
+        window.dispatchEvent(evtUA);
+        isPromptingForUpdate = true;
+
         btnSkip.addEventListener("click", evt => {
             console.log("promptForUpdate 8");
             hidePrompt();
@@ -342,6 +347,7 @@ async function promptForUpdate() {
         btnUpdate.addEventListener("click", evt => {
             console.log("promptForUpdate 9");
             hidePrompt();
+            window.onbeforeunload = null;
             resolve(true);
         });
     });
@@ -372,8 +378,17 @@ export async function updateNow() {
     console.log("pwa.updateNow, calling wb.messageSkipWaiting() 2");
     wb.messageSkipWaiting();
 }
+
 export function hasUpdate() {
+    // This does not work in error.js
+    // No idea why. Changing to isShowingUpdatePrompt in error.js
+    console.error("hasUpdate is obsolete");
+    debugger;
     return canUpdateNow;
+}
+export function isShowingUpdatePrompt() {
+    // return isPromptingForUpdate = true;
+    return !!dlgPrompt?.closest(":root");
 }
 
 // https://web.dev/customize-install/#detect-launch-type
