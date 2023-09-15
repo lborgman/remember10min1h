@@ -1046,8 +1046,10 @@ async function mkMenu() {
     const liHome = modMdc.mkMDCmenuItem("Home");
     liHome.addEventListener("click", evt => { goHome(); });
 
-    const liIntro = modMdc.mkMDCmenuItem("About");
-    liIntro.addEventListener("click", evt => { showIntro(); })
+    // const liIntro = modMdc.mkMDCmenuItem("About");
+    // liIntro.addEventListener("click", evt => { showIntro(); })
+
+    const liAbout = modMdc.mkMDCmenuItem(mkElt("a", { href: "/about.html#fc4i" }, "About"));
 
     const liNew = modMdc.mkMDCmenuItem("New");
     liNew.addEventListener("click", evt => { showAddedNew(); })
@@ -1629,13 +1631,14 @@ async function mkMenu() {
 
     let arrEntries = [
         liHome,
-        liIntro,
+        // liIntro,
         liNew,
+        liExportImport,
         // liGetReminders,
         // liMindmaps,
-        liMindmapsA,
+        // liMindmapsA,
         liAskPersistent,
-        liExportImport,
+        liAbout,
     ];
     const showDebugEntries = true;
     if (showDebugEntries) {

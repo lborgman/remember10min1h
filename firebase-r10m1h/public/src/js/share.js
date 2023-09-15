@@ -387,7 +387,7 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
     const modMdc = await import("util-mdc");
     const modIsDisplayed = await import("is-displayed");
     const modClipboardImages = await import("images");
-    const modMMhelpers = import("mindmap-helpers");
+    const modMMhelpers = await import("mindmap-helpers");
     const divPasteImage = mkElt("div", { class: "div-paste-image" });
 
     if (record) checkRecordFields(record);
@@ -1136,15 +1136,16 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
 
     function mkDivCustomCopy4Mindmaps() {
         const btnAdd = modMdc.mkMDCbutton("Copy to", "raised");
-        btnAdd.addEventListener("click", evt => {
+        btnAdd.addEventListener("click",errorHandlerAsyncEvent( async evt => {
             const key = btnAdd.closest(".container-remember").dataset.key;
             console.log("clicked add", key);
-            const objAdded = addJsmindCopied4Mindmap(key, "fc4i");
-            // dialogCustomPaste2Mindmap();
-            dialogAdded2CustomClipboard(objAdded);
-        });
+            const modEditFc4iMM = await import("jsmind-edit-spec-fc4i");
+            modEditFc4iMM.addProviderFc4i();
+            const objAdded = modMMhelpers.addJsmindCopied4Mindmap(key, "fc4i");
+            modMMhelpers.dialogAdded2CustomClipboard(objAdded);
+        }));
         const btnFind = modMdc.mkMDCbutton("Find in", "raised");
-        btnFind.addEventListener("click", async evt => {
+        btnFind.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             const key = btnFind.closest(".container-remember").dataset.key;
             console.log("clicked find", key);
             // searchMindmaps(key);
@@ -1152,7 +1153,7 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
             const modEditFc4iMM = await import("jsmind-edit-spec-fc4i");
             modEditFc4iMM.addProviderFc4i();
             modJsEditCommon.dialogFindInMindMaps(key, "fc4i");
-        });
+        }));
         const div = mkElt("div", undefined, [
             btnAdd,
             btnFind
@@ -1375,8 +1376,8 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
         });
         // const divURLright = mkElt("div", { class: "div-url-right-buttons" }, [aURL, btnEditURL]);
         const divURLbtns = mkElt("div", { class: "div-url-top-buttons" }, [
-            aURL,
-            aURLorig,
+            // aURL,
+            // aURLorig,
             aURL2,
             btnViewURL, btnEditURL]);
 

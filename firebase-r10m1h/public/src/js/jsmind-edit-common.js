@@ -540,7 +540,7 @@ export async function pageSetup() {
     // let divSearchInputs;
     const idSearchInputs = "jsmind-search-inputs";
 
-    const inpSearch = mkElt("input", { type: "search", placeholder: "Search nodes", id:"jsmind-inp-node-search" });
+    const inpSearch = mkElt("input", { type: "search", placeholder: "Search nodes", id: "jsmind-inp-node-search" });
     // const inpSearch = modMdc.mkMDCtextFieldInput( "jsmind-inp-node-search", "search");
     // const tfSearch = modMdc.mkMDCtextFieldOutlined("Search nodes", inpSearch);
     // const tfSearch = modMdc.mkMDCtextField("Search nodes", inpSearch);
@@ -1072,7 +1072,8 @@ export async function pageSetup() {
             // if (!selected_node) Error("No selected node");
             if (!selected_node) return;
             const eltJmnode = jsMind.my_get_DOM_element_from_node(selected_node);
-            const objCustom = await pasteCustomClipDialog();
+            const modMMhelpers = await import("mindmap-helpers");
+            const objCustom = await modMMhelpers.pasteCustomClipDialog();
             console.log({ objCustom });
             if (!objCustom) return;
             convertPlainJmnode2ProviderLink(eltJmnode, jmDisplayed, objCustom);
@@ -1242,7 +1243,7 @@ export async function pageSetup() {
             liTestConvertToCustom,
             liDragAccessibility,
             liMindmaps,
-            // liMindmapsA,
+            liMindmapsA,
         ];
         const arrMenuTestEntries = [
             liTestTouch,

@@ -169,7 +169,7 @@ export async function getMindmapsHits(customKey) {
 
 
 
-async function pasteCustomClipDialog() {
+export async function pasteCustomClipDialog() {
     const modMdc = await import("util-mdc");
     const arrClip = fetchJsmindCopied4Mindmap();
     if (!arrClip) debugger;
@@ -209,10 +209,11 @@ async function pasteCustomClipDialog() {
 
 async function mkDivOneCustomClip(objCustomClip) {
     const modMdc = await import("util-mdc");
+    const modCustRend = await import("jsmind-cust-rend");
     // const keyRec = await get1Reminder(objCustomClip.key); // FIX-ME: provider
     const key = objCustomClip.key;
     const provider = objCustomClip.provider;
-    const keyRec = await (await getOurCustomRenderer()).getCustomRec(key, provider);
+    const keyRec = await (await modCustRend.getOurCustomRenderer()).getCustomRec(key, provider);
 
     const eltTitle = mkElt("span", undefined, keyRec.title)
     const divClipInner = mkElt("div", { class: "jsmind-test-custom-clip-inner" }, eltTitle);
@@ -239,10 +240,11 @@ async function mkDivOneCustomClip(objCustomClip) {
 
 async function dialogShowCustomClipboard() {
     const modMdc = await import("util-mdc");
+    const modCustRend = await import("jsmind-cust-rend");
     const arrClip = fetchJsmindCopied4Mindmap();
     console.log({ arrCopied4Mindmap: arrClip });
     const body = mkElt("div", { id: "jsmind-test-custom-clipboard" });
-    const ourRend = await getOurCustomRenderer();
+    const ourRend = await modCustRend.getOurCustomRenderer();
     const arrProviders = ourRend.getProviderNames();
     const arrProm = arrClip
         .filter(objClip => arrProviders.includes(objClip.provider))
@@ -254,7 +256,7 @@ async function dialogShowCustomClipboard() {
     modMdc.mkMDCdialogAlert(body, "Close");
 }
 
-async function dialogAdded2CustomClipboard(objAdded) {
+export async function dialogAdded2CustomClipboard(objAdded) {
     const modMdc = await import("util-mdc");
     const divObjAdded = await mkDivOneCustomClip(objAdded);
     const btnRemove = divObjAdded.lastElementChild;
@@ -318,7 +320,7 @@ function getJsmindCopied4Mindmap() {
     return localStorage.getItem("jsmind-copied4mindmap");
 }
 
-function addJsmindCopied4Mindmap(key, provider) {
+export function addJsmindCopied4Mindmap(key, provider) {
     const strJson = JSON.stringify({ key, provider });
     const objAdded = JSON.parse(strJson);
     let arrClips = fetchJsmindCopied4Mindmap() || [];

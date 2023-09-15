@@ -23,6 +23,12 @@
             scroll-behavior: smooth;
         }
 
+        main {
+            max-width: 450px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
         @media screen and (prefers-reduced-motion: reduce) {
             html {
                 scroll-behavior: auto;
@@ -30,10 +36,34 @@
         }
 
 
-        #header-images {
+        .header-images {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 2px;
+            width: 60px;
+            cursor: pointer;
+        }
+
+        .header-images span {
+            display: none;
+        }
+
+        .header-images a img {
+            border-radius: 2px;
+        }
+
+
+        .open-and-top {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: -10px;
+        }
+
+        .my-mdc-card-styles {
+            padding: 10px;
         }
 
         /* https://css-tricks.com/examples/hrs/ */
@@ -46,124 +76,281 @@
         section {
             margin-bottom: 3rem;
         }
+
+        .dark-side {
+            color: #b4cfe8;
+            background: black;
+        }
+
+        #header-images {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        #header-images a {
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+        }
+
+        #header-images a span {
+            padding: 5px;
+        }
+
+        #temp-helper {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            padding: 20px;
+            background-color: chocolate;
+        }
     </style>
     <script src="/src/js/fc4i-importmaps.js"></script>
 </head>
 
 <body id="page-about">
-    <h1>About Flashcards 4 Internet & helpers</h1>
-    <div id="header-images">
-        <a href="#fc4i">
-            <img src="/img/fc4i.svg" class="mdc-card" />
-        </a>
-        <a href="#mm4i">
-            <img src="/img/mm4i.svg" class="mdc-card" />
-        </a>
-        <a href="#tl">
-            <img src="/img/tl.svg" class="mdc-card" />
-        </a>
-    </div>
+    <main>
+        <h1>About Flashcards 4 Internet & helpers</h1>
+        <div id="header-images">
+            <a class="mdc-card" href="#fc4i">
+                <img src="/img/fc4i.svg" />
+                <span> Flashcards 4 Internet </span>
+            </a>
+            <a class="mdc-card" href="#mm4i">
+                <img src="/img/mm4i.svg" />
+                <span> Mindmaps 4 Internet </span>
+            </a>
+            <a class="mdc-card" href="#tl">
+                <img src="/img/tl.svg" />
+                <span> Text + Link</span>
+            </a>
+        </div>
 
-    <section id="fc4i">
-        <h2>Flashcards 4 Internet</h2>
-        <a href="/fc4i/fc4i.html">Open</a>
+        <section>
+            <div>
+                <p>
+                    Are you like me trying to learn from a lot of different things you find on the internet?
+                    Then these three small web apps might be something for you too.
+                </p>
+                <details class="mdc-card my-mdc-card-styles" style="background-color: rgb(24, 119, 242); color: white;">
+                    <summary>Contact</summary>
+                    <p>
+                        <img src="/img/f_logo_RGB-White_58.png" style="width: 30px; float: left; margin-right: 10px">I
+                        have
+                        created a Facebook group, <a href="https://www.facebook.com/groups/flashcards4internet"
+                            target="_blank" style="color: white">Flashcards 4 Internet</a>, where you can comment
+                        on this app.
+                        Suggestions are very welcome!
+                    </p>
+                    <p>
+                        If you find some bugs you can tell me in the Facebook group above.
+                        I will be glad if you do. 🎃
+                    </p>
+                    <p>
+                        If you are a bit technical it is often easier for me if you enter an issue
+                        for the bug here at
+                        <a href="https://github.com/lborgman/remember10min1h/issues">those web apps repository at
+                            GitHub</a>
+                    </p>
+                </details>
 
-        <div>
+                <details class="mdc-card my-mdc-card-styles">
+                    <summary>Tips for learning</summary>
+                    <p>I am really no expert on learning, but here are some tips from other people:</p>
+                    <ul>
+                        <li>
+                            <p><a href="https://www.youtube.com/watch?v=24ecRKfEweU">How to Study Only 2 Hours a Day yet
+                                    STILL
+                                    Ace
+                                    your Exams</a></p>
+                        </li>
+                        <li>
+                            <p><a href="https://www.lifehack.org/articles/featured/back-to-basics-reminders.html">The
+                                    Importance
+                                    of
+                                    Reminders (And How to Make a Reminder Work)</a></p>
+                        </li>
+                        <li>
+                            <p><a href="https://www.sciencedaily.com/releases/2016/08/160822083446.htm">Sleep makes
+                                    relearning
+                                    faster and longer-lasting</a> (<a
+                                    href="https://www.hendrix.edu/uploadedFiles/Academics/Faculty_Resources/2016_FFC/Learn%20then%20sleep.pdf">PDF</a>)
+                            </p>
+                        </li>
+                    </ul>
+                </details>
+
+
+                <details class="mdc-card my-mdc-card-styles dark-side">
+                    <summary>Where are my data saved?</summary>
+                    <p style="font-style:italic">
+                        Please notice that anything you save in those web apps is only saved on your device
+                        (in your web browser).
+                        If you want more permanent notes I recommend
+                        <a href="https://9to5google.com/2023/01/31/what-you-can-do-google-keep/" target="_blank">Google
+                            Keep</a>.
+                    </p>
+                </details>
+
+
+                <details class="mdc-card my-mdc-card-styles dark-side">
+                    <summary>The dark side - Technology</summary>
+                    <h2>The dark side - Technology</h2>
+                    <p>This app is actually just a web site with two additions
+                        (made possible by that it is a PWA):
+                    <div style="margin-top: 10px;">1) You can view it even if you are not online.</div>
+                    <div>2) You can 'share' to it.</div>
+                    </p>
+                    <h3>Good security</h3>
+                    <p>Because this app is just a web site it is just as secure as a web site.
+                        It can't harm your mobile or computer (more than a web site can).
+                    </p>
+                    <h3>Share currently works only on Android</h3>
+                    <p>Unfortunately ´share´ to this app can only work on Android with Google Chrome today.
+                        It is the only case where the technical capabilities are available now.
+                        But you can still use this app now on for example both on iPhone and Windows.
+                        It is just the possibility to 'share' that does not work there.
+                    </p>
+                    <h3 style="color:red">Reminders - do they work?</h3>
+                    <div>
+                        <p>Unfortunately <a href="https://github.com/beverloo/notification-triggers/issues/7"
+                                target="_blank">timers for reminders are not yet supported in PWA:s</a>.</p>
+                        <p>So I have added a workaround.
+                            And actually I think works perhaps even better. 😌
+                            At the top right there is a button.
+                            Just click that to check for reminders.</p>
+                        <p><img src="/img/btn-check-reminders.png" width="50%"></p>
+                    </div>
+                </details>
+
+
+            </div>
+
+        </section>
+
+        <section id="fc4i">
+            <h2>Flashcards 4 Internet</h2>
+            <div class="open-and-top">
+                <a href="/fc4i/fc4i.html">Open</a>
+            </div>
             <p>
-                Are you like me trying to learn from a lot of different things you find on the internet?
-                Then this litte web app is made for you and me.
-            </p>
-            <p>
-                The idea is that you "share" (<span class="sized-mdc-svg-icon"
+                The idea behind <b>Flashcards 4 Internet</b> is that you "share" (<span class="sized-mdc-svg-icon"
                     style="font-size: 1rem; vertical-align: middle;"><svg xmlns="http://www.w3.org/2000/svg"
                         height="100%" viewBox="0 96 960 960" width="100%">
-                        <path
-                            d="M727 976q-47.5 0-80.75-33.346Q613 909.307 613 861.669q0-6.669 1.5-16.312T619 828L316 652q-15 17-37 27.5T234 690q-47.5 0-80.75-33.25T120 576q0-47.5 33.25-80.75T234 462q23 0 44 9t38 26l303-174q-3-7.071-4.5-15.911Q613 298.25 613 290q0-47.5 33.25-80.75T727 176q47.5 0 80.75 33.25T841 290q0 47.5-33.25 80.75T727 404q-23.354 0-44.677-7.5T646 372L343 540q2 8 3.5 18.5t1.5 17.741q0 7.242-1.5 15Q345 599 343 607l303 172q15-14 35-22.5t46-8.5q47.5 0 80.75 33.25T841 862q0 47.5-33.25 80.75T727 976Zm.035-632Q750 344 765.5 328.465q15.5-15.535 15.5-38.5T765.465 251.5q-15.535-15.5-38.5-15.5T688.5 251.535q-15.5 15.535-15.5 38.5t15.535 38.465q15.535 15.5 38.5 15.5Zm-493 286Q257 630 272.5 614.465q15.5-15.535 15.5-38.5T272.465 537.5q-15.535-15.5-38.5-15.5T195.5 537.535q-15.5 15.535-15.5 38.5t15.535 38.465q15.535 15.5 38.5 15.5Zm493 286Q750 916 765.5 900.465q15.5-15.535 15.5-38.5T765.465 823.5q-15.535-15.5-38.5-15.5T688.5 823.535q-15.5 15.535-15.5 38.5t15.535 38.465q15.535 15.5 38.5 15.5ZM727 290ZM234 576Zm493 286Z">
+                        <path d="M727 976
+                                q-47.5 0-80.75-33.346
+                                Q613 909.307 613 861.669
+                                q0-6.669 1.5-16.312T619 828
+                                L316 652
+                                q-15 17-37 27.5
+                                T234 690
+                                q-47.5 0-80.75-33.25
+                                T120 576
+                                q0-47.5 33.25-80.75
+                                T234 462
+                                q23 0 44 9
+                                t38 26l303-174
+                                q-3-7.071-4.5-15.911
+                                Q613 298.25 613 290
+                                q0-47.5 33.25-80.75
+                                T727 176
+                                q47.5 0 80.75 33.25
+                                T841 290
+                                q0 47.5-33.25 80.75
+                                T727 404
+                                q-23.354 0-44.677-7.5
+                                T646 372L343 540
+                                q2 8 3.5 18.5
+                                t1.5 17.741
+                                q0 7.242-1.5 15
+                                Q345 599 343 607l303 172
+                                q15-14 35-22.5
+                                t46-8.5
+                                q47.5 0 80.75 33.25
+                                T841 862
+                                q0 47.5-33.25 80.75
+                                T727 976Zm.035-632
+                                Q750 344 765.5 328.465
+                                q15.5-15.535 15.5-38.5
+                                T765.465 251.5
+                                q-15.535-15.5-38.5-15.5
+                                T688.5 251.535
+                                q-15.5 15.535-15.5 38.5
+                                t15.535 38.465
+                                q15.535 15.5 38.5 15.5Zm-493 286
+                                Q257 630 272.5 614.465
+                                q15.5-15.535 15.5-38.5
+                                T272.465 537.5
+                                q-15.535-15.5-38.5-15.5
+                                T195.5 537.535
+                                q-15.5 15.535-15.5 38.5
+                                t15.535 38.465
+                                q15.535 15.5 38.5 15.5Zm493 286
+                                Q750 916 765.5 900.465
+                                q15.5-15.535 15.5-38.5
+                                T765.465 823.5
+                                q-15.535-15.5-38.5-15.5
+                                T688.5 823.535
+                                q-15.5 15.535-15.5 38.5
+                                t15.535 38.465
+                                q15.535 15.5 38.5 15.5ZM727 290ZM234 576
+                                Z
+                                m493 286
+                                Z">
                         </path>
                     </svg></span>) from a web page you find interesting to this app ( <span
                     style="display: inline-block; width: 1.2rem; height: 1.2rem; vertical-align: middle; background-image: url(/img/192.png)"
                     class="image-bg-cover"></span> ). The link is saved in this app.
-                And you can use flashcards and your study notes to learn.
-                You can also get daily reminders.
+                In the web app you can then use different tools that might (or might not 😐) help you
+                learn about those pages that you have saved.
+                (You have access to flashcards, reminders, mindmap etc.)
             </p>
-            <p>
-                Please notice that this link and your notes, etc, is only saved on your device.
-                If you want more permanent notes I recommend
-                <a href="https://9to5google.com/2023/01/31/what-you-can-do-google-keep/" target="_blank">Google
-                    Keep</a>.
-            </p>
-            <p class="mdc-card" style="background-color: rgb(24, 119, 242);color: white;padding: 1rem"><img
-                    src="/img/f_logo_RGB-White_58.png" style="width: 30px; float: left; margin-right: 10px">I have
-                created a Facebook group, <a href="https://www.facebook.com/groups/flashcards4internet" target="_blank"
-                    style="color: white">Flashcards 4 Internet (web app)</a>, where you can comment on this app.
-                Suggestions are very welcome!</p>
-            <p>I am really no expert on learning, but here are some tips:</p>
-        </div>
-        <ul>
-            <li>
-                <p><a href="https://www.youtube.com/watch?v=24ecRKfEweU">How to Study Only 2 Hours a Day yet STILL Ace
-                        your Exams</a></p>
-            </li>
-            <li>
-                <p><a href="https://www.lifehack.org/articles/featured/back-to-basics-reminders.html">The Importance of
-                        Reminders (And How to Make a Reminder Work)</a></p>
-            </li>
-            <li>
-                <p><a href="https://www.sciencedaily.com/releases/2016/08/160822083446.htm">Sleep makes relearning
-                        faster and longer-lasting</a> (<a
-                        href="https://www.hendrix.edu/uploadedFiles/Academics/Faculty_Resources/2016_FFC/Learn%20then%20sleep.pdf">PDF</a>)
-                </p>
-            </li>
-        </ul>
 
-        <div id="div-dark-side" class="mdc-card">
-            <h2>The dark side - Technology</h2>
-            <p>This app is actually just a web site with two additions
-                (made possible by that it is a PWA):
-            <div style="margin-top: 10px;">1) You can view it even if you are not online.</div>
-            <div>2) You can 'share' to it.</div>
-            </p>
-            <h3>Good security</h3>
-            <p>Because this app is just a web site it is just as secure as a web site.
-                It can't harm your mobile or computer (more than a web site can).
-            </p>
-            <h3>Share currently works only on Android</h3>
-            <p>Unfortunately ´share´ to this app can only work on Android with Google Chrome today.
-                It is the only case where the technical capabilities are available now.
-                But you can still use this app now on for example both on iPhone and Windows.
-                It is just the possibility to 'share' that does not work there.
-            </p>
-            <h3 style="color:red">Reminders - do they work?</h3>
-            <div>
-                <p>Unfortunately <a href="https://github.com/beverloo/notification-triggers/issues/7"
-                        target="_blank">timers for reminders are not yet supported in PWA:s</a>.</p>
-                <p>So I have added a workaround.
-                    And actually I think works perhaps even better. 😌
-                    At the top right there is a button.
-                    Just click that to check for reminders.</p>
-                <p><img src="/img/btn-check-reminders.png" width="50%"></p>
+
+        </section>
+
+        <hr>
+
+        <section id="mm4i">
+            <h2>Mindmaps 4 Internet</h2>
+            <div class="open-and-top">
+                <a href="/mm4i/mm4i.html">Open</a>
             </div>
-        </div>
+        </section>
 
-    </section>
+        <hr>
 
-    <hr>
+        <section id="tl">
+            <h2>Text and Link</h2>
+            <div class="open-and-top">
+                <a href="/tl/text-and-link.html">Open</a>
+            </div>
+        </section>
 
-    <section id="mm4i">
-        <h2>Mindmaps 4 Internet</h2>
-        <a href="/mm4i/mm4i.html">Open</a>
-    </section>
+    </main>
 
-    <hr>
-
-    <section id="mm4i">
-        <h2>Text and Link</h2>
-        <a href="/tl/text-and-link.html">Open</a>
-    </section>
+    <div id="temp-helper"></div>
 
     <script src="/src/js/error.js"></script>
     <script src="/ext/mdc/material-components-web.js"></script>
     <script>
+        [...document.body.querySelectorAll(".open-and-top")]
+            .forEach(div => {
+                const hiCopy = document.getElementById("header-images").cloneNode(true);
+                hiCopy.removeAttribute("id");
+                hiCopy.classList.add("header-images");
+                hiCopy.addEventListener("click", evt => {
+                    evt.preventDefault();
+                    evt.stopPropagation();
+                    window.scrollTo(0, 0);
+                });
+                hiCopy.title = "Scroll to top";
+                hiCopy.tabindex = 0;
+                [...hiCopy.querySelectorAll("a")]
+                    .forEach(a => { a.classList.remove("mdc-card"); });
+                div.appendChild(hiCopy);
+            })
         setTimeout(() => {
             console.log("here I am again");
             (async () => {
@@ -175,4 +362,19 @@
             })();
         }, 1000);
     </script>
+
+    <script>
+        const ms = [
+            "/manifest.json",
+            "/fc4i/manifest-fc4i.json",
+            "/mm4i/manifest-mm4i.json",
+            "/tl/manifest-tl.json",
+        ];
+        const eltTh = document.getElementById("temp-helper");
+        ms.forEach(m => {
+            const a = mkElt("a", { href: m }, m);
+            eltTh.appendChild(a);
+        })
+    </script>
+
 </body>
