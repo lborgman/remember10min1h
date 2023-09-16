@@ -105,6 +105,22 @@
             padding: 20px;
             background-color: chocolate;
         }
+
+        .svg-symbol {
+            height: 1rem;
+            vertical-align: bottom;
+        }
+
+        #div-diff {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #div-diff summary {
+            font-weight: bold;
+        }
     </style>
     <script src="/src/js/fc4i-importmaps.js"></script>
 </head>
@@ -230,93 +246,95 @@
         </section>
 
         <section id="fc4i">
-            <h2>Flashcards 4 Internet</h2>
+            <h2>Flashcards 4 Internet (fc4i)</h2>
             <div class="open-and-top">
                 <a href="/fc4i/fc4i.html">Open</a>
             </div>
             <p>
-                The idea behind <b>Flashcards 4 Internet</b> is that you "share" (<span class="sized-mdc-svg-icon"
-                    style="font-size: 1rem; vertical-align: middle;"><svg xmlns="http://www.w3.org/2000/svg"
-                        height="100%" viewBox="0 96 960 960" width="100%">
-                        <path d="M727 976
-                                q-47.5 0-80.75-33.346
-                                Q613 909.307 613 861.669
-                                q0-6.669 1.5-16.312T619 828
-                                L316 652
-                                q-15 17-37 27.5
-                                T234 690
-                                q-47.5 0-80.75-33.25
-                                T120 576
-                                q0-47.5 33.25-80.75
-                                T234 462
-                                q23 0 44 9
-                                t38 26l303-174
-                                q-3-7.071-4.5-15.911
-                                Q613 298.25 613 290
-                                q0-47.5 33.25-80.75
-                                T727 176
-                                q47.5 0 80.75 33.25
-                                T841 290
-                                q0 47.5-33.25 80.75
-                                T727 404
-                                q-23.354 0-44.677-7.5
-                                T646 372L343 540
-                                q2 8 3.5 18.5
-                                t1.5 17.741
-                                q0 7.242-1.5 15
-                                Q345 599 343 607l303 172
-                                q15-14 35-22.5
-                                t46-8.5
-                                q47.5 0 80.75 33.25
-                                T841 862
-                                q0 47.5-33.25 80.75
-                                T727 976Zm.035-632
-                                Q750 344 765.5 328.465
-                                q15.5-15.535 15.5-38.5
-                                T765.465 251.5
-                                q-15.535-15.5-38.5-15.5
-                                T688.5 251.535
-                                q-15.5 15.535-15.5 38.5
-                                t15.535 38.465
-                                q15.535 15.5 38.5 15.5Zm-493 286
-                                Q257 630 272.5 614.465
-                                q15.5-15.535 15.5-38.5
-                                T272.465 537.5
-                                q-15.535-15.5-38.5-15.5
-                                T195.5 537.535
-                                q-15.5 15.535-15.5 38.5
-                                t15.535 38.465
-                                q15.535 15.5 38.5 15.5Zm493 286
-                                Q750 916 765.5 900.465
-                                q15.5-15.535 15.5-38.5
-                                T765.465 823.5
-                                q-15.535-15.5-38.5-15.5
-                                T688.5 823.535
-                                q-15.5 15.535-15.5 38.5
-                                t15.535 38.465
-                                q15.535 15.5 38.5 15.5ZM727 290ZM234 576
-                                Z
-                                m493 286
-                                Z">
-                        </path>
-                    </svg></span>) from a web page you find interesting to this app ( <span
-                    style="display: inline-block; width: 1.2rem; height: 1.2rem; vertical-align: middle; background-image: url(/img/192.png)"
-                    class="image-bg-cover"></span> ). The link is saved in this app.
-                In the web app you can then use different tools that might (or might not 😐) help you
-                learn about those pages that you have saved.
-                (You have access to flashcards, reminders, mindmap etc.)
+                <b>Fc4i</b> is yet another app for saving links to
+                web pages you are interested in
+                (by using share,
+                <img src="/img/share_FILL0_wght400_GRAD0_opsz24.svg" class="svg-symbol" />
+                , from the web page).
+
+                There are some very good apps for that (like
+                <a href="https://9to5google.com/2023/01/31/what-you-can-do-google-keep/">Google
+                    Keep</a>).
+                So why another one?
+            </p>
+            <p>
+                <b>Tools for learning:</b>
+                My reason for writing
+                Fc4i was to add integrated tools for learning, like flashcards, repeating reminders and 
+                <a href="#mm4i">mindmaps</a>.
             </p>
 
-
+            <div id="div-diff" class="mdc-card">
+                <div> There are some more differences to notice: </div>
+                <details>
+                    <summary>Storing</summary>
+                    Apps like Google Keep has advanced storing where your data is
+                    backed up to your Google account.
+                    Fc4i just stores your data in your web browser.
+                </details>
+                <details>
+                    <summary>Native app vs web app</summary>
+                    The fc4i app and its companions are a
+                    <a href="https://en.wikipedia.org/wiki/Progressive_web_app">progressive web apps (PWA)</a>.
+                    Google Keep is a native app.
+                    <p>
+                        While I install a native app from Google without hesitating
+                        I rather avoid installing a native app from
+                        some unknown developer (like me).
+                        The reason is security concerns.
+                        A PWA is essentially just a web page.
+                        So it is normally not more dangerous to use than a web page.
+                    </p>
+                    <p>
+                        Another advantage of web apps is that they should work
+                        everywhere where there is an uptodate web browser.
+                        (But sadly, sharing to a web app is yet not standardised enough.
+                        It probably only works on Android mobiles and tablets.)
+                    </p>
+                </details>
+            </div>
         </section>
 
         <hr>
 
         <section id="mm4i">
-            <h2>Mindmaps 4 Internet</h2>
+            <h2>Mindmaps 4 Internet (mm4i)</h2>
             <div class="open-and-top">
                 <a href="/mm4i/mm4i.html">Open</a>
             </div>
+            <p>
+                When I first heard about mindmaps I thought it looked like 
+                a very good idea.
+                But I never tried to use it.
+                Until one day I talked with a woman studying the same subject as I at the university.
+                She said that she could read a book in one hour and remember it 
+                with the help of mindmaps.
+            </p>
+            <p>
+                I still did not try mindmaps since I never had enough big papers and colored 
+                pencils with me.
+                But I was determined to try.
+            </p>
+            <p>
+                Then one day I saw that there was a Javascript library for 
+                creating mindmaps, 
+                <a href="https://github.com/hizzgdev/jsmind">jsMind</a>. 
+                Fantastic! It can be used in any modern web browser.
+                I decided to make something that you could use on a mobile phone
+                built on that Javascript library.
+                That became mm4i.
+            </p>
+            <p>
+                Mm4i is integrated with fc4i.
+                You can easily link to subjects in fc4i in a mindmap you create with mm4i.
+                However, mm4i can be used alone. No need to use fc4i.
+                (You can link to web pages in nodes in mindmaps if you want to.)
+            </p>
         </section>
 
         <hr>
