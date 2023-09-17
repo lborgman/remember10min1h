@@ -53,9 +53,8 @@ export class CustomRenderer4jsMind {
         // this.linkRendererImg = linkRendererImg;
     }
 
-    setJm(jmDisplayed) {
-        this.THEjmDisplayed = jmDisplayed;
-    }
+    setJm(jmDisplayed) { this.THEjmDisplayed = jmDisplayed; }
+    getJm(jmDisplayed) { return this.THEjmDisplayed; }
     addProvider(objProv) {
         if (!objProv instanceof providerDetails) { throw Error("Not object of class providerDetails"); }
         this.#providers[objProv.name] = objProv;
@@ -584,29 +583,69 @@ export class CustomRenderer4jsMind {
         const tfLink = modMdc.mkMDCtextField("Link", inpLink, strLink);
 
         let blobBg;
-        const btnAddBg = modMdc.mkMDCbutton("Add background image", "raised");
-        btnAddBg.addEventListener("click", evt => {
-            addBg();
-        });
-        const divPasteImage = mkElt("div");
+        const btnChangeBg = modMdc.mkMDCbutton("Change", "raised");
+        btnChangeBg.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            // const added = await addBgFromClipboard();
+            // if (added) btnAddBg.remove();
+            // if (added) btnAddBg.style.display = "none";
+            await dlgBgImage();
+        }));
+        async function dlgBgImage() {
+            const eltInfoAdd = mkElt("p", undefined,
+                `You can add a background image either as a link 
+                or as an image from cliboard.`);
+            const btnLink = modMdc.mkMDCbutton("Link", "raised");
+            const btnClipboard = modMdc.mkMDCbutton("Clipboard", "raised");
+            btnClipboard.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+                const added = await addBgFromClipboard();
+                // if (added) btnAddBg.remove();
+                // if (added) btnAddBg.style.display = "none";
+            }));
+            const eltBtns = mkElt("p", undefined, [btnLink, btnClipboard]);
+            // const divAdd = mkElt("div", undefined, [eltInfoAdd, eltBtns]);
+
+            const tabsRecsBg = ["Link", "Clipboard"];
+            const divLink = mkElt("div", undefined, [
+                "Link to an image on the web. ",
+            ]);
+            const divClipboard = mkElt("div", undefined, [
+                "Paste an image from the clipboard.",
+            ]);
+            const contentEltsBg = mkElt("div", undefined, [divLink, divClipboard]);
+            // mkMdcTabBarSimple(tabsRecs, contentElts, moreOnActivate) {
+            const moreOnActivateBg = () => console.log("morOnActivateBg");
+            const tabbarBg = modMdc.mkMdcTabBarSimple(tabsRecsBg, contentEltsBg, moreOnActivateBg);
+            const divAdd = mkElt("div", undefined, [eltInfoAdd, tabbarBg, contentEltsBg]);
+
+            const divCurrent = mkElt("div", undefined);
+            const body = mkElt("div", undefined, [
+                mkElt("h2", undefined, "Background image"),
+                divCurrent,
+                divAdd
+            ]);
+            const save = await modMdc.mkMDCdialogConfirm(body, "save", "cancel");
+        }
+        const divCurrentImage = mkElt("div");
         const divBg = mkElt("div", undefined, [
+            mkElt("div", undefined, "Background image"),
             mkElt("div", { style: "color:red;" }, "Not ready!"),
-            divPasteImage,
-            btnAddBg,
+            divCurrentImage,
+            btnChangeBg,
         ]);
-        async function addBg(blob) {
+        async function addBgFromClipboard(blob) {
             const modImages = await import("images");
             const clipboardAccessOk = await modImages.isClipboardPermissionStateOk();
             if (clipboardAccessOk == false) {
                 modImages.alertHowToUnblockPermissions();
-                return;
+                return false;
             }
             const resultImageBlobs = await modImages.getImagesFromClipboard();
             if (Array.isArray(resultImageBlobs)) {
                 if (resultImageBlobs.length == 0) {
                     modImages.alertNoImagesFound();
+                    return false;
                 } else {
-                    const toDiv = divPasteImage;
+                    const toDiv = divCurrentImage;
                     const maxBlobSize = 20 * 1000;
                     for (const blob of resultImageBlobs) {
                         const eltImg = await modImages.mkImageCardFromBigImage(blob, maxBlobSize);
@@ -636,10 +675,11 @@ export class CustomRenderer4jsMind {
                 }
             }
 
-            btnAddBg.style.display = "none";
+            // btnAddBg.style.display = "none";
+            return true;
         }
         function removeBg(blob) {
-            btnAddBg.style.display = null;
+            btnChangeBg.style.display = null;
         }
         const divNormalContent = mkElt("div", { class: "normal-content" }, [
             "edit jmnode",

@@ -1376,7 +1376,7 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
     Xbackground: red;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 20px;
 }
 
 #jsmind-test-div-debug-log {
