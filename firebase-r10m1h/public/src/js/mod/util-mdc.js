@@ -1073,6 +1073,7 @@ export function setValidityMDC(inp, msg) {
 
 
 
+/*
 // https://firebase.google.com/docs/storage/web/list-files
 // FIXME: bucket etc
 export async function listGcs(root, container, filterWords, funItem, funFolder) {
@@ -1154,7 +1155,9 @@ export async function listGcs(root, container, filterWords, funItem, funFolder) 
         }
     }
 }
+*/
 
+/*
 // https://firebase.google.com/docs/storage/web/upload-files
 export async function upload2gcs(params) {
     const allowed = [
@@ -1201,6 +1204,7 @@ export async function upload2gcs(params) {
         });
     return uploadTask;
 }
+*/
 
 
 /*

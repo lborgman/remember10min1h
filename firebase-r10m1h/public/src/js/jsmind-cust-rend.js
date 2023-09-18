@@ -601,17 +601,55 @@ export class CustomRenderer4jsMind {
                 // if (added) btnAddBg.remove();
                 // if (added) btnAddBg.style.display = "none";
             }));
-            const eltBtns = mkElt("p", undefined, [btnLink, btnClipboard]);
+            // const eltBtns = mkElt("p", undefined, [btnLink, btnClipboard]);
             // const divAdd = mkElt("div", undefined, [eltInfoAdd, eltBtns]);
 
-            const tabsRecsBg = ["Link", "Clipboard"];
+            const inpImageUrl = modMdc.mkMDCtextFieldInput(undefined, "url");
+            const tfImageUrl = modMdc.mkMDCtextField("Image link", inpImageUrl);
             const divLink = mkElt("div", undefined, [
-                "Link to an image on the web. ",
+                "An image on the web. ",
+                tfImageUrl
             ]);
+
             const divClipboard = mkElt("div", undefined, [
-                "Paste an image from the clipboard.",
+                "An image on the clipboard.",
+                btnClipboard
             ]);
-            const contentEltsBg = mkElt("div", undefined, [divLink, divClipboard]);
+
+            const divPatternPreview = mkElt("div");
+            divPatternPreview.style.height = 100;
+            const taImagePattern = modMdc.mkMDCtextFieldTextarea(undefined, 5, 80);
+            const tafImagePattern = modMdc.mkMDCtextareaField("CSS3 pattern", taImagePattern);
+            function setBackgroundPreview() {
+                // debugger;
+                const css3bg = taImagePattern.value;
+                const parts = css3bg.split(";").map(p => p.trim()).filter(p => p.length > 0);
+                const css = {};
+                parts.forEach(p => {
+                    const [key, val] = p.split(":");
+                    css[key.trim()] = val.trim();
+                });
+                // console.log({ css });
+                for (const key in css) {
+                    const val = css[key];
+                    divPatternPreview.style[key] = val;
+                }
+            }
+            const debounceSetBackgroundPreview = debounce(setBackgroundPreview, 1000);
+            taImagePattern.addEventListener("input", evt => {
+                debounceSetBackgroundPreview();
+            });
+            taImagePattern.addEventListener("change", evt => {
+                debounceSetBackgroundPreview();
+            });
+            const divPattern = mkElt("div", undefined, [
+                "Instead of a background image you can use a background ",
+                mkElt("a", { href: "https://projects.verou.me/css3patterns/" }, "pattern"),
+                ".",
+                tafImagePattern, divPatternPreview
+            ]);
+            const tabsRecsBg = ["Link", "Clipboard", "Pattern"];
+            const contentEltsBg = mkElt("div", undefined, [divLink, divClipboard, divPattern]);
             // mkMdcTabBarSimple(tabsRecs, contentElts, moreOnActivate) {
             const moreOnActivateBg = () => console.log("morOnActivateBg");
             const tabbarBg = modMdc.mkMdcTabBarSimple(tabsRecsBg, contentEltsBg, moreOnActivateBg);
@@ -620,6 +658,7 @@ export class CustomRenderer4jsMind {
             const divCurrent = mkElt("div", undefined);
             const body = mkElt("div", undefined, [
                 mkElt("h2", undefined, "Background image"),
+                mkElt("div", { style: "color:red;" }, "Not ready!"),
                 divCurrent,
                 divAdd
             ]);
@@ -628,7 +667,6 @@ export class CustomRenderer4jsMind {
         const divCurrentImage = mkElt("div");
         const divBg = mkElt("div", undefined, [
             mkElt("div", undefined, "Background image"),
-            mkElt("div", { style: "color:red;" }, "Not ready!"),
             divCurrentImage,
             btnChangeBg,
         ]);
