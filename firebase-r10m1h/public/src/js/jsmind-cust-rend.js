@@ -616,23 +616,72 @@ export class CustomRenderer4jsMind {
                 btnClipboard
             ]);
 
-            const divPatternPreview = mkElt("div");
-            divPatternPreview.style.height = 100;
+            const divImagePatternPreview = mkElt("div");
+            divImagePatternPreview.style.height = 100;
+            divImagePatternPreview.style.border = "2px black inset";
+            divImagePatternPreview.style.background = "gray";
             const taImagePattern = modMdc.mkMDCtextFieldTextarea(undefined, 5, 80);
             const tafImagePattern = modMdc.mkMDCtextareaField("CSS3 pattern", taImagePattern);
+            const divImagePattern = mkElt("div", undefined, [
+                tafImagePattern,
+
+            ]);
+            let patternValid;
+
+            // https://stackoverflow.com/questions/9014804/javascript-validate-css
+            function css_sanitize(css) {
+                const iframe = document.createElement("iframe");
+                iframe.style.display = "none";
+                iframe.style.width = "10px"; //make small in case display:none fails
+                iframe.style.height = "10px";
+                document.body.appendChild(iframe);
+                const style = iframe.contentDocument.createElement('style');
+                style.innerHTML = css;
+                iframe.contentDocument.head.appendChild(style);
+                const sheet = style.sheet,
+                    result = Array.from(style.sheet.cssRules).map(rule => rule.cssText || '').join('\n');
+                iframe.remove();
+                return result;
+            }
+
             function setBackgroundPreview() {
                 // debugger;
                 const css3bg = taImagePattern.value;
                 const parts = css3bg.split(";").map(p => p.trim()).filter(p => p.length > 0);
                 const css = {};
-                parts.forEach(p => {
-                    const [key, val] = p.split(":");
-                    css[key.trim()] = val.trim();
-                });
+                patternValid = true;
+                const cssRaw = "#temp { " + css3bg + " }";
+                const cssClean = css_sanitize(cssRaw);
+                if (cssRaw.replaceAll(/\s+/g, " ") !== cssClean.replaceAll(/\s+/g, " ")) {
+                    patternValid = "Invalid CSS";
+                }
+                if (patternValid === true) {
+                    parts.forEach(p => {
+                        if (patternValid !== true) return;
+                        let [key, val] = p.split(":");
+                        if (val == undefined) {
+                            patternValid = "ERROR: missing css value";
+                        }
+                        if (patternValid !== true) return;
+                        key = key.trim();
+                        if (key !== "background" && !key.startsWith("background-")) {
+                            patternValid = `Property "${key}" not allowed`;
+                        }
+                        if (patternValid !== true) return;
+                        css[key] = val.trim().replace(/;$/, "");
+                    });
+                }
                 // console.log({ css });
-                for (const key in css) {
-                    const val = css[key];
-                    divPatternPreview.style[key] = val;
+                if (patternValid === true) {
+                    for (const key in css) {
+                        const val = css[key];
+                        divImagePatternPreview.style[key] = val;
+                    }
+                    divImagePattern.style.outline = "none";
+                } else {
+                    console.log("Not valid css:", patternValid);
+                    divImagePatternPreview.style.background = "gray";
+                    divImagePattern.style.outline = "2px dotted red";
                 }
             }
             const debounceSetBackgroundPreview = debounce(setBackgroundPreview, 1000);
@@ -646,7 +695,9 @@ export class CustomRenderer4jsMind {
                 "Instead of a background image you can use a background ",
                 mkElt("a", { href: "https://projects.verou.me/css3patterns/" }, "pattern"),
                 ".",
-                tafImagePattern, divPatternPreview
+                // tafImagePattern,
+                divImagePattern,
+                divImagePatternPreview
             ]);
             const tabsRecsBg = ["Link", "Clipboard", "Pattern"];
             const contentEltsBg = mkElt("div", undefined, [divLink, divClipboard, divPattern]);
