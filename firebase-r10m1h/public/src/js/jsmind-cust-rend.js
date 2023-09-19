@@ -622,10 +622,23 @@ export class CustomRenderer4jsMind {
             divImagePatternPreview.style.background = "gray";
             const taImagePattern = modMdc.mkMDCtextFieldTextarea(undefined, 5, 80);
             const tafImagePattern = modMdc.mkMDCtextareaField("CSS3 pattern", taImagePattern);
+
+            const divValid = mkElt("div", undefined, "-");
+            divValid.style.padding = "4px";
+            divValid.style.fontSize = "1rem";
+            divValid.style.lineHeight = "1.2rem";
+            // FIX-ME: I do not understand why 2.5rem is not enough???
+            divValid.style.minHeight = "calc(2.8rem + 4px)";
+
+
             const divImagePattern = mkElt("div", undefined, [
                 tafImagePattern,
-
+                divValid,
             ]);
+            function tellValid(msg) {
+                console.log(msg);
+                divValid.textContent = msg;
+            }
             let patternValid;
 
             // https://stackoverflow.com/questions/9014804/javascript-validate-css
@@ -673,13 +686,15 @@ export class CustomRenderer4jsMind {
                 }
                 // console.log({ css });
                 if (patternValid === true) {
+                    tellValid("Valid");
                     for (const key in css) {
                         const val = css[key];
                         divImagePatternPreview.style[key] = val;
                     }
                     divImagePattern.style.outline = "none";
                 } else {
-                    console.log("Not valid css:", patternValid);
+                    // console.log("Not valid css:", patternValid);
+                    tellValid("Not valid: " + patternValid);
                     divImagePatternPreview.style.background = "gray";
                     divImagePattern.style.outline = "2px dotted red";
                 }
