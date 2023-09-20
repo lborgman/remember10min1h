@@ -714,19 +714,48 @@ export class CustomRenderer4jsMind {
                 divImagePattern,
                 divImagePatternPreview
             ]);
+
+
+            // FIX-ME: switch to radio buttons choices
+            /*
             const tabsRecsBg = ["Link", "Clipboard", "Pattern"];
             const contentEltsBg = mkElt("div", undefined, [divLink, divClipboard, divPattern]);
             // mkMdcTabBarSimple(tabsRecs, contentElts, moreOnActivate) {
             const moreOnActivateBg = () => console.log("morOnActivateBg");
             const tabbarBg = modMdc.mkMdcTabBarSimple(tabsRecsBg, contentEltsBg, moreOnActivateBg);
             const divAdd = mkElt("div", undefined, [eltInfoAdd, tabbarBg, contentEltsBg]);
+            */
+
+            const mkBgChoice = (id, label, eltDetails) => {
+                const inpRadio = mkElt("input", { type: "radio", id, name: "bg-choice" });
+                inpRadio.disabled = true;
+                inpRadio.style.gridArea = "r";
+                // FIX-ME: modMdc
+                const lbl = mkElt("label", { for: id }, label);
+                lbl.style.gridArea = "l";
+                eltDetails.style.gridArea = "d";
+                const container =  mkElt("div", undefined, [inpRadio, lbl, eltDetails]);
+                container.style.display = "grid";
+                container.style.gridTemplateAreas = '"r l" ". d"';
+                return container ;
+                // const lbl = mkElt("label", { for: id }, eltDetails);
+                // return mkElt("div", undefined, [inpRadio, lbl]);
+            }
+            const detLink = mkElt("details", undefined, [
+                mkElt("summary", undefined, "Link image settings"),
+                divLink
+            ]);
+            const divChoices = mkElt("div", { id: "bg-choices" }, [
+                mkBgChoice("bg-choice-link", "Link image", detLink),
+            ]);
 
             const divCurrent = mkElt("div", undefined);
             const body = mkElt("div", undefined, [
                 mkElt("h2", undefined, "Background image"),
                 mkElt("div", { style: "color:red;" }, "Not ready!"),
                 divCurrent,
-                divAdd
+                // divAdd
+                divChoices
             ]);
             const save = await modMdc.mkMDCdialogConfirm(body, "save", "cancel");
         }
