@@ -612,7 +612,7 @@ export class CustomRenderer4jsMind {
             ]);
 
             const divClipboard = mkElt("div", undefined, [
-                "An image on the clipboard.",
+                "An image from the clipboard.",
                 btnClipboard
             ]);
 
@@ -657,7 +657,7 @@ export class CustomRenderer4jsMind {
                 return result;
             }
 
-            function setBackgroundPreview() {
+            function setBgPatternPreview() {
                 // debugger;
                 const css3bg = taImagePattern.value;
                 const parts = css3bg.split(";").map(p => p.trim()).filter(p => p.length > 0);
@@ -699,7 +699,7 @@ export class CustomRenderer4jsMind {
                     divImagePattern.style.outline = "2px dotted red";
                 }
             }
-            const debounceSetBackgroundPreview = debounce(setBackgroundPreview, 1000);
+            const debounceSetBackgroundPreview = debounce(setBgPatternPreview, 1000);
             taImagePattern.addEventListener("input", evt => {
                 debounceSetBackgroundPreview();
             });
@@ -731,22 +731,31 @@ export class CustomRenderer4jsMind {
                 inpRadio.disabled = true;
                 inpRadio.style.gridArea = "r";
                 // FIX-ME: modMdc
+                const mdcRadio = modMdc.mkMDCradioElt(inpRadio);
                 const lbl = mkElt("label", { for: id }, label);
                 lbl.style.gridArea = "l";
                 eltDetails.style.gridArea = "d";
-                const container =  mkElt("div", undefined, [inpRadio, lbl, eltDetails]);
-                container.style.display = "grid";
-                container.style.gridTemplateAreas = '"r l" ". d"';
-                return container ;
+                const container = mkElt("div", { class: "mdc-card bg-choice" }, [mdcRadio, lbl, eltDetails]);
+                return container;
                 // const lbl = mkElt("label", { for: id }, eltDetails);
                 // return mkElt("div", undefined, [inpRadio, lbl]);
             }
             const detLink = mkElt("details", undefined, [
-                mkElt("summary", undefined, "Link image settings"),
+                mkElt("summary", undefined, "Link image details"),
                 divLink
+            ]);
+            const detClipboard = mkElt("details", undefined, [
+                mkElt("summary", undefined, "Clipboard image details"),
+                divClipboard
+            ]);
+            const detPattern = mkElt("details", undefined, [
+                mkElt("summary", undefined, "Background CSS pattern details"),
+                divPattern
             ]);
             const divChoices = mkElt("div", { id: "bg-choices" }, [
                 mkBgChoice("bg-choice-link", "Link image", detLink),
+                mkBgChoice("bg-choice-clipboard", "Clipboard image", detClipboard),
+                mkBgChoice("bg-choice-pattern", "Background CSS pattern", detPattern),
             ]);
 
             const divCurrent = mkElt("div", undefined);

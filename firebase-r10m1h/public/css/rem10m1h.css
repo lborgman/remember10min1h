@@ -1379,6 +1379,18 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
     gap: 20px;
 }
 
+.bg-choice {
+    display: grid;
+    grid-template-areas: "r l" ". d";
+    grid-template-columns: min-content 1fr;
+    gap: 0;
+}
+#bg-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
 #jsmind-test-div-debug-log {
     display: none;
     z-index: 1000;
