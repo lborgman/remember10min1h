@@ -730,12 +730,25 @@ export class CustomRenderer4jsMind {
                 const inpRadio = mkElt("input", { type: "radio", id, name: "bg-choice" });
                 inpRadio.disabled = true;
                 inpRadio.style.gridArea = "r";
-                // FIX-ME: modMdc
+                inpRadio.style.marginRight = "10px";
+
+                /*
+                // FIX-ME: some chrome bug with grid-area here???
                 const mdcRadio = modMdc.mkMDCradioElt(inpRadio);
+                // mdcRadio.style.gridArea = "r";
+                // inpRadio.style.gridArea = "unset";
+                const wrpRadio = mkElt("div", undefined, mdcRadio);
+                wrpRadio.style.display = "inline-block";
+                wrpRadio.style.gridArea = "r";
+                */
+
+
                 const lbl = mkElt("label", { for: id }, label);
                 lbl.style.gridArea = "l";
                 eltDetails.style.gridArea = "d";
-                const container = mkElt("div", { class: "mdc-card bg-choice" }, [mdcRadio, lbl, eltDetails]);
+                const container = mkElt("div", { class: "mdc-card bg-choice" }, [inpRadio, lbl, eltDetails]);
+                // const container = mkElt("div", { class: "mdc-card bg-choice" }, [mdcRadio, lbl, eltDetails]);
+                // const container = mkElt("div", { class: "mdc-card bg-choice" }, [wrpRadio, lbl, eltDetails]);
                 return container;
                 // const lbl = mkElt("label", { for: id }, eltDetails);
                 // return mkElt("div", undefined, [inpRadio, lbl]);

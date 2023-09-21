@@ -509,12 +509,12 @@ export function fixMDCradioCheckedLabel(name) {
 
         const eltLabel = mdcRadio.closest("label");
         if (inp.checked) {
-            eltLabel.classList.add("our-checked");
-            const inp = eltLabel.querySelector("input[type=text]");
+            eltLabel?.classList.add("our-checked");
+            const inp = eltLabel?.querySelector("input[type=text]");
             // console.log("inp", inp);
             if (inp) inp.focus();
         } else {
-            eltLabel.classList.remove("our-checked");
+            eltLabel?.classList.remove("our-checked");
         }
     })
 }

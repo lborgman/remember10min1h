@@ -1384,7 +1384,18 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
     grid-template-areas: "r l" ". d";
     grid-template-columns: min-content 1fr;
     gap: 0;
+    padding: 10px;
+    background: rgba(200, 200, 0, 0.15);
 }
+
+div.bg-choice:has(input[disabled]) {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+div.bg-choice:not(input[disabled]):has(input:checked) {
+    background: rgba(0, 255, 0, 0.25);
+}
+
 #bg-choices {
     display: flex;
     flex-direction: column;
