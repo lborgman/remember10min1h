@@ -1399,7 +1399,7 @@ div.bg-choice:not(input[disabled]):has(input:checked) {
 #bg-choices {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 10px;
 }
 
 #jsmind-test-div-debug-log {

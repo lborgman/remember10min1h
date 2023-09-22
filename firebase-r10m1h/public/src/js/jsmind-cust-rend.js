@@ -726,6 +726,14 @@ export class CustomRenderer4jsMind {
             const divAdd = mkElt("div", undefined, [eltInfoAdd, tabbarBg, contentEltsBg]);
             */
 
+            function setBgChoiceEnabled(eltChoice, enabled) {
+                if (!eltChoice.classList.contains("bg-choice")) {
+                    console.log("Not bg-choice: ", eltChoice);
+                    throw Error("eltChoice is not bg-choice")
+                }
+                const inp = eltChoice.querySelector("input[name=bg-choice]");
+                inp.disabled = !enabled;
+            }
             const mkBgChoice = (id, label, eltDetails) => {
                 const inpRadio = mkElt("input", { type: "radio", id, name: "bg-choice" });
                 inpRadio.disabled = true;
@@ -745,10 +753,17 @@ export class CustomRenderer4jsMind {
 
                 const lbl = mkElt("label", { for: id }, label);
                 lbl.style.gridArea = "l";
-                eltDetails.style.gridArea = "d";
-                const container = mkElt("div", { class: "mdc-card bg-choice" }, [inpRadio, lbl, eltDetails]);
+                // const container = mkElt("div", { class: "mdc-card bg-choice" }, [inpRadio, lbl, eltDetails]);
+                const container = mkElt("div", { class: "mdc-card bg-choice" }, [inpRadio, lbl]);
+                if (eltDetails) {
+                    container.appendChild(eltDetails);
+                    eltDetails.style.gridArea = "d";
+                }
                 // const container = mkElt("div", { class: "mdc-card bg-choice" }, [mdcRadio, lbl, eltDetails]);
                 // const container = mkElt("div", { class: "mdc-card bg-choice" }, [wrpRadio, lbl, eltDetails]);
+
+                // FIX-ME: Test:
+                setTimeout(() => { setBgChoiceEnabled(container, true); }, 2000);
                 return container;
                 // const lbl = mkElt("label", { for: id }, eltDetails);
                 // return mkElt("div", undefined, [inpRadio, lbl]);
@@ -765,7 +780,10 @@ export class CustomRenderer4jsMind {
                 mkElt("summary", undefined, "Background CSS pattern details"),
                 divPattern
             ]);
+            const bgChoiceNone = mkBgChoice("bg-choice-none", "No special");
+            setBgChoiceEnabled(bgChoiceNone, true);
             const divChoices = mkElt("div", { id: "bg-choices" }, [
+                bgChoiceNone,
                 mkBgChoice("bg-choice-link", "Link image", detLink),
                 mkBgChoice("bg-choice-clipboard", "Clipboard image", detClipboard),
                 mkBgChoice("bg-choice-pattern", "Background CSS pattern", detPattern),
