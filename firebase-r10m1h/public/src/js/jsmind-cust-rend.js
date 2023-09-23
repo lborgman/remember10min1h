@@ -623,21 +623,22 @@ export class CustomRenderer4jsMind {
             const taImagePattern = modMdc.mkMDCtextFieldTextarea(undefined, 5, 80);
             const tafImagePattern = modMdc.mkMDCtextareaField("CSS3 pattern", taImagePattern);
 
-            const divValid = mkElt("div", undefined, "-");
-            divValid.style.padding = "4px";
-            divValid.style.fontSize = "1rem";
-            divValid.style.lineHeight = "1.2rem";
+            const divPatternValid = mkElt("div", undefined, "-");
+            divPatternValid.style.display = "none";
+            divPatternValid.style.padding = "4px";
+            divPatternValid.style.fontSize = "1rem";
+            divPatternValid.style.lineHeight = "1.2rem";
             // FIX-ME: I do not understand why 2.5rem is not enough???
-            divValid.style.minHeight = "calc(2.8rem + 4px)";
+            divPatternValid.style.minHeight = "calc(2.8rem + 4px)";
 
 
             const divImagePattern = mkElt("div", undefined, [
                 tafImagePattern,
-                divValid,
+                divPatternValid,
             ]);
-            function tellValid(msg) {
+            function tellPatternValid(msg) {
                 console.log(msg);
-                divValid.textContent = msg;
+                divPatternValid.textContent = msg;
             }
             let patternValid;
 
@@ -659,7 +660,9 @@ export class CustomRenderer4jsMind {
 
             function setBgPatternPreview() {
                 // debugger;
-                const css3bg = taImagePattern.value;
+                // Add a trailing ; if missing (since it could be very confusing):
+                const taVal = taImagePattern.value.trim();
+                const css3bg = taVal.endsWith(";") ? taVal : taVal + ";";
                 const parts = css3bg.split(";").map(p => p.trim()).filter(p => p.length > 0);
                 const css = {};
                 patternValid = true;
@@ -684,9 +687,12 @@ export class CustomRenderer4jsMind {
                         css[key] = val.trim().replace(/;$/, "");
                     });
                 }
-                // console.log({ css });
+                const divThisChoice = divImagePattern.closest(".bg-choice");
                 if (patternValid === true) {
-                    tellValid("Valid");
+                    modMdc.setValidityMDC(taImagePattern, "");
+                    tellPatternValid("Valid");
+                    setBgChoiceEnabled(divThisChoice, true);
+                    setBgChoiceThis(divThisChoice);
                     for (const key in css) {
                         const val = css[key];
                         divImagePatternPreview.style[key] = val;
@@ -694,7 +700,10 @@ export class CustomRenderer4jsMind {
                     divImagePattern.style.outline = "none";
                 } else {
                     // console.log("Not valid css:", patternValid);
-                    tellValid("Not valid: " + patternValid);
+                    modMdc.setValidityMDC(taImagePattern, patternValid);
+                    tellPatternValid("Not valid: " + patternValid);
+                    setBgChoiceEnabled(divThisChoice, false);
+                    setBgChoiceThis(bgChoiceNone);
                     divImagePatternPreview.style.background = "gray";
                     divImagePattern.style.outline = "2px dotted red";
                 }
@@ -707,10 +716,11 @@ export class CustomRenderer4jsMind {
                 debounceSetBackgroundPreview();
             });
             const divPattern = mkElt("div", undefined, [
-                "Instead of a background image you can use a background ",
-                mkElt("a", { href: "https://projects.verou.me/css3patterns/" }, "pattern"),
-                ".",
-                // tafImagePattern,
+                mkElt("div", undefined, [
+                    "Instead of a background image you can use a background ",
+                    mkElt("a", { href: "https://projects.verou.me/css3patterns/" }, "pattern"),
+                    ".",
+                ]),
                 divImagePattern,
                 divImagePatternPreview
             ]);
@@ -726,6 +736,14 @@ export class CustomRenderer4jsMind {
             const divAdd = mkElt("div", undefined, [eltInfoAdd, tabbarBg, contentEltsBg]);
             */
 
+            function setBgChoiceThis(eltChoice) {
+                const inp = eltChoice.querySelector("input[name=bg-choice]");
+                if (inp.disabled) {
+                    const val = inp.value;
+                    throw Error(`Can't choose disabled ${val}`);
+                }
+                inp.checked = true;
+            }
             function setBgChoiceEnabled(eltChoice, enabled) {
                 if (!eltChoice.classList.contains("bg-choice")) {
                     console.log("Not bg-choice: ", eltChoice);
@@ -762,8 +780,6 @@ export class CustomRenderer4jsMind {
                 // const container = mkElt("div", { class: "mdc-card bg-choice" }, [mdcRadio, lbl, eltDetails]);
                 // const container = mkElt("div", { class: "mdc-card bg-choice" }, [wrpRadio, lbl, eltDetails]);
 
-                // FIX-ME: Test:
-                setTimeout(() => { setBgChoiceEnabled(container, true); }, 2000);
                 return container;
                 // const lbl = mkElt("label", { for: id }, eltDetails);
                 // return mkElt("div", undefined, [inpRadio, lbl]);
@@ -777,21 +793,22 @@ export class CustomRenderer4jsMind {
                 divClipboard
             ]);
             const detPattern = mkElt("details", undefined, [
-                mkElt("summary", undefined, "Background CSS pattern details"),
+                mkElt("summary", undefined, "Pattern details"),
                 divPattern
             ]);
             const bgChoiceNone = mkBgChoice("bg-choice-none", "No special");
             setBgChoiceEnabled(bgChoiceNone, true);
+            setBgChoiceThis(bgChoiceNone);
             const divChoices = mkElt("div", { id: "bg-choices" }, [
                 bgChoiceNone,
                 mkBgChoice("bg-choice-link", "Link image", detLink),
                 mkBgChoice("bg-choice-clipboard", "Clipboard image", detClipboard),
-                mkBgChoice("bg-choice-pattern", "Background CSS pattern", detPattern),
+                mkBgChoice("bg-choice-pattern", "Pattern", detPattern),
             ]);
 
             const divCurrent = mkElt("div", undefined);
-            const body = mkElt("div", undefined, [
-                mkElt("h2", undefined, "Background image"),
+            const body = mkElt("div", {id: "dlg-body-node-background"}, [
+                mkElt("h2", undefined, "Node background"),
                 mkElt("div", { style: "color:red;" }, "Not ready!"),
                 divCurrent,
                 // divAdd
@@ -801,7 +818,7 @@ export class CustomRenderer4jsMind {
         }
         const divCurrentImage = mkElt("div");
         const divBg = mkElt("div", undefined, [
-            mkElt("div", undefined, "Background image"),
+            mkElt("div", undefined, "Node background"),
             divCurrentImage,
             btnChangeBg,
         ]);

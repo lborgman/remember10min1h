@@ -1379,6 +1379,18 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
     gap: 20px;
 }
 
+
+
+#dlg-body-node-background div {
+    line-height: 1;
+}
+
+.bg-choice>details>div {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 .bg-choice {
     display: grid;
     grid-template-areas: "r l" ". d";
