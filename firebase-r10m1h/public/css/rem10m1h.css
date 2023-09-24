@@ -1380,6 +1380,20 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
 }
 
 
+#jsmind-ednode-content {
+    dislay: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#jsmind-ednode-content div.topic-choice {
+    padding: 10px;
+    background: gray;
+}
+
+#jsmind-ednode-content div.topic-choice:has(input:checked) {
+    background: rgba(0, 255, 0, 0.15);
+}
 
 #dlg-body-node-background div {
     line-height: 1;
@@ -2502,11 +2516,11 @@ https://unused-css.com/tools/clip-path-generator (adjustable nodes!)
 }
 
 #jsmind-ednode-content .custom-content {
-    display: none;
+    NOdisplay: none;
 }
 
 #jsmind-ednode-content.custom-node .custom-content {
-    display: block;
+    NOdisplay: block;
 }
 
 #jsmind-ednode-content.custom-node .normal-content {

@@ -554,10 +554,231 @@ export class CustomRenderer4jsMind {
             "flex-direction: column",
             "gap: 10px"
         ].join("; ");
-        const divColors = mkElt("div", { style: styleColors }, [
+
+        function setBgChoiceThis(eltChoice) {
+            const inp = eltChoice.querySelector("input[name=bg-choice]");
+            if (inp.disabled) {
+                const val = inp.value;
+                throw Error(`Can't choose disabled ${val}`);
+            }
+            inp.checked = true;
+        }
+        function setBgChoiceEnabled(eltChoice, enabled) {
+            if (!eltChoice.classList.contains("bg-choice")) {
+                console.log("Not bg-choice: ", eltChoice);
+                throw Error("eltChoice is not bg-choice")
+            }
+            const inp = eltChoice.querySelector("input[name=bg-choice]");
+            inp.disabled = !enabled;
+        }
+        const mkBgChoice = (id, label, eltDetails) => {
+            const inpRadio = mkElt("input", { type: "radio", id, name: "bg-choice" });
+            inpRadio.disabled = true;
+            inpRadio.style.gridArea = "r";
+            inpRadio.style.marginRight = "10px";
+
+            /*
+            // FIX-ME: some chrome bug with grid-area here???
+            const mdcRadio = modMdc.mkMDCradioElt(inpRadio);
+            // mdcRadio.style.gridArea = "r";
+            // inpRadio.style.gridArea = "unset";
+            const wrpRadio = mkElt("div", undefined, mdcRadio);
+            wrpRadio.style.display = "inline-block";
+            wrpRadio.style.gridArea = "r";
+            */
+
+
+            const lbl = mkElt("label", { for: id }, label);
+            lbl.style.gridArea = "l";
+            // const container = mkElt("div", { class: "mdc-card bg-choice" }, [inpRadio, lbl, eltDetails]);
+            const container = mkElt("div", { class: "mdc-card bg-choice" }, [inpRadio, lbl]);
+            if (eltDetails) {
+                container.appendChild(eltDetails);
+                eltDetails.style.gridArea = "d";
+            }
+            // const container = mkElt("div", { class: "mdc-card bg-choice" }, [mdcRadio, lbl, eltDetails]);
+            // const container = mkElt("div", { class: "mdc-card bg-choice" }, [wrpRadio, lbl, eltDetails]);
+
+            return container;
+            // const lbl = mkElt("label", { for: id }, eltDetails);
+            // return mkElt("div", undefined, [inpRadio, lbl]);
+        }
+
+        const bgChoiceNone = mkBgChoice("bg-choice-none", "No special");
+        setBgChoiceEnabled(bgChoiceNone, true);
+
+        const inpImageUrl = modMdc.mkMDCtextFieldInput(undefined, "url");
+        const tfImageUrl = modMdc.mkMDCtextField("Image link", inpImageUrl);
+        const divLink = mkElt("div", undefined, [
+            "An image on the web. ",
+            tfImageUrl
+        ]);
+
+        const btnClipboard = modMdc.mkMDCbutton("Clipboard", "raised");
+        btnClipboard.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            const added = await addBgFromClipboard();
+            // if (added) btnAddBg.remove();
+            // if (added) btnAddBg.style.display = "none";
+        }));
+        const divClipboard = mkElt("div", undefined, [
+            "An image from the clipboard.",
+            btnClipboard
+        ]);
+
+
+        const divImagePatternPreview = mkElt("div");
+        divImagePatternPreview.style.height = 100;
+        divImagePatternPreview.style.border = "2px black inset";
+        divImagePatternPreview.style.background = "gray";
+        const taImagePattern = modMdc.mkMDCtextFieldTextarea(undefined, 5, 80);
+        const tafImagePattern = modMdc.mkMDCtextareaField("CSS3 pattern", taImagePattern);
+
+        const divPatternValid = mkElt("div", undefined, "-");
+        divPatternValid.style.display = "none";
+        divPatternValid.style.padding = "4px";
+        divPatternValid.style.fontSize = "1rem";
+        divPatternValid.style.lineHeight = "1.2rem";
+        // FIX-ME: I do not understand why 2.5rem is not enough???
+        divPatternValid.style.minHeight = "calc(2.8rem + 4px)";
+
+
+        const divImagePattern = mkElt("div", undefined, [
+            tafImagePattern,
+            divPatternValid,
+        ]);
+        function tellPatternValid(msg) {
+            console.log(msg);
+            divPatternValid.textContent = msg;
+        }
+        let patternValid;
+
+        // https://stackoverflow.com/questions/9014804/javascript-validate-css
+        function css_sanitize(css) {
+            const iframe = document.createElement("iframe");
+            iframe.style.display = "none";
+            iframe.style.width = "10px"; //make small in case display:none fails
+            iframe.style.height = "10px";
+            document.body.appendChild(iframe);
+            const style = iframe.contentDocument.createElement('style');
+            style.innerHTML = css;
+            iframe.contentDocument.head.appendChild(style);
+            const sheet = style.sheet,
+                result = Array.from(style.sheet.cssRules).map(rule => rule.cssText || '').join('\n');
+            iframe.remove();
+            return result;
+        }
+
+        function setBgPatternPreview() {
+            // debugger;
+            // Add a trailing ; if missing (since it could be very confusing):
+            const taVal = taImagePattern.value.trim();
+            const css3bg = taVal.endsWith(";") ? taVal : taVal + ";";
+            const parts = css3bg.split(";").map(p => p.trim()).filter(p => p.length > 0);
+            const css = {};
+            patternValid = true;
+            const cssRaw = "#temp { " + css3bg + " }";
+            const cssClean = css_sanitize(cssRaw);
+            if (cssRaw.replaceAll(/\s+/g, " ") !== cssClean.replaceAll(/\s+/g, " ")) {
+                patternValid = "Invalid CSS";
+            }
+            if (patternValid === true) {
+                parts.forEach(p => {
+                    if (patternValid !== true) return;
+                    let [key, val] = p.split(":");
+                    if (val == undefined) {
+                        patternValid = "ERROR: missing css value";
+                    }
+                    if (patternValid !== true) return;
+                    key = key.trim();
+                    if (key !== "background" && !key.startsWith("background-")) {
+                        patternValid = `Property "${key}" not allowed`;
+                    }
+                    if (patternValid !== true) return;
+                    css[key] = val.trim().replace(/;$/, "");
+                });
+            }
+            const divThisChoice = divImagePattern.closest(".bg-choice");
+            if (patternValid === true) {
+                modMdc.setValidityMDC(taImagePattern, "");
+                tellPatternValid("Valid");
+                setBgChoiceEnabled(divThisChoice, true);
+                setBgChoiceThis(divThisChoice);
+                for (const key in css) {
+                    const val = css[key];
+                    divImagePatternPreview.style[key] = val;
+                }
+                divImagePattern.style.outline = "none";
+            } else {
+                // console.log("Not valid css:", patternValid);
+                modMdc.setValidityMDC(taImagePattern, patternValid);
+                tellPatternValid("Not valid: " + patternValid);
+                setBgChoiceEnabled(divThisChoice, false);
+                setBgChoiceThis(bgChoiceNone);
+                divImagePatternPreview.style.background = "gray";
+                divImagePattern.style.outline = "2px dotted red";
+            }
+        }
+        const debounceSetBackgroundPreview = debounce(setBgPatternPreview, 1000);
+        taImagePattern.addEventListener("input", evt => {
+            debounceSetBackgroundPreview();
+        });
+        taImagePattern.addEventListener("change", evt => {
+            debounceSetBackgroundPreview();
+        });
+        const divPattern = mkElt("div", undefined, [
+            mkElt("div", undefined, [
+                "Use a CSS: ",
+                mkElt("a", { href: "https://projects.verou.me/css3patterns/" }, "pattern"),
+                ".",
+            ]),
+            divImagePattern,
+            divImagePatternPreview
+        ]);
+
+
+
+        const detLink = mkElt("details", undefined, [
+            mkElt("summary", undefined, "Edit link"),
+            divLink
+        ]);
+        const detClipboard = mkElt("details", undefined, [
+            mkElt("summary", undefined, "Add clipboard image"),
+            divClipboard
+        ]);
+        const detPattern = mkElt("details", undefined, [
+            mkElt("summary", undefined, "Set up pattern"),
+            divPattern
+        ]);
+        const divBgColor = mkElt("div", undefined, [
             mkElt("label", undefined, ["Background color: ", inpBgColor]),
+        ]);
+        const detBgColor = mkElt("details", undefined, [
+            mkElt("summary", undefined, "Choose color"),
+            divBgColor
+        ]);
+
+
+        const bgChoiceColor = mkBgChoice("bg-choice-color", "Color", detBgColor);
+        setBgChoiceEnabled(bgChoiceColor, true);
+
+        const divChoices = mkElt("div", { id: "bg-choices" }, [
+            bgChoiceNone,
+            mkBgChoice("bg-choice-link", "Link image", detLink),
+            mkBgChoice("bg-choice-clipboard", "Clipboard image", detClipboard),
+            mkBgChoice("bg-choice-pattern", "Pattern", detPattern),
+            bgChoiceColor
+        ]);
+        setBgChoiceThis(bgChoiceNone);
+
+        const divCurrentBg = mkElt("div", undefined);
+
+        const divBackground = mkElt("div", { style: styleColors }, [
+            // mkElt("label", undefined, ["Background color: ", inpBgColor]),
             mkElt("label", undefined, ["Text color: ", inpFgColor]),
-            pContrast
+            pContrast,
+            divCurrentBg,
+            // divAdd
+            divChoices
         ]);
 
 
@@ -580,7 +801,7 @@ export class CustomRenderer4jsMind {
         });
         const strLink = initialShapeEtc.nodeLink;
         // inpLink.value = strLink;
-        const tfLink = modMdc.mkMDCtextField("Link", inpLink, strLink);
+        const tfLink = modMdc.mkMDCtextField("Topic link", inpLink, strLink);
 
         let blobBg;
         const btnChangeBg = modMdc.mkMDCbutton("Change", "raised");
@@ -595,135 +816,9 @@ export class CustomRenderer4jsMind {
                 `You can add a background image either as a link 
                 or as an image from cliboard.`);
             const btnLink = modMdc.mkMDCbutton("Link", "raised");
-            const btnClipboard = modMdc.mkMDCbutton("Clipboard", "raised");
-            btnClipboard.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-                const added = await addBgFromClipboard();
-                // if (added) btnAddBg.remove();
-                // if (added) btnAddBg.style.display = "none";
-            }));
             // const eltBtns = mkElt("p", undefined, [btnLink, btnClipboard]);
             // const divAdd = mkElt("div", undefined, [eltInfoAdd, eltBtns]);
 
-            const inpImageUrl = modMdc.mkMDCtextFieldInput(undefined, "url");
-            const tfImageUrl = modMdc.mkMDCtextField("Image link", inpImageUrl);
-            const divLink = mkElt("div", undefined, [
-                "An image on the web. ",
-                tfImageUrl
-            ]);
-
-            const divClipboard = mkElt("div", undefined, [
-                "An image from the clipboard.",
-                btnClipboard
-            ]);
-
-            const divImagePatternPreview = mkElt("div");
-            divImagePatternPreview.style.height = 100;
-            divImagePatternPreview.style.border = "2px black inset";
-            divImagePatternPreview.style.background = "gray";
-            const taImagePattern = modMdc.mkMDCtextFieldTextarea(undefined, 5, 80);
-            const tafImagePattern = modMdc.mkMDCtextareaField("CSS3 pattern", taImagePattern);
-
-            const divPatternValid = mkElt("div", undefined, "-");
-            divPatternValid.style.display = "none";
-            divPatternValid.style.padding = "4px";
-            divPatternValid.style.fontSize = "1rem";
-            divPatternValid.style.lineHeight = "1.2rem";
-            // FIX-ME: I do not understand why 2.5rem is not enough???
-            divPatternValid.style.minHeight = "calc(2.8rem + 4px)";
-
-
-            const divImagePattern = mkElt("div", undefined, [
-                tafImagePattern,
-                divPatternValid,
-            ]);
-            function tellPatternValid(msg) {
-                console.log(msg);
-                divPatternValid.textContent = msg;
-            }
-            let patternValid;
-
-            // https://stackoverflow.com/questions/9014804/javascript-validate-css
-            function css_sanitize(css) {
-                const iframe = document.createElement("iframe");
-                iframe.style.display = "none";
-                iframe.style.width = "10px"; //make small in case display:none fails
-                iframe.style.height = "10px";
-                document.body.appendChild(iframe);
-                const style = iframe.contentDocument.createElement('style');
-                style.innerHTML = css;
-                iframe.contentDocument.head.appendChild(style);
-                const sheet = style.sheet,
-                    result = Array.from(style.sheet.cssRules).map(rule => rule.cssText || '').join('\n');
-                iframe.remove();
-                return result;
-            }
-
-            function setBgPatternPreview() {
-                // debugger;
-                // Add a trailing ; if missing (since it could be very confusing):
-                const taVal = taImagePattern.value.trim();
-                const css3bg = taVal.endsWith(";") ? taVal : taVal + ";";
-                const parts = css3bg.split(";").map(p => p.trim()).filter(p => p.length > 0);
-                const css = {};
-                patternValid = true;
-                const cssRaw = "#temp { " + css3bg + " }";
-                const cssClean = css_sanitize(cssRaw);
-                if (cssRaw.replaceAll(/\s+/g, " ") !== cssClean.replaceAll(/\s+/g, " ")) {
-                    patternValid = "Invalid CSS";
-                }
-                if (patternValid === true) {
-                    parts.forEach(p => {
-                        if (patternValid !== true) return;
-                        let [key, val] = p.split(":");
-                        if (val == undefined) {
-                            patternValid = "ERROR: missing css value";
-                        }
-                        if (patternValid !== true) return;
-                        key = key.trim();
-                        if (key !== "background" && !key.startsWith("background-")) {
-                            patternValid = `Property "${key}" not allowed`;
-                        }
-                        if (patternValid !== true) return;
-                        css[key] = val.trim().replace(/;$/, "");
-                    });
-                }
-                const divThisChoice = divImagePattern.closest(".bg-choice");
-                if (patternValid === true) {
-                    modMdc.setValidityMDC(taImagePattern, "");
-                    tellPatternValid("Valid");
-                    setBgChoiceEnabled(divThisChoice, true);
-                    setBgChoiceThis(divThisChoice);
-                    for (const key in css) {
-                        const val = css[key];
-                        divImagePatternPreview.style[key] = val;
-                    }
-                    divImagePattern.style.outline = "none";
-                } else {
-                    // console.log("Not valid css:", patternValid);
-                    modMdc.setValidityMDC(taImagePattern, patternValid);
-                    tellPatternValid("Not valid: " + patternValid);
-                    setBgChoiceEnabled(divThisChoice, false);
-                    setBgChoiceThis(bgChoiceNone);
-                    divImagePatternPreview.style.background = "gray";
-                    divImagePattern.style.outline = "2px dotted red";
-                }
-            }
-            const debounceSetBackgroundPreview = debounce(setBgPatternPreview, 1000);
-            taImagePattern.addEventListener("input", evt => {
-                debounceSetBackgroundPreview();
-            });
-            taImagePattern.addEventListener("change", evt => {
-                debounceSetBackgroundPreview();
-            });
-            const divPattern = mkElt("div", undefined, [
-                mkElt("div", undefined, [
-                    "Instead of a background image you can use a background ",
-                    mkElt("a", { href: "https://projects.verou.me/css3patterns/" }, "pattern"),
-                    ".",
-                ]),
-                divImagePattern,
-                divImagePatternPreview
-            ]);
 
 
             // FIX-ME: switch to radio buttons choices
@@ -736,92 +831,23 @@ export class CustomRenderer4jsMind {
             const divAdd = mkElt("div", undefined, [eltInfoAdd, tabbarBg, contentEltsBg]);
             */
 
-            function setBgChoiceThis(eltChoice) {
-                const inp = eltChoice.querySelector("input[name=bg-choice]");
-                if (inp.disabled) {
-                    const val = inp.value;
-                    throw Error(`Can't choose disabled ${val}`);
-                }
-                inp.checked = true;
-            }
-            function setBgChoiceEnabled(eltChoice, enabled) {
-                if (!eltChoice.classList.contains("bg-choice")) {
-                    console.log("Not bg-choice: ", eltChoice);
-                    throw Error("eltChoice is not bg-choice")
-                }
-                const inp = eltChoice.querySelector("input[name=bg-choice]");
-                inp.disabled = !enabled;
-            }
-            const mkBgChoice = (id, label, eltDetails) => {
-                const inpRadio = mkElt("input", { type: "radio", id, name: "bg-choice" });
-                inpRadio.disabled = true;
-                inpRadio.style.gridArea = "r";
-                inpRadio.style.marginRight = "10px";
-
-                /*
-                // FIX-ME: some chrome bug with grid-area here???
-                const mdcRadio = modMdc.mkMDCradioElt(inpRadio);
-                // mdcRadio.style.gridArea = "r";
-                // inpRadio.style.gridArea = "unset";
-                const wrpRadio = mkElt("div", undefined, mdcRadio);
-                wrpRadio.style.display = "inline-block";
-                wrpRadio.style.gridArea = "r";
-                */
-
-
-                const lbl = mkElt("label", { for: id }, label);
-                lbl.style.gridArea = "l";
-                // const container = mkElt("div", { class: "mdc-card bg-choice" }, [inpRadio, lbl, eltDetails]);
-                const container = mkElt("div", { class: "mdc-card bg-choice" }, [inpRadio, lbl]);
-                if (eltDetails) {
-                    container.appendChild(eltDetails);
-                    eltDetails.style.gridArea = "d";
-                }
-                // const container = mkElt("div", { class: "mdc-card bg-choice" }, [mdcRadio, lbl, eltDetails]);
-                // const container = mkElt("div", { class: "mdc-card bg-choice" }, [wrpRadio, lbl, eltDetails]);
-
-                return container;
-                // const lbl = mkElt("label", { for: id }, eltDetails);
-                // return mkElt("div", undefined, [inpRadio, lbl]);
-            }
-            const detLink = mkElt("details", undefined, [
-                mkElt("summary", undefined, "Link image details"),
-                divLink
-            ]);
-            const detClipboard = mkElt("details", undefined, [
-                mkElt("summary", undefined, "Clipboard image details"),
-                divClipboard
-            ]);
-            const detPattern = mkElt("details", undefined, [
-                mkElt("summary", undefined, "Pattern details"),
-                divPattern
-            ]);
-            const bgChoiceNone = mkBgChoice("bg-choice-none", "No special");
-            setBgChoiceEnabled(bgChoiceNone, true);
-            setBgChoiceThis(bgChoiceNone);
-            const divChoices = mkElt("div", { id: "bg-choices" }, [
-                bgChoiceNone,
-                mkBgChoice("bg-choice-link", "Link image", detLink),
-                mkBgChoice("bg-choice-clipboard", "Clipboard image", detClipboard),
-                mkBgChoice("bg-choice-pattern", "Pattern", detPattern),
-            ]);
-
-            const divCurrent = mkElt("div", undefined);
-            const body = mkElt("div", {id: "dlg-body-node-background"}, [
+            const body = mkElt("div", { id: "dlg-body-node-background" }, [
                 mkElt("h2", undefined, "Node background"),
                 mkElt("div", { style: "color:red;" }, "Not ready!"),
-                divCurrent,
+                divCurrentBg,
                 // divAdd
                 divChoices
             ]);
             const save = await modMdc.mkMDCdialogConfirm(body, "save", "cancel");
         }
-        const divCurrentImage = mkElt("div");
+        // const divCurrentImage = mkElt("div");
+        /*
         const divBg = mkElt("div", undefined, [
             mkElt("div", undefined, "Node background"),
             divCurrentImage,
             btnChangeBg,
         ]);
+        */
         async function addBgFromClipboard(blob) {
             const modImages = await import("images");
             const clipboardAccessOk = await modImages.isClipboardPermissionStateOk();
@@ -871,12 +897,28 @@ export class CustomRenderer4jsMind {
         function removeBg(blob) {
             btnChangeBg.style.display = null;
         }
+
+        // mkBgChoice = mkBgChoice(
+        const mkTopicChoice = (id, label, divChoice) => {
+            const inpRadio = mkElt("input", { type: "radio", id, name: "topic-choice" });
+            const mdcRadio = modMdc.mkMDCradioElt(inpRadio);
+            const lbl = mkElt("label", undefined, [mdcRadio, label]);
+            return mkElt("div", { class: "mdc-card topic-choice" }, [lbl, divChoice]);
+        }
+        const divTopicSimple = mkTopicChoice("topic-choice-simple",
+            "Default node type",
+            mkElt("div", undefined, [tafTopic, tfLink]));
+        /*
+        const NOdivTopicCustom = mkTopicChoice("topic-choice-custom",
+            "Custom link node type",
+            mkElt("div", undefined, [tafTopic, tfLink]));
         const divNormalContent = mkElt("div", { class: "normal-content" }, [
             "edit jmnode",
-            tafTopic,
-            tfLink,
-            divBg,
+            // tafTopic, tfLink,
+            // divTopicSimple,
+            // divBg,
         ]);
+        */
 
         let providerName = "NOT CUSTOM PROVIDED";
         const divCustomContent = mkElt("div", { class: "custom-content" }, [
@@ -913,12 +955,31 @@ export class CustomRenderer4jsMind {
             // providerName = objCopiedCustom.provider || "fc4i";
             providerName = objCopiedCustom.provider;
             divCustomContent.appendChild(btnCustomLink);
+        } else {
+            const btnConvert2Custom = modMdc.mkMDCbutton("Link to custom", "raised");
+            divCustomContent.appendChild(btnConvert2Custom);
+            btnConvert2Custom.addEventListener("click", async evt => {
+                // async function pasteCustom2node() {
+                // const selected_node = getSelected_node();
+                // if (!selected_node) return;
+                // const eltJmnode = jsMind.my_get_DOM_element_from_node(selected_node);
+                const modMMhelpers = await import("mindmap-helpers");
+                const objCustom = await modMMhelpers.pasteCustomClipDialog();
+                console.log({ objCustom });
+                if (!objCustom) return;
+                // convertPlainJmnode2ProviderLink(eltJmnode, jmDisplayed, objCustom);
+                // }
+            });
+
         }
 
+        const divTopicCustom = mkTopicChoice("topic-choice-custom", "Custom linked node", divCustomContent);
 
         const divContent = mkElt("div", { id: "jsmind-ednode-content" }, [
-            divNormalContent,
-            divCustomContent
+            // divNormalContent,
+            divTopicSimple,
+            // divCustomContent
+            divTopicCustom
         ]);
 
         if (strCopiedCustom) {
@@ -1088,8 +1149,8 @@ export class CustomRenderer4jsMind {
 
         // console.log("setting up tabs bar", eltCopied);
         // mkMdcTabBarSimple(tabsRecs, contentElts, moreOnActivate) 
-        const tabRecs = ["Content", "Shapes", "Border", "Shadow", "Colors", "Themes"];
-        const contentElts = mkElt("div", undefined, [divContent, divShapes, divBorder, divShadow, divColors, divColorThemes]);
+        const tabRecs = ["Content", "Shapes", "Border", "Shadow", "Background", "Themes"];
+        const contentElts = mkElt("div", undefined, [divContent, divShapes, divBorder, divShadow, divBackground, divColorThemes]);
         if (tabRecs.length != contentElts.childElementCount) throw Error("Tab bar setup number mismatch");
         const onActivateMore = (idx) => {
             // console.log("onActivateMore", idx);
