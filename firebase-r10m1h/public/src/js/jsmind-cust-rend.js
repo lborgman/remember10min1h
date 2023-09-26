@@ -609,9 +609,56 @@ export class CustomRenderer4jsMind {
 
         const inpImageUrl = modMdc.mkMDCtextFieldInput(undefined, "url");
         const tfImageUrl = modMdc.mkMDCtextField("Image link", inpImageUrl);
+
+        const divImgPreview = mkElt("div");
+        divImgPreview.style.height = 100;
+        divImgPreview.style.width = 100;
+        divImgPreview.style.backgroundColor = "lightgray";
+        divImgPreview.style.backgroundSize = "contain";
+        divImgPreview.style.backgroundRepeat = "no-repeat";
+        divImgPreview.style.backgroundPosition = "center";
+
+        const imgPreview = new Image();
+        imgPreview.onload = () => {
+            const src = imgPreview.src;
+            console.log("onload", src);
+            divImgPreview.style.backgroundImage = `url(${src})`;
+            divImgPreview.style.backgroundColor = "lightgray";
+        };
+        imgPreview.onerror = () => {
+            const src = imgPreview.src;
+            console.log("onerror", src);
+            divImgPreview.style.backgroundColor = "red";
+            divImgPreview.style.backgroundImage = "none";
+        };
+        inpImageUrl.addEventListener("input", evt => {
+            // FIX-ME: debounce
+            const targ = evt.target;
+            const maybeUrl = targ.value.trim();
+            console.log({ maybeUrl });
+            if (maybeUrl == "") {
+                modMdc.setValidityMDC(targ, "");
+                divImgPreview.style.backgroundColor = "lightgray";
+                divImgPreview.style.backgroundImage = "none";
+                return;
+            }
+            if (isValidUrl(maybeUrl)) {
+                modMdc.setValidityMDC(targ, "");
+                imgPreview.src = maybeUrl;
+            } else {
+                modMdc.setValidityMDC(targ, "Not a link");
+                imgPreview.src = "";
+                divImgPreview.style.backgroundColor = "yellow";
+                divImgPreview.style.backgroundImage = "none";
+            }
+        });
         const divLink = mkElt("div", undefined, [
-            "An image on the web. ",
-            tfImageUrl
+            mkElt("div", undefined,
+                `Link to image on the web.
+            (This most often does not work because using the image is prevented.)`
+            ),
+            tfImageUrl,
+            mkElt("div", undefined, divImgPreview)
         ]);
 
         const btnClipboard = modMdc.mkMDCbutton("Clipboard", "raised");
