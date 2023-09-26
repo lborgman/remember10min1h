@@ -296,8 +296,9 @@ console.log("?????????? adding error event listener!"); // Just because things b
 
 // Put external URL:s here since we need them for error reporting.
 // const theGitHubIssuesURL = "https://github.com/lborgman/easy-cap-ed/issues";
-const theGitHubIssuesURL = undefined; // "";
+// const theGitHubIssuesURL = undefined; // "";
 // const theGitHubIssuesURL = "dummy"; // "";
+const theGitHubIssuesURL = "https://github.com/lborgman/remember10min1h/issues";
 
 // const theFacebookGroupURL = undefined;
 const theFacebookGroupURL = "https://www.facebook.com/groups/flashcards4internet";
@@ -1275,7 +1276,7 @@ function throttleTO(fn, msDelay) {
         }
         timeoutId = setTimeout(() => {
             fn(...args);
-            console.log("throttleTO(fn, delay)");
+            // console.log("throttleTO(fn, delay)");
             timeoutId = null;
         }, msDelay);
     }
@@ -1322,3 +1323,41 @@ function throttle(func, waitMS = 200) {
         }
     }
 }
+
+
+
+////////// URLs
+// https://www.freecodecamp.org/news/how-to-validate-urls-in-javascript/
+// isValidURL
+function isValidUrl(strUrl, protocol) {
+    protocol = protocol || "https:";
+    try {
+        // new URL() only checks for well formatted so do some more checks first
+        switch(protocol) {
+            case "https:":
+                if (!strUrl.match(new RegExp("^https://[^/]"))) return false;
+                if (strUrl.search(" ") != -1) return false; 
+                break;
+            default:
+                throw Error("Not implemented");
+        }
+        const newUrl = new URL(strUrl);
+        return newUrl.protocol === protocol;
+    } catch (err) {
+        return false;
+    }
+}
+/*
+This doesn't work because of CORS.
+// https://stackoverflow.com/questions/42758604/check-if-online-resource-is-reachable-with-javascript-not-requiring-the-the-sam
+async function isReachableUrl(url) {
+    let reachable = false;
+    try {
+        const resp = await fetch(url, { method: "HEAD" });
+        reachable = resp.ok;
+    }
+    finally {
+        return reachable
+    }
+}
+*/

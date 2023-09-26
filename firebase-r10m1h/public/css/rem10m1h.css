@@ -1388,11 +1388,22 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
 
 #jsmind-ednode-content div.topic-choice {
     padding: 10px;
-    background: gray;
+    background: white;
+}
+
+#jsmind-ednode-content div.topic-choice>div {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 #jsmind-ednode-content div.topic-choice:has(input:checked) {
-    background: rgba(0, 255, 0, 0.15);
+    /* background: rgba(0, 255, 0, 0.15); MDC radio button not visible */
+    background-color: yellowgreen;
+}
+
+#jsmind-ednode-content div.topic-choice:has(input[disabled]) {
+    background: lightgray;
 }
 
 #dlg-body-node-background div {

@@ -793,15 +793,47 @@ export class CustomRenderer4jsMind {
         const tafTopic = modMdc.mkMDCtextareaField("Topic", taTopic, initialTempData.topic);
         modMdc.mkMDCtextareaGrow(tafTopic);
 
+        /*
+            iframe preview can not be used because of frame-ancestors CSP
+            const iframePreview = mkElt("iframe");
+            const divIframe = mkElt("div", undefined, iframePreview);
+        */
+
+        const aLinkPreview = mkElt("a");
+        const divLinkPreview = mkElt("div", undefined, ["Link: ", aLinkPreview]);
 
         const inpLink = modMdc.mkMDCtextFieldInput(undefined, "url");
-        inpLink.addEventListener("input", evt => {
-            console.log("inpLink input");
-            currentShapeEtc.nodeLink = inpLink.value;
-        });
         const strLink = initialShapeEtc.nodeLink;
-        // inpLink.value = strLink;
         const tfLink = modMdc.mkMDCtextField("Topic link", inpLink, strLink);
+
+        const onInpLink = () => {
+            console.log("inpLink input");
+            const maybeUrl = inpLink.value.trim();
+            if (maybeUrl == "") {
+                modMdc.setValidityMDC(inpLink, "");
+                aLinkPreview.href = "";
+                aLinkPreview.textContent = "";
+                return;
+            }
+            if (isValidUrl(maybeUrl)) {
+                console.log("inpLink", maybeUrl);
+                currentShapeEtc.nodeLink = maybeUrl;
+                aLinkPreview.href = maybeUrl;
+                aLinkPreview.textContent = maybeUrl;
+                modMdc.setValidityMDC(inpLink, "");
+            } else {
+                aLinkPreview.href = "";
+                aLinkPreview.textContent = "";
+                modMdc.setValidityMDC(inpLink, "Not a link");
+            }
+        }
+        const debounceOnInpLink = debounce(onInpLink, 1000);
+        inpLink.addEventListener("input", debounceOnInpLink);
+        setTimeout(() => {
+            // modMdc.setMdcInputValid(inpLink, true);
+            onInpLink();
+        }, 100);
+
 
         let blobBg;
         const btnChangeBg = modMdc.mkMDCbutton("Change", "raised");
@@ -907,7 +939,7 @@ export class CustomRenderer4jsMind {
         }
         const divTopicSimple = mkTopicChoice("topic-choice-simple",
             "Default node type",
-            mkElt("div", undefined, [tafTopic, tfLink]));
+            mkElt("div", undefined, [tafTopic, tfLink, divLinkPreview]));
         /*
         const NOdivTopicCustom = mkTopicChoice("topic-choice-custom",
             "Custom link node type",
