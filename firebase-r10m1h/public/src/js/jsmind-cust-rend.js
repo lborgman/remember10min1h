@@ -627,9 +627,12 @@ export class CustomRenderer4jsMind {
         };
         imgPreview.onerror = () => {
             const src = imgPreview.src;
-            console.log("onerror", src);
+            const wasValid = inpImageUrl.checkValidity();
+            console.log("onerror", wasValid, src);
+            if (!wasValid) return;
             divImgPreview.style.backgroundColor = "red";
             divImgPreview.style.backgroundImage = "none";
+            modMdc.setValidityMDC(inpImageUrl, "Not an image");
         };
         inpImageUrl.addEventListener("input", evt => {
             // FIX-ME: debounce
@@ -646,10 +649,12 @@ export class CustomRenderer4jsMind {
                 modMdc.setValidityMDC(targ, "");
                 imgPreview.src = maybeUrl;
             } else {
-                modMdc.setValidityMDC(targ, "Not a link");
-                imgPreview.src = "";
                 divImgPreview.style.backgroundColor = "yellow";
                 divImgPreview.style.backgroundImage = "none";
+                const wasValid = inpImageUrl.checkValidity();
+                modMdc.setValidityMDC(targ, "Not a link");
+                if (!wasValid) return;
+                imgPreview.src = "";
             }
         });
         const divLink = mkElt("div", undefined, [
