@@ -1348,6 +1348,10 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
     NObackground: orange;
 }
 
+div.mdc-dialog__surface:has(#jsmind-ednode) {
+    min-height: calc(100% - 32px);
+}
+
 #jsmind-ednode>* {
     min-height: 0;
 }
@@ -1370,6 +1374,7 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
 
 #jsmind-ednode-parts div.tab-elts {
     overflow-y: auto;
+    scroll-behavior: smooth;
 }
 
 #jsmind-ednode div.normal-content {

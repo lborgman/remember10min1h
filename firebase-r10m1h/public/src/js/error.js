@@ -1329,14 +1329,27 @@ function throttle(func, waitMS = 200) {
 ////////// URLs
 // https://www.freecodecamp.org/news/how-to-validate-urls-in-javascript/
 // isValidURL
-function isValidUrl(strUrl, protocol) {
+function getUrllNotValidMsg(id) {
+switch(id) {
+    case "NO-HTTPS": return "Link must begin with 'https://'";
+    case "NO-DOMAIN": return "Link must have domain";
+    case "CONTAINS-SPACE": return "Link must not contain spaces";
+    case "UNKNOWN-TLD": return "Unknown top level domain";
+    default:
+        throw Error(`Unknown url not valid id: ${id}`);
+}
+}
+async function isValidUrl(strUrl, protocol) {
     protocol = protocol || "https:";
     try {
         // new URL() only checks for well formatted so do some more checks first
-        switch(protocol) {
+        switch (protocol) {
             case "https:":
-                if (!strUrl.match(new RegExp("^https://[^/]"))) return false;
-                if (strUrl.search(" ") != -1) return false; 
+                if (!strUrl.match(new RegExp("^https://[^/]"))) return "NO-HTTPS";
+                if (!strUrl.match(new RegExp("^https://[^/]{0,}[^.][.][^/.]+($|/)"))) return "NO-DOMAIN";
+                if (strUrl.search(" ") != -1) return "CONTAINS-SPACE";
+                const re = await getReTLD();
+                if (!re.test(strUrl)) return "UNKNOWN-TLD";
                 break;
             default:
                 throw Error("Not implemented");
@@ -1361,3 +1374,23 @@ async function isReachableUrl(url) {
     }
 }
 */
+
+let reTLD;
+async function getReTLD() {
+    if (reTLD == undefined) {
+        const urlTLDlist = "https://publicsuffix.org/list/public_suffix_list.dat";
+        const resp = await fetch(urlTLDlist);
+        const text = await resp.text();
+        const lines = text
+            .split("\n")
+            .map(t => t.trim())
+            .filter(t => !t.startsWith("//"))
+            .filter(t => t.length > 0)
+            .filter(t => t.indexOf(".") == -1)
+            ;
+        // console.log(lines)
+        // lines.length = 4;
+        reTLD = new RegExp("^https://[^/]{0,}[^.][.](" + lines.join("|") + ")" + "($|/)");
+    }
+    return reTLD;
+}

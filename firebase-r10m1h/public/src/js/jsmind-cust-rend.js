@@ -625,16 +625,17 @@ export class CustomRenderer4jsMind {
             divImgPreview.style.backgroundImage = `url(${src})`;
             divImgPreview.style.backgroundColor = "lightgray";
         };
-        imgPreview.onerror = () => {
+        imgPreview.onerror = (evt) => {
             const src = imgPreview.src;
             const wasValid = inpImageUrl.checkValidity();
-            console.log("onerror", wasValid, src);
+            // There is no info in evt.
+            console.log("onerror", wasValid, src, evt);
             if (!wasValid) return;
             divImgPreview.style.backgroundColor = "red";
             divImgPreview.style.backgroundImage = "none";
             modMdc.setValidityMDC(inpImageUrl, "Not an image");
         };
-        inpImageUrl.addEventListener("input", evt => {
+        inpImageUrl.addEventListener("input", async evt => {
             // FIX-ME: debounce
             const targ = evt.target;
             const maybeUrl = targ.value.trim();
@@ -645,23 +646,31 @@ export class CustomRenderer4jsMind {
                 divImgPreview.style.backgroundImage = "none";
                 return;
             }
-            if (isValidUrl(maybeUrl)) {
+            const isValid = await isValidUrl(maybeUrl);
+            if (true == isValid) {
                 modMdc.setValidityMDC(targ, "");
                 imgPreview.src = maybeUrl;
             } else {
                 divImgPreview.style.backgroundColor = "yellow";
                 divImgPreview.style.backgroundImage = "none";
                 const wasValid = inpImageUrl.checkValidity();
-                modMdc.setValidityMDC(targ, "Not a link");
+                modMdc.setValidityMDC(targ, `Not a link (${getUrllNotValidMsg(isValid)})`);
                 if (!wasValid) return;
                 imgPreview.src = "";
             }
         });
+        const btnNote = modMdc.mkMDCiconButton("info");
+        btnNote.style.verticalAlign = "top";
+        btnNote.style.marginTop = "-10px";
+        btnNote.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            modMdc.mkMDCdialogAlert(
+                `This might not work because using the image is prevented.
+                If however you can see the image below it does work.`,
+                "Close"
+            );
+        }));
         const divLink = mkElt("div", undefined, [
-            mkElt("div", undefined,
-                `Link to image on the web.
-            (This most often does not work because using the image is prevented.)`
-            ),
+            mkElt("div", undefined, [`Link to image on the web. `, btnNote,]),
             tfImageUrl,
             mkElt("div", undefined, divImgPreview)
         ]);
@@ -793,6 +802,14 @@ export class CustomRenderer4jsMind {
             mkElt("summary", undefined, "Edit link"),
             divLink
         ]);
+        detLink.addEventListener("toggle", evt => {
+            setTimeout(() => {
+                console.log("detLink.open", detLink.open);
+                if (detLink.open) {
+                    inpImageUrl.focus();
+                }
+            }, 100);
+        });
         const detClipboard = mkElt("details", undefined, [
             mkElt("summary", undefined, "Add clipboard image"),
             divClipboard
@@ -801,6 +818,13 @@ export class CustomRenderer4jsMind {
             mkElt("summary", undefined, "Set up pattern"),
             divPattern
         ]);
+        detPattern.addEventListener("toggle", evt => {
+            setTimeout(() => {
+                if (detPattern.open) {
+                    taImagePattern.focus();
+                }
+            }, 100);
+        });
         const divBgColor = mkElt("div", undefined, [
             mkElt("label", undefined, ["Background color: ", inpBgColor]),
         ]);
