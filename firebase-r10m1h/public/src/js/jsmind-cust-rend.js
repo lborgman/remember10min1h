@@ -606,6 +606,8 @@ export class CustomRenderer4jsMind {
 
         const bgChoiceNone = mkBgChoice("bg-choice-none", "No special");
         setBgChoiceEnabled(bgChoiceNone, true);
+        const radChoiceNone = bgChoiceNone.querySelector("#bg-choice-none");
+        // radChoiceLink = divChoices.querySelector("#bg-choice-link");
 
         const inpImageUrl = modMdc.mkMDCtextFieldInput(undefined, "url");
         const tfImageUrl = modMdc.mkMDCtextField("Image link", inpImageUrl);
@@ -618,12 +620,15 @@ export class CustomRenderer4jsMind {
         divImgPreview.style.backgroundRepeat = "no-repeat";
         divImgPreview.style.backgroundPosition = "center";
 
+        let radChoiceLink;
+
         const imgPreview = new Image();
         imgPreview.onload = () => {
             const src = imgPreview.src;
             console.log("onload", src);
             divImgPreview.style.backgroundImage = `url(${src})`;
             divImgPreview.style.backgroundColor = "lightgray";
+            radChoiceLink.disabled = false;
         };
         imgPreview.onerror = (evt) => {
             const src = imgPreview.src;
@@ -634,20 +639,30 @@ export class CustomRenderer4jsMind {
             divImgPreview.style.backgroundColor = "red";
             divImgPreview.style.backgroundImage = "none";
             modMdc.setValidityMDC(inpImageUrl, "Not an image");
+            radChoiceLink.disabled = true;
+            radChoiceNone.checked = true;
         };
         inpImageUrl.addEventListener("input", async evt => {
             // FIX-ME: debounce
+            function badImgUrl() {
+                radChoiceLink.disabled = true;
+                radChoiceNone.checked = true;
+            }
+            radChoiceLink.disabled = true;
             const targ = evt.target;
             const maybeUrl = targ.value.trim();
             console.log({ maybeUrl });
             if (maybeUrl == "") {
                 modMdc.setValidityMDC(targ, "");
+                badImgUrl();
                 divImgPreview.style.backgroundColor = "lightgray";
                 divImgPreview.style.backgroundImage = "none";
                 return;
             }
             const isValid = await isValidUrl(maybeUrl);
             if (true == isValid) {
+                radChoiceLink.checked = true;
+                radChoiceLink.disabled = false;
                 modMdc.setValidityMDC(targ, "");
                 imgPreview.src = maybeUrl;
             } else {
@@ -655,6 +670,7 @@ export class CustomRenderer4jsMind {
                 divImgPreview.style.backgroundImage = "none";
                 const wasValid = inpImageUrl.checkValidity();
                 modMdc.setValidityMDC(targ, `Not a link (${getUrllNotValidMsg(isValid)})`);
+                badImgUrl();
                 if (!wasValid) return;
                 imgPreview.src = "";
             }
@@ -687,12 +703,12 @@ export class CustomRenderer4jsMind {
         ]);
 
 
-        const divImagePatternPreview = mkElt("div");
-        divImagePatternPreview.style.height = 100;
-        divImagePatternPreview.style.border = "2px black inset";
-        divImagePatternPreview.style.background = "gray";
-        const taImagePattern = modMdc.mkMDCtextFieldTextarea(undefined, 5, 80);
-        const tafImagePattern = modMdc.mkMDCtextareaField("CSS3 pattern", taImagePattern);
+        const divImgPatternPreview = mkElt("div");
+        divImgPatternPreview.style.height = 100;
+        divImgPatternPreview.style.border = "2px black inset";
+        divImgPatternPreview.style.background = "gray";
+        const taImgPattern = modMdc.mkMDCtextFieldTextarea(undefined, 5, 80);
+        const tafImgPattern = modMdc.mkMDCtextareaField("CSS3 pattern", taImgPattern);
 
         const divPatternValid = mkElt("div", undefined, "-");
         divPatternValid.style.display = "none";
@@ -704,7 +720,7 @@ export class CustomRenderer4jsMind {
 
 
         const divImagePattern = mkElt("div", undefined, [
-            tafImagePattern,
+            tafImgPattern,
             divPatternValid,
         ]);
         function tellPatternValid(msg) {
@@ -732,7 +748,7 @@ export class CustomRenderer4jsMind {
         function setBgPatternPreview() {
             // debugger;
             // Add a trailing ; if missing (since it could be very confusing):
-            const taVal = taImagePattern.value.trim();
+            const taVal = taImgPattern.value.trim();
             const css3bg = taVal.endsWith(";") ? taVal : taVal + ";";
             const parts = css3bg.split(";").map(p => p.trim()).filter(p => p.length > 0);
             const css = {};
@@ -760,30 +776,30 @@ export class CustomRenderer4jsMind {
             }
             const divThisChoice = divImagePattern.closest(".bg-choice");
             if (patternValid === true) {
-                modMdc.setValidityMDC(taImagePattern, "");
+                modMdc.setValidityMDC(taImgPattern, "");
                 tellPatternValid("Valid");
                 setBgChoiceEnabled(divThisChoice, true);
                 setBgChoiceThis(divThisChoice);
                 for (const key in css) {
                     const val = css[key];
-                    divImagePatternPreview.style[key] = val;
+                    divImgPatternPreview.style[key] = val;
                 }
                 divImagePattern.style.outline = "none";
             } else {
                 // console.log("Not valid css:", patternValid);
-                modMdc.setValidityMDC(taImagePattern, patternValid);
+                modMdc.setValidityMDC(taImgPattern, patternValid);
                 tellPatternValid("Not valid: " + patternValid);
                 setBgChoiceEnabled(divThisChoice, false);
                 setBgChoiceThis(bgChoiceNone);
-                divImagePatternPreview.style.background = "gray";
+                divImgPatternPreview.style.background = "gray";
                 divImagePattern.style.outline = "2px dotted red";
             }
         }
         const debounceSetBackgroundPreview = debounce(setBgPatternPreview, 1000);
-        taImagePattern.addEventListener("input", evt => {
+        taImgPattern.addEventListener("input", evt => {
             debounceSetBackgroundPreview();
         });
-        taImagePattern.addEventListener("change", evt => {
+        taImgPattern.addEventListener("change", evt => {
             debounceSetBackgroundPreview();
         });
         const divPattern = mkElt("div", undefined, [
@@ -793,7 +809,7 @@ export class CustomRenderer4jsMind {
                 ".",
             ]),
             divImagePattern,
-            divImagePatternPreview
+            divImgPatternPreview
         ]);
 
 
@@ -821,7 +837,7 @@ export class CustomRenderer4jsMind {
         detPattern.addEventListener("toggle", evt => {
             setTimeout(() => {
                 if (detPattern.open) {
-                    taImagePattern.focus();
+                    taImgPattern.focus();
                 }
             }, 100);
         });
@@ -844,6 +860,8 @@ export class CustomRenderer4jsMind {
             mkBgChoice("bg-choice-pattern", "Pattern", detPattern),
             bgChoiceColor
         ]);
+        radChoiceLink = divChoices.querySelector("#bg-choice-link");
+        console.log({ radChoiceLink });
         setBgChoiceThis(bgChoiceNone);
 
         const divCurrentBg = mkElt("div", undefined);

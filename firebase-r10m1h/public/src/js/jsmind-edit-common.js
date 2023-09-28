@@ -326,6 +326,18 @@ export function applyShapeEtc(shapeEtc, eltJmnode) {
         // const s = shadow.spread;
         // eltJmnode.style.filter = `drop-shadow(${x}px ${y}px ${b}px ${s}px ${c})`;
     }
+    const bg = shapeEtc.backgroundCSS;
+    if (bg) {
+        const style = eltShape.style;
+        style.background = "none";
+        // style.backgroundSize = "cover";
+        // style.backgroundRepeat = "no-repeat";
+        // style.backgroundPosition = "center";
+        bg.split(";").forEach(cs => {
+            const [key, val] = cs.split(":");
+            style[key.trim()] = val.trim();
+        });
+    }
 }
 
 
