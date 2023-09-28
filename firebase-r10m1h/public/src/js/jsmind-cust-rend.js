@@ -639,22 +639,21 @@ export class CustomRenderer4jsMind {
             divImgPreview.style.backgroundColor = "red";
             divImgPreview.style.backgroundImage = "none";
             modMdc.setValidityMDC(inpImageUrl, "Not an image");
+            badImgLinkUrl();
+        };
+        function badImgLinkUrl() {
             radChoiceLink.disabled = true;
             radChoiceNone.checked = true;
-        };
+        }
         inpImageUrl.addEventListener("input", async evt => {
             // FIX-ME: debounce
-            function badImgUrl() {
-                radChoiceLink.disabled = true;
-                radChoiceNone.checked = true;
-            }
             radChoiceLink.disabled = true;
             const targ = evt.target;
             const maybeUrl = targ.value.trim();
             console.log({ maybeUrl });
             if (maybeUrl == "") {
                 modMdc.setValidityMDC(targ, "");
-                badImgUrl();
+                badImgLinkUrl();
                 divImgPreview.style.backgroundColor = "lightgray";
                 divImgPreview.style.backgroundImage = "none";
                 return;
@@ -670,7 +669,7 @@ export class CustomRenderer4jsMind {
                 divImgPreview.style.backgroundImage = "none";
                 const wasValid = inpImageUrl.checkValidity();
                 modMdc.setValidityMDC(targ, `Not a link (${getUrllNotValidMsg(isValid)})`);
-                badImgUrl();
+                badImgLinkUrl();
                 if (!wasValid) return;
                 imgPreview.src = "";
             }
