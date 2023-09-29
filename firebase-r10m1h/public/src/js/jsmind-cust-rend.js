@@ -852,17 +852,66 @@ export class CustomRenderer4jsMind {
         const bgChoiceColor = mkBgChoice("bg-choice-color", "Color", detBgColor);
         setBgChoiceEnabled(bgChoiceColor, true);
 
-        const divChoices = mkElt("div", { id: "bg-choices" }, [
+        const divBgChoices = mkElt("div", { id: "bg-choices" }, [
             bgChoiceNone,
             mkBgChoice("bg-choice-link", "Link image", detLink),
             mkBgChoice("bg-choice-clipboard", "Clipboard image", detClipboard),
             mkBgChoice("bg-choice-pattern", "Pattern", detPattern),
             bgChoiceColor
         ]);
-        radChoiceLink = divChoices.querySelector("#bg-choice-link");
+        radChoiceLink = divBgChoices.querySelector("#bg-choice-link");
         console.log({ radChoiceLink });
         setBgChoiceThis(bgChoiceNone);
 
+        function getBgCssValue() {
+            const elt = divBgChoices.querySelector("input[name=bg-choice]:checked")
+            const id = elt.id;
+            console.log("getBgCssValue", elt, id);
+            switch (id) {
+                case "bg-choice-none":
+                    return {};
+                case "bg-choice-link":
+                    const valLink = inpImageUrl.value.trim();
+                    return {
+                        "background-image": `url(${valLink})`
+                    };
+                default:
+                    throw Error(`Unknown bg-choice: ${id}`);
+            }
+        }
+
+        function applyBgCssValue(jmnode, bgCssValue) {
+            const tn = jmnode.tagName ;
+            if (tn != "JMNODE") throw Error(`Not a <jmnode>: ${tn}`);
+            const eltBg = jmnode.querySelector(".jmnode-bg");
+            const bgStyle = eltBg.style;
+            // jmstyle.background = "none";
+            for (const prop in bgStyle) { 
+                if (prop.startsWith("background")) {
+                    const val = bgStyle[prop];
+                    if ("string" == typeof val) {
+                        // "backgroundColor".replaceAll(/([A-Z])/g, "-$1").toLowerCase()
+                        const cssName = prop.replaceAll(/([A-Z])/g, "-$1").toLowerCase()
+                        bgStyle.removeProperty(cssName);
+                    }
+                }
+            }
+            for (const prop in bgCssValue) {
+                if (!prop.startsWith("background")) throw Error(`Bg value not background: ${val}`);
+                const val = bgCssValue[prop];
+                console.log("applyBgCssValue", prop, val);
+                bgStyle[prop] = val;
+            }
+        }
+        function tempApplyBg() {
+            const cssVal = getBgCssValue();
+            // debugger;
+            // if (!cssVal) return; // FIX-ME:
+            applyBgCssValue(eltCopied, cssVal);
+        }
+        getBgCssValue();
+        tempApplyBg();
+        debugger;
         const divCurrentBg = mkElt("div", undefined);
 
         const divBackground = mkElt("div", { style: styleColors }, [
@@ -871,7 +920,7 @@ export class CustomRenderer4jsMind {
             pContrast,
             divCurrentBg,
             // divAdd
-            divChoices
+            divBgChoices
         ]);
 
 
@@ -961,7 +1010,7 @@ export class CustomRenderer4jsMind {
                 mkElt("div", { style: "color:red;" }, "Not ready!"),
                 divCurrentBg,
                 // divAdd
-                divChoices
+                divBgChoices
             ]);
             const save = await modMdc.mkMDCdialogConfirm(body, "save", "cancel");
         }
