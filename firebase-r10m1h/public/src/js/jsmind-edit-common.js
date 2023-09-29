@@ -192,24 +192,27 @@ async function teardownPointHandle() {
 function checkPointHandleDistance(evt) {
     if (posPointHandle.startX == undefined) {
         // console.log("checkPointHandleDistance", evt);
-        posPointHandle.startX = evt.clientX;
-        posPointHandle.startY = evt.clientY;
 
         const target = evt.target.closest("jmnode");
-        const bcrT = target.getBoundingClientRect();
-        posPointHandle.dTop = evt.clientY - bcrT.top;
-        posPointHandle.dBottom = bcrT.bottom - evt.clientY;
-        posPointHandle.dLeft = evt.clientX - bcrT.left;
-        posPointHandle.dRight = bcrT.right - evt.clientX;
+        const bcrNode = target.getBoundingClientRect();
+        posPointHandle.dTop = evt.clientY - bcrNode.top;
+        posPointHandle.dBottom = bcrNode.bottom - evt.clientY;
+        posPointHandle.dLeft = evt.clientX - bcrNode.left;
+        posPointHandle.dRight = bcrNode.right - evt.clientX;
+        let insideNode = false;
         ["dTop", "dBottom", "dLeft", "dRight"].forEach(dT => {
             const d = posPointHandle[dT];
-            if (d <= 0) throw Error(`${dT} < 0, =${d}`);
+            // if (d <= 0) throw Error(`${dT} < 0, =${d}`);
+            if (d <= 0) insideNode = true;
         });
+        if (insideNode) return;
 
         pointPointHandle.style.left = evt.clientX - sizePointHandle / 2;
         pointPointHandle.style.top = evt.clientY - sizePointHandle / 2;
         jmnodesPointHandle.appendChild(pointPointHandle)
         console.log("checkPointHandleDistance start", { posPointHandle });
+        posPointHandle.startX = evt.clientX;
+        posPointHandle.startY = evt.clientY;
     }
     const diffX = posPointHandle.startX - evt.clientX;
     const diffY = posPointHandle.startY - evt.clientY;
