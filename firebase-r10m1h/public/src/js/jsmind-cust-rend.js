@@ -745,25 +745,71 @@ export class CustomRenderer4jsMind {
         }
 
         function setBgPatternPreview() {
+            function cssTxt2keyVal(cssTxt) {
+                let taVal = cssTxt.trim();
+                taVal = taVal.replaceAll(/\s+/g, " ");
+                taVal = taVal.replaceAll(/\s+/g, " ");
+                taVal = taVal.replaceAll(new RegExp("/\\*.*?\\*/", "g"), " ");
+                taVal = taVal.replaceAll(/\s+/g, " ").trim();
+                if (!taVal.endsWith(";")) taVal += ";";
+                console.log({ taVal });
+                function isValidCss(css3bgIn) {
+                    const cssRaw = "#temp { " + css3bgIn + " }";
+                    const cssClean = css_sanitize(cssRaw);
+                    const cssRaw2 = cssRaw.replaceAll(/\s+/g, " ");
+                    const cssClean2 = cssClean.replaceAll(/\s+/g, " ");
+                    return cssRaw2 == cssClean2;
+                }
+                if (!isValidCss(taVal)) return "Invalid CSS";
+                const parts = taVal.split(";").map(p => p.trim()).filter(p => p.length > 0);
+                const cssKV = {};
+                for (let i = 0, len = parts.length; i < len; i++) {
+                    const p = parts[i];
+                    let [key, val] = p.split(":");
+                    if (val == undefined) return "ERROR: missing css value";
+                    cssKV[key] = val;
+                }
+                return cssKV;
+            }
+            const cssKeyVal = cssTxt2keyVal(taImgPattern.value);
+            console.log({ cssKeyVal });
+            if (typeof cssKeyVal == "string") {
+                patternValid = cssKeyVal;
+            } else patternValid = true;
+
+            if (patternValid === true) {
+                for (const prop in cssKeyVal) {
+                    if (prop !== "background" && !prop.startsWith("background-")) {
+                        patternValid = `Property "${prop}" not allowed`;
+                        break;
+                    }
+                }
+            }
+
+            /*
             // debugger;
             // Add a trailing ; if missing (since it could be very confusing):
-            const taVal = taImgPattern.value.trim();
-            const css3bg = taVal.endsWith(";") ? taVal : taVal + ";";
-            const parts = css3bg.split(";").map(p => p.trim()).filter(p => p.length > 0);
-            const css = {};
+            let taVal = taImgPattern.value.trim();
+            taVal = taVal.replaceAll(/\s+/g, " ");
+            // taVal = taVal.replaceAll(new RegExp("/\\*.*?\\* /", "g"), " ");
+            taVal = taVal.trim().replaceAll(/\s+/g, " ");
+            console.log({ taVal });
+
             patternValid = true;
-            const cssRaw = "#temp { " + css3bg + " }";
+
+            const css3bgIn = taVal.endsWith(";") ? taVal : taVal + ";";
+            const cssRaw = "#temp { " + css3bgIn + " }";
             const cssClean = css_sanitize(cssRaw);
             if (cssRaw.replaceAll(/\s+/g, " ") !== cssClean.replaceAll(/\s+/g, " ")) {
                 patternValid = "Invalid CSS";
             }
+            const parts = css3bgIn.split(";").map(p => p.trim()).filter(p => p.length > 0);
+            const css = {};
             if (patternValid === true) {
                 parts.forEach(p => {
                     if (patternValid !== true) return;
                     let [key, val] = p.split(":");
-                    if (val == undefined) {
-                        patternValid = "ERROR: missing css value";
-                    }
+                    if (val == undefined) { patternValid = "ERROR: missing css value"; }
                     if (patternValid !== true) return;
                     key = key.trim();
                     if (key !== "background" && !key.startsWith("background-")) {
@@ -773,15 +819,16 @@ export class CustomRenderer4jsMind {
                     css[key] = val.trim().replace(/;$/, "");
                 });
             }
+            */
             const divThisChoice = divImagePattern.closest(".bg-choice");
             if (patternValid === true) {
                 modMdc.setValidityMDC(taImgPattern, "");
                 tellPatternValid("Valid");
                 setBgChoiceEnabled(divThisChoice, true);
                 setBgChoiceThis(divThisChoice);
-                for (const key in css) {
-                    const val = css[key];
-                    divImgPatternPreview.style[key] = val;
+                for (const prop in cssKeyVal) {
+                    const val = cssKeyVal[prop];
+                    divImgPatternPreview.style[prop] = val;
                 }
                 divImagePattern.style.outline = "none";
             } else {
@@ -875,18 +922,22 @@ export class CustomRenderer4jsMind {
                     return {
                         "background-image": `url(${valLink})`
                     };
+                case "bg-choice-pattern":
+                    debugger;
+                    return {};
+                    break;
                 default:
                     throw Error(`Unknown bg-choice: ${id}`);
             }
         }
 
         function applyBgCssValue(jmnode, bgCssValue) {
-            const tn = jmnode.tagName ;
+            const tn = jmnode.tagName;
             if (tn != "JMNODE") throw Error(`Not a <jmnode>: ${tn}`);
             const eltBg = jmnode.querySelector(".jmnode-bg");
             const bgStyle = eltBg.style;
             // jmstyle.background = "none";
-            for (const prop in bgStyle) { 
+            for (const prop in bgStyle) {
                 if (prop.startsWith("background")) {
                     const val = bgStyle[prop];
                     if ("string" == typeof val) {
@@ -911,7 +962,7 @@ export class CustomRenderer4jsMind {
         }
         getBgCssValue();
         tempApplyBg();
-        debugger;
+        // debugger;
         const divCurrentBg = mkElt("div", undefined);
 
         const divBackground = mkElt("div", { style: styleColors }, [
