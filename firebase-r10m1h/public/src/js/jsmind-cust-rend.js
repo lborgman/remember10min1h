@@ -615,10 +615,10 @@ export class CustomRenderer4jsMind {
         const divImgPreview = mkElt("div");
         divImgPreview.style.height = 100;
         divImgPreview.style.width = 100;
-        divImgPreview.style.backgroundColor = "lightgray";
-        divImgPreview.style.backgroundSize = "contain";
-        divImgPreview.style.backgroundRepeat = "no-repeat";
-        divImgPreview.style.backgroundPosition = "center";
+        // divImgPreview.style.backgroundColor = "lightgray";
+        // divImgPreview.style.backgroundSize = "contain";
+        // divImgPreview.style.backgroundRepeat = "no-repeat";
+        // divImgPreview.style.backgroundPosition = "center";
 
         let radChoiceLink;
 
@@ -626,8 +626,16 @@ export class CustomRenderer4jsMind {
         imgPreview.onload = () => {
             const src = imgPreview.src;
             console.log("onload", src);
-            divImgPreview.style.backgroundImage = `url(${src})`;
-            divImgPreview.style.backgroundColor = "lightgray";
+            // divImgPreview.style.backgroundImage = `url(${src})`;
+            // divImgPreview.style.backgroundColor = "lightgray";
+            const cssBg = {
+                "background-color": "lightgray",
+                "background-size": "cover",
+                "background-repeat": "no-repeat",
+                "background-position": "center",
+                "background-image": `url(${src})`,
+            };
+            applyBgCssValue(divImgPreview, cssBg);
             radChoiceLink.disabled = false;
         };
         imgPreview.onerror = (evt) => {
@@ -636,8 +644,12 @@ export class CustomRenderer4jsMind {
             // There is no info in evt.
             console.log("onerror", wasValid, src, evt);
             if (!wasValid) return;
-            divImgPreview.style.backgroundColor = "red";
-            divImgPreview.style.backgroundImage = "none";
+            // divImgPreview.style.backgroundColor = "red";
+            // divImgPreview.style.backgroundImage = "none";
+            const cssBg = {
+                "background-color": "red",
+            };
+            applyBgCssValue(divImgPreview, cssBg);
             modMdc.setValidityMDC(inpImageUrl, "Not an image");
             badImgLinkUrl();
         };
@@ -645,14 +657,15 @@ export class CustomRenderer4jsMind {
             radChoiceLink.disabled = true;
             radChoiceNone.checked = true;
         }
-        inpImageUrl.addEventListener("input", async evt => {
+        const checkImageUrl = async () => {
+            console.log("checkImageUrl");
             // FIX-ME: debounce
             radChoiceLink.disabled = true;
-            const targ = evt.target;
-            const maybeUrl = targ.value.trim();
+            // const targ = evt.target;
+            const maybeUrl = inpImageUrl.value.trim();
             console.log({ maybeUrl });
             if (maybeUrl == "") {
-                modMdc.setValidityMDC(targ, "");
+                modMdc.setValidityMDC(inpImageUrl, "");
                 badImgLinkUrl();
                 divImgPreview.style.backgroundColor = "lightgray";
                 divImgPreview.style.backgroundImage = "none";
@@ -662,17 +675,21 @@ export class CustomRenderer4jsMind {
             if (true == isValid) {
                 radChoiceLink.checked = true;
                 radChoiceLink.disabled = false;
-                modMdc.setValidityMDC(targ, "");
+                modMdc.setValidityMDC(inpImageUrl, "");
                 imgPreview.src = maybeUrl;
             } else {
                 divImgPreview.style.backgroundColor = "yellow";
                 divImgPreview.style.backgroundImage = "none";
                 const wasValid = inpImageUrl.checkValidity();
-                modMdc.setValidityMDC(targ, `Not a link (${getUrllNotValidMsg(isValid)})`);
+                modMdc.setValidityMDC(inpImageUrl, `Not a link (${getUrllNotValidMsg(isValid)})`);
                 badImgLinkUrl();
                 if (!wasValid) return;
                 imgPreview.src = "";
             }
+        }
+        const debounceCheckImageUrl = debounce(checkImageUrl, 1500);
+        inpImageUrl.addEventListener("input", async evt => {
+            debounceCheckImageUrl();
         });
         const btnNote = modMdc.mkMDCiconButton("info");
         btnNote.style.verticalAlign = "top";
@@ -909,9 +926,18 @@ export class CustomRenderer4jsMind {
         radChoiceLink = divBgChoices.querySelector("#bg-choice-link");
         console.log({ radChoiceLink });
         setBgChoiceThis(bgChoiceNone);
+        divBgChoices.addEventListener("change", evt => {
+            const checked = getBgCssValueElt();
+            console.log({ checked });
+        });
 
-        function getBgCssValue() {
+        function getBgCssValueElt() {
             const elt = divBgChoices.querySelector("input[name=bg-choice]:checked")
+            return elt;
+        }
+        function getBgCssValueFromElts() {
+            // const elt = divBgChoices.querySelector("input[name=bg-choice]:checked")
+            const elt = getBgCssValueElt();
             const id = elt.id;
             console.log("getBgCssValue", elt, id);
             switch (id) {
@@ -931,10 +957,34 @@ export class CustomRenderer4jsMind {
             }
         }
 
-        function applyBgCssValue(jmnode, bgCssValue) {
+        function clearBgCssValue(elt) {
+            const bgStyle = elt.style;
+            for (const prop in bgStyle) {
+                if (prop.startsWith("background")) {
+                    const val = bgStyle[prop];
+                    if ("string" == typeof val) {
+                        // "backgroundColor".replaceAll(/([A-Z])/g, "-$1").toLowerCase()
+                        const cssName = prop.replaceAll(/([A-Z])/g, "-$1").toLowerCase()
+                        bgStyle.removeProperty(cssName);
+                    }
+                }
+            }
+        }
+        function applyBgCssValue(elt, bgCssValues) {
+            clearBgCssValue(elt);
+            const bgStyle = elt.style;
+            for (const prop in bgCssValues) {
+                if (!prop.startsWith("background")) throw Error(`Bg value not background: ${val}`);
+                const val = bgCssValues[prop];
+                console.log("applyBgCssValue", prop, val);
+                bgStyle[prop] = val;
+            }
+        }
+        function applyJmnodeBgCssValue(jmnode, bgCssValues) {
             const tn = jmnode.tagName;
             if (tn != "JMNODE") throw Error(`Not a <jmnode>: ${tn}`);
             const eltBg = jmnode.querySelector(".jmnode-bg");
+            /*
             const bgStyle = eltBg.style;
             // jmstyle.background = "none";
             for (const prop in bgStyle) {
@@ -947,20 +997,25 @@ export class CustomRenderer4jsMind {
                     }
                 }
             }
-            for (const prop in bgCssValue) {
+            */
+            // clearBgCssValue(eltBg);
+            /*
+            for (const prop in bgCssValues) {
                 if (!prop.startsWith("background")) throw Error(`Bg value not background: ${val}`);
-                const val = bgCssValue[prop];
+                const val = bgCssValues[prop];
                 console.log("applyBgCssValue", prop, val);
                 bgStyle[prop] = val;
             }
+            */
+            applyBgCssValue(eltBg, bgCssValues);
         }
         function tempApplyBg() {
-            const cssVal = getBgCssValue();
+            const cssVal = getBgCssValueFromElts();
             // debugger;
             // if (!cssVal) return; // FIX-ME:
-            applyBgCssValue(eltCopied, cssVal);
+            applyJmnodeBgCssValue(eltCopied, cssVal);
         }
-        getBgCssValue();
+        getBgCssValueFromElts();
         tempApplyBg();
         // debugger;
         const divCurrentBg = mkElt("div", undefined);
