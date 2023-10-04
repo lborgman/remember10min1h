@@ -864,6 +864,8 @@ export class CustomRenderer4jsMind {
                     divImgPatternPreview.style[prop] = val;
                     objCssPattern[prop] = val;
                 }
+                // Unset repeat
+                objCssPattern["background-repeat"] = "initial";
                 divImagePattern.style.outline = "none";
             } else {
                 // console.log("Not valid css:", patternValid);
