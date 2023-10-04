@@ -555,6 +555,7 @@ export class CustomRenderer4jsMind {
             "gap: 10px"
         ].join("; ");
 
+        const debounceTempApplyBgToCopied = debounce(tempApplyBgToCopied, 2000);
         function setBgChoiceThis(eltChoice) {
             const inp = eltChoice.querySelector("input[name=bg-choice]");
             if (inp.disabled) {
@@ -562,6 +563,7 @@ export class CustomRenderer4jsMind {
                 throw Error(`Can't choose disabled ${val}`);
             }
             inp.checked = true;
+            debounceTempApplyBgToCopied();
         }
         function setBgChoiceEnabled(eltChoice, enabled) {
             if (!eltChoice.classList.contains("bg-choice")) {
@@ -637,6 +639,7 @@ export class CustomRenderer4jsMind {
             };
             applyBgCssValue(divImgPreview, cssBg);
             radChoiceLink.disabled = false;
+            debounceTempApplyBgToCopied();
         };
         imgPreview.onerror = (evt) => {
             const src = imgPreview.src;
@@ -652,6 +655,7 @@ export class CustomRenderer4jsMind {
             applyBgCssValue(divImgPreview, cssBg);
             modMdc.setValidityMDC(inpImageUrl, "Not an image");
             badImgLinkUrl();
+            debounceTempApplyBgToCopied();
         };
         function badImgLinkUrl() {
             radChoiceLink.disabled = true;
@@ -733,6 +737,7 @@ export class CustomRenderer4jsMind {
         divPatternValid.style.lineHeight = "1.2rem";
         // FIX-ME: I do not understand why 2.5rem is not enough???
         divPatternValid.style.minHeight = "calc(2.8rem + 4px)";
+        const objCssPattern = {};
 
 
         const divImagePattern = mkElt("div", undefined, [
@@ -760,6 +765,16 @@ export class CustomRenderer4jsMind {
             iframe.remove();
             return result;
         }
+        function isValidCssDecl(cssDecl) {
+            // Only one line allowed
+            cssDecl = cssDecl.trim();
+            if (!cssDecl.endsWith(";")) return false;
+            if (2 != cssDecl.split(";").length) return false;
+            const cssRaw = "#temp { " + cssDecl + " }";
+            const cssClean = css_sanitize(cssRaw);
+            if (cssClean.length < 14) return false;
+            return true;
+        }
 
         function setBgPatternPreview() {
             function cssTxt2keyVal(cssTxt) {
@@ -770,21 +785,15 @@ export class CustomRenderer4jsMind {
                 taVal = taVal.replaceAll(/\s+/g, " ").trim();
                 if (!taVal.endsWith(";")) taVal += ";";
                 console.log({ taVal });
-                function isValidCss(css3bgIn) {
-                    const cssRaw = "#temp { " + css3bgIn + " }";
-                    const cssClean = css_sanitize(cssRaw);
-                    const cssRaw2 = cssRaw.replaceAll(/\s+/g, " ");
-                    const cssClean2 = cssClean.replaceAll(/\s+/g, " ");
-                    return cssRaw2 == cssClean2;
-                }
-                if (!isValidCss(taVal)) return "Invalid CSS";
+                // if (!isValidCss(taVal)) return "Invalid CSS";
                 const parts = taVal.split(";").map(p => p.trim()).filter(p => p.length > 0);
                 const cssKV = {};
                 for (let i = 0, len = parts.length; i < len; i++) {
                     const p = parts[i];
-                    let [key, val] = p.split(":");
-                    if (val == undefined) return "ERROR: missing css value";
-                    cssKV[key] = val;
+                    let [prop, val] = p.split(":");
+                    // const cssDecl = `${prop}: ${val};`;
+                    // if (!isValidCssDecl(cssDecl)) return `Invalid css: ${cssDecl}`;
+                    cssKV[prop] = val;
                 }
                 return cssKV;
             }
@@ -796,10 +805,16 @@ export class CustomRenderer4jsMind {
 
             if (patternValid === true) {
                 for (const prop in cssKeyVal) {
-                    if (prop !== "background" && !prop.startsWith("background-")) {
+                    if (prop !== "background"
+                        && !prop.startsWith("background-")
+                        && prop !== "opacity"
+                    ) {
                         patternValid = `Property "${prop}" not allowed`;
                         break;
                     }
+                    const val = cssKeyVal[prop];
+                    const cssDecl = `${prop}: ${val};`;
+                    if (!isValidCssDecl(cssDecl)) patternValid = `Invalid css: ${cssDecl}`;
                 }
             }
 
@@ -838,6 +853,7 @@ export class CustomRenderer4jsMind {
             }
             */
             const divThisChoice = divImagePattern.closest(".bg-choice");
+            for (const prop in objCssPattern) { delete objCssPattern[prop]; }
             if (patternValid === true) {
                 modMdc.setValidityMDC(taImgPattern, "");
                 tellPatternValid("Valid");
@@ -846,6 +862,7 @@ export class CustomRenderer4jsMind {
                 for (const prop in cssKeyVal) {
                     const val = cssKeyVal[prop];
                     divImgPatternPreview.style[prop] = val;
+                    objCssPattern[prop] = val;
                 }
                 divImagePattern.style.outline = "none";
             } else {
@@ -858,17 +875,18 @@ export class CustomRenderer4jsMind {
                 divImagePattern.style.outline = "2px dotted red";
             }
         }
-        const debounceSetBackgroundPreview = debounce(setBgPatternPreview, 1000);
+        const debounceSetBgPatternPreview = debounce(setBgPatternPreview, 1000);
         taImgPattern.addEventListener("input", evt => {
-            debounceSetBackgroundPreview();
+            debounceSetBgPatternPreview();
         });
         taImgPattern.addEventListener("change", evt => {
-            debounceSetBackgroundPreview();
+            debounceSetBgPatternPreview();
         });
         const divPattern = mkElt("div", undefined, [
             mkElt("div", undefined, [
-                "Use a CSS: ",
-                mkElt("a", { href: "https://projects.verou.me/css3patterns/" }, "pattern"),
+                "Use a CSS ",
+                // mkElt("a", { href: "https://projects.verou.me/css3patterns/" }, "pattern"),
+                mkElt("a", { href: "https://www.magicpattern.design/tools/css-backgrounds" }, "pattern"),
                 ".",
             ]),
             divImagePattern,
@@ -926,10 +944,22 @@ export class CustomRenderer4jsMind {
         radChoiceLink = divBgChoices.querySelector("#bg-choice-link");
         console.log({ radChoiceLink });
         setBgChoiceThis(bgChoiceNone);
-        divBgChoices.addEventListener("change", evt => {
-            const checked = getBgCssValueElt();
-            console.log({ checked });
-        });
+        divBgChoices.addEventListener("input", errorHandlerAsyncEvent(async evt => {
+            evt.stopPropagation();
+            evt.stopImmediatePropagation();
+            console.log("hej input");
+            console.log(evt);
+            // FIX-ME: the above does not create an entry in console???
+            // Tried reboot etc.
+            // Suspect a chrome bug since there is another event handler here.
+            // Try a timeout here:
+            setTimeout(() => {
+                console.log("in timeout");
+                const checked = getBgCssValueElt();
+                console.log({ checked });
+                debounceTempApplyBgToCopied();
+            }, 100);
+        }));
 
         function getBgCssValueElt() {
             const elt = divBgChoices.querySelector("input[name=bg-choice]:checked")
@@ -949,8 +979,7 @@ export class CustomRenderer4jsMind {
                         "background-image": `url(${valLink})`
                     };
                 case "bg-choice-pattern":
-                    debugger;
-                    return {};
+                    return objCssPattern;
                     break;
                 default:
                     throw Error(`Unknown bg-choice: ${id}`);
@@ -974,7 +1003,8 @@ export class CustomRenderer4jsMind {
             clearBgCssValue(elt);
             const bgStyle = elt.style;
             for (const prop in bgCssValues) {
-                if (!prop.startsWith("background")) throw Error(`Bg value not background: ${val}`);
+                if (!prop.startsWith("background") && prop != "opacity")
+                    throw Error(`Bg value not background or opacity: ${val}`);
                 const val = bgCssValues[prop];
                 console.log("applyBgCssValue", prop, val);
                 bgStyle[prop] = val;
@@ -1009,14 +1039,15 @@ export class CustomRenderer4jsMind {
             */
             applyBgCssValue(eltBg, bgCssValues);
         }
-        function tempApplyBg() {
+        function tempApplyBgToCopied() {
             const cssVal = getBgCssValueFromElts();
+            console.warn("tempApplyBgToCopied", cssVal);
             // debugger;
             // if (!cssVal) return; // FIX-ME:
             applyJmnodeBgCssValue(eltCopied, cssVal);
         }
         getBgCssValueFromElts();
-        tempApplyBg();
+        debounceTempApplyBgToCopied();
         // debugger;
         const divCurrentBg = mkElt("div", undefined);
 
