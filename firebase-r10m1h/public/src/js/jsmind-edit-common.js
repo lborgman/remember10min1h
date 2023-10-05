@@ -1425,9 +1425,11 @@ export async function pageSetup() {
 
     }
 
+
     async function convertPlainJmnode2ProviderLink(eltJmnode, jmOwner, objCustomCopied) {
         // console.log("convertDOMnodeTo...", eltJmnode, objCustomCopied);
         if (eltJmnode.tagName != "JMNODE") throw Error("Not <jmnode>");
+        /*
         const lastElementChild = eltJmnode.lastElementChild;
         if (lastElementChild) {
             if (lastElementChild.classList.contains("jsmind-custom")) {
@@ -1435,20 +1437,30 @@ export async function pageSetup() {
                 return;
             }
         }
-        if (eltJmnode.childElementCount == 3) {
-            debugger;
+        function isCustomJmnode(eltJmnode) {
+            if (eltJmnode.tagName != "JMNODE") throw Error("Not <jmnode>");
+            const eltLast = eltJmnode.lastElementChild;
+            if (eltLast?.classList.contains("jsmind-custom")) return true;
+            return false;
         }
+
+        if (isCustomJmnode(eltJmnode)) {
+            alert("Already provider link, not handled yet");
+            return;
+        }
+        if (eltJmnode.childElementCount == 3) { debugger; }
+        */
 
         const provider = objCustomCopied.provider;
         if (!getCustomRenderer().getProviderNames().includes(provider)) throw Error(`Provider ${provider} is unknown`);
         const providerKey = objCustomCopied.key;
 
-        const strTopic = getCustomRenderer().customData2jsmindTopic(providerKey, provider);
+        const strJsmindTopic = getCustomRenderer().customData2jsmindTopic(providerKey, provider);
 
-        console.log("eltJmnode", eltJmnode, strTopic);
+        console.log("eltJmnode", eltJmnode, strJsmindTopic);
         if (jmOwner) {
             const node_id = jsMind.my_get_nodeID_from_DOM_element(eltJmnode);
-            jmOwner.update_node(node_id, strTopic);
+            jmOwner.update_node(node_id, strJsmindTopic);
             jmOwner.set_node_background_image(node_id, undefined, 150, 100);
             ///// Do the rest in callback at update_node!
             // console.log("eltJmnode befor fix", eltJmnode);
@@ -1460,7 +1472,7 @@ export async function pageSetup() {
             const s = eltJmnode.style;
             s.height = s.height || "140px";
             s.width = s.width || "140px";
-            const eltCustom = getCustomRenderer().jsmindTopic2customElt(strTopic);
+            const eltCustom = getCustomRenderer().jsmindTopic2customElt(strJsmindTopic);
             eltJmnode.appendChild(eltCustom);
             getCustomRenderer().updateJmnodeFromCustom(eltJmnode, jmOwner);
         }

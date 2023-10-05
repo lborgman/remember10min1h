@@ -1071,7 +1071,10 @@ export class CustomRenderer4jsMind {
             currentShapeEtc.temp.topic = taTopic.value;
             eltCopiedText.textContent = taTopic.value;
         });
-        const tafTopic = modMdc.mkMDCtextareaField("Topic", taTopic, initialTempData.topic);
+        const copiedWasCustom = eltCopied.lastElementChild.dataset.jsmindCustom != undefined;
+        const initTopic = copiedWasCustom ? "" : initialTempData.topic;
+
+        const tafTopic = modMdc.mkMDCtextareaField("Topic", taTopic, initTopic);
         modMdc.mkMDCtextareaGrow(tafTopic);
 
         /*
@@ -1218,7 +1221,7 @@ export class CustomRenderer4jsMind {
             const lbl = mkElt("label", undefined, [mdcRadio, label]);
             return mkElt("div", { class: "mdc-card topic-choice" }, [lbl, divChoice]);
         }
-        const divTopicSimple = mkTopicChoice("topic-choice-simple",
+        const divTopicChoiceSimple = mkTopicChoice("topic-choice-simple",
             "Default node type",
             mkElt("div", undefined, [tafTopic, tfLink, divLinkPreview]));
         /*
@@ -1286,14 +1289,38 @@ export class CustomRenderer4jsMind {
 
         }
 
-        const divTopicCustom = mkTopicChoice("topic-choice-custom", "Custom linked node", divCustomContent);
+        const divTopicChoiceCustom = mkTopicChoice("topic-choice-custom", "Custom linked node", divCustomContent);
 
         const divContent = mkElt("div", { id: "jsmind-ednode-content" }, [
-            // divNormalContent,
-            divTopicSimple,
-            // divCustomContent
-            divTopicCustom
+            divTopicChoiceSimple, divTopicChoiceCustom
         ]);
+        function setTopicChoiceThis(eltChoice) {
+            checkTopicChoiceThis(eltChoice);
+            // debounceTempApplyBgToCopied();
+        }
+        function checkTopicChoiceThis(eltChoice) {
+            const inp = eltChoice.querySelector("input[name=topic-choice]");
+            inp.checked = true;
+        }
+        function setTopicChoiceEnabled(eltChoice, enabled) {
+            /*
+            if (!eltChoice.classList.contains("topic-choice")) {
+                // console.log("Not topic-choice: ", eltChoice);
+                throw Error("eltChoice is not topic-choice")
+            }
+            */
+            const inp = eltChoice.querySelector("input[name=topic-choice]");
+            inp.disabled = !enabled;
+        }
+
+        if (copiedWasCustom) {
+            checkTopicChoiceThis(divTopicChoiceCustom);
+            setTopicChoiceEnabled(divTopicChoiceSimple, false);
+            setTimeout(() => { divTopicChoiceCustom.scrollIntoView(); }, 500);
+        } else {
+            setTopicChoiceEnabled(divTopicChoiceCustom, false);
+            checkTopicChoiceThis(divTopicChoiceSimple);
+        }
 
         if (strCopiedCustom) {
             divContent.classList.add("custom-node");
