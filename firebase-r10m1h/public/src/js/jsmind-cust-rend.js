@@ -61,6 +61,15 @@ export class CustomRenderer4jsMind {
         console.log("Providers:", this.#providers);
     }
     getProviderNames() { return Object.keys(this.#providers); }
+    getProviderLongName(providerShortName) {
+        const provDet = this.#providers[providerShortName];
+        return provDet.longName;
+    }
+    // const linkProvider = await theCustomRenderer.#providers[provider].getRecLink(key);
+    getRecLink(key, provider) {
+        const provDet = this.#providers[provider];
+        return provDet.getRecLink(key);
+    }
     getCustomRec(key, provider) {
         return this.#providers[provider].getRec(key);
     }
@@ -1073,6 +1082,7 @@ export class CustomRenderer4jsMind {
         });
         const copiedWasCustom = eltCopied.lastElementChild.dataset.jsmindCustom != undefined;
         const initTopic = copiedWasCustom ? "" : initialTempData.topic;
+        const initCustomTopic = eltCopied.lastElementChild.dataset.jsmindCustom;
 
         const tafTopic = modMdc.mkMDCtextareaField("Topic", taTopic, initTopic);
         modMdc.mkMDCtextareaGrow(tafTopic);
@@ -1237,16 +1247,35 @@ export class CustomRenderer4jsMind {
         */
 
         let providerName = "NOT CUSTOM PROVIDED";
+        const btnSelectCustomItem = modMdc.mkMDCbutton("Select custom item", "raised");
+        // divCustomContent.appendChild(btnSelectCustomItem);
+        btnSelectCustomItem.addEventListener("click", async evt => {
+            const modMMhelpers = await import("mindmap-helpers");
+            const objCustom = await modMMhelpers.pasteCustomClipDialog();
+            console.log({ objCustom });
+            if (!objCustom) return;
+            debugger;
+            const strCustom = JSON.stringify(objCustom);
+            const divTopicChoice = btnSelectCustomItem.closest(".topic-choice");
+            divTopicChoice.dataset.jsmindCustom = strCustom;
+            showCustomTopic();
+        });
+        const divSelectCustomItem = mkElt("p", undefined, btnSelectCustomItem);
+
         const divCustomContent = mkElt("div", { class: "custom-content" }, [
-            mkElt("p", undefined, [
-                "This node content is from provider ",
-                providerName,
-                ". Click the image below to show and edit it:"
+            // mkElt("p", undefined, "(Show customitem here)"),
+            // divShow
+            mkElt("div", undefined, [
+                mkElt("div", { id: "ednode-cust-title" }, "(title)"),
+                mkElt("div", { id: "ednode-cust-image" }, "(image)"),
+                mkElt("div", { id: "ednode-cust-link" }, "(link)"),
             ]),
+            divSelectCustomItem,
         ]);
 
         // const strCopiedCustom = eltCopied.firstElementChild?.dataset.jsmindCustom;
         const strCopiedCustom = eltCopied.lastElementChild?.dataset.jsmindCustom;
+        /*
         if (strCopiedCustom) {
             const objCopiedCustom = JSON.parse(strCopiedCustom);
             const eltCustomLink = mkElt("div", { class: "jsmind-ednode-custom-link" });
@@ -1275,19 +1304,15 @@ export class CustomRenderer4jsMind {
             const btnConvert2Custom = modMdc.mkMDCbutton("Link to custom", "raised");
             divCustomContent.appendChild(btnConvert2Custom);
             btnConvert2Custom.addEventListener("click", async evt => {
-                // async function pasteCustom2node() {
-                // const selected_node = getSelected_node();
-                // if (!selected_node) return;
-                // const eltJmnode = jsMind.my_get_DOM_element_from_node(selected_node);
                 const modMMhelpers = await import("mindmap-helpers");
                 const objCustom = await modMMhelpers.pasteCustomClipDialog();
                 console.log({ objCustom });
                 if (!objCustom) return;
-                // convertPlainJmnode2ProviderLink(eltJmnode, jmDisplayed, objCustom);
-                // }
+                debugger;
             });
 
         }
+        */
 
         const divTopicChoiceCustom = mkTopicChoice("topic-choice-custom", "Custom linked node", divCustomContent);
 
@@ -1303,24 +1328,114 @@ export class CustomRenderer4jsMind {
             inp.checked = true;
         }
         function setTopicChoiceEnabled(eltChoice, enabled) {
-            /*
-            if (!eltChoice.classList.contains("topic-choice")) {
-                // console.log("Not topic-choice: ", eltChoice);
-                throw Error("eltChoice is not topic-choice")
-            }
-            */
             const inp = eltChoice.querySelector("input[name=topic-choice]");
             inp.disabled = !enabled;
         }
 
+        async function showCustomTopic() {
+            // this node content
+            // const divShow = divCustomContent.firstElementChild;
+            // divShow.textContent = "";
+            if (divTopicChoiceCustom.dataset.jsmindCustom) {
+                const strCustom= divTopicChoiceCustom.dataset.jsmindCustom;
+                // const objCopiedCustom = JSON.parse(strCopiedCustom);
+                const objCopiedCustom = JSON.parse(strCustom);
+                const eltCustomLink = mkElt("div", { class: "jsmind-ednode-custom-link" });
+
+                const r = await getOurCustomRenderer();
+                const key = objCopiedCustom.key;
+                const provider = objCopiedCustom.provider;
+                const providerName = r.getProviderLongName(provider);
+                const rec = await r.getCustomRec(key, provider);
+
+                // const divTitle = mkElt("p", undefined, rec.title);
+                // divShow.appendChild(divTitle);
+                const divTitle = document.getElementById("ednode-cust-title");
+                divTitle.textContent = rec.title;
+
+                if (rec.images) {
+                    const bgBlob = rec.images[0];
+                    const urlBlob = URL.createObjectURL(bgBlob);
+                    const urlBg = `url(${urlBlob})`;
+                    const divBgImage = mkElt("div");
+                    divBgImage.style.width = "160px";
+                    divBgImage.style.height = "100px";
+                    divBgImage.style.backgroundSize = "cover";
+                    divBgImage.style.backgroundImage = urlBg;
+                    // divBgImage.style.backgroundColor = "red";
+                    // const divImage = mkElt("p", undefined, divBgImage);
+                    // divShow.appendChild(divImage);
+                    const divImage = document.getElementById("ednode-cust-image");
+                    divImage.textContent = "";
+                    divImage.appendChild(divBgImage);
+                }
+
+                /*
+                const btnCustomLink = await modMdc.mkMDCiconButton(eltCustomLink, "", 48);
+                btnCustomLink.addEventListener("click", evt => {
+                    console.log("goto provider");
+                    showKeyInFc4i(objCopiedCustom.key);
+                });
+                btnCustomLink.style.padding = "0"; // FIX-ME: don't ask me about this!
+                */
+
+                const btnURL = modMdc.mkMDCiconButton("");
+                btnURL.title = "Go to this item in Fc4i";
+                btnURL.classList.add("icon-button-40");
+                // const linkProvider = await theCustomRenderer.#providers[provider].getRecLink(key);
+                const bgImg = theCustomRenderer.getLinkRendererImage(provider);
+                btnURL.style.backgroundImage = `url(${bgImg})`;
+
+                const linkProvider = await r.getRecLink(key, provider);
+                const aURL = mkElt("a", { href: linkProvider }, btnURL);
+                aURL.classList.add("jsmind-renderer-img");
+                aURL.style.position = "unset";
+                // aURL.dataset.jsmindCustom = strCustom;
+
+
+                const divLinkProvInner = mkElt("p", undefined, [
+                    // btnCustomLink,
+                    aURL,
+                    providerName
+                ]);
+                divLinkProvInner.style.display = "grid";
+                divLinkProvInner.style.gridTemplateColumns = "48px 1fr";
+                divLinkProvInner.style.gap = "10px";
+                // divShow.appendChild(divLinkProvInner);
+                const divLinkProv = document.getElementById("ednode-cust-link");
+                divLinkProv.textContent = "";
+                divLinkProv.appendChild(divLinkProvInner);
+
+                const stCL = eltCustomLink.style;
+                stCL.backgroundImage = `url(${r.getLinkRendererImage(objCopiedCustom.provider)})`;
+                stCL.backgroundSize = "cover";
+                stCL.width = 48;
+                stCL.height = 48;
+                stCL.border = "1px solid black";
+                stCL.borderRadius = "4px";
+            } else {
+                // divShow.appendChild(mkElt("p", undefined, "No custom item selected."));
+                setTimeout(() => {
+                    const divTitle = document.getElementById("ednode-cust-title");
+                    divTitle.textContent = "(No custom item selected.)";
+                    const divImage = document.getElementById("ednode-cust-image");
+                    divImage.textContent = "";
+                    const divLink = document.getElementById("ednode-cust-link");
+                    divLink.textContent = "";
+                }, 1000);
+            }
+        }
+
         if (copiedWasCustom) {
             checkTopicChoiceThis(divTopicChoiceCustom);
+            divTopicChoiceCustom.dataset.jsmindCustom = initCustomTopic;
             setTopicChoiceEnabled(divTopicChoiceSimple, false);
             setTimeout(() => { divTopicChoiceCustom.scrollIntoView(); }, 500);
         } else {
             setTopicChoiceEnabled(divTopicChoiceCustom, false);
             checkTopicChoiceThis(divTopicChoiceSimple);
         }
+        showCustomTopic();
 
         if (strCopiedCustom) {
             divContent.classList.add("custom-node");
