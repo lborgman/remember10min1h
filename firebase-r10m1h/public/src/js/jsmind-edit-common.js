@@ -1200,7 +1200,10 @@ export async function pageSetup() {
                 try {
                     fromClipBoard = await navigator.clipboard.readText();
                     if (fromClipBoard?.length > 0) {
-                        fromClipBoard = fromClipBoard.slice(0, 100);
+                        fromClipBoard = fromClipBoard
+                            .trim()
+                            .replaceAll(/\s/g, "x")
+                            .slice(0, 100);
                     }
                 } catch (err) {
                     console.warn(err);

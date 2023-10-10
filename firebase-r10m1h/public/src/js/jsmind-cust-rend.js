@@ -774,38 +774,42 @@ export class CustomRenderer4jsMind {
             iframe.remove();
             return result;
         }
+        function isValidCss(cssDecls) {
+            const cssRaw = "#temp { " + cssDecls + " }";
+            const cssClean = css_sanitize(cssRaw);
+            if (cssClean.length < 14) return false;
+            return true;
+        }
         function isValidCssDecl(cssDecl) {
             // Only one line allowed
             cssDecl = cssDecl.trim();
             if (!cssDecl.endsWith(";")) return false;
             if (2 != cssDecl.split(";").length) return false;
-            const cssRaw = "#temp { " + cssDecl + " }";
-            const cssClean = css_sanitize(cssRaw);
-            if (cssClean.length < 14) return false;
-            return true;
+            return isValidCss(cssDecl);
         }
 
-        function setBgPatternPreview() {
-            function cssTxt2keyVal(cssTxt) {
-                let taVal = cssTxt.trim();
-                taVal = taVal.replaceAll(/\s+/g, " ");
-                taVal = taVal.replaceAll(/\s+/g, " ");
-                taVal = taVal.replaceAll(new RegExp("/\\*.*?\\*/", "g"), " ");
-                taVal = taVal.replaceAll(/\s+/g, " ").trim();
-                if (!taVal.endsWith(";")) taVal += ";";
-                console.log({ taVal });
-                // if (!isValidCss(taVal)) return "Invalid CSS";
-                const parts = taVal.split(";").map(p => p.trim()).filter(p => p.length > 0);
-                const cssKV = {};
-                for (let i = 0, len = parts.length; i < len; i++) {
-                    const p = parts[i];
-                    let [prop, val] = p.split(":");
-                    // const cssDecl = `${prop}: ${val};`;
-                    // if (!isValidCssDecl(cssDecl)) return `Invalid css: ${cssDecl}`;
-                    cssKV[prop] = val;
-                }
-                return cssKV;
+        function cssTxt2keyVal(cssTxt) {
+            // Return string on invalid CSS
+            let taVal = cssTxt.trim();
+            taVal = taVal.replaceAll(/\s+/g, " ");
+            taVal = taVal.replaceAll(/\s+/g, " ");
+            taVal = taVal.replaceAll(new RegExp("/\\*.*?\\*/", "g"), " ");
+            taVal = taVal.replaceAll(/\s+/g, " ").trim();
+            if (!taVal.endsWith(";")) taVal += ";";
+            console.log({ taVal });
+            if (!isValidCss(taVal)) return "Invalid CSS";
+            const parts = taVal.split(";").map(p => p.trim()).filter(p => p.length > 0);
+            const cssKV = {};
+            for (let i = 0, len = parts.length; i < len; i++) {
+                const p = parts[i];
+                let [prop, val] = p.split(":");
+                const cssDecl = `${prop}: ${val};`;
+                if (!isValidCssDecl(cssDecl)) return `Invalid css: ${cssDecl}`;
+                cssKV[prop.trim()] = val.trim();
             }
+            return cssKV;
+        }
+        function setBgPatternPreview() {
             const cssKeyVal = cssTxt2keyVal(taImgPattern.value);
             console.log({ cssKeyVal });
             if (typeof cssKeyVal == "string") {
@@ -984,6 +988,11 @@ export class CustomRenderer4jsMind {
             switch (id) {
                 case "bg-choice-none":
                     return {};
+                case "bg-choice-color":
+                    // debugger;
+                    return {
+                        "background-color": inpBgColor.value
+                    };
                 case "bg-choice-link":
                     const valLink = inpImageUrl.value.trim();
                     return {
@@ -1011,11 +1020,15 @@ export class CustomRenderer4jsMind {
             }
         }
         function applyBgCssValue(elt, bgCssValues) {
+            if (!elt.classList.contains("jmnode-bg")) {
+                console.warn("Class 'jmnode-bg' missing on elt", { elt });
+                throw Error("Class 'jmnode-bg' missing");
+            }
             clearBgCssValue(elt);
             const bgStyle = elt.style;
             for (const prop in bgCssValues) {
                 if (!prop.startsWith("background") && prop != "opacity")
-                    throw Error(`Bg value not background or opacity: ${val}`);
+                    throw Error(`Bg property not background or opacity: ${prop}`);
                 const val = bgCssValues[prop];
                 console.log("applyBgCssValue", prop, val);
                 bgStyle[prop] = val;
@@ -1337,7 +1350,7 @@ export class CustomRenderer4jsMind {
             // const divShow = divCustomContent.firstElementChild;
             // divShow.textContent = "";
             if (divTopicChoiceCustom.dataset.jsmindCustom) {
-                const strCustom= divTopicChoiceCustom.dataset.jsmindCustom;
+                const strCustom = divTopicChoiceCustom.dataset.jsmindCustom;
                 // const objCopiedCustom = JSON.parse(strCopiedCustom);
                 const objCopiedCustom = JSON.parse(strCustom);
                 const eltCustomLink = mkElt("div", { class: "jsmind-ednode-custom-link" });
