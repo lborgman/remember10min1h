@@ -413,6 +413,12 @@ export class CustomRenderer4jsMind {
             }
         }
 
+            // console.log(divBgChoices);
+        function setupBackgroundTab() {
+            const initBgCss = initialShapeEtc.background?.CSS;
+            console.log({initBgCss});
+        }
+        setupBackgroundTab();
 
         const jmnodesShapes = mkElt("jmnodes");
         jmnodesShapes.addEventListener("change", evt => {
@@ -564,7 +570,23 @@ export class CustomRenderer4jsMind {
             "gap: 10px"
         ].join("; ");
 
-        const debounceTempApplyBgToCopied = debounce(tempApplyBgToCopied, 2000);
+
+        function tempApplyBgToCopied() {
+            const cssBgVal = getBgCssValueFromElts();
+            console.log("old tempApplyBgToCopied", cssBgVal);
+            applyJmnodeBgCssValue(eltCopied, cssBgVal);
+        }
+        // const debounceTempApplyBgToCopied = debounce(tempApplyBgToCopied, 2000);
+        function newTempApplyBgToCopied() {
+            const cssBgVal = getBgCssValueFromElts();
+            // const strCss = typeof cssBgVal == "string" ? cssBgVal : JSON.stringify(cssBgVal).slice(1, -1);
+            if (typeof cssBgVal != "string") throw Error("cssBgVal not string");
+            setInShapeEtc(cssBgVal, "background.CSS", currentShapeEtc);
+            applyToCopied();
+        }
+        const debounceTempApplyBgToCopied = debounce(newTempApplyBgToCopied, 2000);
+
+
         function setBgChoiceThis(eltChoice) {
             const inp = eltChoice.querySelector("input[name=bg-choice]");
             if (inp.disabled) {
@@ -639,14 +661,14 @@ export class CustomRenderer4jsMind {
             console.log("onload", src);
             // divImgPreview.style.backgroundImage = `url(${src})`;
             // divImgPreview.style.backgroundColor = "lightgray";
-            const cssBg = {
+            const cssBgValue = {
                 "background-color": "lightgray",
                 "background-size": "cover",
                 "background-repeat": "no-repeat",
                 "background-position": "center",
                 "background-image": `url(${src})`,
             };
-            applyBgCssValue(divImgPreview, cssBg);
+            applyBgCssValue(divImgPreview, cssBgValue);
             radChoiceLink.disabled = false;
             debounceTempApplyBgToCopied();
         };
@@ -658,10 +680,10 @@ export class CustomRenderer4jsMind {
             if (!wasValid) return;
             // divImgPreview.style.backgroundColor = "red";
             // divImgPreview.style.backgroundImage = "none";
-            const cssBg = {
+            const cssBgValue = {
                 "background-color": "red",
             };
-            applyBgCssValue(divImgPreview, cssBg);
+            applyBgCssValue(divImgPreview, cssBgValue);
             modMdc.setValidityMDC(inpImageUrl, "Not an image");
             badImgLinkUrl();
             debounceTempApplyBgToCopied();
@@ -759,55 +781,18 @@ export class CustomRenderer4jsMind {
         }
         let patternValid;
 
-        // https://stackoverflow.com/questions/9014804/javascript-validate-css
-        function css_sanitize(css) {
-            const iframe = document.createElement("iframe");
-            iframe.style.display = "none";
-            iframe.style.width = "10px"; //make small in case display:none fails
-            iframe.style.height = "10px";
-            document.body.appendChild(iframe);
-            const style = iframe.contentDocument.createElement('style');
-            style.innerHTML = css;
-            iframe.contentDocument.head.appendChild(style);
-            const sheet = style.sheet,
-                result = Array.from(style.sheet.cssRules).map(rule => rule.cssText || '').join('\n');
-            iframe.remove();
-            return result;
+        // FIX-ME: Make a better formatting, keeping comments!
+        function formatCssDecls(strCss) {
         }
-        function isValidCss(cssDecls) {
-            const cssRaw = "#temp { " + cssDecls + " }";
-            const cssClean = css_sanitize(cssRaw);
-            if (cssClean.length < 14) return false;
-            return true;
-        }
-        function isValidCssDecl(cssDecl) {
-            // Only one line allowed
-            cssDecl = cssDecl.trim();
-            if (!cssDecl.endsWith(";")) return false;
-            if (2 != cssDecl.split(";").length) return false;
-            return isValidCss(cssDecl);
-        }
-
-        function cssTxt2keyVal(cssTxt) {
-            // Return string on invalid CSS
-            let taVal = cssTxt.trim();
-            taVal = taVal.replaceAll(/\s+/g, " ");
-            taVal = taVal.replaceAll(/\s+/g, " ");
-            taVal = taVal.replaceAll(new RegExp("/\\*.*?\\*/", "g"), " ");
-            taVal = taVal.replaceAll(/\s+/g, " ").trim();
-            if (!taVal.endsWith(";")) taVal += ";";
-            console.log({ taVal });
-            if (!isValidCss(taVal)) return "Invalid CSS";
-            const parts = taVal.split(";").map(p => p.trim()).filter(p => p.length > 0);
-            const cssKV = {};
-            for (let i = 0, len = parts.length; i < len; i++) {
-                const p = parts[i];
-                let [prop, val] = p.split(":");
-                const cssDecl = `${prop}: ${val};`;
-                if (!isValidCssDecl(cssDecl)) return `Invalid css: ${cssDecl}`;
-                cssKV[prop.trim()] = val.trim();
+        function OLDformatCssDecls(strCss) {
+            const objCss = cssTxt2keyVal(strCss);
+            if (typeof objCss == "string") throw Error(objCss);
+            let str = "";
+            for (const prop in objCss) {
+                const val = objCss[prop];
+                if (str.length > 0) str += "\n";
+                str += `${prop}: ${val};`;
             }
-            return cssKV;
         }
         function setBgPatternPreview() {
             const cssKeyVal = cssTxt2keyVal(taImgPattern.value);
@@ -987,91 +972,27 @@ export class CustomRenderer4jsMind {
             console.log("getBgCssValue", elt, id);
             switch (id) {
                 case "bg-choice-none":
-                    return {};
+                    // return {};
+                    return "";
                 case "bg-choice-color":
                     // debugger;
-                    return {
-                        "background-color": inpBgColor.value
-                    };
+                    // return { "background-color": inpBgColor.value };
+                    return `background-color: ${inpBgColor.value}`;
                 case "bg-choice-link":
                     const valLink = inpImageUrl.value.trim();
-                    return {
-                        "background-image": `url(${valLink})`
-                    };
+                    // return { "background-image": `url(${valLink})` };
+                    return `background-image: url(${valLink})`;
                 case "bg-choice-pattern":
-                    return objCssPattern;
+                    // return objCssPattern;
+                    return taImgPattern.value;
                     break;
                 default:
                     throw Error(`Unknown bg-choice: ${id}`);
             }
         }
 
-        function clearBgCssValue(elt) {
-            const bgStyle = elt.style;
-            for (const prop in bgStyle) {
-                if (prop.startsWith("background")) {
-                    const val = bgStyle[prop];
-                    if ("string" == typeof val) {
-                        // "backgroundColor".replaceAll(/([A-Z])/g, "-$1").toLowerCase()
-                        const cssName = prop.replaceAll(/([A-Z])/g, "-$1").toLowerCase()
-                        bgStyle.removeProperty(cssName);
-                    }
-                }
-            }
-        }
-        function applyBgCssValue(elt, bgCssValues) {
-            if (!elt.classList.contains("jmnode-bg")) {
-                console.warn("Class 'jmnode-bg' missing on elt", { elt });
-                throw Error("Class 'jmnode-bg' missing");
-            }
-            clearBgCssValue(elt);
-            const bgStyle = elt.style;
-            for (const prop in bgCssValues) {
-                if (!prop.startsWith("background") && prop != "opacity")
-                    throw Error(`Bg property not background or opacity: ${prop}`);
-                const val = bgCssValues[prop];
-                console.log("applyBgCssValue", prop, val);
-                bgStyle[prop] = val;
-            }
-        }
-        function applyJmnodeBgCssValue(jmnode, bgCssValues) {
-            const tn = jmnode.tagName;
-            if (tn != "JMNODE") throw Error(`Not a <jmnode>: ${tn}`);
-            const eltBg = jmnode.querySelector(".jmnode-bg");
-            /*
-            const bgStyle = eltBg.style;
-            // jmstyle.background = "none";
-            for (const prop in bgStyle) {
-                if (prop.startsWith("background")) {
-                    const val = bgStyle[prop];
-                    if ("string" == typeof val) {
-                        // "backgroundColor".replaceAll(/([A-Z])/g, "-$1").toLowerCase()
-                        const cssName = prop.replaceAll(/([A-Z])/g, "-$1").toLowerCase()
-                        bgStyle.removeProperty(cssName);
-                    }
-                }
-            }
-            */
-            // clearBgCssValue(eltBg);
-            /*
-            for (const prop in bgCssValues) {
-                if (!prop.startsWith("background")) throw Error(`Bg value not background: ${val}`);
-                const val = bgCssValues[prop];
-                console.log("applyBgCssValue", prop, val);
-                bgStyle[prop] = val;
-            }
-            */
-            applyBgCssValue(eltBg, bgCssValues);
-        }
-        function tempApplyBgToCopied() {
-            const cssVal = getBgCssValueFromElts();
-            console.warn("tempApplyBgToCopied", cssVal);
-            // debugger;
-            // if (!cssVal) return; // FIX-ME:
-            applyJmnodeBgCssValue(eltCopied, cssVal);
-        }
-        getBgCssValueFromElts();
-        debounceTempApplyBgToCopied();
+        // getBgCssValueFromElts();
+        // debounceTempApplyBgToCopied();
         // debugger;
         const divCurrentBg = mkElt("div", undefined);
 
@@ -1505,14 +1426,15 @@ export class CustomRenderer4jsMind {
                 typeof pathShEtc == "string" ? getShapeEtcGrpMbr(pathShEtc) : pathShEtc;
             targetShEtc[grpName] = targetShEtc[grpName] || {};
             const grp = targetShEtc[grpName];
-            grp[mbrName] = val;
+            if (mbrName) { grp[mbrName] = val; } else { targetShEtc[grpName] = val }
         }
         function getFromShapeEtc(pathShEtc, sourceShEtc) {
             const { grpName, mbrName } =
                 typeof pathShEtc == "string" ? getShapeEtcGrpMbr(pathShEtc) : pathShEtc;
             const grp = sourceShEtc[grpName];
-            if (!grp) return;
-            return grp[mbrName];
+            if (!grp) return grp;
+            if (mbrName) return grp[mbrName];
+            return grp;
         }
 
 
@@ -2080,5 +2002,104 @@ export async function ourCustomRendererAddProvider(providerRec) {
     const custRend = await getOurCustomRenderer();
     custRend.addProvider(prov);
 }
+function clearBgCssValue(elt) {
+    const bgStyle = elt.style;
+    for (const prop in bgStyle) {
+        if (prop.startsWith("background")) {
+            const val = bgStyle[prop];
+            if ("string" == typeof val) {
+                // "backgroundColor".replaceAll(/([A-Z])/g, "-$1").toLowerCase()
+                const cssName = prop.replaceAll(/([A-Z])/g, "-$1").toLowerCase()
+                bgStyle.removeProperty(cssName);
+            }
+        }
+    }
+}
+function applyBgCssValue(elt, bgCssValues) {
+    if (!elt.classList.contains("jmnode-bg")) {
+        console.warn("Class 'jmnode-bg' missing on elt", { elt });
+        throw Error("Class 'jmnode-bg' missing");
+    }
+    clearBgCssValue(elt);
+    const bgStyle = elt.style;
+    for (const prop in bgCssValues) {
+        if (!prop.startsWith("background") && prop != "opacity")
+            throw Error(`Bg property not background or opacity: ${prop}`);
+        const val = bgCssValues[prop];
+        console.log("applyBgCssValue", prop, val);
+        bgStyle[prop] = val;
+    }
+}
+function applyBgCssText(elt, bgCssText) {
+    const bgCssValues = cssTxt2keyVal(bgCssText);
+    console.log({ bgCssValues });
+    if (typeof bgCssValues == "string") { throw Error(bgCssValues); }
+    applyBgCssValue(elt, bgCssValues);
+}
+export function applyJmnodeBgCssText(jmnode, bgCssText) {
+    const bgCssValues = cssTxt2keyVal(bgCssText);
+    console.log({ bgCssValues });
+    // if (typeof bgCssValues == "string") { throw Error(bgCssValues); }
+    applyJmnodeBgCssValue(jmnode, bgCssValues);
+}
+function applyJmnodeBgCssValue(jmnode, bgCssValues) {
+    const tn = jmnode.tagName;
+    if (tn != "JMNODE") throw Error(`Not a <jmnode>: ${tn}`);
+    const eltBg = jmnode.querySelector(".jmnode-bg");
+    applyBgCssValue(eltBg, bgCssValues);
+}
+
+
+// https://stackoverflow.com/questions/9014804/javascript-validate-css
+function css_sanitize(css) {
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    iframe.style.width = "10px"; //make small in case display:none fails
+    iframe.style.height = "10px";
+    document.body.appendChild(iframe);
+    const style = iframe.contentDocument.createElement('style');
+    style.innerHTML = css;
+    iframe.contentDocument.head.appendChild(style);
+    const sheet = style.sheet,
+        result = Array.from(style.sheet.cssRules).map(rule => rule.cssText || '').join('\n');
+    iframe.remove();
+    return result;
+}
+function isValidCss(cssDecls) {
+    const cssRaw = "#temp { " + cssDecls + " }";
+    const cssClean = css_sanitize(cssRaw);
+    if (cssClean.length < 14) return false;
+    return true;
+}
+function isValidCssDecl(cssDecl) {
+    // Only one line allowed
+    cssDecl = cssDecl.trim();
+    if (!cssDecl.endsWith(";")) return false;
+    if (2 != cssDecl.split(";").length) return false;
+    return isValidCss(cssDecl);
+}
+
+function cssTxt2keyVal(cssTxt) {
+    // Return string on invalid CSS
+    let taVal = cssTxt.trim();
+    taVal = taVal.replaceAll(/\s+/g, " ");
+    taVal = taVal.replaceAll(/\s+/g, " ");
+    taVal = taVal.replaceAll(new RegExp("/\\*.*?\\*/", "g"), " ");
+    taVal = taVal.replaceAll(/\s+/g, " ").trim();
+    if (!taVal.endsWith(";")) taVal += ";";
+    console.log({ taVal });
+    if (!isValidCss(taVal)) return "Invalid CSS";
+    const parts = taVal.split(";").map(p => p.trim()).filter(p => p.length > 0);
+    const cssKV = {};
+    for (let i = 0, len = parts.length; i < len; i++) {
+        const p = parts[i];
+        let [prop, val] = p.split(":");
+        const cssDecl = `${prop}: ${val};`;
+        if (!isValidCssDecl(cssDecl)) return `Invalid css: ${cssDecl}`;
+        cssKV[prop.trim()] = val.trim();
+    }
+    return cssKV;
+}
+
 
 createOurCustomRenderer();
