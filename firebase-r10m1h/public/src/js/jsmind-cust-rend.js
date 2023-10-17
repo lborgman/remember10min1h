@@ -413,12 +413,36 @@ export class CustomRenderer4jsMind {
             }
         }
 
-            // console.log(divBgChoices);
+        let backgroundTabIsSetup = false;
         function setupBackgroundTab() {
-            const initBgCss = initialShapeEtc.background?.CSS;
-            console.log({initBgCss});
+            if (backgroundTabIsSetup) return;
+            debugger;
+            console.log(divBgChoices);
+            backgroundTabIsSetup = true;
+            const initBgCssText = initialShapeEtc.background?.CSS;
+            console.log({ initBgCss: initBgCssText });
+            let bgChoice = "bg-choice-pattern";
+            if (initBgCssText.indexOf("/*") == -1) {
+                const initBgCssValues = cssTxt2keyVal(initBgCssText);
+                const arrProp = Object.keys(initBgCssValues);
+                if (arrProp.length == 0) {
+                    bgChoice = "bg-choice-none";
+                } else if (arrProp.length == 1) {
+                    const prop = arrProp[0];
+                    switch (prop) {
+                        case "background-color":
+                            bgChoice = "bg-choice-color";
+                    }
+                }
+            }
+            debugger;
+            const rad = divBgChoices.querySelector(`#${bgChoice}`);
+            rad.checked = true
+            setTimeout(() => rad.scrollIntoView(), 500);
         }
-        setupBackgroundTab();
+        function activateBackgroundTab() {
+            setupBackgroundTab();
+        }
 
         const jmnodesShapes = mkElt("jmnodes");
         jmnodesShapes.addEventListener("change", evt => {
@@ -1556,6 +1580,7 @@ export class CustomRenderer4jsMind {
                     activateShadowTab();
                     break;
                 case 4:
+                    activateBackgroundTab();
                     break;
                 case 5:
                     activateThemesTab();
