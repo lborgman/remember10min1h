@@ -421,9 +421,9 @@ export class CustomRenderer4jsMind {
             backgroundTabIsSetup = true;
             const initBgCssText = initialShapeEtc.background?.CSS;
             console.log({ initBgCss: initBgCssText });
-            let bgChoice = "bg-choice-pattern";
+            let bgChoice = initBgCssText ? "bg-choice-pattern" : "bg-choice-none";
             let cssProp, cssVal;
-            if (initBgCssText.indexOf("/*") == -1) {
+            if (initBgCssText?.indexOf("/*") == -1) {
                 const initBgCssValues = cssTxt2keyVal(initBgCssText);
                 const arrProp = Object.keys(initBgCssValues);
                 if (arrProp.length == 0) {
