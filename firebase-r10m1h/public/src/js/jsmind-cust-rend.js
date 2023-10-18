@@ -434,6 +434,14 @@ export class CustomRenderer4jsMind {
                     switch (cssProp) {
                         case "background-color":
                             bgChoice = "bg-choice-color";
+                            break;
+                        case "background-image":
+                            if (cssVal.startsWith("url")) {
+                                bgChoice = "bg-choice-link";
+                            }
+                            break;
+                        default:
+                            throw Error(`Unexpected css prop ${cssProp}`);
                     }
                 }
             }
@@ -459,7 +467,16 @@ export class CustomRenderer4jsMind {
                     detBgColor.open = true;
                     break;
                 case "bg-choice-link":
-                    debugger;
+                    console.log({ detLink, divLink, tfImageUrl });
+                    // debugger;
+                    const funFocusLink = () => {
+                        setTimeout(() => tfImageUrl.focus(), 500);
+                    }
+                    document.addEventListener("scrollend", funFocusLink, { once: true });
+                    // url(...)
+                    inpImageUrl.value = cssVal.trim().slice(4, -1);
+                    divImgPreview.style.backgroundImage = cssVal;
+                    detLink.open = true;
                     break;
                 case "bg-choice-clipboard":
                     debugger;
@@ -467,6 +484,7 @@ export class CustomRenderer4jsMind {
                 default:
                     throw Error(`Unknown bg choice: ${bgChoice}`);
             }
+            // setBgChoiceThis(bgChoice);
             setTimeout(() => rad.scrollIntoView(), 500);
         }
         function activateBackgroundTab() {
@@ -699,6 +717,7 @@ export class CustomRenderer4jsMind {
         const tfImageUrl = modMdc.mkMDCtextField("Image link", inpImageUrl);
 
         const divImgPreview = mkElt("div");
+        divImgPreview.classList.add("jmnode-bg");
         divImgPreview.style.height = 100;
         divImgPreview.style.width = 100;
         // divImgPreview.style.backgroundColor = "lightgray";
@@ -2097,7 +2116,11 @@ function cssTxt2keyVal(cssTxt) {
     const cssKV = {};
     for (let i = 0, len = parts.length; i < len; i++) {
         const p = parts[i];
-        let [prop, val] = p.split(":");
+        // let [prop, val] = p.split(":");
+        const idx = p.indexOf(":");
+        if (idx == -1) return `Invalid css: ${p}`;
+        const prop = p.slice(0, idx);
+        const val = p.slice(idx + 1);
         const cssDecl = `${prop}: ${val};`;
         if (!isValidCssDecl(cssDecl)) return `Invalid css: ${cssDecl}`;
         cssKV[prop.trim()] = val.trim();
