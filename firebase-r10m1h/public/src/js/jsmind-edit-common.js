@@ -1596,7 +1596,7 @@ function fixProblemsAndUpdateCustomAndShapes(jmDisplayed) {
 // function RGBToHex(rgb) { return standardizeColorTo6Hex(rgb); }
 
 // https://stackoverflow.com/questions/1573053/javascript-function-to-convert-color-names-to-hex-codes/47355187#47355187
-function standardizeColorTo6Hex(strColor) {
+export function standardizeColorTo6Hex(strColor) {
     var ctx = document.createElement('canvas').getContext('2d');
     ctx.fillStyle = strColor;
     return ctx.fillStyle;

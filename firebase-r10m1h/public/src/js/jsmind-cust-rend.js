@@ -416,28 +416,57 @@ export class CustomRenderer4jsMind {
         let backgroundTabIsSetup = false;
         function setupBackgroundTab() {
             if (backgroundTabIsSetup) return;
-            debugger;
+            // debugger;
             console.log(divBgChoices);
             backgroundTabIsSetup = true;
             const initBgCssText = initialShapeEtc.background?.CSS;
             console.log({ initBgCss: initBgCssText });
             let bgChoice = "bg-choice-pattern";
+            let cssProp, cssVal;
             if (initBgCssText.indexOf("/*") == -1) {
                 const initBgCssValues = cssTxt2keyVal(initBgCssText);
                 const arrProp = Object.keys(initBgCssValues);
                 if (arrProp.length == 0) {
                     bgChoice = "bg-choice-none";
                 } else if (arrProp.length == 1) {
-                    const prop = arrProp[0];
-                    switch (prop) {
+                    cssProp = arrProp[0];
+                    cssVal = initBgCssValues[cssProp];
+                    switch (cssProp) {
                         case "background-color":
                             bgChoice = "bg-choice-color";
                     }
                 }
             }
-            debugger;
             const rad = divBgChoices.querySelector(`#${bgChoice}`);
-            rad.checked = true
+            rad.checked = true;
+            switch (bgChoice) {
+                case "bg-choice-none":
+                    break;
+                case "bg-choice-pattern":
+                    // debugger;
+                    // FIX-ME: There is some problem with the taImgPattern state.
+                    // https://stackoverflow.com/questions/46795955/how-to-know-scroll-to-element-is-done-in-javascript
+                    const funFocusTa = () => {
+                        console.log("funFocusTa");
+                        setTimeout(() => taImgPattern.focus(), 500);
+                    };
+                    document.addEventListener("scrollend", funFocusTa, { once: true });
+                    taImgPattern.value = initBgCssText;
+                    detPattern.open = true;
+                    break;
+                case "bg-choice-color":
+                    inpBgColor.value = modJsEditCommon.standardizeColorTo6Hex(cssVal);
+                    detBgColor.open = true;
+                    break;
+                case "bg-choice-link":
+                    debugger;
+                    break;
+                case "bg-choice-clipboard":
+                    debugger;
+                    break;
+                default:
+                    throw Error(`Unknown bg choice: ${bgChoice}`);
+            }
             setTimeout(() => rad.scrollIntoView(), 500);
         }
         function activateBackgroundTab() {
@@ -799,6 +828,19 @@ export class CustomRenderer4jsMind {
             tafImgPattern,
             divPatternValid,
         ]);
+
+
+        const divBgColor = mkElt("div", undefined, [
+            mkElt("label", undefined, ["Background color: ", inpBgColor]),
+        ]);
+        const detBgColor = mkElt("details", undefined, [
+            mkElt("summary", undefined, "Choose color"),
+            divBgColor
+        ]);
+        const bgChoiceColor = mkBgChoice("bg-choice-color", "Color", detBgColor);
+        setBgChoiceEnabled(bgChoiceColor, true);
+
+
         function tellPatternValid(msg) {
             console.log(msg);
             divPatternValid.textContent = msg;
@@ -806,6 +848,7 @@ export class CustomRenderer4jsMind {
         let patternValid;
 
         // FIX-ME: Make a better formatting, keeping comments!
+        /*
         function formatCssDecls(strCss) {
         }
         function OLDformatCssDecls(strCss) {
@@ -818,6 +861,7 @@ export class CustomRenderer4jsMind {
                 str += `${prop}: ${val};`;
             }
         }
+        */
         function setBgPatternPreview() {
             const cssKeyVal = cssTxt2keyVal(taImgPattern.value);
             console.log({ cssKeyVal });
@@ -840,40 +884,6 @@ export class CustomRenderer4jsMind {
                 }
             }
 
-            /*
-            // debugger;
-            // Add a trailing ; if missing (since it could be very confusing):
-            let taVal = taImgPattern.value.trim();
-            taVal = taVal.replaceAll(/\s+/g, " ");
-            // taVal = taVal.replaceAll(new RegExp("/\\*.*?\\* /", "g"), " ");
-            taVal = taVal.trim().replaceAll(/\s+/g, " ");
-            console.log({ taVal });
-
-            patternValid = true;
-
-            const css3bgIn = taVal.endsWith(";") ? taVal : taVal + ";";
-            const cssRaw = "#temp { " + css3bgIn + " }";
-            const cssClean = css_sanitize(cssRaw);
-            if (cssRaw.replaceAll(/\s+/g, " ") !== cssClean.replaceAll(/\s+/g, " ")) {
-                patternValid = "Invalid CSS";
-            }
-            const parts = css3bgIn.split(";").map(p => p.trim()).filter(p => p.length > 0);
-            const css = {};
-            if (patternValid === true) {
-                parts.forEach(p => {
-                    if (patternValid !== true) return;
-                    let [key, val] = p.split(":");
-                    if (val == undefined) { patternValid = "ERROR: missing css value"; }
-                    if (patternValid !== true) return;
-                    key = key.trim();
-                    if (key !== "background" && !key.startsWith("background-")) {
-                        patternValid = `Property "${key}" not allowed`;
-                    }
-                    if (patternValid !== true) return;
-                    css[key] = val.trim().replace(/;$/, "");
-                });
-            }
-            */
             const divThisChoice = divImagePattern.closest(".bg-choice");
             for (const prop in objCssPattern) { delete objCssPattern[prop]; }
             if (patternValid === true) {
@@ -940,23 +950,15 @@ export class CustomRenderer4jsMind {
             divPattern
         ]);
         detPattern.addEventListener("toggle", evt => {
+            // FIX-ME: The delay should perhaps not be needed.
+            //   Take a look at this again when switching to MDC 3.
             setTimeout(() => {
                 if (detPattern.open) {
-                    taImgPattern.focus();
+                    tafImgPattern.focus();
                 }
-            }, 100);
+            }, 1000);
         });
-        const divBgColor = mkElt("div", undefined, [
-            mkElt("label", undefined, ["Background color: ", inpBgColor]),
-        ]);
-        const detBgColor = mkElt("details", undefined, [
-            mkElt("summary", undefined, "Choose color"),
-            divBgColor
-        ]);
 
-
-        const bgChoiceColor = mkBgChoice("bg-choice-color", "Color", detBgColor);
-        setBgChoiceEnabled(bgChoiceColor, true);
 
         const divBgChoices = mkElt("div", { id: "bg-choices" }, [
             bgChoiceNone,
@@ -1100,38 +1102,15 @@ export class CustomRenderer4jsMind {
                 `You can add a background image either as a link 
                 or as an image from cliboard.`);
             const btnLink = modMdc.mkMDCbutton("Link", "raised");
-            // const eltBtns = mkElt("p", undefined, [btnLink, btnClipboard]);
-            // const divAdd = mkElt("div", undefined, [eltInfoAdd, eltBtns]);
-
-
-
-            // FIX-ME: switch to radio buttons choices
-            /*
-            const tabsRecsBg = ["Link", "Clipboard", "Pattern"];
-            const contentEltsBg = mkElt("div", undefined, [divLink, divClipboard, divPattern]);
-            // mkMdcTabBarSimple(tabsRecs, contentElts, moreOnActivate) {
-            const moreOnActivateBg = () => console.log("morOnActivateBg");
-            const tabbarBg = modMdc.mkMdcTabBarSimple(tabsRecsBg, contentEltsBg, moreOnActivateBg);
-            const divAdd = mkElt("div", undefined, [eltInfoAdd, tabbarBg, contentEltsBg]);
-            */
 
             const body = mkElt("div", { id: "dlg-body-node-background" }, [
                 mkElt("h2", undefined, "Node background"),
                 mkElt("div", { style: "color:red;" }, "Not ready!"),
                 divCurrentBg,
-                // divAdd
                 divBgChoices
             ]);
             const save = await modMdc.mkMDCdialogConfirm(body, "save", "cancel");
         }
-        // const divCurrentImage = mkElt("div");
-        /*
-        const divBg = mkElt("div", undefined, [
-            mkElt("div", undefined, "Node background"),
-            divCurrentImage,
-            btnChangeBg,
-        ]);
-        */
         async function addBgFromClipboard(blob) {
             const modImages = await import("images");
             const clipboardAccessOk = await modImages.isClipboardPermissionStateOk();
