@@ -1,6 +1,6 @@
 //========== Specific ====================================================
 // throw Error("Test worker error");
-const SW_VERSION = "0.4.075";
+const SW_VERSION = "0.4.076";
 const logColors = "color: green; background: yellow;";
 console.log(`%csw-worker-input.js ${SW_VERSION} is here`, logColors + " font-size: 20px;");
 
