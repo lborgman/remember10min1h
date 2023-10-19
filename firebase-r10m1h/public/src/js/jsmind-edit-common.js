@@ -331,7 +331,7 @@ export function applyShapeEtc(shapeEtc, eltJmnode) {
     }
     const bgCssText = shapeEtc.background?.CSS;
     if (bgCssText) {
-       modCustRend.applyJmnodeBgCssText(eltJmnode, bgCssText);
+        modCustRend.applyJmnodeBgCssText(eltJmnode, bgCssText);
     }
 }
 
@@ -1096,12 +1096,17 @@ export async function pageSetup() {
         // const liTestMirror = mkMenuItem("test mirror", testStartMirror);
         const liDragAccessibility = mkMenuItem("Drag accessiblity", dialogDragAccessibility);
 
-        const liMindmaps = funMindmapsDialog ? mkMenuItem("Mindmaps", funMindmapsDialog) : undefined;
-        const liMindmapsA = mkMenuItemA("Mindmaps", "/mm4i/mm4i.html");
+        // const liMindmaps = funMindmapsDialog ? mkMenuItem("Mindmaps", funMindmapsDialog) : undefined;
+        const liMindmapsA = mkMenuItemA("List Mindmaps", "/mm4i/mm4i.html");
         console.log({ liMindmapsA });
 
+        const liEditMindmap = mkMenuItem("Edit Mindmap", dialogEditMindmap);
         // const idScreenMirrorPoint = "jsmindtest-screen-mirror-point";
         // const idScreenMirrorColor = "jsmindtest-screen-mirror-color";
+        async function dialogEditMindmap() {
+            const rend = await modCustRend.getOurCustomRenderer();
+            await rend.editMindmapDialog();
+        }
 
 
         async function dialogDragAccessibility() {
@@ -1252,7 +1257,7 @@ export async function pageSetup() {
             liDelete,
             liTestConvertToCustom,
             liDragAccessibility,
-            liMindmaps,
+            liEditMindmap,
             liMindmapsA,
         ];
         const arrMenuTestEntries = [

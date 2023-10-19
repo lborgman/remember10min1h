@@ -5,6 +5,7 @@ if (document.currentScript) throw Error("import .currentScript"); // is module
 if (!import.meta.url) throw Error("!import.meta.url"); // is module
 
 const modMMhelpers = await import("mindmap-helpers");
+const modMdc = await import("util-mdc");
 
 let theCustomRenderer;
 
@@ -206,6 +207,59 @@ export class CustomRenderer4jsMind {
     }
     // async updatePlainLink(node, eltJmnode) { debugger; }
 
+    async editMindmapDialog(eltJmnode) {
+        const title = mkElt("h2", undefined, "Edit mindmap");
+        const body = mkElt("div", undefined, [
+            title,
+        ]);
+
+        const btnTest = modMdc.mkMDCdialogButton("Test", "test");
+        const btnSave = modMdc.mkMDCdialogButton("Save", "save", true);
+        const btnCancel = modMdc.mkMDCdialogButton("Cancel", "close");
+        const eltActions = modMdc.mkMDCdialogActions([btnTest, btnSave, btnCancel]);
+        const dlg = await modMdc.mkMDCdialog(body, eltActions);
+        btnTest.addEventListener("click", evt => {
+            evt.stopPropagation();
+            evt.stopImmediatePropagation();
+            evt.preventDefault();
+            // alert("hi, i am test");
+            // debugger;
+            const style = [
+                "position: fixed",
+                "top: 10",
+                "left: 10",
+                "z-index: 100",
+                "font-size: 2rem",
+                "padding: 8px",
+                "background: yellow",
+                "color: black",
+                "border: 1px solid black",
+            ].join(";");
+            const eltInfo = mkElt("div", { style }, "Preview");
+            document.body.appendChild(eltInfo);
+            dlg.dom.style.display = "none";
+            setTimeout(() => {
+                eltInfo.remove();
+                dlg.dom.style.removeProperty("display");
+            }, 2000);
+        });
+
+        return await new Promise((resolve, reject) => {
+            dlg.dom.addEventListener("MDCDialog:closed", errorHandlerAsyncEvent(async evt => {
+                const action = evt.detail.action;
+                switch (action) {
+                    case "save":
+                        resolve(true);
+                        break;
+                    case "close":
+                        resolve(false);
+                        break;
+                    default:
+                        throw Error(`error in mkMDCdialogConfirm, action is ${action}`)
+                }
+            }));
+        });
+    }
     async editNodeDialog(eltJmnode) {
         const idThemeChoices = "theme-choices";
         const modMdc = await import("util-mdc");
