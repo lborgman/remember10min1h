@@ -223,6 +223,9 @@ export class CustomRenderer4jsMind {
         const eltRoot = jsMind.my_get_DOM_element_from_node(root_node);
         const eltJmnodes = eltRoot.closest("jmnodes");
 
+        // const themeClass = getThemeClass(eltJmnodes);
+        // console.log({ themeClass });
+
         const idThemeChoices = "theme-choices";
         const divThemeChoices = mkElt("div", { id: idThemeChoices });
         const divColorThemes = mkElt("div", undefined, [
@@ -257,7 +260,7 @@ export class CustomRenderer4jsMind {
                 evt.stopPropagation();
                 console.log("theme input", evt.target);
                 const theme = evt.target.value;
-                setJsmindTheme(jmnodesCopied, theme);
+                // setJsmindTheme(jmnodesCopied, theme);
             });
 
 
@@ -308,9 +311,28 @@ export class CustomRenderer4jsMind {
         }
 
 
-        const title = mkElt("h2", undefined, "Edit mindmap");
+        // tabs
+        // mkMdcTabBarSimple(tabsRecs, contentElts, moreOnActivate) 
+        const tabRecs = ["Themes"];
+        const contentElts = mkElt("div", undefined, [divThemeChoices]);
+        if (tabRecs.length != contentElts.childElementCount) throw Error("Tab bar setup number mismatch");
+        const onActivateMore = (idx) => {
+            // console.log("onActivateMore", idx);
+            switch (idx) {
+                case 0:
+                    activateThemesTab();
+                    break;
+                default:
+                    throw Error(`There is no tab at idx=${idx} `);
+            }
+        }
+        debugger;
+        const eltTabs = modMdc.mkMdcTabBarSimple(tabRecs, contentElts, onActivateMore);
+
         const body = mkElt("div", undefined, [
-            title,
+            mkElt("h2", undefined, "Edit mindmap"),
+            eltTabs,
+            contentElts,
         ]);
 
         const btnTest = modMdc.mkMDCdialogButton("Test", "test");
@@ -338,10 +360,13 @@ export class CustomRenderer4jsMind {
             const eltInfo = mkElt("div", { style }, "Preview");
             document.body.appendChild(eltInfo);
             dlg.dom.style.display = "none";
+            const selectedTheme = divThemeChoices.querySelector("input[type=radio]:checked").value;
+            setJsmindTheme(eltJmnodes, selectedTheme);
             setTimeout(() => {
                 eltInfo.remove();
                 dlg.dom.style.removeProperty("display");
-            }, 2000);
+                setJsmindTheme(eltJmnodes, oldThemeCls);
+            }, 5000);
         });
 
         return await new Promise((resolve, reject) => {
@@ -385,12 +410,7 @@ export class CustomRenderer4jsMind {
         };
         const ctrlsSliders = {}
 
-        const eltJmnodes = eltJmnode.closest("jmnodes");
-        let themeClass;
-        eltJmnodes.classList.forEach(entry => {
-            const clsName = entry;
-            if (clsName.match(/^theme-[a-z0-9]*$/)) themeClass = clsName;
-        })
+        // const eltJmnodes = eltJmnode.closest("jmnodes");
         const eltCopied = eltJmnode.cloneNode(true);
         eltCopied.style.outline = "1px dotted white";
         const bcrOrig = eltJmnode.getBoundingClientRect();
@@ -2049,20 +2069,20 @@ function getJsmindTheme(eltJmnodes) {
     checkTagName(eltJmnodes, "JMNODES");
     const themes = [...eltJmnodes.classList].filter(cls => cls.startsWith("theme-"));
     if (themes.length > 1) {
-        const err = `There seems to be several JsMind themes`
-        console.error(err, eltJmnodes, themes);
+        const err = `Several JsMind themes: ${themes.join(" ")}`;
         throw Error(err);
     }
     return themes[0];
 }
 function setJsmindTheme(eltJmnodes, theme) {
     checkTagName(eltJmnodes, "JMNODES");
-    const strJsmindThemeStart = "theme-"
-    if (!theme.startsWith(strJsmindThemeStart)) Error(`${theme} is not a jsmind theme`);
     const arrCls = [...eltJmnodes.classList];
+    const strJsmindThemeStart = "theme-"
     arrCls.forEach(cls => {
         if (cls.startsWith(strJsmindThemeStart)) eltJmnodes.classList.remove(cls)
     });
+    if (!theme) return;
+    if (!theme.startsWith(strJsmindThemeStart)) Error(`${theme} is not a jsmind theme`);
     eltJmnodes.classList.add(theme);
 }
 
@@ -2140,6 +2160,20 @@ function applyJmnodeBgCssValue(jmnode, bgCssValues) {
     const eltBg = jmnode.querySelector(".jmnode-bg");
     applyBgCssValue(eltBg, bgCssValues);
 }
+
+/*
+function getThemeClass(eltJmnodes) {
+    const cn = eltJmnodes.nodeName;
+    if (cn !== "JMNODES") throw Error(`Expeced JMNODES: ${cn}`);
+    const themeClasses = [...eltJmnodes.classList].filter(entry => {
+        const clsName = entry;
+        return clsName.match(/^theme-[a-z0-9]*$/);
+    });
+    if (themeClasses.length == 1) return themeClasses[0];
+    if (themeClasses.length == 0) return undefined;
+    throw Error(`Several theme classes: ${themeClasses.join(" ")}`);
+}
+*/
 
 
 // https://stackoverflow.com/questions/9014804/javascript-validate-css
