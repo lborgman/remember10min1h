@@ -63,7 +63,6 @@ function switchDragTouchAccWay(newWay) {
 // https://hackernoon.com/how-to-embed-single-photos-from-google-photos-on-your-website-and-notion-page
 // https://jumpshare.com/blog/how-to-embed-google-drive-video/
 async function dialogMirrorWay() {
-    // const modMdc = await import("util-mdc");
     const notWorking = ["useCanvas", "jsmind",];
     const altWays = theMirrorWays.filter(alt => !notWorking.includes(alt));
     console.log({ altWays });
@@ -382,7 +381,6 @@ export function setMindmapDialog(fun) {
 
 checkTheDragTouchAccWay();
 
-// const modMdc = await import("util-mdc");
 
 function mkMenuItemA(lbl, url) {
     const eltA = mkElt("a", { href: url }, lbl);
@@ -565,8 +563,6 @@ export async function pageSetup() {
     addJsmindButtons();
 
     async function addJsmindButtons() {
-        // const modMdc = await import("util-mdc");
-
         btnJsmindDebug = modMdc.mkMDCiconButton("adb", "Debug log", 40);
         btnJsmindDebug.id = idBtnJsmindDebug;
         btnJsmindDebug.classList.add("test-item");
@@ -897,7 +893,6 @@ export async function pageSetup() {
 
     async function getDivContextMenu() {
         if (!divContextMenu) {
-            // const modMdc = await import("util-mdc");
             divContextMenu = modMdc.mkMDCmenuDiv();
             divContextMenu.classList.add("is-menu-div");
             document.body.appendChild(divContextMenu);
@@ -958,7 +953,6 @@ export async function pageSetup() {
                 const strCustom = eltCustom.dataset.jsmindCustom;
                 const objCustom = JSON.parse(strCustom);
                 const prov = objCustom.provider;
-                // const modMdc = await import("util-mdc");
                 const go = await modMdc.mkMDCdialogConfirm(`Show entry in ${prov}?`);
                 console.log({ go });
                 if (!go) return;
@@ -1046,7 +1040,6 @@ export async function pageSetup() {
 
 
     async function mkPageMenu() {
-        // const modMdc = await import("util-mdc");
         let toJmDisplayed;
         try {
             toJmDisplayed = typeof jmDisplayed;
@@ -1079,7 +1072,6 @@ export async function pageSetup() {
             // if (!selected_node) Error("No selected node");
             if (!selected_node) return;
             const eltJmnode = jsMind.my_get_DOM_element_from_node(selected_node);
-            const modMMhelpers = await import("mindmap-helpers");
             const objCustom = await modMMhelpers.pasteCustomClipDialog();
             console.log({ objCustom });
             if (!objCustom) return;
@@ -1903,7 +1895,6 @@ export async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits, pr
 export async function dialogFindInMindMaps(key, provider) {
     const modCustRend = await import("jsmind-cust-rend");
     // const renderer = await modCustRend.getOurCustomRenderer();
-    const modMMhelpers = await import("mindmap-helpers");
     const arrMindmapsHits = await modMMhelpers.getMindmapsHits(key);
     console.log({ arrMindmapsHits });
     if (arrMindmapsHits.length == 0) {

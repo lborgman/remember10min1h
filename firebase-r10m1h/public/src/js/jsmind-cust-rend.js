@@ -4,8 +4,16 @@ console.log("here is module jsmind-cust-rend.js");
 if (document.currentScript) throw Error("import .currentScript"); // is module
 if (!import.meta.url) throw Error("!import.meta.url"); // is module
 
+
+
+// FIX-ME: clean up
 const modMMhelpers = await import("mindmap-helpers");
 const modMdc = await import("util-mdc");
+
+// This creates a loop:
+// const modJsEditCommon = await import("jsmind-edit-common");
+
+
 
 let theCustomRenderer;
 
@@ -123,7 +131,6 @@ export class CustomRenderer4jsMind {
         const nodeLink = node.data.shapeEtc?.nodeLink;
         // console.log({ node }, node.data.shapeEtc, nodeLink);
         if (nodeLink && nodeLink.length > 0) {
-            const modMdc = await import("util-mdc");
             const iconBtn = modMdc.mkMDCiconButton("link");
             iconBtn.title = "Visit web page";
             iconBtn.classList.add("icon-button-40");
@@ -133,7 +140,6 @@ export class CustomRenderer4jsMind {
     }
     async updateJmnodeFromCustom(eltJmnode, jmOwner) {
         async function fixRenderImg(eltDiv) {
-            const modMdc = await import("util-mdc");
             const eltParent = eltDiv.parentElement;
             eltDiv.remove();
             // const btnURL = modMdc.mkMDCiconButton("link");
@@ -208,6 +214,100 @@ export class CustomRenderer4jsMind {
     // async updatePlainLink(node, eltJmnode) { debugger; }
 
     async editMindmapDialog(eltJmnode) {
+        const modJsEditCommon = await import("jsmind-edit-common");
+        // theme
+        debugger;
+        const rend = await getOurCustomRenderer();
+        const jmD = rend.getJm();
+        const root_node = jmD.get_root();
+        const eltRoot = jsMind.my_get_DOM_element_from_node(root_node);
+        const eltJmnodes = eltRoot.closest("jmnodes");
+
+        const idThemeChoices = "theme-choices";
+        const divThemeChoices = mkElt("div", { id: idThemeChoices });
+        const divColorThemes = mkElt("div", undefined, [
+            "Themes are for all nodes",
+            divThemeChoices,
+        ]);
+        const oldThemeCls = getJsmindTheme(eltJmnodes);
+        console.log({ oldThemeCls });
+        setupThemeChoices(oldThemeCls);
+        function setupThemeChoices(oldThemeCls) {
+            const arrFormThemes = modJsEditCommon.getMatchesInCssRules(/\.(theme-[^.#\s]*)/);
+            function mkThemeAlt(cls) {
+                const themeName = cls.substring(6);
+                // console.log("mkThemeAlt", { cls, themeName });
+                const inpRadio = mkElt("input", { type: "radio", name: "theme", value: cls });
+                if (cls == oldThemeCls) inpRadio.checked = true;
+                const eltLbl = mkElt("label", undefined, [inpRadio, themeName]);
+                return mkElt("jmnodes", { class: cls },
+                    mkElt("jmnode", undefined, eltLbl)
+                );
+            }
+            arrFormThemes.forEach(cls => {
+                divThemeChoices.appendChild(mkThemeAlt(cls));
+            });
+
+            // https://javascript.info/events-change-input
+            divThemeChoices.addEventListener("change", evt => {
+                evt.stopPropagation();
+                console.log("theme change", evt.target);
+            });
+            divThemeChoices.addEventListener("input", evt => {
+                evt.stopPropagation();
+                console.log("theme input", evt.target);
+                const theme = evt.target.value;
+                setJsmindTheme(jmnodesCopied, theme);
+            });
+
+
+        }
+
+        function activateThemesTab() {
+            console.log("activateThemesTab");
+            const divThemeChoices = document.getElementById(idThemeChoices);
+            checkThemesContrast(divThemeChoices);
+        }
+        let allThemesContrastsChecked = false;
+        async function checkThemesContrast(divThemeChoices) {
+            if (allThemesContrastsChecked) return;
+            const modContrast = await import("acc-colors");
+            setTimeout(() => {
+                try {
+                    const markWithOutline = false;
+                    divThemeChoices.querySelectorAll("jmnode").forEach(jmnode => {
+                        const s = getComputedStyle(jmnode);
+                        const fgColor = s.color;
+                        const bgColor = s.backgroundColor;
+                        const contrast = modContrast.colorContrast(fgColor, bgColor);
+                        if (contrast < 3.0) {
+                            jmnode.classList.add("low-theme-contrast");
+                        }
+                        if (markWithOutline) {
+                            if (contrast < 7) jmnode.style.outline = "1px dotted red";
+                            if (contrast < 4.5) jmnode.style.outline = "4px dotted red";
+                            if (contrast < 3.0) jmnode.style.outline = "6px dotted red";
+                            if (contrast < 2.5) jmnode.style.outline = "8px dotted red";
+                            if (contrast < 2.0) jmnode.style.outline = "10px dotted red";
+                        }
+                        const fgHex = to6HexColor(fgColor);
+                        const fgHexCorrect = getCorrectTextColor(bgColor);
+                        if (fgHex !== fgHexCorrect) {
+                            jmnode.style.outlineColor = "black";
+                        }
+                        if (contrast < 4.5) {
+                            // console.log(jmnode.textContent, { fgColor, bgColor, fgHexCorrect, fgHex, contrast });
+                        }
+                    });
+                    allThemesContrastsChecked = true;
+                    console.log({ allThemesContrastsChecked });
+                } catch (err) {
+                    console.error("checkThemesContrast", err);
+                }
+            }, 1000);
+        }
+
+
         const title = mkElt("h2", undefined, "Edit mindmap");
         const body = mkElt("div", undefined, [
             title,
@@ -261,8 +361,6 @@ export class CustomRenderer4jsMind {
         });
     }
     async editNodeDialog(eltJmnode) {
-        const idThemeChoices = "theme-choices";
-        const modMdc = await import("util-mdc");
         const modJsEditCommon = await import("jsmind-edit-common");
         const modIsDisplayed = await import("is-displayed");
 
@@ -1260,7 +1358,6 @@ export class CustomRenderer4jsMind {
         const btnSelectCustomItem = modMdc.mkMDCbutton("Select custom item", "raised");
         // divCustomContent.appendChild(btnSelectCustomItem);
         btnSelectCustomItem.addEventListener("click", async evt => {
-            const modMMhelpers = await import("mindmap-helpers");
             const objCustom = await modMMhelpers.pasteCustomClipDialog();
             console.log({ objCustom });
             if (!objCustom) return;
@@ -1314,7 +1411,6 @@ export class CustomRenderer4jsMind {
             const btnConvert2Custom = modMdc.mkMDCbutton("Link to custom", "raised");
             divCustomContent.appendChild(btnConvert2Custom);
             btnConvert2Custom.addEventListener("click", async evt => {
-                const modMMhelpers = await import("mindmap-helpers");
                 const objCustom = await modMMhelpers.pasteCustomClipDialog();
                 console.log({ objCustom });
                 if (!objCustom) return;
@@ -1573,50 +1669,12 @@ export class CustomRenderer4jsMind {
             setupShadowTab();
         }
 
-        const divThemeChoices = mkElt("div", { id: idThemeChoices });
-        const divColorThemes = mkElt("div", undefined, [
-            "Themes are for all nodes",
-            divThemeChoices,
-        ]);
-        const oldThemeCls = getJsmindTheme(jmnodesCopied);
-        console.log({ oldTheme: oldThemeCls });
-        setupThemeChoices(oldThemeCls);
-        function setupThemeChoices(oldThemeCls) {
-            const arrFormThemes = modJsEditCommon.getMatchesInCssRules(/\.(theme-[^.#\s]*)/);
-            function mkThemeAlt(cls) {
-                const themeName = cls.substring(6);
-                // console.log("mkThemeAlt", { cls, themeName });
-                const inpRadio = mkElt("input", { type: "radio", name: "theme", value: cls });
-                if (cls == oldThemeCls) inpRadio.checked = true;
-                const eltLbl = mkElt("label", undefined, [inpRadio, themeName]);
-                return mkElt("jmnodes", { class: cls },
-                    mkElt("jmnode", undefined, eltLbl)
-                );
-            }
-            arrFormThemes.forEach(cls => {
-                divThemeChoices.appendChild(mkThemeAlt(cls));
-            });
-
-            // https://javascript.info/events-change-input
-            divThemeChoices.addEventListener("change", evt => {
-                evt.stopPropagation();
-                console.log("theme change", evt.target);
-            });
-            divThemeChoices.addEventListener("input", evt => {
-                evt.stopPropagation();
-                console.log("theme input", evt.target);
-                const theme = evt.target.value;
-                setJsmindTheme(jmnodesCopied, theme);
-            });
-
-
-        }
 
 
         // console.log("setting up tabs bar", eltCopied);
         // mkMdcTabBarSimple(tabsRecs, contentElts, moreOnActivate) 
-        const tabRecs = ["Content", "Shapes", "Border", "Shadow", "Background", "Themes"];
-        const contentElts = mkElt("div", undefined, [divContent, divShapes, divBorder, divShadow, divBackground, divColorThemes]);
+        const tabRecs = ["Content", "Shapes", "Border", "Shadow", "Background"];
+        const contentElts = mkElt("div", undefined, [divContent, divShapes, divBorder, divShadow, divBackground]);
         if (tabRecs.length != contentElts.childElementCount) throw Error("Tab bar setup number mismatch");
         const onActivateMore = (idx) => {
             // console.log("onActivateMore", idx);
@@ -1642,49 +1700,6 @@ export class CustomRenderer4jsMind {
             }
         }
 
-        function activateThemesTab() {
-            console.log("activateThemesTab");
-            const divThemeChoices = document.getElementById(idThemeChoices);
-            checkThemesContrast(divThemeChoices);
-        }
-        let allThemesContrastsChecked = false;
-        async function checkThemesContrast(divThemeChoices) {
-            if (allThemesContrastsChecked) return;
-            const modContrast = await import("acc-colors");
-            setTimeout(() => {
-                try {
-                    const markWithOutline = false;
-                    divThemeChoices.querySelectorAll("jmnode").forEach(jmnode => {
-                        const s = getComputedStyle(jmnode);
-                        const fgColor = s.color;
-                        const bgColor = s.backgroundColor;
-                        const contrast = modContrast.colorContrast(fgColor, bgColor);
-                        if (contrast < 3.0) {
-                            jmnode.classList.add("low-theme-contrast");
-                        }
-                        if (markWithOutline) {
-                            if (contrast < 7) jmnode.style.outline = "1px dotted red";
-                            if (contrast < 4.5) jmnode.style.outline = "4px dotted red";
-                            if (contrast < 3.0) jmnode.style.outline = "6px dotted red";
-                            if (contrast < 2.5) jmnode.style.outline = "8px dotted red";
-                            if (contrast < 2.0) jmnode.style.outline = "10px dotted red";
-                        }
-                        const fgHex = to6HexColor(fgColor);
-                        const fgHexCorrect = getCorrectTextColor(bgColor);
-                        if (fgHex !== fgHexCorrect) {
-                            jmnode.style.outlineColor = "black";
-                        }
-                        if (contrast < 4.5) {
-                            // console.log(jmnode.textContent, { fgColor, bgColor, fgHexCorrect, fgHex, contrast });
-                        }
-                    });
-                    allThemesContrastsChecked = true;
-                    console.log({ allThemesContrastsChecked });
-                } catch (err) {
-                    console.error("checkThemesContrast", err);
-                }
-            }, 1000);
-        }
 
         contentElts.classList.add("tab-elts");
         contentElts.addEventListener("change", evt => {
