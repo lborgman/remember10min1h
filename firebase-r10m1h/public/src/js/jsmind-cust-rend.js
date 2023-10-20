@@ -63,7 +63,34 @@ export class CustomRenderer4jsMind {
     }
 
     setJm(jmDisplayed) { this.THEjmDisplayed = jmDisplayed; }
-    getJm(jmDisplayed) { return this.THEjmDisplayed; }
+    getJm() { return this.THEjmDisplayed; }
+    getEltRoot() {
+        const root_node = this.THEjmDisplayed.get_root();
+        return jsMind.my_get_DOM_element_from_node(root_node);
+    }
+    getEltJmnodes() {
+        const elt = this.getEltRoot();
+        return elt.closest("jmnodes");
+    }
+    setMindmapGlobals(globals) {
+        const root_node = this.THEjmDisplayed.get_root();
+        root_node.data.mindmapGlobals = globals;
+    }
+    getMindmapGlobals() {
+        // .shapeEtc
+        const root_node = this.THEjmDisplayed.get_root();
+        return root_node.data.mindmapGlobals;
+    }
+    applyThisMindmapGlobals() {
+        const defaultGlobals = {
+            themeCls: "theme-orange",
+        }
+        const globals = this.getMindmapGlobals() || defaultGlobals;
+        if (!globals) return;
+        const elt = this.getEltJmnodes();
+        applyMindmapGlobals(elt, globals);
+    }
+
     addProvider(objProv) {
         if (!objProv instanceof providerDetails) { throw Error("Not object of class providerDetails"); }
         this.#providers[objProv.name] = objProv;
@@ -216,11 +243,12 @@ export class CustomRenderer4jsMind {
     async editMindmapDialog(eltJmnode) {
         const modJsEditCommon = await import("jsmind-edit-common");
         // theme
-        debugger;
+        // debugger;
         const rend = await getOurCustomRenderer();
-        const jmD = rend.getJm();
-        const root_node = jmD.get_root();
-        const eltRoot = jsMind.my_get_DOM_element_from_node(root_node);
+        // const jmD = rend.getJm();
+        // const root_node = jmD.get_root();
+        // const eltRoot = jsMind.my_get_DOM_element_from_node(root_node);
+        const eltRoot = rend.getEltRoot();
         const eltJmnodes = eltRoot.closest("jmnodes");
 
         // const themeClass = getThemeClass(eltJmnodes);
@@ -232,9 +260,12 @@ export class CustomRenderer4jsMind {
             "Themes are for all nodes",
             divThemeChoices,
         ]);
-        const oldThemeCls = getJsmindTheme(eltJmnodes);
+        const oldGlobals = rend.getMindmapGlobals();
+        // const oldThemeCls = getJsmindTheme(eltJmnodes);
+        const oldThemeCls = oldGlobals? oldGlobals.themeCls : getJsmindTheme(eltJmnodes);
         console.log({ oldThemeCls });
         setupThemeChoices(oldThemeCls);
+        let selectedThemeCls = oldThemeCls;
         function setupThemeChoices(oldThemeCls) {
             const arrFormThemes = modJsEditCommon.getMatchesInCssRules(/\.(theme-[^.#\s]*)/);
             function mkThemeAlt(cls) {
@@ -259,8 +290,9 @@ export class CustomRenderer4jsMind {
             divThemeChoices.addEventListener("input", evt => {
                 evt.stopPropagation();
                 console.log("theme input", evt.target);
-                const theme = evt.target.value;
+                selectedThemeCls = evt.target.value;
                 // setJsmindTheme(jmnodesCopied, theme);
+                funDebounceSomethingToSave();
             });
 
 
@@ -326,7 +358,7 @@ export class CustomRenderer4jsMind {
                     throw Error(`There is no tab at idx=${idx} `);
             }
         }
-        debugger;
+        // debugger;
         const eltTabs = modMdc.mkMdcTabBarSimple(tabRecs, contentElts, onActivateMore);
 
         const body = mkElt("div", undefined, [
@@ -340,12 +372,19 @@ export class CustomRenderer4jsMind {
         const btnCancel = modMdc.mkMDCdialogButton("Cancel", "close");
         const eltActions = modMdc.mkMDCdialogActions([btnTest, btnSave, btnCancel]);
         const dlg = await modMdc.mkMDCdialog(body, eltActions);
+        btnSave.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            const saveGlobals = {
+                themeCls: selectedThemeCls,
+            }
+            // const r = await getOurCustomRenderer();
+            rend.setMindmapGlobals(saveGlobals);
+            rend.applyThisMindmapGlobals();
+            modMMhelpers.DBrequestSaveThisMindmap(rend.getJm());
+        }));
         btnTest.addEventListener("click", evt => {
             evt.stopPropagation();
             evt.stopImmediatePropagation();
             evt.preventDefault();
-            // alert("hi, i am test");
-            // debugger;
             const style = [
                 "position: fixed",
                 "top: 10",
@@ -360,14 +399,29 @@ export class CustomRenderer4jsMind {
             const eltInfo = mkElt("div", { style }, "Preview");
             document.body.appendChild(eltInfo);
             dlg.dom.style.display = "none";
-            const selectedTheme = divThemeChoices.querySelector("input[type=radio]:checked").value;
-            setJsmindTheme(eltJmnodes, selectedTheme);
+            const tempGlobals = {
+                themeCls: selectedThemeCls,
+            }
+            applyMindmapGlobals(eltJmnodes, tempGlobals);
             setTimeout(() => {
                 eltInfo.remove();
                 dlg.dom.style.removeProperty("display");
-                setJsmindTheme(eltJmnodes, oldThemeCls);
+                // const oldGlobals = { themeCls: oldThemeCls, };
+                applyMindmapGlobals(eltJmnodes, oldGlobals);
             }, 5000);
         });
+
+        function somethingToSave() {
+            if (selectedThemeCls != oldThemeCls) return true;
+            return false;
+        }
+        btnSave.disabled = true;
+        function checkSomethingToSave() {
+            btnSave.disabled = !somethingToSave();
+        }
+        const debounceSomethingToSave = debounce(checkSomethingToSave, 1000);
+        function funDebounceSomethingToSave() { debounceSomethingToSave(); }
+
 
         return await new Promise((resolve, reject) => {
             dlg.dom.addEventListener("MDCDialog:closed", errorHandlerAsyncEvent(async evt => {
@@ -2161,19 +2215,20 @@ function applyJmnodeBgCssValue(jmnode, bgCssValues) {
     applyBgCssValue(eltBg, bgCssValues);
 }
 
-/*
-function getThemeClass(eltJmnodes) {
-    const cn = eltJmnodes.nodeName;
-    if (cn !== "JMNODES") throw Error(`Expeced JMNODES: ${cn}`);
-    const themeClasses = [...eltJmnodes.classList].filter(entry => {
-        const clsName = entry;
-        return clsName.match(/^theme-[a-z0-9]*$/);
-    });
-    if (themeClasses.length == 1) return themeClasses[0];
-    if (themeClasses.length == 0) return undefined;
-    throw Error(`Several theme classes: ${themeClasses.join(" ")}`);
+export function applyMindmapGlobals(eltJmnodes, mindmapGlobals) {
+    setJsmindTheme(eltJmnodes, undefined);
+    if (!mindmapGlobals) { return; }
+    for (const prop in mindmapGlobals) {
+        switch (prop) {
+            case "themeCls":
+                const themeCls = mindmapGlobals[prop];
+                setJsmindTheme(eltJmnodes, themeCls);
+                break;
+            default:
+                throw Error(`Unknown property in minmapGlobals: ${prop}`);
+        }
+    }
 }
-*/
 
 
 // https://stackoverflow.com/questions/9014804/javascript-validate-css

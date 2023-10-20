@@ -335,6 +335,7 @@ export function applyShapeEtc(shapeEtc, eltJmnode) {
 }
 
 
+
 let modJsmindDraggable;
 // basicInit4jsmind();
 export function basicInit4jsmind() {
@@ -482,7 +483,7 @@ export async function pageSetup() {
     const optionsJmDisplay = {
         // container: 'jsmind_container',
         container: idDivJmnodesMain,
-        theme: 'orange',
+        // theme: 'orange',
         editable: true,
         view: {
             // draggable: true,
@@ -706,6 +707,10 @@ export async function pageSetup() {
     jmDisplayed = displayMindMap(mind, optionsJmDisplay);
 
     modCustRend.setOurCustomRendererJm(jmDisplayed);
+    const render = await modCustRend.getOurCustomRenderer();
+    // const globals = render.getMindmapGlobals();
+    render.applyThisMindmapGlobals();
+
     switchDragTouchAccWay(theDragTouchAccWay);
 
     const nowAfter = Date.now();
