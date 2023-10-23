@@ -389,10 +389,13 @@ export class CustomRenderer4jsMind {
         inpUseBg.addEventListener("change", evt => {
             console.log("inpUseBg", inpUseBg.checked);
             setBgDisabled(!inpUseBg.checked);
-            // const eltSlider = divBgOpacity.
         });
 
         let bgTabInitialized = false;
+        function bgInputs2cssText() {
+            
+        }
+        function cssText2bgInputs() {}
         async function initBgTab() {
             if (bgTabInitialized) return;
             bgTabInitialized = true;
