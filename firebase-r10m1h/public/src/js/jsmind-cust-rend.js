@@ -262,7 +262,7 @@ export class CustomRenderer4jsMind {
         ]);
         const oldGlobals = rend.getMindmapGlobals();
         // const oldThemeCls = getJsmindTheme(eltJmnodes);
-        const oldThemeCls = oldGlobals? oldGlobals.themeCls : getJsmindTheme(eltJmnodes);
+        const oldThemeCls = oldGlobals ? oldGlobals.themeCls : getJsmindTheme(eltJmnodes);
         console.log({ oldThemeCls });
         setupThemeChoices(oldThemeCls);
         let selectedThemeCls = oldThemeCls;
@@ -343,19 +343,100 @@ export class CustomRenderer4jsMind {
         }
 
 
+        const divBgOpSlider = mkElt("div");
+        const divBgOpacity = mkElt("div", undefined, [
+            divBgOpSlider,
+        ]);
+        const divBgOpLabels = mkElt("div", undefined, [
+            mkElt("div", undefined, "Transparant"),
+            mkElt("div", undefined, "Opaque")
+        ]);
+        divBgOpLabels.style.display = "flex";
+        divBgOpLabels.style.justifyContent = "space-between";
+
+        const inpUseBg = modMdc.mkMDCcheckboxInput();
+        const chkUseBg = await modMdc.mkMDCcheckboxElt(inpUseBg, "Set background color");
+        console.log({ oldGlobals });
+        // debugger;
+        const chkLabel = inpUseBg.closest("label");
+        console.log({ chkLabel });
+        chkLabel.classList.add("mdc-chkbox-label-helper");
+
+        const inpBgColor = mkElt("input", { type: "color" });
+        let sliBgOpacity;
+        const divBgCtrls = mkElt("div", { class: "mdc-card" }, [
+            inpBgColor,
+            // divBgOpSlider,
+            mkElt("p", undefined, [
+                divBgOpLabels,
+                divBgOpacity
+            ])
+        ]);
+        divBgCtrls.style.padding = "10px";
+        const divBackground = mkElt("div", undefined, [
+            mkElt("p", undefined, chkUseBg),
+            divBgCtrls
+        ]);
+        function setBgDisabled(disabled) {
+            modMdc.setMDCSliderDisabled(sliBgOpacity, disabled);
+            inpBgColor.disabled = disabled;
+            if (disabled) {
+                divBgCtrls.style.opacity = 0.3;
+            } else {
+                divBgCtrls.style.opacity = 1;
+            }
+        }
+        inpUseBg.addEventListener("change", evt => {
+            console.log("inpUseBg", inpUseBg.checked);
+            setBgDisabled(!inpUseBg.checked);
+            // const eltSlider = divBgOpacity.
+        });
+
+        let bgTabInitialized = false;
+        async function initBgTab() {
+            if (bgTabInitialized) return;
+            bgTabInitialized = true;
+            const s = getComputedStyle(eltJmnodes);
+            const rgba = s.backgroundColor;
+            const reRgba = new RegExp("^rgba.*?,.*?,.*?,.*?([0-9.]+)\\)");
+            const m = rgba.match(reRgba);
+            if (!m) throw Error(`Expected rgba color format: ${rgba}`);
+            inpBgColor.value = rgba;
+            const opacity = m[1];
+            const funChange = () => { console.log("change op"); }
+            // sliBgOpacity = await modIsDisplayed.mkSliderInContainer(divBgOpacity, 0, 1, opacity, step, title, funChange);
+            const modIsDisplayed = await import("is-displayed");
+            const iOpacity = Math.floor(100 * opacity)
+            sliBgOpacity = await modIsDisplayed.mkSliderInContainer(
+                divBgOpSlider,
+                // FIX-ME: Can't get it to work with step "undefined"???
+                // 0, 1, opacity, undefined,
+                0, 100, iOpacity, 10,
+                "Opacity", funChange);
+            const inpBgEnabled = oldGlobals?.backgroundCss != undefined;
+            chkUseBg.checked = inpBgEnabled;
+            setBgDisabled(!inpBgEnabled);
+        }
+        // sli = await modIsDisplayed.mkSliderInContainer(eltCont, min, max, initVal, step, title, funChange);
+
         // tabs
         // mkMdcTabBarSimple(tabsRecs, contentElts, moreOnActivate) 
-        const tabRecs = ["Themes"];
-        const contentElts = mkElt("div", undefined, [divThemeChoices]);
+        const tabRecs = ["Themes", "Background"];
+        const contentElts = mkElt("div", undefined,
+            [divThemeChoices, divBackground]);
         if (tabRecs.length != contentElts.childElementCount) throw Error("Tab bar setup number mismatch");
         const onActivateMore = (idx) => {
             // console.log("onActivateMore", idx);
+            if (idx > tabRecs.length - 1) { throw Error(`There is no tab at idx=${idx} `); }
             switch (idx) {
                 case 0:
                     activateThemesTab();
                     break;
+                case 1:
+                    initBgTab();
+                    break;
                 default:
-                    throw Error(`There is no tab at idx=${idx} `);
+                    throw Error(`Activation code missing for tab, idx=${idx} `);
             }
         }
         // debugger;
@@ -396,7 +477,11 @@ export class CustomRenderer4jsMind {
                 "color: black",
                 "border: 1px solid black",
             ].join(";");
-            const eltInfo = mkElt("div", { style }, "Preview");
+            const btnClose = modMdc.mkMDCbutton("Close");
+            const eltInfo = mkElt("div", { style }, [
+                "Preview",
+                btnClose
+            ]);
             document.body.appendChild(eltInfo);
             dlg.dom.style.display = "none";
             const tempGlobals = {
@@ -528,7 +613,8 @@ export class CustomRenderer4jsMind {
             https://plnkr.co/edit/zSi5dCJOiabaCHfw?p=preview&preview
         */
         const jmnodesCopied = mkElt("jmnodes", undefined, eltCopied);
-        if (themeClass) jmnodesCopied.classList.add(themeClass);
+        // FIX-ME: MindmapGlobals
+        // if (themeClass) jmnodesCopied.classList.add(themeClass);
         const divEdnodeCopied = mkElt("div", undefined, [
             jmnodesCopied
         ]);
@@ -733,7 +819,8 @@ export class CustomRenderer4jsMind {
                 currentShapeEtc.shape = tval;
             }
         });
-        if (themeClass) jmnodesShapes.classList.add(themeClass);
+        // FIX-ME: MindmapGlobals
+        // if (themeClass) jmnodesShapes.classList.add(themeClass);
         const eltCopiedNoShape = eltCopied.cloneNode(true);
         const divCopiedNoShape = eltCopiedNoShape.querySelector(".jmnode-bg");
         modJsEditCommon.clearShapes(divCopiedNoShape);
@@ -2223,6 +2310,11 @@ export function applyMindmapGlobals(eltJmnodes, mindmapGlobals) {
             case "themeCls":
                 const themeCls = mindmapGlobals[prop];
                 setJsmindTheme(eltJmnodes, themeCls);
+                break;
+            case "backgroundCss":
+                const bgCssText = mindmapGlobals[prop];
+                const bgCssValues = cssTxt2keyVal(bgCssText);
+                applyBgCssValue(eltJmnodes, bgCssValues);
                 break;
             default:
                 throw Error(`Unknown property in minmapGlobals: ${prop}`);

@@ -649,7 +649,7 @@ export function mkMDClistItem(txt, role) {
 // https://m2.material.io/components/sliders
 // https://stackoverflow.com/questions/64892909/how-do-i-use-mdcslider-in-javascript
 // If now is an array then it is a range slider
-export async function mkMDCslider(min, max, now, step, label, onChange, onInput, disable) {
+export async function mkMDCslider(min, max, now, step, label, onChange, onInput) {
     /*
     <div class="mdc-slider">
         <div class="mdc-slider__track">
@@ -815,7 +815,8 @@ async function attachMdcWhenOnDocument(eltMdc, clsMdc) {
 }
 
 export function getMDCslider4elt(elt) {
-    return elt["mdc-slider"];
+    // return elt["mdc-slider"];
+    return elt["myMdc"];
 }
 export function setMDCSliderValue(elt, val) {
     const slider = getMDCslider4elt(elt);
