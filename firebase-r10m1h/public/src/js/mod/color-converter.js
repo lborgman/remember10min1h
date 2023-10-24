@@ -20,7 +20,7 @@ const color_convert = function () {
          * color_convert.to_rgb_array('garbagey')  # [0, 0, 0, 0]
          */
         // Setting an invalid fillStyle leaves this unchanged
-        context.fillStyle = 'rgba(0, 0, 0, 0)';
+        context.fillStyle = 'rgba(-1,-1,-1,-1)';
         // We're reusing the canvas, so fill it with something predictable
         context.clearRect(0, 0, 1, 1);
         context.fillStyle = color;
@@ -66,5 +66,33 @@ const color_convert = function () {
 }();
 
 export function toRgba(color) {
-    return color_convert.to_rgba(color);
+    const res = color_convert.to_rgba(color);
+    if (res == "rgba(-1,-1,-1,-1)") throw Error(`Invalid color ${color}`);
+    return res;
+}
+export function toRgbaArr(color) {
+    const res = color_convert.to_rgba_array(color);
+    if (res.join(",") == "-1,-1,-1,-1") throw Error(`Invalid color ${color}`);
+    return res;
+}
+export function toHex6(color) {
+    const res = color_convert.to_hex(color);
+    return res;
+}
+
+// https://stackoverflow.com/questions/47022484/in-js-find-the-color-as-if-it-had-0-5-opacity-on-a-white-background
+export function computeMixed(fgColor, bgColor) {
+    const arrBg = color_convert.to_rgba_array(bgColor);
+    if (arrBg[3] != 255) {
+        throw Error(`Background must be opaque: ${bgColor}`);
+    }
+    const arrFg = color_convert.to_rgba_array(fgColor);
+    if (!arrFg[3] == 255) { return toRgba(fgColor); }
+
+    const alpha = arrFg[3] / 255;
+    // newComponent = floor(oldComponent x alpha + backgroundComponent x (1 - alpha)) 
+    const newComponent = (fgComp, bgComp) => Math.floor(fgComp * alpha + bgComp * (1 - alpha));
+    const arrRes = [];
+    [0, 1, 2].forEach(i => { arrRes[i] = newComponent(arrFg[i], arrBg[i])});
+    return `rgb(${arrRes.join(",")})`;
 }

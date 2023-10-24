@@ -393,23 +393,22 @@ export class CustomRenderer4jsMind {
 
         let bgTabInitialized = false;
         function bgInputs2cssText() {
-            
+
         }
-        function cssText2bgInputs() {}
+        function cssText2bgInputs() { }
         async function initBgTab() {
             if (bgTabInitialized) return;
             bgTabInitialized = true;
+            const modColorConverter = await import("color-converter");
             const s = getComputedStyle(eltJmnodes);
-            const rgba = s.backgroundColor;
-            const reRgba = new RegExp("^rgba.*?,.*?,.*?,.*?([0-9.]+)\\)");
-            const m = rgba.match(reRgba);
-            if (!m) throw Error(`Expected rgba color format: ${rgba}`);
-            inpBgColor.value = rgba;
-            const opacity = m[1];
+            const hex = modColorConverter.toHex6(s.backgroundColor);
+            inpBgColor.value = hex;
+            const arrRgba = modColorConverter.toRgbaArr(s.backgroundColor);
+            const opacity = arrRgba[3] / 255;
             const funChange = () => { console.log("change op"); }
             // sliBgOpacity = await modIsDisplayed.mkSliderInContainer(divBgOpacity, 0, 1, opacity, step, title, funChange);
             const modIsDisplayed = await import("is-displayed");
-            const iOpacity = Math.floor(100 * opacity)
+            const iOpacity = Math.floor(100 * (opacity + 0.001));
             sliBgOpacity = await modIsDisplayed.mkSliderInContainer(
                 divBgOpSlider,
                 // FIX-ME: Can't get it to work with step "undefined"???
@@ -480,22 +479,31 @@ export class CustomRenderer4jsMind {
                 "color: black",
                 "border: 1px solid black",
             ].join(";");
-            const btnClose = modMdc.mkMDCbutton("Close");
-            const eltInfo = mkElt("div", { style }, [
+            const btnClose = modMdc.mkMDCiconButton("Close");
+            const eltPreviewInfo = mkElt("div", { style }, [
                 "Preview",
                 btnClose
             ]);
-            document.body.appendChild(eltInfo);
+            eltPreviewInfo.addEventListener("click", evt => {
+                evt.stopPropagation();
+                closePreview();
+            })
+            function closePreview() {
+                eltPreviewInfo.remove();
+                dlg.dom.style.removeProperty("display");
+                applyMindmapGlobals(eltJmnodes, oldGlobals);
+            }
+            document.body.appendChild(eltPreviewInfo);
             dlg.dom.style.display = "none";
             const tempGlobals = {
                 themeCls: selectedThemeCls,
             }
             applyMindmapGlobals(eltJmnodes, tempGlobals);
             setTimeout(() => {
-                eltInfo.remove();
-                dlg.dom.style.removeProperty("display");
-                // const oldGlobals = { themeCls: oldThemeCls, };
-                applyMindmapGlobals(eltJmnodes, oldGlobals);
+                // eltPreviewInfo.remove();
+                // dlg.dom.style.removeProperty("display");
+                // applyMindmapGlobals(eltJmnodes, oldGlobals);
+                closePreview();
             }, 5000);
         });
 
