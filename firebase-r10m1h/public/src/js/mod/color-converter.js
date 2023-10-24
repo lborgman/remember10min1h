@@ -75,6 +75,10 @@ export function toRgbaArr(color) {
     if (res.join(",") == "-1,-1,-1,-1") throw Error(`Invalid color ${color}`);
     return res;
 }
+export function arrToRgba(arrColor) {
+    const a = arrColor;
+    return `rgba(${a[0]},${a[1]},${a[2]},${a[3]/255})`;
+}
 export function toHex6(color) {
     const res = color_convert.to_hex(color);
     return res;

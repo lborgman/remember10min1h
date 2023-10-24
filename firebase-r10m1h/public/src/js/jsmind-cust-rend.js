@@ -9,6 +9,7 @@ if (!import.meta.url) throw Error("!import.meta.url"); // is module
 // FIX-ME: clean up
 const modMMhelpers = await import("mindmap-helpers");
 const modMdc = await import("util-mdc");
+const modColorConverter = await import("color-converter");
 
 // This creates a loop:
 // const modJsEditCommon = await import("jsmind-edit-common");
@@ -261,6 +262,7 @@ export class CustomRenderer4jsMind {
             divThemeChoices,
         ]);
         const oldGlobals = rend.getMindmapGlobals();
+        let tempGlobals = JSON.parse(JSON.stringify(oldGlobals));
         // const oldThemeCls = getJsmindTheme(eltJmnodes);
         const oldThemeCls = oldGlobals ? oldGlobals.themeCls : getJsmindTheme(eltJmnodes);
         console.log({ oldThemeCls });
@@ -456,11 +458,10 @@ export class CustomRenderer4jsMind {
         const eltActions = modMdc.mkMDCdialogActions([btnTest, btnSave, btnCancel]);
         const dlg = await modMdc.mkMDCdialog(body, eltActions);
         btnSave.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            const saveGlobals = {
-                themeCls: selectedThemeCls,
-            }
+            const saveGlobals = { themeCls: selectedThemeCls, }
             // const r = await getOurCustomRenderer();
-            rend.setMindmapGlobals(saveGlobals);
+            // rend.setMindmapGlobals(saveGlobals);
+            rend.setMindmapGlobals(tempGlobals);
             rend.applyThisMindmapGlobals();
             modMMhelpers.DBrequestSaveThisMindmap(rend.getJm());
         }));
@@ -483,10 +484,10 @@ export class CustomRenderer4jsMind {
                 "box-shadow: red 8px 8px 8px"
             ].join(";");
             // const btnClose = modMdc.mkMDCiconButton("close");
-            const eltPreviewInfo = mkElt("div", { style, class:"mdc-card" }, [
+            const eltPreviewInfo = mkElt("div", { style, class: "mdc-card" }, [
                 "Preview",
                 // btnClose
-                mkElt("div", {style:"font-size:0.8rem;"}, "Click to end preview")
+                mkElt("div", { style: "font-size:0.8rem;" }, "Click to end preview")
             ]);
             eltPreviewInfo.title = "Click to end preview";
             eltPreviewInfo.addEventListener("click", evt => {
@@ -500,20 +501,42 @@ export class CustomRenderer4jsMind {
             }
             document.body.appendChild(eltPreviewInfo);
             dlg.dom.style.display = "none";
-            const tempGlobals = {
-                themeCls: selectedThemeCls,
-            }
+            // const tempGlobals = { themeCls: selectedThemeCls, }
             applyMindmapGlobals(eltJmnodes, tempGlobals);
             // setTimeout(() => { closePreview(); }, 160 * 1000);
         });
 
         function somethingToSave() {
-            if (selectedThemeCls != oldThemeCls) return true;
+            // if (selectedThemeCls != oldThemeCls) return true;
+            tempGlobals = {
+                themeCls: selectedThemeCls,
+            }
+            // const inpBgEnabled = oldGlobals?.backgroundCss != undefined;
+            if (inpUseBg.checked) {
+                debugger;
+                console.log({ inpBgColor }, inpBgColor.value);
+                console.log({modColorConverter});
+                const arr = modColorConverter.toRgbaArr(inpBgColor.value);
+                const opRaw = sliBgOpacity["myMdc"].getInput().value;
+                const op = Math.round(opRaw / 100 * 255);
+                arr[3] = op;
+                
+                const bgColor = modColorConverter.arrToRgba(arr);
+                const bgCss = `background-color: ${bgColor}`;
+                tempGlobals.backgroundCss = bgCss;
+
+            } else {
+
+            }
+            if (JSON.stringify(tempGlobals) != JSON.stringify(oldGlobals)) return true;
             return false;
         }
         btnSave.disabled = true;
+        btnTest.disabled = true;
         function checkSomethingToSave() {
-            btnSave.disabled = !somethingToSave();
+            const maySave = somethingToSave();
+            btnSave.disabled = !maySave;
+            btnTest.disabled = !maySave;
         }
         const debounceSomethingToSave = debounce(checkSomethingToSave, 1000);
         function funDebounceSomethingToSave() { debounceSomethingToSave(); }
@@ -2280,7 +2303,7 @@ function clearBgCssValue(elt) {
     }
 }
 function applyBgCssValue(elt, bgCssValues) {
-    if (!elt.classList.contains("jmnode-bg")) {
+    if (!((elt.classList.contains("jmnode-bg") || elt.nodeName == "JMNODES"))) {
         console.warn("Class 'jmnode-bg' missing on elt", { elt });
         throw Error("Class 'jmnode-bg' missing");
     }
