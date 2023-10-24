@@ -478,8 +478,10 @@ export class CustomRenderer4jsMind {
                 "background: yellow",
                 "color: black",
                 "border: 1px solid black",
+                "cursor: pointer",
+                "box-shadow: #1b5589 8px 8px 8px"
             ].join(";");
-            const btnClose = modMdc.mkMDCiconButton("Close");
+            const btnClose = modMdc.mkMDCiconButton("close");
             const eltPreviewInfo = mkElt("div", { style }, [
                 "Preview",
                 btnClose
@@ -499,12 +501,7 @@ export class CustomRenderer4jsMind {
                 themeCls: selectedThemeCls,
             }
             applyMindmapGlobals(eltJmnodes, tempGlobals);
-            setTimeout(() => {
-                // eltPreviewInfo.remove();
-                // dlg.dom.style.removeProperty("display");
-                // applyMindmapGlobals(eltJmnodes, oldGlobals);
-                closePreview();
-            }, 5000);
+            // setTimeout(() => { closePreview(); }, 160 * 1000);
         });
 
         function somethingToSave() {
