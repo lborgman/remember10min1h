@@ -474,18 +474,21 @@ export class CustomRenderer4jsMind {
                 "left: 10",
                 "z-index: 100",
                 "font-size: 2rem",
+                "font-family: sans-serif",
                 "padding: 8px",
                 "background: yellow",
-                "color: black",
-                "border: 1px solid black",
+                "color: red",
+                "border: 1px solid red",
                 "cursor: pointer",
-                "box-shadow: #1b5589 8px 8px 8px"
+                "box-shadow: red 8px 8px 8px"
             ].join(";");
-            const btnClose = modMdc.mkMDCiconButton("close");
-            const eltPreviewInfo = mkElt("div", { style }, [
+            // const btnClose = modMdc.mkMDCiconButton("close");
+            const eltPreviewInfo = mkElt("div", { style, class:"mdc-card" }, [
                 "Preview",
-                btnClose
+                // btnClose
+                mkElt("div", {style:"font-size:0.8rem;"}, "Click to end preview")
             ]);
+            eltPreviewInfo.title = "Click to end preview";
             eltPreviewInfo.addEventListener("click", evt => {
                 evt.stopPropagation();
                 closePreview();
