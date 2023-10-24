@@ -294,7 +294,7 @@ export class CustomRenderer4jsMind {
                 console.log("theme input", evt.target);
                 selectedThemeCls = evt.target.value;
                 // setJsmindTheme(jmnodesCopied, theme);
-                funDebounceSomethingToSave();
+                funDebounceSomethingToSaveMm();
             });
 
 
@@ -356,19 +356,18 @@ export class CustomRenderer4jsMind {
         divBgOpLabels.style.display = "flex";
         divBgOpLabels.style.justifyContent = "space-between";
 
-        const inpUseBg = modMdc.mkMDCcheckboxInput();
-        const chkUseBg = await modMdc.mkMDCcheckboxElt(inpUseBg, "Set background color");
+        const inpChkUseBgMm = modMdc.mkMDCcheckboxInput();
+        const chkUseBg = await modMdc.mkMDCcheckboxElt(inpChkUseBgMm, "Set background color");
         console.log({ oldGlobals });
         // debugger;
-        const chkLabel = inpUseBg.closest("label");
+        const chkLabel = inpChkUseBgMm.closest("label");
         console.log({ chkLabel });
         chkLabel.classList.add("mdc-chkbox-label-helper");
 
-        const inpBgColor = mkElt("input", { type: "color" });
-        let sliBgOpacity;
+        const inpBgMmColor = mkElt("input", { type: "color" });
+        let sliBgMmOpacity;
         const divBgCtrls = mkElt("div", { class: "mdc-card" }, [
-            inpBgColor,
-            // divBgOpSlider,
+            inpBgMmColor,
             mkElt("p", undefined, [
                 divBgOpLabels,
                 divBgOpacity
@@ -380,45 +379,58 @@ export class CustomRenderer4jsMind {
             divBgCtrls
         ]);
         function setBgDisabled(disabled) {
-            modMdc.setMDCSliderDisabled(sliBgOpacity, disabled);
-            inpBgColor.disabled = disabled;
+            modMdc.setMDCSliderDisabled(sliBgMmOpacity, disabled);
+            inpBgMmColor.disabled = disabled;
             if (disabled) {
                 divBgCtrls.style.opacity = 0.3;
             } else {
                 divBgCtrls.style.opacity = 1;
             }
         }
-        inpUseBg.addEventListener("change", evt => {
-            console.log("inpUseBg", inpUseBg.checked);
-            setBgDisabled(!inpUseBg.checked);
+        inpChkUseBgMm.addEventListener("change", evt => {
+            console.log("inpUseBg", inpChkUseBgMm.checked);
+            setBgDisabled(!inpChkUseBgMm.checked);
+            funDebounceSomethingToSaveMm();
         });
+        inpBgMmColor.addEventListener("change", evt => {
+            if (!inpChkUseBgMm.checked) return;
+            funDebounceSomethingToSaveMm();
+        })
 
         let bgTabInitialized = false;
         function bgInputs2cssText() {
 
         }
         function cssText2bgInputs() { }
-        async function initBgTab() {
+        async function initBgMmTab() {
             if (bgTabInitialized) return;
             bgTabInitialized = true;
             const modColorConverter = await import("color-converter");
             const s = getComputedStyle(eltJmnodes);
             const hex = modColorConverter.toHex6(s.backgroundColor);
-            inpBgColor.value = hex;
+            inpBgMmColor.value = hex;
             const arrRgba = modColorConverter.toRgbaArr(s.backgroundColor);
             const opacity = arrRgba[3] / 255;
-            const funChange = () => { console.log("change op"); }
+            const funChange = () => {
+                console.log("change op");
+                // debugger;
+            }
+            const funInput = () => {
+                console.log("input op");
+                // debugger;
+                funDebounceSomethingToSaveMm();
+            }
             // sliBgOpacity = await modIsDisplayed.mkSliderInContainer(divBgOpacity, 0, 1, opacity, step, title, funChange);
             const modIsDisplayed = await import("is-displayed");
             const iOpacity = Math.floor(100 * (opacity + 0.001));
-            sliBgOpacity = await modIsDisplayed.mkSliderInContainer(
+            sliBgMmOpacity = await modIsDisplayed.mkSliderInContainer(
                 divBgOpSlider,
                 // FIX-ME: Can't get it to work with step "undefined"???
                 // 0, 1, opacity, undefined,
                 0, 100, iOpacity, 10,
-                "Opacity", funChange);
+                "Opacity", funChange, funInput);
             const inpBgEnabled = oldGlobals?.backgroundCss != undefined;
-            chkUseBg.checked = inpBgEnabled;
+            inpChkUseBgMm.checked = inpBgEnabled;
             setBgDisabled(!inpBgEnabled);
         }
         // sli = await modIsDisplayed.mkSliderInContainer(eltCont, min, max, initVal, step, title, funChange);
@@ -437,7 +449,7 @@ export class CustomRenderer4jsMind {
                     activateThemesTab();
                     break;
                 case 1:
-                    initBgTab();
+                    initBgMmTab();
                     break;
                 default:
                     throw Error(`Activation code missing for tab, idx=${idx} `);
@@ -512,12 +524,12 @@ export class CustomRenderer4jsMind {
                 themeCls: selectedThemeCls,
             }
             // const inpBgEnabled = oldGlobals?.backgroundCss != undefined;
-            if (inpUseBg.checked) {
-                debugger;
-                console.log({ inpBgColor }, inpBgColor.value);
+            if (inpChkUseBgMm.checked) {
+                // debugger;
+                console.log({ inpBgMmColor }, inpBgMmColor.value);
                 console.log({modColorConverter});
-                const arr = modColorConverter.toRgbaArr(inpBgColor.value);
-                const opRaw = sliBgOpacity["myMdc"].getInput().value;
+                const arr = modColorConverter.toRgbaArr(inpBgMmColor.value);
+                const opRaw = sliBgMmOpacity["myMdc"].getInput().value;
                 const op = Math.round(opRaw / 100 * 255);
                 arr[3] = op;
                 
@@ -539,7 +551,7 @@ export class CustomRenderer4jsMind {
             btnTest.disabled = !maySave;
         }
         const debounceSomethingToSave = debounce(checkSomethingToSave, 1000);
-        function funDebounceSomethingToSave() { debounceSomethingToSave(); }
+        function funDebounceSomethingToSaveMm() { debounceSomethingToSave(); }
 
 
         return await new Promise((resolve, reject) => {
