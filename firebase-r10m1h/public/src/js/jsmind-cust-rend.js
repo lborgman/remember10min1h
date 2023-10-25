@@ -243,6 +243,7 @@ export class CustomRenderer4jsMind {
 
     async editMindmapDialog(eltJmnode) {
         const modJsEditCommon = await import("jsmind-edit-common");
+        const modIsDisplayed = await import("is-displayed");
         // theme
         // debugger;
         const rend = await getOurCustomRenderer();
@@ -350,7 +351,7 @@ export class CustomRenderer4jsMind {
             divBgOpSlider,
         ]);
         const divBgOpLabels = mkElt("div", undefined, [
-            mkElt("div", undefined, "Transparant"),
+            mkElt("div", undefined, "Transparent"),
             mkElt("div", undefined, "Opaque")
         ]);
         divBgOpLabels.style.display = "flex";
@@ -437,19 +438,64 @@ export class CustomRenderer4jsMind {
 
         // tabs
         // mkMdcTabBarSimple(tabsRecs, contentElts, moreOnActivate) 
-        const tabRecs = ["Themes", "Background"];
+        const taDesc = modMdc.mkMDCtextFieldTextarea(undefined, 10, 10);
+        const tafDesc = modMdc.mkMDCtextareaField("Mindmap description", taDesc);
+        const divDesc = mkElt("div", undefined, tafDesc);
+
+
+        const defaultLineW = 2;
+        const defaultLineC = "red";
+        const inpChkDefaultLines = mkElt("input", { type: "checkbox" });
+        const eltChkDefaultLines = await modMdc.mkMDCcheckboxElt(inpChkDefaultLines, "Use default color and width")
+        const divPreviewLine = mkElt("div");
+        divPreviewLine.style.height = `${defaultLineW}px`;
+        divPreviewLine.style.backgroundColor = defaultLineC;
+        const divLinePreview = mkElt("div", { id: "div-line-preview", class: "mdc-card" }, divPreviewLine);
+        divLinePreview.style.padding = "20px";
+        const inpLineColor = mkElt("input", { type: "color" });
+        const lblLineColor = mkElt("label", undefined, ["Line color: ", inpLineColor]);
+        const divLineWidth = mkElt("div");
+        let sliLineWidth;
+
+        const divLines = mkElt("div", undefined, [
+            eltChkDefaultLines,
+            divLinePreview,
+            lblLineColor,
+            divLineWidth,
+        ]);
+        async function activateLineWTab() {
+            // sliLineWidth = await modIsDisplayed.mkSliderInContainer(divLineWidth, 1, 10);
+            if (!sliLineWidth) {
+                const funInput = () => {
+                    console.log("funInput line width");
+                    funDebounceSomethingToSaveMm();
+                }
+                sliLineWidth = await modIsDisplayed.mkSliderInContainer(divLineWidth, 1, 10, defaultLineW, 1, "Line width", undefined, funInput);
+                // console.log({sli})
+            }
+            const bgColorJmnodes = getComputedStyle(eltJmnodes).backgroundColor;
+            divLinePreview.style.backgroundColor = bgColorJmnodes;
+        }
+
+
+        const tabRecs = ["Description", "Themes", "Background", "Lines"];
         const contentElts = mkElt("div", undefined,
-            [divThemeChoices, divBackground]);
+            [divDesc, divThemeChoices, divBackground, divLines]);
         if (tabRecs.length != contentElts.childElementCount) throw Error("Tab bar setup number mismatch");
         const onActivateMore = (idx) => {
             // console.log("onActivateMore", idx);
             if (idx > tabRecs.length - 1) { throw Error(`There is no tab at idx=${idx} `); }
             switch (idx) {
                 case 0:
-                    activateThemesTab();
                     break;
                 case 1:
+                    activateThemesTab();
+                    break;
+                case 2:
                     initBgMmTab();
+                    break;
+                case 3:
+                    activateLineWTab();
                     break;
                 default:
                     throw Error(`Activation code missing for tab, idx=${idx} `);
@@ -527,12 +573,12 @@ export class CustomRenderer4jsMind {
             if (inpChkUseBgMm.checked) {
                 // debugger;
                 console.log({ inpBgMmColor }, inpBgMmColor.value);
-                console.log({modColorConverter});
+                console.log({ modColorConverter });
                 const arr = modColorConverter.toRgbaArr(inpBgMmColor.value);
                 const opRaw = sliBgMmOpacity["myMdc"].getInput().value;
                 const op = Math.round(opRaw / 100 * 255);
                 arr[3] = op;
-                
+
                 const bgColor = modColorConverter.arrToRgba(arr);
                 const bgCss = `background-color: ${bgColor}`;
                 tempGlobals.backgroundCss = bgCss;

@@ -702,7 +702,28 @@ export async function pageSetup() {
     const modJmDrag = await getDraggableNodes();
     modJmDrag.setupNewDragging();
 
+    function getMindmapGlobals(mind) {
+        const format = mind.format;
+        let root_node;
+        switch (format) {
+            case "node_array":
+                for (const idx in mind.data) {
+                    const n = mind.data[idx];
+                    if (n.id == "root") {
+                        root_node = n;
+                        break;
+                    }
+                }
+                break;
+            default:
+                throw Error(`Can't get mindmapGlobals when mind format is ${format}`);
+        }
+        const globals = root_node.mindmapGlobals;
+        console.log({root_node, globals});
+        return globals;
+    }
     const nowBefore = Date.now();
+    getMindmapGlobals(mind);
     // const jmDisplayed = displayMindMap(mind, optionsJmDisplay);
     jmDisplayed = displayMindMap(mind, optionsJmDisplay);
 
