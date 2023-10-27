@@ -573,9 +573,17 @@ export async function mkMDCcheckboxElt(inpCheckbox, label) {
     if (!label) return elt;
     // FIXME: This is perhaps not good with MDC?
     const eltLabelText = mkElt("span", { class: "label-text" }, label);
+    const eltLabel = mkElt("label", undefined, [elt, eltLabelText]);
+
+    // FIX-ME: trying to fix label vertical position
+    // Something is obviously wrong, but I use this workaround
+    // and hope this is fixed in Material Design for Web, version 3.
+    eltLabel.classList.add("mdc-chkbox-label-helper");
+
     const eltWithLabel = mkElt("div", { class: "mdc-form-field" }, [
         // mkElt("label", undefined, [elt, label]),
-        mkElt("label", undefined, [elt, eltLabelText]),
+        // mkElt("label", undefined, [elt, eltLabelText]),
+        eltLabel
     ]);
     return eltWithLabel;
 }

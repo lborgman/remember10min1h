@@ -357,13 +357,18 @@ export class CustomRenderer4jsMind {
         divBgOpLabels.style.display = "flex";
         divBgOpLabels.style.justifyContent = "space-between";
 
-        const inpChkUseBgMm = modMdc.mkMDCcheckboxInput();
-        const chkUseBg = await modMdc.mkMDCcheckboxElt(inpChkUseBgMm, "Set background color");
+        const inpUseBgMm = modMdc.mkMDCcheckboxInput();
+        const chkUseBgMm = await modMdc.mkMDCcheckboxElt(inpUseBgMm, "Set background color");
         console.log({ oldGlobals });
         // debugger;
-        const chkLabel = inpChkUseBgMm.closest("label");
-        console.log({ chkLabel });
-        chkLabel.classList.add("mdc-chkbox-label-helper");
+        /*
+        fixMdcChkLabelVerticalPos(inpUseBgMm);
+        function fixMdcChkLabelVerticalPos(inpCheckbox) {
+            const lblUseBgMm = inpCheckbox.closest("label");
+            console.log({ lblUseBgMm });
+            lblUseBgMm.classList.add("mdc-chkbox-label-helper");
+        }
+        */
 
         const inpBgMmColor = mkElt("input", { type: "color" });
         let sliBgMmOpacity;
@@ -376,10 +381,10 @@ export class CustomRenderer4jsMind {
         ]);
         divBgCtrls.style.padding = "10px";
         const divBackground = mkElt("div", undefined, [
-            mkElt("p", undefined, chkUseBg),
+            mkElt("p", undefined, chkUseBgMm),
             divBgCtrls
         ]);
-        function setBgDisabled(disabled) {
+        function setBgMmDisabled(disabled) {
             modMdc.setMDCSliderDisabled(sliBgMmOpacity, disabled);
             inpBgMmColor.disabled = disabled;
             if (disabled) {
@@ -388,13 +393,13 @@ export class CustomRenderer4jsMind {
                 divBgCtrls.style.opacity = 1;
             }
         }
-        inpChkUseBgMm.addEventListener("change", evt => {
-            console.log("inpUseBg", inpChkUseBgMm.checked);
-            setBgDisabled(!inpChkUseBgMm.checked);
+        inpUseBgMm.addEventListener("change", evt => {
+            console.log("inpUseBg", inpUseBgMm.checked);
+            setBgMmDisabled(!inpUseBgMm.checked);
             funDebounceSomethingToSaveMm();
         });
         inpBgMmColor.addEventListener("change", evt => {
-            if (!inpChkUseBgMm.checked) return;
+            if (!inpUseBgMm.checked) return;
             funDebounceSomethingToSaveMm();
         })
 
@@ -431,8 +436,8 @@ export class CustomRenderer4jsMind {
                 0, 100, iOpacity, 10,
                 "Opacity", funChange, funInput);
             const inpBgEnabled = oldGlobals?.backgroundCss != undefined;
-            inpChkUseBgMm.checked = inpBgEnabled;
-            setBgDisabled(!inpBgEnabled);
+            inpUseBgMm.checked = inpBgEnabled;
+            setBgMmDisabled(!inpBgEnabled);
         }
         // sli = await modIsDisplayed.mkSliderInContainer(eltCont, min, max, initVal, step, title, funChange);
 
@@ -445,8 +450,9 @@ export class CustomRenderer4jsMind {
 
         const defaultLineW = 2;
         const defaultLineC = "red";
-        const inpChkDefaultLines = mkElt("input", { type: "checkbox" });
-        const eltChkDefaultLines = await modMdc.mkMDCcheckboxElt(inpChkDefaultLines, "Use default color and width")
+        const inpChkDefaultLines = modMdc.mkMDCcheckboxInput();
+        const lblChkLines = await modMdc.mkMDCcheckboxElt(inpChkDefaultLines, "Change color and width")
+        // lblChkLines.classList.add("mdc-chkbox-label-helper");
         const divPreviewLine = mkElt("div");
         divPreviewLine.style.height = `${defaultLineW}px`;
         divPreviewLine.style.backgroundColor = defaultLineC;
@@ -457,17 +463,31 @@ export class CustomRenderer4jsMind {
         const divLineWidth = mkElt("div");
         let sliLineWidth;
 
-        const divLines = mkElt("div", undefined, [
-            eltChkDefaultLines,
-            divLinePreview,
+        const cardLine = mkElt("div", { class: "mdc-card" }, [
             lblLineColor,
             divLineWidth,
         ]);
+        cardLine.style.padding = "10px";
+        const divLines = mkElt("div", undefined, [
+            divLinePreview,
+            lblChkLines,
+            cardLine
+        ]);
+        divLines.style.display = "flex";
+        divLines.style.gap = "10px";
+        divLines.style.marginTop = "10px"; // FIX-ME:
+
+        inpLineColor.addEventListener("input", evt => {
+            divPreviewLine.style.backgroundColor = inpLineColor.value;
+            funDebounceSomethingToSaveMm();
+        })
         async function activateLineWTab() {
             // sliLineWidth = await modIsDisplayed.mkSliderInContainer(divLineWidth, 1, 10);
             if (!sliLineWidth) {
                 const funInput = () => {
                     console.log("funInput line width");
+                    const val = sliLineWidth["myMdc"].getValue();
+                    divPreviewLine.style.height = `${val}px`;
                     funDebounceSomethingToSaveMm();
                 }
                 sliLineWidth = await modIsDisplayed.mkSliderInContainer(divLineWidth, 1, 10, defaultLineW, 1, "Line width", undefined, funInput);
@@ -570,7 +590,7 @@ export class CustomRenderer4jsMind {
                 themeCls: selectedThemeCls,
             }
             // const inpBgEnabled = oldGlobals?.backgroundCss != undefined;
-            if (inpChkUseBgMm.checked) {
+            if (inpUseBgMm.checked) {
                 // debugger;
                 console.log({ inpBgMmColor }, inpBgMmColor.value);
                 console.log({ modColorConverter });

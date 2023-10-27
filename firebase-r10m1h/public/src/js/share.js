@@ -340,9 +340,11 @@ async function dialog10min1hour(eltPrevFocused) {
         true === document.getElementById("div-h-your-items").classList.contains("is-searching");
     const chkOnlyMatched = modMdc.mkMDCcheckboxInput("chk-only-matched");
     const eltOnlyMatched = await modMdc.mkMDCcheckboxElt(chkOnlyMatched, "Check only matched items");
+    /*
     const chkLabel = chkOnlyMatched.closest("label");
     console.log({ chkLabel });
     chkLabel.classList.add("mdc-chkbox-label-helper");
+    */
     const pOnlyMatched = mkElt("p", undefined, [
         eltOnlyMatched,
     ]);
