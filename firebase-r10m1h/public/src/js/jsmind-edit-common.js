@@ -728,6 +728,7 @@ export async function pageSetup() {
     jmDisplayed = displayMindMap(mind, optionsJmDisplay);
 
     modCustRend.setOurCustomRendererJm(jmDisplayed);
+    modCustRend.setOurCustomRendererJmOptions(optionsJmDisplay);
     const render = await modCustRend.getOurCustomRenderer();
     // const globals = render.getMindmapGlobals();
     render.applyThisMindmapGlobals();

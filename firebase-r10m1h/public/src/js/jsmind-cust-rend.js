@@ -65,6 +65,8 @@ export class CustomRenderer4jsMind {
 
     setJm(jmDisplayed) { this.THEjmDisplayed = jmDisplayed; }
     getJm() { return this.THEjmDisplayed; }
+    setJmOptions(jmOptions) { this.THEjmOptions = jmOptions; }
+    getJmOptions() { return this.THEjmOptions; }
     getEltRoot() {
         const root_node = this.THEjmDisplayed.get_root();
         return jsMind.my_get_DOM_element_from_node(root_node);
@@ -447,9 +449,9 @@ export class CustomRenderer4jsMind {
         const tafDesc = modMdc.mkMDCtextareaField("Mindmap description", taDesc);
         const divDesc = mkElt("div", undefined, tafDesc);
 
-
-        const defaultLineW = 2;
-        const defaultLineC = "red";
+        const jmOpt = this.getJmOptions();
+        const defaultLineW = jmOpt.view.line_width;
+        const defaultLineC = jmOpt.view.line_color;
         const inpChkDefaultLines = modMdc.mkMDCcheckboxInput();
         const lblChkLines = await modMdc.mkMDCcheckboxElt(inpChkDefaultLines, "Change color and width")
         // lblChkLines.classList.add("mdc-chkbox-label-helper");
@@ -459,6 +461,7 @@ export class CustomRenderer4jsMind {
         const divLinePreview = mkElt("div", { id: "div-line-preview", class: "mdc-card" }, divPreviewLine);
         divLinePreview.style.padding = "20px";
         const inpLineColor = mkElt("input", { type: "color" });
+        inpLineColor.value = modColorConverter.toHex6(defaultLineC);
         const lblLineColor = mkElt("label", undefined, ["Line color: ", inpLineColor]);
         const divLineWidth = mkElt("div");
         let sliLineWidth;
@@ -2359,6 +2362,9 @@ async function createOurCustomRenderer() {
 }
 export function setOurCustomRendererJm(jmDisplayed) {
     theCustomRenderer.setJm(jmDisplayed);
+}
+export function setOurCustomRendererJmOptions(jmOptions) {
+    theCustomRenderer.setJmOptions(jmOptions);
 }
 export async function ourCustomRendererAddProvider(providerRec) {
     // const modCustom = await import("jsmind-cust-rend");
