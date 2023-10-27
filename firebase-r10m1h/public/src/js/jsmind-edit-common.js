@@ -480,7 +480,7 @@ export async function pageSetup() {
     }
     */
 
-    const optionsJmDisplay = {
+    const defaultOptJmDisplay = {
         // container: 'jsmind_container',
         container: idDivJmnodesMain,
         // theme: 'orange',
@@ -509,12 +509,14 @@ export async function pageSetup() {
             }
         },
     };
-    const strOptionsJmDisplay = JSON.stringify(optionsJmDisplay);
+    /*
+    const strOptionsJmDisplay = JSON.stringify(defaultOptJmDisplay);
     const optionsJmMirror = JSON.parse(strOptionsJmDisplay);
     // FIX-ME: We can't use mirror.
     // optionsJmMirror.container = idDivJmnodesMirror;
     optionsJmMirror.container = "this-id-does-not-exist";
     delete optionsJmMirror.shortcut;
+    */
 
 
     // Use this??? copy canvas https://jsfiddle.net/lborgman/5L1bfhow/3/
@@ -702,7 +704,7 @@ export async function pageSetup() {
     const modJmDrag = await getDraggableNodes();
     modJmDrag.setupNewDragging();
 
-    function getMindmapGlobals(mind) {
+    function getMindmapGlobals0(mind) {
         const format = mind.format;
         let root_node;
         switch (format) {
@@ -719,16 +721,25 @@ export async function pageSetup() {
                 throw Error(`Can't get mindmapGlobals when mind format is ${format}`);
         }
         const globals = root_node.mindmapGlobals;
-        console.log({root_node, globals});
+        console.log({ root_node, globals });
         return globals;
     }
+    const usedOptJmDisplay = JSON.parse(JSON.stringify(defaultOptJmDisplay));
+    const savedGlobals = getMindmapGlobals0(mind);
+    // Merge in savedGlobals:
+    if (savedGlobals) {
+        if (savedGlobals.lines_width) {
+        }
+        if (savedGlobals.lines_color) {
+        }
+    }
+
+
     const nowBefore = Date.now();
-    getMindmapGlobals(mind);
-    // const jmDisplayed = displayMindMap(mind, optionsJmDisplay);
-    jmDisplayed = displayMindMap(mind, optionsJmDisplay);
+    jmDisplayed = displayMindMap(mind, usedOptJmDisplay);
 
     modCustRend.setOurCustomRendererJm(jmDisplayed);
-    modCustRend.setOurCustomRendererJmOptions(optionsJmDisplay);
+    modCustRend.setOurCustomRendererJmOptions(defaultOptJmDisplay);
     const render = await modCustRend.getOurCustomRenderer();
     // const globals = render.getMindmapGlobals();
     render.applyThisMindmapGlobals();

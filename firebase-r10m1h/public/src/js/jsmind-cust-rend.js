@@ -453,7 +453,14 @@ export class CustomRenderer4jsMind {
         const defaultLineW = jmOpt.view.line_width;
         const defaultLineC = jmOpt.view.line_color;
         const inpChkDefaultLines = modMdc.mkMDCcheckboxInput();
-        const lblChkLines = await modMdc.mkMDCcheckboxElt(inpChkDefaultLines, "Change color and width")
+        inpChkDefaultLines.addEventListener("input", evt => {
+            // console.log("chk line input"); debugger;
+            disableCardLine(!inpChkDefaultLines.checked);
+        });
+        inpChkDefaultLines.addEventListener("change", evt => {
+            // console.log("chk line change"); debugger;
+        });
+        const lblChkLines = await modMdc.mkMDCcheckboxElt(inpChkDefaultLines, "Change color and width");
         // lblChkLines.classList.add("mdc-chkbox-label-helper");
         const divPreviewLine = mkElt("div");
         divPreviewLine.style.height = `${defaultLineW}px`;
@@ -480,6 +487,17 @@ export class CustomRenderer4jsMind {
         divLines.style.gap = "10px";
         divLines.style.marginTop = "10px"; // FIX-ME:
 
+        function disableCardLine(disabled) {
+            // sliLineWidth["myMdc"].disabled = disable;
+            modMdc.setMDCSliderDisabled(sliLineWidth, disabled);
+            inpLineColor.disabled = disabled;
+            if (disabled) {
+                cardLine.style.opacity = 0.3;
+            } else {
+                cardLine.style.opacity = 1;
+            }
+        }
+        // .mindmapGlobals
         inpLineColor.addEventListener("input", evt => {
             divPreviewLine.style.backgroundColor = inpLineColor.value;
             funDebounceSomethingToSaveMm();
