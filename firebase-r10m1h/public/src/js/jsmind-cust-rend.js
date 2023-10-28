@@ -407,10 +407,6 @@ export class CustomRenderer4jsMind {
         })
 
         let bgTabInitialized = false;
-        function bgInputs2cssText() {
-
-        }
-        function cssText2bgInputs() { }
         async function initBgMmTab() {
             if (bgTabInitialized) return;
             bgTabInitialized = true;
@@ -453,23 +449,23 @@ export class CustomRenderer4jsMind {
         const jmOpt = this.getJmOptions();
         const defaultLineW = jmOpt.view.line_width;
         const defaultLineC = jmOpt.view.line_color;
-        const inpChkDefaultLines = modMdc.mkMDCcheckboxInput();
-        inpChkDefaultLines.addEventListener("input", evt => {
+        const inpChkChangeLines = modMdc.mkMDCcheckboxInput();
+        inpChkChangeLines.addEventListener("input", evt => {
             // console.log("chk line input"); debugger;
-            disableCardLine(!inpChkDefaultLines.checked);
+            disableCardLine(!inpChkChangeLines.checked);
         });
-        inpChkDefaultLines.addEventListener("change", evt => {
+        inpChkChangeLines.addEventListener("change", evt => {
             // console.log("chk line change"); debugger;
         });
-        const lblChkLines = await modMdc.mkMDCcheckboxElt(inpChkDefaultLines, "Change color and width");
+        const lblChkLines = await modMdc.mkMDCcheckboxElt(inpChkChangeLines, "Change color and width");
         // lblChkLines.classList.add("mdc-chkbox-label-helper");
         const divPreviewLine = mkElt("div");
-        divPreviewLine.style.height = `${defaultLineW}px`;
-        divPreviewLine.style.backgroundColor = defaultLineC;
+        // divPreviewLine.style.height = `${defaultLineW}px`;
+        // divPreviewLine.style.backgroundColor = defaultLineC;
         const divLinePreview = mkElt("div", { id: "div-line-preview", class: "mdc-card" }, divPreviewLine);
         divLinePreview.style.padding = "20px";
         const inpLineColor = mkElt("input", { type: "color" });
-        inpLineColor.value = modColorConverter.toHex6(defaultLineC);
+        // inpLineColor.value = modColorConverter.toHex6(defaultLineC);
         const lblLineColor = mkElt("label", undefined, ["Line color: ", inpLineColor]);
         const divLineWidth = mkElt("div");
         let sliLineWidth;
@@ -503,8 +499,8 @@ export class CustomRenderer4jsMind {
             divPreviewLine.style.backgroundColor = inpLineColor.value;
             funDebounceSomethingToSaveMm();
         })
-        async function activateLineWTab() {
-            // sliLineWidth = await modIsDisplayed.mkSliderInContainer(divLineWidth, 1, 10);
+        let lineTabActivated = false;
+        async function activateLineTab() {
             if (!sliLineWidth) {
                 const funInput = () => {
                     console.log("funInput line width");
@@ -515,8 +511,20 @@ export class CustomRenderer4jsMind {
                 sliLineWidth = await modIsDisplayed.mkSliderInContainer(divLineWidth, 1, 10, defaultLineW, 1, "Line width", undefined, funInput);
                 // console.log({sli})
             }
+            if (lineTabActivated) return;
+            lineTabActivated = true;
             const bgColorJmnodes = getComputedStyle(eltJmnodes).backgroundColor;
             divLinePreview.style.backgroundColor = bgColorJmnodes;
+            const old_line_width = oldGlobals?.line_width;
+            const old_line_color = oldGlobals?.line_color;
+            const old_line = old_line_width || old_line_color;
+            inpChkChangeLines.checked = old_line;
+            const line_width = old_line_width || defaultLineW;
+            const line_color = old_line_color || defaultLineC;
+            inpLineColor.value = modColorConverter.toHex6(line_color);
+            sliLineWidth["myMdc"].setValue(line_width);
+            divPreviewLine.style.height = `${line_width}px`;
+            divPreviewLine.style.backgroundColor = line_color;
         }
 
 
@@ -537,7 +545,7 @@ export class CustomRenderer4jsMind {
                     initBgMmTab();
                     break;
                 case 3:
-                    activateLineWTab();
+                    activateLineTab();
                     break;
                 default:
                     throw Error(`Activation code missing for tab, idx=${idx} `);
@@ -606,7 +614,7 @@ export class CustomRenderer4jsMind {
             // setTimeout(() => { closePreview(); }, 160 * 1000);
         });
 
-        function somethingToSave() {
+        function somethingToSaveMm() {
             // if (selectedThemeCls != oldThemeCls) return true;
             tempGlobals = {
                 themeCls: selectedThemeCls,
@@ -624,22 +632,24 @@ export class CustomRenderer4jsMind {
                 const bgColor = modColorConverter.arrToRgba(arr);
                 const bgCss = `background-color: ${bgColor}`;
                 tempGlobals.backgroundCss = bgCss;
-
             } else {
-
+            }
+            if (inpChkChangeLines.checked) {
+                tempGlobals.line_color = modColorConverter.toRgba(inpLineColor.value);
+                tempGlobals.line_width = sliLineWidth["myMdc"].getValue();
             }
             if (JSON.stringify(tempGlobals) != JSON.stringify(oldGlobals)) return true;
             return false;
         }
         btnSave.disabled = true;
         btnTest.disabled = true;
-        function checkSomethingToSave() {
-            const maySave = somethingToSave();
+        function checkSomethingToSaveMm() {
+            const maySave = somethingToSaveMm();
             btnSave.disabled = !maySave;
             btnTest.disabled = !maySave;
         }
-        const debounceSomethingToSave = debounce(checkSomethingToSave, 1000);
-        function funDebounceSomethingToSaveMm() { debounceSomethingToSave(); }
+        const debounceSomethingToSaveMm = debounce(checkSomethingToSaveMm, 1000);
+        function funDebounceSomethingToSaveMm() { debounceSomethingToSaveMm(); }
 
 
         return await new Promise((resolve, reject) => {
@@ -2452,6 +2462,10 @@ export function applyMindmapGlobals(eltJmnodes, mindmapGlobals) {
                 const bgCssText = mindmapGlobals[prop];
                 const bgCssValues = cssTxt2keyVal(bgCssText);
                 applyBgCssValue(eltJmnodes, bgCssValues);
+                break;
+            case "line_color":
+            case "line_width":
+                // Not handled here
                 break;
             default:
                 throw Error(`Unknown property in minmapGlobals: ${prop}`);

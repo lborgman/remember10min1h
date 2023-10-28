@@ -728,9 +728,11 @@ export async function pageSetup() {
     const savedGlobals = getMindmapGlobals0(mind);
     // Merge in savedGlobals:
     if (savedGlobals) {
-        if (savedGlobals.lines_width) {
+        if (savedGlobals.line_width) {
+            usedOptJmDisplay.view.line_width = savedGlobals.line_width;
         }
-        if (savedGlobals.lines_color) {
+        if (savedGlobals.line_color) {
+            usedOptJmDisplay.view.line_color = savedGlobals.line_color;
         }
     }
 
