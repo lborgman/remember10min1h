@@ -265,7 +265,8 @@ export class CustomRenderer4jsMind {
             divThemeChoices,
         ]);
         const oldGlobals = rend.getMindmapGlobals();
-        let tempGlobals = JSON.parse(JSON.stringify(oldGlobals));
+        let tempGlobals;
+        if (oldGlobals) tempGlobals = JSON.parse(JSON.stringify(oldGlobals));
         // const oldThemeCls = getJsmindTheme(eltJmnodes);
         const oldThemeCls = oldGlobals ? oldGlobals.themeCls : getJsmindTheme(eltJmnodes);
         console.log({ oldThemeCls });
