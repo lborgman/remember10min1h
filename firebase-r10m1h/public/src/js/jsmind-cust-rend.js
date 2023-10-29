@@ -411,7 +411,7 @@ export class CustomRenderer4jsMind {
             if (bgTabInitialized) return;
             bgTabInitialized = true;
             const modColorConverter = await import("color-converter");
-            const s = getComputedStyle(eltJmnodes);
+            const s = getComputedStyle(eltJmnodes.closest(".jsmind-inner"));
             const hex = modColorConverter.toHex6(s.backgroundColor);
             inpBgMmColor.value = hex;
             const arrRgba = modColorConverter.toRgbaArr(s.backgroundColor);
@@ -484,6 +484,13 @@ export class CustomRenderer4jsMind {
         divLines.style.gap = "10px";
         divLines.style.marginTop = "10px"; // FIX-ME:
 
+        let initialLineValues;
+        function getLineValues() {
+            return {
+                line_color: divPreviewLine.style.backgroundColor,
+                line_width: divPreviewLine.style.height
+            }
+        }
         function disableCardLine(disabled) {
             // sliLineWidth["myMdc"].disabled = disable;
             modMdc.setMDCSliderDisabled(sliLineWidth, disabled);
@@ -517,7 +524,7 @@ export class CustomRenderer4jsMind {
             divLinePreview.style.backgroundColor = bgColorJmnodes;
             const old_line_width = oldGlobals?.line_width;
             const old_line_color = oldGlobals?.line_color;
-            const old_line = old_line_width || old_line_color;
+            const old_line = !!old_line_width || !!old_line_color;
             inpChkChangeLines.checked = old_line;
             const line_width = old_line_width || defaultLineW;
             const line_color = old_line_color || defaultLineC;
@@ -525,6 +532,7 @@ export class CustomRenderer4jsMind {
             sliLineWidth["myMdc"].setValue(line_width);
             divPreviewLine.style.height = `${line_width}px`;
             divPreviewLine.style.backgroundColor = line_color;
+            initialLineValues = getLineValues();
         }
 
 
@@ -560,23 +568,36 @@ export class CustomRenderer4jsMind {
             contentElts,
         ]);
 
-        const btnTest = modMdc.mkMDCdialogButton("Test", "test");
-        const btnSave = modMdc.mkMDCdialogButton("Save", "save", true);
+        const btnTestMm = modMdc.mkMDCdialogButton("Test", "test");
+        const btnSaveMm = modMdc.mkMDCdialogButton("Save", "save", true);
         const btnCancel = modMdc.mkMDCdialogButton("Cancel", "close");
-        const eltActions = modMdc.mkMDCdialogActions([btnTest, btnSave, btnCancel]);
+        const eltActions = modMdc.mkMDCdialogActions([btnTestMm, btnSaveMm, btnCancel]);
         const dlg = await modMdc.mkMDCdialog(body, eltActions);
-        btnSave.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            const saveGlobals = { themeCls: selectedThemeCls, }
+        const somethingHasChangedLines = () => {
+            if (!!!initialLineValues) return false;
+            const currentLineValues = getLineValues();
+            return JSON.stringify(initialLineValues) != JSON.stringify(currentLineValues);
+        }
+        btnSaveMm.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            // const saveGlobals = { themeCls: selectedThemeCls, }
             // const r = await getOurCustomRenderer();
             // rend.setMindmapGlobals(saveGlobals);
+            if (somethingHasChangedLines()) {
+                modMdc.mkMDCdialogAlert(
+                    "Changes to line color/width is not shown until mindmap is opened next time");
+            }
             rend.setMindmapGlobals(tempGlobals);
             rend.applyThisMindmapGlobals();
             modMMhelpers.DBrequestSaveThisMindmap(rend.getJm());
         }));
-        btnTest.addEventListener("click", evt => {
+        btnTestMm.addEventListener("click", evt => {
             evt.stopPropagation();
             evt.stopImmediatePropagation();
             evt.preventDefault();
+            if (somethingHasChangedLines()) {
+                modMdc.mkMDCdialogAlert(
+                    "Changes to line color/width is not shown in preview");
+            }
             const style = [
                 "position: fixed",
                 "top: 10",
@@ -641,12 +662,12 @@ export class CustomRenderer4jsMind {
             if (JSON.stringify(tempGlobals) != JSON.stringify(oldGlobals)) return true;
             return false;
         }
-        btnSave.disabled = true;
-        btnTest.disabled = true;
+        btnSaveMm.disabled = true;
+        btnTestMm.disabled = true;
         function checkSomethingToSaveMm() {
             const maySave = somethingToSaveMm();
-            btnSave.disabled = !maySave;
-            btnTest.disabled = !maySave;
+            btnSaveMm.disabled = !maySave;
+            btnTestMm.disabled = !maySave;
         }
         const debounceSomethingToSaveMm = debounce(checkSomethingToSaveMm, 1000);
         function funDebounceSomethingToSaveMm() { debounceSomethingToSaveMm(); }
@@ -2416,7 +2437,7 @@ function clearBgCssValue(elt) {
     }
 }
 function applyBgCssValue(elt, bgCssValues) {
-    if (!((elt.classList.contains("jmnode-bg") || elt.nodeName == "JMNODES"))) {
+    if (!((elt.classList.contains("jmnode-bg") || elt.classList.contains("jsmind-inner")))) {
         console.warn("Class 'jmnode-bg' missing on elt", { elt });
         throw Error("Class 'jmnode-bg' missing");
     }
@@ -2461,7 +2482,7 @@ export function applyMindmapGlobals(eltJmnodes, mindmapGlobals) {
             case "backgroundCss":
                 const bgCssText = mindmapGlobals[prop];
                 const bgCssValues = cssTxt2keyVal(bgCssText);
-                applyBgCssValue(eltJmnodes, bgCssValues);
+                applyBgCssValue(eltJmnodes.closest(".jsmind-inner"), bgCssValues);
                 break;
             case "line_color":
             case "line_width":
