@@ -4,7 +4,10 @@ console.log("here is module jsmind-cust-rend.js");
 if (document.currentScript) throw Error("import .currentScript"); // is module
 if (!import.meta.url) throw Error("!import.meta.url"); // is module
 
-
+if (!!!jsMind.mm4iSupported) {
+    // throw Error("This version of jsMind does not support mm4i");
+    console.error("This version of jsMind does not support mm4i");
+}
 
 // FIX-ME: clean up
 const modMMhelpers = await import("mindmap-helpers");
@@ -2332,11 +2335,33 @@ export class CustomRenderer4jsMind {
         if (tn !== "JMNODE") { eltJmnode = target.closest("jmnode"); }
         this.editNodeDialog(eltJmnode);
     }
+    mindmapDblclick = (evt) => {
+        evt.preventDefault();
+        evt.stopPropagation();
+        evt.stopImmediatePropagation();
+        const target = evt.target;
+        let eltJmnode;
+        let eltJmnodes;
+        const tn = target.tagName;
+        if (tn == "JMNODE") { eltJmnode = target; }
+        eltJmnode = eltJmnode || target.closest("jmnode");
+        if (eltJmnode) {
+            this.editNodeDialog(eltJmnode);
+            return;
+        }
+        if (tn == "JMNODES") { eltJmnodes = target; }
+        eltJmnodes = eltJmnodes || target.closest("jmnodes");
+        if (eltJmnodes) {
+            this.editMindmapDialog(eltJmnode);
+        }
+    }
 }
 const cr4j = new CustomRenderer4jsMind();
 console.log({ cr4j });
 
 export function addJmnodeBgAndText(eltJmnode) {
+    console.warn("Add bg and text called");
+    debugger;
     const eltTxt = mkElt("div", { class: "jmnode-text" });
     eltTxt.classList.add("multiline-ellipsis");
     const eltBg = mkElt("div", { class: "jmnode-bg" });

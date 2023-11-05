@@ -11,6 +11,8 @@ const importMap = {
         "idb-common": "/src/js/mod/idb-common.js",
         "images": "/src/js/images.js",
         "is-displayed": "/src/js/is-displayed.js",
+        // The jsmind entry is not used yet:
+        "jsmind": "/ext/jsmind/jsmind-dbg.js",
         "jsmind-edit-common": "/src/js/jsmind-edit-common.js",
         "jsmind-edit-spec-fc4i": "/src/js/jsmind-edit-spec-fc4i.js",
         "jsmind-cust-rend": "/src/js/jsmind-cust-rend.js",

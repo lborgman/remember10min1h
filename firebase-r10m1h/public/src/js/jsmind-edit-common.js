@@ -7,6 +7,7 @@ if (!import.meta.url) throw Error("!import.meta.url"); // is module
 const modCustRend = await import("jsmind-cust-rend");
 const modMMhelpers = await import("mindmap-helpers");
 const modMdc = await import("util-mdc");
+// const modJsmind = await import("jsmind");
 
 const divJsmindSearch = mkElt("div", { id: "jsmind-search-div" });
 
@@ -263,6 +264,7 @@ function getposPointHandle() {
 
 export const arrShapeClasses = getMatchesInCssRules(/\.(jsmind-shape-[^.:#\s]*)/);
 export function clearShapes(eltShape) {
+    if (!jsMind.mm4iSupported) return;
     if (eltShape.tagName != "DIV" || !eltShape.classList.contains("jmnode-bg")) {
         throw Error('Not <jmnode><div class="jmnode-bg"');
     }
@@ -739,11 +741,20 @@ export async function pageSetup() {
 
     const nowBefore = Date.now();
     jmDisplayed = displayMindMap(mind, usedOptJmDisplay);
+    // "dblclick"
 
     modCustRend.setOurCustomRendererJm(jmDisplayed);
     modCustRend.setOurCustomRendererJmOptions(defaultOptJmDisplay);
     const render = await modCustRend.getOurCustomRenderer();
+
+    // "dblclick"
+    // eltJmnode.addEventListener("dblclick", customRenderer.jmnodeDblclick);
     // const globals = render.getMindmapGlobals();
+
+    // const eltJmnodes = getJmnodesFromJm(jmDisplayed);
+    eltJmnodes.addEventListener("dblclick", render.mindmapDblclick);
+    jmDisplayed.disable_event_handle("dblclick");
+
     render.applyThisMindmapGlobals();
 
     switchDragTouchAccWay(theDragTouchAccWay);
@@ -865,10 +876,11 @@ export async function pageSetup() {
                     console.log({ operation_type, id_updated, updated_node });
                     // const [id, topic] = datadata
                     const eltJmnode = jsMind.my_get_DOM_element_from_node(updated_node);
+                    const eltTxt = eltJmnode.lastElementChild;
+                    if (!eltTxt.classList.contains("jmnode-text")) throw Error("Not .jmnode-text");
                     // debugger;
-                    const isPlainNode = eltJmnode.childElementCount == 0;
-                    // getCustomRenderer().addJmnodeBgAndText(eltJmnode);
-                    modCustRend.addJmnodeBgAndText(eltJmnode);
+                    const isPlainNode = eltTxt.childElementCount == 0;
+                    // modCustRend.addJmnodeBgAndText(eltJmnode);
                     // const isCustomNode = topic.search(" data-jsmind-custom=") > 0;
                     if (!isPlainNode) {
                         getCustomRenderer().updateJmnodeFromCustom(eltJmnode);
@@ -892,7 +904,6 @@ export async function pageSetup() {
                     const moved_node = jmDisplayed.get_node(id_moved);
                     const eltJmnode = jsMind.my_get_DOM_element_from_node(moved_node);
                     const isPlainNode = eltJmnode.childElementCount == 0;
-                    // getCustomRenderer().addJmnodeBgAndText(eltJmnode);
                     modCustRend.addJmnodeBgAndText(eltJmnode);
                     if (!isPlainNode) {
                         getCustomRenderer().updateJmnodeFromCustom(eltJmnode);
@@ -1498,7 +1509,7 @@ export async function pageSetup() {
             // console.log("eltJmnode befor fix", eltJmnode);
             // fixRenderImg(eltRendererImg);
             // const modCustom = await getJsmindCust();
-            // modCustom.addJmnodeBgAndText(eltJmnode);
+            // modCustom.NOaddJmnodeBgAndText(eltJmnode);
             // getCustomRenderer().updateJmnodeFromCustom(eltJmnode, jmOwner);
         } else {
             const s = eltJmnode.style;
@@ -1541,19 +1552,21 @@ function getJmnodesFromJm(jmDisplayed) {
 
 
 export async function fixJmnodeProblem(eltJmnode) {
-    // console.log("fixJmnodeProblem", eltJmnode);
+    console.warn("fixJmnodeProblem", eltJmnode);
     const customRenderer = await modCustRend.getOurCustomRenderer();
     customRenderer.fixLeftRightChildren(eltJmnode);
+    return;
+
     const isPlainNode = eltJmnode.childElementCount == 0;
     const isNewCustomFormat = eltJmnode.childElementCount == 1;
     const eltRendererImg = eltJmnode.lastElementChild;
     const eltTopic = eltJmnode.firstElementChild;
 
     // const modCustRend = await import("jsmind-cust-rend");
-    // const { eltTxt, eltBg } = modCustom.addJmnodeBgAndText(eltJmnode);
-    // const { eltTxt, eltBg } = getCustomRenderer().addJmnodeBgAndText(eltJmnode);
-    // const { eltTxt, eltBg } = modCustRend.getOurCustomRenderer().addJmnodeBgAndText(eltJmnode);
-    // const { eltTxt, eltBg } = theCustomRenderer().addJmnodeBgAndText(eltJmnode);
+    // const { eltTxt, eltBg } = modCustom.NOaddJmnodeBgAndText(eltJmnode);
+    // const { eltTxt, eltBg } = getCustomRenderer().NOaddJmnodeBgAndText(eltJmnode);
+    // const { eltTxt, eltBg } = modCustRend.getOurCustomRenderer().NOaddJmnodeBgAndText(eltJmnode);
+    // const { eltTxt, eltBg } = theCustomRenderer().NOaddJmnodeBgAndText(eltJmnode);
     const { eltTxt, eltBg } = modCustRend.addJmnodeBgAndText(eltJmnode);
 
     if (isPlainNode) {
@@ -1573,8 +1586,7 @@ export async function fixJmnodeProblem(eltJmnode) {
         }
     }
     // FIX-ME: This should only be done once
-    // eltJmnode.addEventListener("dblclick", ourCustomRenderer.jmnodeDblclick);
-    eltJmnode.addEventListener("dblclick", customRenderer.jmnodeDblclick);
+    // eltJmnode.addEventListener("dblclick", customRenderer.jmnodeDblclick);
 }
 function isVeryOldCustomFormat(eltJmnode) {
     const child1 = eltJmnode.firstElementChild;
@@ -1600,6 +1612,7 @@ function isVeryOldCustomFormat(eltJmnode) {
     }
 }
 function fixOldCustomAndUpdate(eltJmnode) {
+    if (!jsMind.mm4iSupported) return;
     const childLast = eltJmnode.lastElementChild;
     const strCustom = childLast.dataset.jsmindCustom
     const isOldCustom = childLast.classList.contains("jsmind-renderer-img");
@@ -1619,7 +1632,7 @@ function fixProblemsAndUpdateCustomAndShapes(jmDisplayed) {
         // [...document.getElementsByTagName("jmnode")].forEach(eltJmnode => 
         [...eltJmnodes.getElementsByTagName("jmnode")].forEach(async eltJmnode => {
             if (isVeryOldCustomFormat(eltJmnode)) return;
-            await fixJmnodeProblem(eltJmnode); // FIX-ME: Remove when this is fixed in jsmind
+            // await fixJmnodeProblem(eltJmnode); // FIX-ME: Remove when this is fixed in jsmind
             fixOldCustomAndUpdate(eltJmnode);
             const node_id = jsMind.my_get_nodeID_from_DOM_element(eltJmnode);
             if (node_id == 21) console.warn("node_id 21");
