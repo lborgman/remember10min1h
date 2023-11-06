@@ -172,6 +172,7 @@ export class CustomRenderer4jsMind {
         }
     }
     async updateJmnodeFromCustom(eltJmnode, jmOwner) {
+        return;
         async function fixRenderImg(eltDiv) {
             const eltParent = eltDiv.parentElement;
             eltDiv.remove();
@@ -725,8 +726,8 @@ export class CustomRenderer4jsMind {
         eltCopied.style.left = 0;
         eltCopied.classList.remove("selected");
         eltCopied.classList.remove("jsmind-hit");
-        eltCopied.classList.remove("is-left");
-        eltCopied.classList.remove("is-right");
+        eltCopied.classList.remove("left-side");
+        eltCopied.classList.remove("right-side");
         eltCopied.classList.remove("has-children");
         if (eltCopied.style.width == "") {
             eltCopied.style.width = `${bcrOrig.width}px`;
@@ -2362,6 +2363,7 @@ console.log({ cr4j });
 export function addJmnodeBgAndText(eltJmnode) {
     console.warn("Add bg and text called");
     debugger;
+    return;
     const eltTxt = mkElt("div", { class: "jmnode-text" });
     eltTxt.classList.add("multiline-ellipsis");
     const eltBg = mkElt("div", { class: "jmnode-bg" });
@@ -2386,11 +2388,11 @@ function fixLeftRightChildren(eltJmnode) {
     eltJmnode.classList.remove("is-right");
     eltJmnode.classList.remove("has-children");
     if (hasChildren) {
-        eltJmnode.classList.add("has-children");
+        // eltJmnode.classList.add("has-children");
         if (isLeft) {
-            eltJmnode.classList.add("is-left");
+            // eltJmnode.classList.add("is-left");
         } else {
-            eltJmnode.classList.add("is-right");
+            // eltJmnode.classList.add("is-right");
         }
         if (node.expanded) eltJmnode.classList.add("is-expanded");
     }

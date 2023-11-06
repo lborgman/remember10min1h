@@ -1731,11 +1731,11 @@ jmnode.has-children.is-expanded::after {
     content: "-";
 }
 
-jmnode.has-children.is-left::after {
+jmnode.has-children.left-side::after {
     left: -30px;
 }
 
-jmnode.has-children.is-right::after {
+jmnode.has-children.right-side::after {
     right: -30px;
 }
 

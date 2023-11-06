@@ -751,7 +751,7 @@ export async function pageSetup() {
     // eltJmnode.addEventListener("dblclick", customRenderer.jmnodeDblclick);
     // const globals = render.getMindmapGlobals();
 
-    // const eltJmnodes = getJmnodesFromJm(jmDisplayed);
+    const eltJmnodes = getJmnodesFromJm(jmDisplayed);
     eltJmnodes.addEventListener("dblclick", render.mindmapDblclick);
     jmDisplayed.disable_event_handle("dblclick");
 
@@ -919,7 +919,7 @@ export async function pageSetup() {
                 // const id_removed = operation_node_id;
                 const id_removed = datadata[0];
                 console.log({ operation_type, id_removed, operation_node_id });
-                jmMirrored?.remove_node(id_removed);
+                // jmMirrored?.remove_node(id_removed);
                 break;
             default:
                 console.warn(`unknown operation_type: ${operation_type}`);
