@@ -154,16 +154,18 @@ export class CustomRenderer4jsMind {
     }
     // addJmnodeBgAndText(eltJmnode) { return addJmnodeBgAndText(eltJmnode) }
     fixLeftRightChildren(eltJmnode) { fixLeftRightChildren(eltJmnode); }
-    async addEltNodeLink(eltJmnode) {
-        const childCount = eltJmnode.childElementCount;
-        // console.warn("addEltNodeLink", eltJmnode, childCount);
-        if (childCount != 2) throw Error(`childElementCound != 2, ${childCount}`);
+    async updateEltNodeLink(eltJmnode) {
+        // const childCount = eltJmnode.childElementCount;
+        // console.warn("updateEltNodeLink", eltJmnode, childCount);
+        // if (childCount != 2) throw Error(`childElementCound != 2, ${childCount}`);
         // debugger;
         const node_id = jsMind.my_get_nodeID_from_DOM_element(eltJmnode);
         const node = this.THEjmDisplayed.get_node(node_id);
         const nodeLink = node.data.shapeEtc?.nodeLink;
         // console.log({ node }, node.data.shapeEtc, nodeLink);
         if (nodeLink && nodeLink.length > 0) {
+            const oldBtn = eltJmnode.querySelector("a.jsmind-plain-link");
+            oldBtn?.remove();
             const iconBtn = modMdc.mkMDCiconButton("link");
             iconBtn.title = "Visit web page";
             iconBtn.classList.add("icon-button-40");
@@ -2313,7 +2315,7 @@ export class CustomRenderer4jsMind {
                 if (strCustom) {
                     this.updateJmnodeFromCustom(eltJmnode);
                 } else {
-                    this.addEltNodeLink(eltJmnode);
+                    this.updateEltNodeLink(eltJmnode);
                 }
             }, 1100);
 

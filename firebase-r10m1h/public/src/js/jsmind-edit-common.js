@@ -876,7 +876,8 @@ export async function pageSetup() {
                     console.log({ operation_type, id_updated, updated_node });
                     // const [id, topic] = datadata
                     const eltJmnode = jsMind.my_get_DOM_element_from_node(updated_node);
-                    const eltTxt = eltJmnode.lastElementChild;
+                    // const eltTxt = eltJmnode.lastElementChild;
+                    const eltTxt = eltJmnode.querySelector(".jmnode-text");
                     if (!eltTxt.classList.contains("jmnode-text")) throw Error("Not .jmnode-text");
                     // debugger;
                     const isPlainNode = eltTxt.childElementCount == 0;
@@ -885,7 +886,7 @@ export async function pageSetup() {
                     if (!isPlainNode) {
                         getCustomRenderer().updateJmnodeFromCustom(eltJmnode);
                     } else {
-                        getCustomRenderer().addEltNodeLink(eltJmnode);
+                        getCustomRenderer().updateEltNodeLink(eltJmnode);
                     }
                 }
                 break;
@@ -908,7 +909,7 @@ export async function pageSetup() {
                     if (!isPlainNode) {
                         getCustomRenderer().updateJmnodeFromCustom(eltJmnode);
                     } else {
-                        getCustomRenderer().addEltNodeLink(eltJmnode);
+                        getCustomRenderer().updateEltNodeLink(eltJmnode);
                     }
                     // const before_id = datadata[1];
                     // const parent_id = datadata[2];
@@ -1620,7 +1621,7 @@ function fixOldCustomAndUpdate(eltJmnode) {
         // if (!isOldCustom) { fixRenderImg(childLast); }
         getCustomRenderer().updateJmnodeFromCustom(eltJmnode);
     } else {
-        getCustomRenderer().addEltNodeLink(eltJmnode);
+        getCustomRenderer().updateEltNodeLink(eltJmnode);
     }
 }
 
