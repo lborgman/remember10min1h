@@ -905,7 +905,7 @@ export async function pageSetup() {
                     const moved_node = jmDisplayed.get_node(id_moved);
                     const eltJmnode = jsMind.my_get_DOM_element_from_node(moved_node);
                     const isPlainNode = eltJmnode.childElementCount == 0;
-                    modCustRend.addJmnodeBgAndText(eltJmnode);
+                    // modCustRend.addJmnodeBgAndText(eltJmnode);
                     if (!isPlainNode) {
                         getCustomRenderer().updateJmnodeFromCustom(eltJmnode);
                     } else {
@@ -994,7 +994,7 @@ export async function pageSetup() {
         if (isOutsideO) {
             const node_id = jsMind.my_get_nodeID_from_DOM_element(eltJmnode);
             jmDisplayed.toggle_node(node_id);
-            eltJmnode.classList.toggle("is-expanded");
+            // eltJmnode.classList.toggle("is-expanded");
             modMMhelpers.DBrequestSaveThisMindmap(getCustomRenderer().THEjmDisplayed);
         }
         if (target.dataset.jsmindCustom) {
@@ -1554,8 +1554,9 @@ function getJmnodesFromJm(jmDisplayed) {
 
 export async function fixJmnodeProblem(eltJmnode) {
     console.warn("fixJmnodeProblem", eltJmnode);
+    return;
     const customRenderer = await modCustRend.getOurCustomRenderer();
-    customRenderer.fixLeftRightChildren(eltJmnode);
+    // customRenderer.fixLeftRightChildren(eltJmnode);
     return;
 
     const isPlainNode = eltJmnode.childElementCount == 0;

@@ -153,7 +153,7 @@ export class CustomRenderer4jsMind {
         return this.#providers[providerName].img;
     }
     // addJmnodeBgAndText(eltJmnode) { return addJmnodeBgAndText(eltJmnode) }
-    fixLeftRightChildren(eltJmnode) { fixLeftRightChildren(eltJmnode); }
+    // fixLeftRightChildren(eltJmnode) { fixLeftRightChildren(eltJmnode); }
     async updateEltNodeLink(eltJmnode) {
         // const childCount = eltJmnode.childElementCount;
         // console.warn("updateEltNodeLink", eltJmnode, childCount);
@@ -2376,6 +2376,7 @@ export function addJmnodeBgAndText(eltJmnode) {
 
 
 function fixLeftRightChildren(eltJmnode) {
+    return;
     const node_id = jsMind.my_get_nodeID_from_DOM_element(eltJmnode);
     // FIX-ME: root
     if (node_id == "root") return;
