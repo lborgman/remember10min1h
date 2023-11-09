@@ -4,7 +4,8 @@ console.log("here is module jsmind-cust-rend.js");
 if (document.currentScript) throw Error("import .currentScript"); // is module
 if (!import.meta.url) throw Error("!import.meta.url"); // is module
 
-if (!!!jsMind.mm4iSupported) {
+// FIX-ME: Why is this called in share.html?
+if (typeof jsMind != "undefined" && !!!jsMind.mm4iSupported) {
     // throw Error("This version of jsMind does not support mm4i");
     console.error("This version of jsMind does not support mm4i");
 }
