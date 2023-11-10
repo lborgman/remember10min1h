@@ -1685,6 +1685,34 @@ jmnodes jmnode .jmnode-text {
     position: relative;
     /* Otherwise it will be behind jmnode-bg??? */
     padding: 0px;
+    height: 100%;
+
+    /* https://blog.logrocket.com/guide-css-word-wrap-overflow-wrap-word-break/ */
+
+    /*
+        - white-space: initial; causes the root node to be out of place???
+        - Also setting overflow-wrap: anywhere causes the root to be much more out of place.
+        - Setting white-space this way seems to set white-space-collapse,
+          which is marked as "experimental".
+          https://developer.mozilla.org/en-US/docs/Web/CSS/white-space
+          https://developer.mozilla.org/en-US/docs/Web/CSS/white-space-collapse (experimental 2023-11)
+          https://developer.mozilla.org/en-US/docs/Web/CSS/text-wrap (experimental 2023-11)
+        - white-space: normal; shows the same problem as "inital".
+        - white-space: nowrap; makes averything ok.
+        - white-space: break-spaces; shows the same problem as "initial".
+    */
+    overflow-wrap: anywhere !important;
+    overflow: hidden !important;
+    /*
+    white-space: initial;
+    white-space: normal;
+    white-space: nowrap;
+    white-space: break-spaces;
+    */
+    /* Since white-space is a shorthand for white-space-collapse and text-wrap try them one by one: */
+    text-wrap: wrap !important;
+
+    /*
     NOoverflow: hidden;
     NOtext-overflow: ellipsis;
     NOposition: absolute;
@@ -1692,8 +1720,9 @@ jmnodes jmnode .jmnode-text {
     NOleft: 0;
     NObottom: 0;
     NOright: 0;
-    outline: 1px dashed red;
     NO-webkit-text-stroke: 1px green;
+    */
+    outline: 1px dashed red;
     /* black does not work??? */
     text-shadow: 1px 0 black, -1px 0 black, 0 1px black, 0 -1px black, 0 0 2px black;
 }
