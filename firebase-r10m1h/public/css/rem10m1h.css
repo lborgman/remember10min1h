@@ -1656,83 +1656,7 @@ div.bg-choice:not(input[disabled]):has(input:checked) {
 
 
 
-/* .jsmind_container jmnodes jmnode { */
-jmnodes jmnode {
-    padding: 10px;
-}
 
-/* .jsmind_container jmnodes jmnode .jmnode-bg { */
-jmnodes jmnode .jmnode-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-
-    NOwidth: 100%;
-    NOheight: 100%;
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-color: green;
-}
-
-jmnodes jmnode .jmnode-bg:not([class*=jsmind-shape-]) {
-    background-color: transparent;
-}
-
-/* .jsmind_container jmnodes jmnode .jmnode-text { */
-jmnodes jmnode .jmnode-text {
-    position: relative;
-    /* Otherwise it will be behind jmnode-bg??? */
-    padding: 0px;
-    height: 100%;
-
-    /* https://blog.logrocket.com/guide-css-word-wrap-overflow-wrap-word-break/ */
-
-    /*
-        - white-space: initial; causes the root node to be out of place???
-        - Also setting overflow-wrap: anywhere causes the root to be much more out of place.
-        - Setting white-space this way seems to set white-space-collapse,
-          which is marked as "experimental".
-          https://developer.mozilla.org/en-US/docs/Web/CSS/white-space
-          https://developer.mozilla.org/en-US/docs/Web/CSS/white-space-collapse (experimental 2023-11)
-          https://developer.mozilla.org/en-US/docs/Web/CSS/text-wrap (experimental 2023-11)
-        - white-space: normal; shows the same problem as "inital".
-        - white-space: nowrap; makes averything ok.
-        - white-space: break-spaces; shows the same problem as "initial".
-    */
-    overflow-wrap: anywhere !important;
-    overflow: hidden !important;
-    /*
-    white-space: initial;
-    white-space: normal;
-    white-space: nowrap;
-    white-space: break-spaces;
-    */
-    /* Since white-space is a shorthand for white-space-collapse and text-wrap try them one by one: */
-    text-wrap: wrap !important;
-
-    /*
-    NOoverflow: hidden;
-    NOtext-overflow: ellipsis;
-    NOposition: absolute;
-    NOtop: 0;
-    NOleft: 0;
-    NObottom: 0;
-    NOright: 0;
-    NO-webkit-text-stroke: 1px green;
-    */
-    outline: 1px dashed red;
-    /* black does not work??? */
-    text-shadow: 1px 0 black, -1px 0 black, 0 1px black, 0 -1px black, 0 0 2px black;
-}
-
-
-
-.jsmind_container jmnodes jmnode[nodeid=root] {
-    overflow: hidden;
-    overflow: visible;
-}
 
 /* This does not display since I have set overflow:hidden on jmnode. */
 jmnode.has-children::after {
@@ -1834,11 +1758,6 @@ div.dialog-mindmaps-image {
 }
 
 
-
-/* https://css-tricks.com/almanac/properties/t/touch-action/ */
-jmnodes {
-    touch-action: manipulation;
-}
 
 #theme-choices {
     display: flex;
