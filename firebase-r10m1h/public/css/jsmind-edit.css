@@ -84,7 +84,7 @@ div.dialog-mindmaps-image {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    background: lightgray;
+    NObackground: lightgray;
 }
 
 #jsmind-ednode-shape jmnodes jmnode {
@@ -216,7 +216,12 @@ div.dialog-mindmaps-image {
 
 
 /*** BEGIN SHAPES DEFINITIONS *********************************/
-/* Not that padding % is of the parent! */
+/* Note that padding % is of the parent! */
+
+div.jsmind-inner>jmnodes>jmnode.bg-transparent {
+    background-color: transparent;
+    box-shadow: none;
+}
 
 .jsmind-shape-ellipse {
     border-radius: 50%;
@@ -782,4 +787,3 @@ jmnode.low-theme-contrast::after {
     left: 0;
     bottom: 0;
 }
-

@@ -723,6 +723,22 @@ export class CustomRenderer4jsMind {
 
         // const eltJmnodes = eltJmnode.closest("jmnodes");
         const eltCopied = eltJmnode.cloneNode(true);
+        /*
+            FIX-ME:
+            If aPlainLink is not removed then div.jmnode-bg will
+            be shown 10px to high (10px is jmnode padding).
+            This is a chromium bug, but I am not able to pin it down
+            right now because of problems with Chrome Dev Tools
+            (2023-11-15). One of the bugs I just saw in CDT was 
+            fixed today in
+            
+              Chrome, Version 119.0.6045.160 (Official Build) (64-bit)
+
+            Waiting to see if this bug is also fixed soon!
+        */
+        const aPlainLink = eltCopied.querySelector("a.jsmind-plain-link");
+        aPlainLink?.remove();
+
         eltCopied.style.outline = "1px dotted white";
         const bcrOrig = eltJmnode.getBoundingClientRect();
         eltCopied.style.top = 0;
@@ -787,15 +803,25 @@ export class CustomRenderer4jsMind {
         const jmnodesCopied = mkElt("jmnodes", undefined, eltCopied);
         // FIX-ME: MindmapGlobals
         // if (themeClass) jmnodesCopied.classList.add(themeClass);
-        const divEdnodeCopied = mkElt("div", undefined, [
-            jmnodesCopied
-        ]);
+        const origJmnodes = eltJmnode.closest("jmnodes");
+        const origJmnodesStyle = getComputedStyle(origJmnodes);
+        const origJmnodesParentStyle = getComputedStyle(origJmnodes.parentElement);
+
+        const themeCls = getJsmindTheme(origJmnodes)
+        jmnodesCopied.classList.add(themeCls);
+
+        const divEdnodeCopied = mkElt("div", { class: "mdc-card" }, [jmnodesCopied]);
+        jmnodesCopied.style.backgroundColor = origJmnodesStyle.backgroundColor;
+        divEdnodeCopied.style.backgroundColor = origJmnodesParentStyle.backgroundColor;
+
         const paddingDivEdnodeCopied = 8;
         divEdnodeCopied.style.position = "relative";
         // divEdnodeCopied.style.height = "200px";
         divEdnodeCopied.style.width = "100%";
-        divEdnodeCopied.style.backgroundColor = "black";
+        // divEdnodeCopied.style.backgroundColor = "black";
         divEdnodeCopied.style.padding = `${paddingDivEdnodeCopied}px`;
+        divEdnodeCopied.style.border = "1px solid black";
+        divEdnodeCopied.style.marginBottom = "5px";
         // https://stackoverflow.com/questions/59010779/pointer-event-issue-pointercancel-with-pressure-input-pen
         divEdnodeCopied.style.touchAction = "none";
 
@@ -1007,12 +1033,21 @@ export class CustomRenderer4jsMind {
         const scaleCopies = desiredW / origW;
 
         const formShapes = mkElt("form", undefined, jmnodesShapes);
+        formShapes.style.backgroundColor = origJmnodesParentStyle.backgroundColor;
         const divShapes = mkElt("div", { id: "jsmind-ednode-shape" });
+        divShapes.style.backgroundColor = origJmnodesStyle.backgroundColor;
 
         const arrCopiedChildren = [...eltCopied.querySelectorAll("jmnode>[class|=jsmind-custom-image]")];
         const numCopiedChildren = arrCopiedChildren.length;
         const divChildCoundInfo = mkElt("div", undefined, `Node internal child cound: ${numCopiedChildren}`);
         divShapes.appendChild(divChildCoundInfo);
+
+
+        const inpChkShapeBg = modMdc.mkMDCcheckboxInput();
+        const chkShapeBg = await modMdc.mkMDCcheckboxElt(inpChkShapeBg, "Transparent box");
+        const divShapeBg = mkElt("div", undefined, chkShapeBg);
+        divShapeBg.style.marginBottom = "10px";
+        divShapes.appendChild(divShapeBg);
 
         divShapes.appendChild(formShapes);
 
