@@ -156,10 +156,6 @@ export class CustomRenderer4jsMind {
     // addJmnodeBgAndText(eltJmnode) { return addJmnodeBgAndText(eltJmnode) }
     // fixLeftRightChildren(eltJmnode) { fixLeftRightChildren(eltJmnode); }
     async updateEltNodeLink(eltJmnode) {
-        // const childCount = eltJmnode.childElementCount;
-        // console.warn("updateEltNodeLink", eltJmnode, childCount);
-        // if (childCount != 2) throw Error(`childElementCound != 2, ${childCount}`);
-        // debugger;
         const node_id = jsMind.my_get_nodeID_from_DOM_element(eltJmnode);
         const node = this.THEjmDisplayed.get_node(node_id);
         const nodeLink = node.data.shapeEtc?.nodeLink;
@@ -1037,17 +1033,29 @@ export class CustomRenderer4jsMind {
         const divShapes = mkElt("div", { id: "jsmind-ednode-shape" });
         divShapes.style.backgroundColor = origJmnodesStyle.backgroundColor;
 
+        /*
         const arrCopiedChildren = [...eltCopied.querySelectorAll("jmnode>[class|=jsmind-custom-image]")];
         const numCopiedChildren = arrCopiedChildren.length;
         const divChildCoundInfo = mkElt("div", undefined, `Node internal child cound: ${numCopiedChildren}`);
         divShapes.appendChild(divChildCoundInfo);
+        */
 
 
         const inpChkShapeBg = modMdc.mkMDCcheckboxInput();
+        if (currentShapeEtc?.shapeBoxBg != undefined) {
+            inpChkShapeBg.checked = currentShapeEtc.shapeBoxBg;
+        } else {
+            inpChkShapeBg.checked = true;
+        }
         const chkShapeBg = await modMdc.mkMDCcheckboxElt(inpChkShapeBg, "Transparent box");
         const divShapeBg = mkElt("div", undefined, chkShapeBg);
         divShapeBg.style.marginBottom = "10px";
         divShapes.appendChild(divShapeBg);
+        inpChkShapeBg.addEventListener("input", evt => {
+            // debugger;
+            console.log("inpChkShapgeBg input", inpChkShapeBg.checked);
+            currentShapeEtc.shapeBoxBg = inpChkShapeBg.checked;
+        })
 
         divShapes.appendChild(formShapes);
 

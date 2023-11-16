@@ -218,6 +218,7 @@ div.dialog-mindmaps-image {
 /*** BEGIN SHAPES DEFINITIONS *********************************/
 /* Note that padding % is of the parent! */
 
+#jsmind-ednode jmnodes>jmnode.bg-transparent,
 div.jsmind-inner>jmnodes>jmnode.bg-transparent {
     background-color: transparent;
     box-shadow: none;

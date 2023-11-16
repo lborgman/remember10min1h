@@ -83,7 +83,7 @@ jmnode {
     font: 16px/1.125 Verdana, Arial, Helvetica, sans-serif;
 }
 jmnode:hover {
-    box-shadow: 2px 2px 8px #000;
+    box-shadow: 2px 2px 8px #000 !important;
     background-color: #ebebeb;
     color: #333;
 }

@@ -298,13 +298,21 @@ export function applyShapeEtc(shapeEtc, eltJmnode) {
 
     clearShapes(eltShape);
     const shape = shapeEtc.shape;
+    eltJmnode.classList.remove("bg-transparent");
     if (shape) {
-        eltShape.parentElement.classList.add("bg-transparent");
+        if (shapeEtc?.shapeBoxBg != undefined) {
+            if (shapeEtc.shapeBoxBg) {
+                eltJmnode.classList.add("bg-transparent");
+            }
+        } else {
+            eltJmnode.classList.add("bg-transparent");
+        }
         if (arrShapeClasses.includes(shape)) {
             eltShape.classList.add(shape);
         } else {
             if (shape != "default") console.error(`Unknown shape: ${shape}`);
         }
+
     }
     if (shapeCanHaveBorder(shape)) {
         const border = shapeEtc.border;
