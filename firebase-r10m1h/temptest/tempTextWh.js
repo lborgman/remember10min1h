@@ -33,7 +33,17 @@ function getJmnodeDefaultSize(eltJmnode) {
     logColored2("TM text", tm);
     logColored2("bcrText", bcrText);
     const hText = parseFloat(ourLineHeight);
-    return { w: tm.width, h: hText };
+    const textWh = { w: tm.width, h: hText };
+    console.log("testWh", textWh);
+    const getPx = (str) => {
+        if (!str.endsWith("px")) throw Error(`Does not end with px: ${str}`);
+        return parseFloat(str);
+    }
+    const jmPadT = getPx(ourJmnodeStyle.paddingTop);
+    const jmPadB = getPx(ourJmnodeStyle.paddingBottom);
+    const jmPadL = getPx(ourJmnodeStyle.paddingLeft);
+    const jmPadR = getPx(ourJmnodeStyle.paddingRight);
+    return { w: tm.width + jmPadL + jmPadR, h: hText+jmPadT+jmPadB };
 }
 function fontStretchCSS2canvas(fsCss) {
     if (fsCss.indexOf("%") == -1) return fsCss;
@@ -70,4 +80,21 @@ function getTextMetrics(txt, computedStyle) {
 
     const tm = context.measureText(txt);
     return tm;
+}
+
+var cjmnode;
+function test() {
+    const jmnode = temp1;
+    getJmnodeDefaultSize(jmnode);
+    cjmnode?.remove();
+    cjmnode = jmnode.cloneNode(true);
+    const st = cjmnode.style;
+    st.visibility = "hidden";
+    st.position = "fixed";
+    st.left = 0;
+    st.top = 100;
+    const jmnodes = jmnode.closest("jmnodes");
+    jmnodes.appendChild(cjmnode);
+    console.log("HIDDEN------------------");
+    getJmnodeDefaultSize(cjmnode);
 }
