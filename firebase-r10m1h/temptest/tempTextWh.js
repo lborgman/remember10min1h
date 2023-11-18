@@ -25,16 +25,18 @@ function getJmnodeDefaultSize(eltJmnode) {
     // debugger;
     const tm = getTextMetrics(ourText, ourTextStyle);
     const bcrText = eltTxt.getBoundingClientRect();
+    const bcrJmnode = eltJmnode.getBoundingClientRect();
     function logColored2(what, ...args) {
         const ls = "background:orange; color:black;";
         console.log(`%c ${what}`, ls, ...args);
     }
     logColored2("text line-height", ourLineHeight);
     logColored2("TM text", tm);
-    logColored2("bcrText", bcrText);
+    logColored2("bcr Text", bcrText);
+    logColored2("bcr jmnode", bcrJmnode);
     const hText = parseFloat(ourLineHeight);
     const textWh = { w: tm.width, h: hText };
-    console.log("testWh", textWh);
+    logColored2("text Wh", textWh);
     const getPx = (str) => {
         if (!str.endsWith("px")) throw Error(`Does not end with px: ${str}`);
         return parseFloat(str);
@@ -43,7 +45,9 @@ function getJmnodeDefaultSize(eltJmnode) {
     const jmPadB = getPx(ourJmnodeStyle.paddingBottom);
     const jmPadL = getPx(ourJmnodeStyle.paddingLeft);
     const jmPadR = getPx(ourJmnodeStyle.paddingRight);
-    return { w: tm.width + jmPadL + jmPadR, h: hText+jmPadT+jmPadB };
+    const jmnodeWh = { w: tm.width + jmPadL + jmPadR, h: hText+jmPadT+jmPadB };
+    logColored2("jmnode Wh", jmnodeWh);
+    return jmnodeWh;
 }
 function fontStretchCSS2canvas(fsCss) {
     if (fsCss.indexOf("%") == -1) return fsCss;
