@@ -66,9 +66,9 @@ node_modules/
 .env
 
 # The output Workbox file
-firebase-r10m1h/public/sw-workbox.js
 firebase-r10m1h/public/ext/jsmind/jsmind-dbg.js
 firebase-r10m1h/public/ext/jsmind/jsmind-dbg.js.map
 firebase-r10m1h/public/sw-workbox.js
 firebase-r10m1h/public/sw-workbox.js
 firebase-r10m1h/public/ext/jsmind/jsmind.css
+firebase-r10m1h/public/sw-workbox.js
