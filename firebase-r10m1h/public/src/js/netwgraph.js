@@ -13,37 +13,57 @@ const elt3dGraph = document.getElementById('3d-graph');
 const st3d = elt3dGraph.style;
 // st3d.width = "60vw";
 // st3d.height = "60vh";
-const grWidthPx = document.documentElement.clientWidth * 0.6;
-const grHeightPx = document.documentElement.clientHeight * 0.6;
+const grWidthPx = document.documentElement.clientWidth * 0.8;
+const grHeightPx = document.documentElement.clientHeight * 0.8;
 
 const funGraph = ForceGraph3D({
-    // width: grWidthPx,
-    // height: grHeightPx,
 });
 // debugger;
 funGraph.width(grWidthPx);
-funGraph.height(grWidthPx);
-// funGraph.width(100);
-// funGraph.height(100);
-testRandom();
+funGraph.height(grHeightPx);
+const graphDisplayer = funGraph(elt3dGraph)
 
-function testRandom() {
-    // https://github.com/vasturiano/3d-force-graph/blob/master/example/basic/index.html
+const gData = getNodesAndLinks();
+chooseView();
+
+function getNodesAndLinks() {
     // Random tree
     const N = 30;
-    const gData = {
-        nodes: [...Array(N).keys()].map(i => ({ id: i })),
-        links: [...Array(N).keys()]
-            .filter(id => id)
-            .map(id => ({
-                source: id,
-                target: Math.round(Math.random() * (id - 1))
-            }))
-    };
-
-    // const Graph = ForceGraph3D()
-    // (document.getElementById('3d-graph'))
-    const Graph = funGraph
-        (elt3dGraph)
-        .graphData(gData);
+    const nodes = [...Array(N).keys()].map(i => ({ id: i }));
+    const links = [...Array(N).keys()]
+        .filter(id => id)
+        .map(id => ({
+            source: id,
+            target: Math.round(Math.random() * (id - 1))
+        }));
+    console.log("got nodes and links");
+    return { nodes, links }
+}
+function chooseView() {
+    // testBasic();
+    testText();
+}
+async function testText() {
+    await import("https://unpkg.com/three");
+    await import("https://unpkg.com/three-spritetext");
+    // https://github.com/vasturiano/3d-force-graph/blob/master/example/text-nodes/index.html
+    const Graph = graphDisplayer.graphData(gData)
+        .nodeThreeObject(node => {
+            const sprite = new SpriteText(node.id);
+            // sprite.material.depthWrite = false; // make sprite background transparent
+            sprite.material.transparent = false;
+            sprite.backgroundColor = "yellow";
+            sprite.padding = 2;
+            sprite.borderRadius = 4;
+            sprite.borderWidth = 1;
+            sprite.borderColor = "red";
+            // sprite.color = node.color;
+            sprite.color = "red";
+            sprite.textHeight = 14;
+            return sprite;
+        });
+}
+function testBasic() {
+    // https://github.com/vasturiano/3d-force-graph/blob/master/example/basic/index.html
+    const Graph = graphDisplayer.graphData(gData);
 }
