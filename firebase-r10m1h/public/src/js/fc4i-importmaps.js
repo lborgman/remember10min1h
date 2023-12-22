@@ -2,6 +2,11 @@ console.log("here is fc4i-importmaps");
 
 const importMap = {
     imports: {
+        // https://github.com/vasturiano/3d-force-graph
+        // Not a module?
+        // Anyway ForceGraph3D will be defined in window by import("3d-force-graph")!
+        "mod3d-force-graph": "https://unpkg.com/3d-force-graph",
+
         "acc-colors": "/src/acc-colors.js",
         "color-converter": "/src/js/mod/color-converter.js",
         "d3": "/ext/d3/d3.v7.js",
@@ -12,8 +17,10 @@ const importMap = {
         "idb-common": "/src/js/mod/idb-common.js",
         "images": "/src/js/images.js",
         "is-displayed": "/src/js/is-displayed.js",
+
         // The jsmind entry is not used yet:
         "jsmind": "/ext/jsmind/jsmind-dbg.js",
+
         "jsmind-edit-common": "/src/js/jsmind-edit-common.js",
         "jsmind-edit-spec-fc4i": "/src/js/jsmind-edit-spec-fc4i.js",
         "jsmind-cust-rend": "/src/js/jsmind-cust-rend.js",

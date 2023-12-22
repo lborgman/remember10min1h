@@ -1082,6 +1082,11 @@ async function mkMenu() {
     liTestShareWithArgs.addEventListener("click", evt => { showTestTarget(); })
     liTestShareWithArgs.classList.add("test-item");
 
+    const liTestNetwGraph = modMdc.mkMDCmenuItem(mkElt("a", { href: "/netwgraph.html" }, "Test network graph (not ready)"));
+    // const liAbout = modMdc.mkMDCmenuItem(mkElt("a", { href: "/about.html#fc4i" }, "About"));
+    // mm4i.html
+    // liTestNetwGraph.classList.add("test-item");
+
     const liMindmapsA = modMdc.mkMDCmenuItem(mkElt("a", { href: "/mm4i/mm4i.html" }, "Mindmaps"));
 
     const liJsmindEdit = modMdc.mkMDCmenuItem("Jsmind-edit");
@@ -1639,6 +1644,7 @@ async function mkMenu() {
         // liMindmapsA,
         liAskPersistent,
         liAbout,
+        liTestNetwGraph,
     ];
     const showDebugEntries = true;
     if (showDebugEntries) {
