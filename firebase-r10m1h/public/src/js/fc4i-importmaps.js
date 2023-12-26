@@ -5,6 +5,9 @@ const importMap = {
         // https://github.com/vasturiano/3d-force-graph
         // Not a module?
         // Anyway ForceGraph3D will be defined in window by import("3d-force-graph")!
+        // "three": "https://unpkg.com/three",
+        "three": "https://unpkg.com/three/build/three.module.js",
+        "three-spritetext": "https://unpkg.com/three-spritetext",
         "mod3d-force-graph": "https://unpkg.com/3d-force-graph",
 
         "acc-colors": "/src/acc-colors.js",

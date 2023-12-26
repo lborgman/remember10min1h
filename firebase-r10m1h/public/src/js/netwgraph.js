@@ -1,6 +1,19 @@
+import("pwa");
+
+const modMdc = await import("util-mdc");
+
 const modD3 = await import("d3");
+
+// FIX-ME: Note the order of import. Something is wrong.
+/*
+await import("three");
+console.log({ __THREE__ });
+await import("three-spritetext");
+console.log({ __THREE__ });
 const mod3d = await import("mod3d-force-graph");
+console.log({ __THREE__ });
 // debugger;
+*/
 
 const modDbMm = await import("db-mindmaps");
 const allMm = await modDbMm.DBgetAllMindmaps();
@@ -9,6 +22,8 @@ console.log({ mm0 });
 const mm0nodeArray = mm0.jsmindmap.data;
 // debugger;
 
+
+
 const elt3dGraph = document.getElementById('3d-graph');
 const st3d = elt3dGraph.style;
 // st3d.width = "60vw";
@@ -16,19 +31,26 @@ const st3d = elt3dGraph.style;
 const grWidthPx = document.documentElement.clientWidth * 0.8;
 const grHeightPx = document.documentElement.clientHeight * 0.8;
 
-const funGraph = ForceGraph3D({
-});
-// debugger;
-funGraph.width(grWidthPx);
-funGraph.height(grHeightPx);
-const graphDisplayer = funGraph(elt3dGraph)
+
+function setupGraphDisplayer(opt) {
+    const funGraph = ForceGraph3D(opt);
+    // debugger;
+    funGraph.width(grWidthPx);
+    funGraph.height(grHeightPx);
+    // funGraph.linkColor("green");
+    funGraph.linkColor("#ff0000");
+    funGraph.linkWidth(3);
+    funGraph.linkOpacity(1.0);
+    return funGraph(elt3dGraph);
+}
+const graphDisplayer = setupGraphDisplayer();
 
 const gData = getNodesAndLinks();
 chooseView();
 
 function getNodesAndLinks() {
     // Random tree
-    const N = 30;
+    const N = 4;
     const nodes = [...Array(N).keys()].map(i => ({ id: i }));
     const links = [...Array(N).keys()]
         .filter(id => id)
@@ -39,21 +61,330 @@ function getNodesAndLinks() {
     console.log("got nodes and links");
     return { nodes, links }
 }
-function chooseView() {
+async function chooseView() {
     // testBasic();
-    testText();
+    // testText();
+    // testHtml();
+
+    function mkViewAlt(txt, fun) {
+        const eltRad = mkElt("input", { type: "radio", name: "view-alt" });
+        eltRad.altFun = fun;
+        const txtFun = fun.name;
+        const lbl = mkElt("label", undefined, [eltRad, txtFun]);
+        return mkElt("p", undefined, lbl);
+    }
+
+    const divAlts = mkElt("div", undefined, [
+        mkViewAlt("Basic", testBasic),
+        mkViewAlt("Text", testText),
+        mkViewAlt("Html class", testHtml),
+        mkViewAlt("Focus", testFocus),
+        mkViewAlt("My own", testMyOwn),
+        mkViewAlt("FH", testFH),
+        mkViewAlt("HF", testTF),
+    ]);
+    divAlts.querySelector("input").checked = true;
+
+    const body = mkElt("div", undefined, [
+        mkElt("h2", undefined, "Choose view"),
+        divAlts,
+    ])
+    const answer = await modMdc.mkMDCdialogConfirm(body);
+    console.log({ answer });
+    if (!answer) return;
+    // debugger;
+    const radChecked = divAlts.querySelector("input:checked");
+    if (!radChecked) return;
+    // testText();
+    const fun = radChecked.altFun;
+    const eltShowAlt = document.getElementById("show-alt");
+    eltShowAlt.textContent = fun.name;
+    fun();
 }
-async function testText() {
-    await import("https://unpkg.com/three");
-    await import("https://unpkg.com/three-spritetext");
-    // https://github.com/vasturiano/3d-force-graph/blob/master/example/text-nodes/index.html
-    const Graph = graphDisplayer.graphData(gData)
-        .nodeThreeObject(node => {
-            const sprite = new SpriteText(node.id);
+async function testTF() {
+    let ourDisplayer = graphDisplayer;
+    const useHtml = true;
+    let m;
+    if (useHtml) {
+        m = await import('//unpkg.com/three/examples/jsm/renderers/CSS2DRenderer.js');
+        ourDisplayer = setupGraphDisplayer({
+            extraRenderers: [new m.CSS2DRenderer()]
+        });
+    }
+    let graph = ourDisplayer.graphData(gData);
+    graph = graph.nodeOpacity(1.0);
+
+    // await addHtml();
+    addText();
+    await waitSeconds(1);
+    addOnClick();
+    async function addText() {
+        // const Graph = graphDisplayer.graphData(gData)
+        // .nodeAutoColorBy("group")
+        graph = graph.nodeThreeObject(node => {
+        // .nodeThreeObject(node => {
+            const sprite = new SpriteText(`Text ${node.id}`);
             // sprite.material.depthWrite = false; // make sprite background transparent
             sprite.material.transparent = false;
             sprite.backgroundColor = "yellow";
-            sprite.padding = 2;
+            // sprite.backgroundColor = node.color;
+            sprite.padding = [2, 6];
+            sprite.borderRadius = 4;
+            sprite.borderWidth = 1;
+            sprite.borderColor = "red";
+            // sprite.color = node.color;
+            sprite.color = "red";
+            sprite.textHeight = 14;
+            return sprite;
+        });
+    }
+    async function addHtml() {
+        console.log("addHTML >>>>>");
+        let logged1 = true;
+        graph = graph.nodeThreeObject(node => {
+            console.log("  addHtml .nodeThreeObject >>>>> node", node);
+            const nodeEl = document.createElement('div');
+            nodeEl.textContent = `Html ${node.id}`;
+
+            /*
+            const btn = mkElt("button", undefined, `Html ${node.id}`);
+            btn.addEventListener("click", evt => {
+                console.log(`clicked ${node.id}`);
+                alert(node.id);
+            });
+            nodeEl.appendChild(btn);
+            */
+
+            nodeEl.classList.add("node-label");
+
+            if (!logged1) {
+                console.log(nodeEl);
+                logged1 = true;
+            }
+
+            // return new m.CSS2DObject(nodeEl);
+            const ret = new m.CSS2DObject(nodeEl);
+            console.log("  addHtml .nodeThreeObject <<<< ret", ret);
+            return ret;
+        })
+
+    }
+    function addOnClick() {
+        console.log("addOnClick >>>>>");
+        graph = graph.onNodeClick(node => {
+            console.log("  addOnClick onNodeClick >>>>> node", node);
+            // Aim at node from outside it
+            const distance = 40;
+            const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+
+            const newPos = node.x || node.y || node.z
+                ? { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }
+                : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
+
+            graph.cameraPosition(
+                newPos, // new position
+                node, // lookAt ({ x, y, z })
+                3000  // ms transition duration
+            );
+        });
+    }
+
+}
+
+async function testFH() {
+    let ourDisplayer = graphDisplayer;
+    const useHtml = true;
+    let m;
+    if (useHtml) {
+        m = await import('//unpkg.com/three/examples/jsm/renderers/CSS2DRenderer.js');
+        ourDisplayer = setupGraphDisplayer({
+            extraRenderers: [new m.CSS2DRenderer()]
+        });
+    }
+    let graph = ourDisplayer.graphData(gData);
+    graph = graph.nodeOpacity(1.0);
+
+    addOnClick();
+    // addText();
+    await addHtml();
+
+    async function addText() {
+    }
+    async function addHtml() {
+        console.log("addHTML >>>>>");
+        let logged1 = false;
+        graph = graph.nodeThreeObject(node => {
+            console.log("  addHtml .nodeThreeObject >>>>> node", node);
+            const nodeEl = document.createElement('div');
+            nodeEl.textContent = `Html ${node.id}`;
+
+            const btn = mkElt("button", undefined, `Html ${node.id}`);
+            btn.addEventListener("click", evt => {
+                console.log(`clicked ${node.id}`);
+                alert(node.id);
+            });
+            nodeEl.appendChild(btn);
+
+            nodeEl.classList.add("node-label");
+
+            if (!logged1) {
+                console.log(nodeEl);
+                logged1 = true;
+            }
+
+            // return new m.CSS2DObject(nodeEl);
+            const ret = new m.CSS2DObject(nodeEl);
+            console.log("  addHtml .nodeThreeObject <<<< ret", ret);
+            return ret;
+        })
+
+    }
+    function addOnClick() {
+        console.log("addOnClick >>>>>");
+        graph = graph.onNodeClick(node => {
+            console.log("  addOnClick onNodeClick >>>>> node", node);
+            // Aim at node from outside it
+            const distance = 40;
+            const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+
+            const newPos = node.x || node.y || node.z
+                ? { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }
+                : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
+
+            graph.cameraPosition(
+                newPos, // new position
+                node, // lookAt ({ x, y, z })
+                3000  // ms transition duration
+            );
+        });
+    }
+
+}
+async function testMyOwn() {
+    const useHtml = true;
+    let ourDisplayer = graphDisplayer;
+    let m;
+    if (useHtml) {
+        m = await import('//unpkg.com/three/examples/jsm/renderers/CSS2DRenderer.js');
+        ourDisplayer = setupGraphDisplayer({
+            extraRenderers: [new m.CSS2DRenderer()]
+        });
+    }
+    let graph = ourDisplayer.graphData(gData);
+    graph = graph.nodeOpacity(1.0);
+
+    // if (useHtml) await addHtml();
+    addOnClick();
+
+    async function addText() {
+    }
+    async function addHtml() {
+        let logged1 = false;
+        graph = graph.nodeThreeObject(node => {
+            const nodeEl = document.createElement('div');
+            nodeEl.textContent = `Html ${node.id}`;
+
+            const btn = mkElt("button", undefined, `Html ${node.id}`);
+            btn.addEventListener("click", evt => {
+                console.log(`clicked ${node.id}`);
+                alert(node.id);
+            });
+            nodeEl.appendChild(btn);
+
+            nodeEl.classList.add("node-label");
+
+            if (!logged1) {
+                console.log(nodeEl);
+                logged1 = true;
+            }
+
+            return new m.CSS2DObject(nodeEl);
+        })
+
+    }
+    function addOnClick() {
+        graph = graph.onNodeClick(node => {
+            // Aim at node from outside it
+            const distance = 40;
+            const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+
+            const newPos = node.x || node.y || node.z
+                ? { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }
+                : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
+
+            graph.cameraPosition(
+                newPos, // new position
+                node, // lookAt ({ x, y, z })
+                3000  // ms transition duration
+            );
+        });
+    }
+}
+async function testFocus() {
+    // https://github.com/vasturiano/3d-force-graph/blob/master/example/click-to-focus/index.html
+    const Graph = graphDisplayer.graphData(gData)
+        .nodeLabel("id")
+        .onNodeClick(node => {
+            // Aim at node from outside it
+            const distance = 40;
+            const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+
+            const newPos = node.x || node.y || node.z
+                ? { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }
+                : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
+
+            Graph.cameraPosition(
+                newPos, // new position
+                node, // lookAt ({ x, y, z })
+                3000  // ms transition duration
+            );
+        });
+}
+async function testHtml() {
+    console.log("TEST HTLM");
+    // https://github.com/vasturiano/3d-force-graph/blob/master/example/html-nodes/index.html
+    const m = await import('//unpkg.com/three/examples/jsm/renderers/CSS2DRenderer.js');
+    const graphDisplayer = setupGraphDisplayer({
+        extraRenderers: [new m.CSS2DRenderer()]
+    });
+    let logged1 = false;
+    const Graph = graphDisplayer.graphData(gData)
+        .onNodeClick(node => {
+            console.log("onNodeClick", node);
+        })
+        .nodeThreeObject(node => {
+            const nodeEl = document.createElement('div');
+            nodeEl.textContent = `Html ${node.id}`;
+
+            const btn = mkElt("button", undefined, `Html ${node.id}`);
+            btn.addEventListener("click", evt => {
+                console.log(`clicked ${node.id}`);
+                alert(node.id);
+            });
+            nodeEl.appendChild(btn);
+
+            nodeEl.classList.add("node-label");
+
+            if (!logged1) {
+                console.log(nodeEl);
+                logged1 = true;
+            }
+
+            return new m.CSS2DObject(nodeEl);
+        })
+        ;
+}
+async function testText() {
+    // https://github.com/vasturiano/3d-force-graph/blob/master/example/text-nodes/index.html
+    const Graph = graphDisplayer.graphData(gData)
+        // .nodeAutoColorBy("group")
+        .nodeThreeObject(node => {
+            const sprite = new SpriteText(`Text ${node.id}`);
+            // sprite.material.depthWrite = false; // make sprite background transparent
+            sprite.material.transparent = false;
+            sprite.backgroundColor = "yellow";
+            // sprite.backgroundColor = node.color;
+            sprite.padding = [2, 6];
             sprite.borderRadius = 4;
             sprite.borderWidth = 1;
             sprite.borderColor = "red";

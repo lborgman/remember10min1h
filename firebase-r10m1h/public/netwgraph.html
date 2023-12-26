@@ -33,6 +33,18 @@
     <link rel="stylesheet" href="css/rem10m1h.css">
     <link id="jsmind-my-colors" rel="stylesheet" href="css/var-colors.css">
 
+    <style>
+        .node-label {
+            font-size: 12px;
+            padding: 1px 4px;
+            border-radius: 4px;
+            background-color: aqua;
+            color: green;
+            user-select: none;
+            border: 1px solid blue;
+        }
+    </style>
+
     <script src="src/js/fc4i-importmaps.js"></script>
 
     <script src="src/js/error.js"></script>
@@ -44,9 +56,19 @@
     <link rel="stylesheet" href="/ext/fontawesome/5.13.0/css/all.css" xmedia="print" xonload="this.media='all'">
 
     <script src="/ext/mdc/material-components-web.js"></script>
+
+    <script src="//unpkg.com/three"></script>
+    <script src="//unpkg.com/three-spritetext"></script>
+
+    <script src="//unpkg.com/3d-force-graph"></script>
+    <script type="module">
+        import { CSS2DRenderer, CSS2DObject } from '//unpkg.com/three/examples/jsm/renderers/CSS2DRenderer.js';
+    </script>
+
 </head>
 
 <body>
+    <div id="show-alt" style="color:red;">(show alt here)</div>
     <section id="main-section">
         <div id="3d-graph"></div>
     </section>
