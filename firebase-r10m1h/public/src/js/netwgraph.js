@@ -45,12 +45,13 @@ function setupGraphDisplayer(opt) {
 }
 const graphDisplayer = setupGraphDisplayer();
 
-const gData = getNodesAndLinks();
+const inpNumNodes = mkElt("input", { type: "number", value: 10, min: 5, max: 20 });
+let gData;
 chooseView();
 
 function getNodesAndLinks() {
     // Random tree
-    const N = 4;
+    const N = Math.floor(Number(inpNumNodes.value));
     const nodes = [...Array(N).keys()].map(i => ({ id: i }));
     const links = [...Array(N).keys()]
         .filter(id => id)
@@ -59,7 +60,7 @@ function getNodesAndLinks() {
             target: Math.round(Math.random() * (id - 1))
         }));
     console.log("got nodes and links");
-    return { nodes, links }
+    gData = { nodes, links }
 }
 async function chooseView() {
     // testBasic();
@@ -85,9 +86,27 @@ async function chooseView() {
     ]);
     divAlts.querySelector("input").checked = true;
 
+    function mkSourceAlt(txt) {
+        const eltRad = mkElt("input", { type: "radio", name: "source" })
+        const eltLbl = mkElt("label", undefined, [eltRad, txt]);
+        return mkElt("p", undefined, eltLbl);
+    }
+    const divAltFc4i = mkElt("div", { class: "mdc-card" }, [
+        mkSourceAlt("fc4i")
+    ]);
+
+    const divSource = mkElt("div", { class: "xmdc-card" }, [
+        mkElt("h3", undefined, "Source"),
+        mkElt("label", undefined, ["Num nodes: ", inpNumNodes]),
+        mkSourceAlt("Random links, number nodes"),
+        divAltFc4i
+    ])
+
     const body = mkElt("div", undefined, [
         mkElt("h2", undefined, "Choose view"),
         divAlts,
+        mkElt("hr"),
+        divSource
     ])
     const answer = await modMdc.mkMDCdialogConfirm(body);
     console.log({ answer });
@@ -99,6 +118,7 @@ async function chooseView() {
     const fun = radChecked.altFun;
     const eltShowAlt = document.getElementById("show-alt");
     eltShowAlt.textContent = fun.name;
+    getNodesAndLinks();
     fun();
 }
 async function testTF() {
@@ -121,71 +141,76 @@ async function testTF() {
     async function addText() {
         // const Graph = graphDisplayer.graphData(gData)
         // .nodeAutoColorBy("group")
+        let added1html = true;
         graph = graph.nodeThreeObject(node => {
-        // .nodeThreeObject(node => {
-            const sprite = new SpriteText(`Text ${node.id}`);
-            // sprite.material.depthWrite = false; // make sprite background transparent
-            sprite.material.transparent = false;
-            sprite.backgroundColor = "yellow";
-            // sprite.backgroundColor = node.color;
-            sprite.padding = [2, 6];
-            sprite.borderRadius = 4;
-            sprite.borderWidth = 1;
-            sprite.borderColor = "red";
-            // sprite.color = node.color;
-            sprite.color = "red";
-            sprite.textHeight = 14;
-            return sprite;
+            function addNodeAsText(node) {
+                const sprite = new SpriteText(`Text ${node.id}`);
+                // sprite.material.depthWrite = false; // make sprite background transparent
+                sprite.material.transparent = false;
+                sprite.backgroundColor = "yellow";
+                // sprite.backgroundColor = node.color;
+                sprite.padding = [1, 2];
+                sprite.borderRadius = 2;
+                sprite.borderWidth = 1;
+                sprite.borderColor = "yellowgreen";
+                // sprite.color = node.color;
+                sprite.color = "red";
+                sprite.textHeight = 14;
+                sprite.ourCustom = "sprite our custom";
+                return sprite;
+            }
+            if (!added1html) {
+                added1html = true;
+                return addNodeAsHtml(node);
+            }
+            return addNodeAsText(node);
         });
+    }
+    function addNodeAsHtml(node) {
+        console.log("  addHtml .nodeThreeObject >>>>> node", node);
+        const nodeEl = document.createElement('div');
+        nodeEl.textContent = `Html ${node.id}`;
+        nodeEl.classList.add("node-label");
+        const ret = new m.CSS2DObject(nodeEl);
+        console.log("  addHtml .nodeThreeObject <<<< ret", ret);
+        return ret;
     }
     async function addHtml() {
         console.log("addHTML >>>>>");
-        let logged1 = true;
         graph = graph.nodeThreeObject(node => {
-            console.log("  addHtml .nodeThreeObject >>>>> node", node);
-            const nodeEl = document.createElement('div');
-            nodeEl.textContent = `Html ${node.id}`;
-
-            /*
-            const btn = mkElt("button", undefined, `Html ${node.id}`);
-            btn.addEventListener("click", evt => {
-                console.log(`clicked ${node.id}`);
-                alert(node.id);
-            });
-            nodeEl.appendChild(btn);
-            */
-
-            nodeEl.classList.add("node-label");
-
-            if (!logged1) {
-                console.log(nodeEl);
-                logged1 = true;
-            }
-
-            // return new m.CSS2DObject(nodeEl);
-            const ret = new m.CSS2DObject(nodeEl);
-            console.log("  addHtml .nodeThreeObject <<<< ret", ret);
-            return ret;
-        })
-
+            return addNodeAsHtml(node);
+        });
     }
+    let lastClickedNodeId;
     function addOnClick() {
         console.log("addOnClick >>>>>");
         graph = graph.onNodeClick(node => {
-            console.log("  addOnClick onNodeClick >>>>> node", node);
-            // Aim at node from outside it
-            const distance = 40;
-            const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+            nodeClickAction(node);
+            function nodeClickAction(node) {
+                console.log("  addOnClick onNodeClick >>>>> node", node);
+                if (lastClickedNodeId == node.id) {
+                    console.log("Clicked again", node.id);
+                    modMdc.mkMDCdialogAlert(`clicked again ${node.id}`);
+                    return;
+                }
+                lastClickedNodeId = node.id;
+                // Aim at node from outside it
+                let distance = 40;
+                distance = 300; // Should make text 14px easily readable
+                distance = 100; // Should make text 14px easily readable
+                const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
 
-            const newPos = node.x || node.y || node.z
-                ? { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }
-                : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
+                const newPos = node.x || node.y || node.z
+                    ? { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }
+                    : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
 
-            graph.cameraPosition(
-                newPos, // new position
-                node, // lookAt ({ x, y, z })
-                3000  // ms transition duration
-            );
+                graph.cameraPosition(
+                    newPos, // new position
+                    node, // lookAt ({ x, y, z })
+                    // 3000  // ms transition duration
+                    2000  // ms transition duration
+                );
+            }
         });
     }
 
