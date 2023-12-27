@@ -1,8 +1,8 @@
 import("pwa");
 
 const modMdc = await import("util-mdc");
-
 const modD3 = await import("d3");
+const dbFc4i = await import("db-fc4i");
 
 // FIX-ME: Note the order of import. Something is wrong.
 /*
@@ -45,22 +45,34 @@ function setupGraphDisplayer(opt) {
 }
 const graphDisplayer = setupGraphDisplayer();
 
-const inpNumNodes = mkElt("input", { type: "number", value: 10, min: 5, max: 20 });
 let gData;
 chooseView();
 
-function getNodesAndLinks() {
-    // Random tree
-    const N = Math.floor(Number(inpNumNodes.value));
-    const nodes = [...Array(N).keys()].map(i => ({ id: i }));
-    const links = [...Array(N).keys()]
-        .filter(id => id)
-        .map(id => ({
-            source: id,
-            target: Math.round(Math.random() * (id - 1))
-        }));
-    console.log("got nodes and links");
-    gData = { nodes, links }
+function getNodesAndLinks(N, sourceName) {
+    switch (sourceName) {
+        case "random":
+            randomGraph();
+            break;
+        case "fc4i":
+            break;
+        default:
+            throw Error(`Unknown source name: ${sourceName}`);
+    }
+    function fc4iGraph() {
+        alert("NIY");
+    }
+    function randomGraph() {
+        // Random tree
+        const nodes = [...Array(N).keys()].map(i => ({ id: i }));
+        const links = [...Array(N).keys()]
+            .filter(id => id)
+            .map(id => ({
+                source: id,
+                target: Math.round(Math.random() * (id - 1))
+            }));
+        console.log("got nodes and links");
+        gData = { nodes, links }
+    }
 }
 async function chooseView() {
     // testBasic();
@@ -86,21 +98,23 @@ async function chooseView() {
     ]);
     divAlts.querySelector("input").checked = true;
 
-    function mkSourceAlt(txt) {
-        const eltRad = mkElt("input", { type: "radio", name: "source" })
+    function mkSourceAlt(sourceName, txt) {
+        const eltRad = mkElt("input", { type: "radio", name: "source", value: sourceName });
         const eltLbl = mkElt("label", undefined, [eltRad, txt]);
-        return mkElt("p", undefined, eltLbl);
+        return mkElt("div", undefined, eltLbl);
     }
     const divAltFc4i = mkElt("div", { class: "mdc-card" }, [
-        mkSourceAlt("fc4i")
+        mkSourceAlt("fc4i", "fc4i")
     ]);
 
+    const inpNumNodes = mkElt("input", { type: "number", value: 10, min: 5, max: 20 });
     const divSource = mkElt("div", { class: "xmdc-card" }, [
         mkElt("h3", undefined, "Source"),
         mkElt("label", undefined, ["Num nodes: ", inpNumNodes]),
-        mkSourceAlt("Random links, number nodes"),
+        mkSourceAlt("random", "Random links, number nodes"),
         divAltFc4i
-    ])
+    ]);
+    divSource.querySelector("input[type=radio]").checked = true;
 
     const body = mkElt("div", undefined, [
         mkElt("h2", undefined, "Choose view"),
@@ -118,7 +132,9 @@ async function chooseView() {
     const fun = radChecked.altFun;
     const eltShowAlt = document.getElementById("show-alt");
     eltShowAlt.textContent = fun.name;
-    getNodesAndLinks();
+    const numNodes = Math.floor(Number(inpNumNodes.value));
+    const sourceName = divSource.querySelector("input[name=source]:checked").value;
+    getNodesAndLinks(numNodes, sourceName);
     fun();
 }
 async function testTF() {
