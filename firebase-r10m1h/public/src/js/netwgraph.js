@@ -48,18 +48,56 @@ const graphDisplayer = setupGraphDisplayer();
 let gData;
 chooseView();
 
-function getNodesAndLinks(N, sourceName) {
+async function getNodesAndLinks(N, sourceName) {
     switch (sourceName) {
         case "random":
             randomGraph();
             break;
         case "fc4i":
+            await fc4iGraph();
             break;
         default:
             throw Error(`Unknown source name: ${sourceName}`);
     }
-    function fc4iGraph() {
-        alert("NIY");
+    async function fc4iGraph() {
+        const strSearch = "";
+        // const arrMatch = await dbFc4i.getDbMatching(strSearch, undefined, undefined, ["newtag"]);
+        const arrMatchAll = await dbFc4i.getDbMatching();
+        const arrMatch = arrMatchAll.filter(r => r.tags && r.tags.length > 0);
+        const lenMatch = arrMatch.length;
+        const setI = new Set();
+        let s = 0;
+        while (s++ < 2 * N && setI.size < N) {
+            const i = Math.floor(Math.random() * lenMatch);
+            setI.add(i);
+        }
+        const arrUse = [...setI].map(i => arrMatch[i]);
+        let nodeNum = 0;
+        const nodesR = arrUse.map(r => ({ id: nodeNum++, r }));
+        const nodes = nodesR.map(r => ({ id: r.id, fc4i: r }));
+        const setTags = new Set();
+        arrUse.forEach(r => {
+            r.tags.forEach(t => setTags.add(t));
+        });
+        const links = [];
+        setTags.forEach(t => {
+            const arrT = [];
+            nodesR.forEach(n => {
+                if (n.r.tags.includes(t)) { arrT.push(n) }
+            });
+            while (arrT.length > 0) {
+                const a0 = arrT.pop();
+                arrT.forEach(r => {
+                    const link = {
+                        source: a0.id,
+                        target: r.id
+                    }
+                    links.push(link);
+                })
+            }
+        })
+        console.log("NIY");
+        gData = { nodes, links }
     }
     function randomGraph() {
         // Random tree
@@ -134,9 +172,107 @@ async function chooseView() {
     eltShowAlt.textContent = fun.name;
     const numNodes = Math.floor(Number(inpNumNodes.value));
     const sourceName = divSource.querySelector("input[name=source]:checked").value;
-    getNodesAndLinks(numNodes, sourceName);
+    await getNodesAndLinks(numNodes, sourceName);
     fun();
 }
+
+/////////////////
+let lastClickedNodeId;
+let graph;
+function nodeClickAction(node) {
+    console.log("  addOnClick onNodeClick >>>>> node", node);
+    if (lastClickedNodeId == node.id) {
+        console.log("Clicked again", node);
+        const body = mkElt("div");
+        if (node.fc4i) {
+            const rec = node.fc4i.r;
+            const title = rec.title;
+            body.appendChild(
+                mkElt("span", undefined, `${title}`),
+            );
+            const imgBlob = rec.images ? rec.images[0] : undefined;
+            if (imgBlob) {
+                const divImg = mkElt("div");
+                const st = divImg.style;
+                st.height = "100px";
+                st.width = "150px";
+                st.backgroundSize = "contain";
+                st.backgroundPosition = "center";
+                st.backgroundImage = `url(${URL.createObjectURL(imgBlob)})`;
+                const p =mkElt("p", undefined, divImg);
+                p.style.display = "flex";
+                p.style.justifyContent = "center";
+                body.appendChild(p);
+            }
+        } else {
+            body.appendChild(
+                mkElt("span", { style: "color:red;" }, `clicked again ${node.id}`)
+            );
+        }
+        modMdc.mkMDCdialogAlert(body);
+        return;
+    }
+    lastClickedNodeId = node.id;
+    // Aim at node from outside it
+    let distance = 40;
+    distance = 300; // Should make text 14px easily readable
+    distance = 100; // Should make text 14px easily readable
+    const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+
+    const newPos = node.x || node.y || node.z
+        ? { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }
+        : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
+
+    graph.cameraPosition(
+        newPos, // new position
+        node, // lookAt ({ x, y, z })
+        // 3000  // ms transition duration
+        2000  // ms transition duration
+    );
+}
+
+function addOnClick() {
+    console.log("addOnClick >>>>>");
+    graph = graph.onNodeClick(node => {
+        nodeClickAction(node);
+    });
+}
+
+async function addText() {
+    // const Graph = graphDisplayer.graphData(gData)
+    // .nodeAutoColorBy("group")
+    let added1html = true;
+    graph = graph.nodeThreeObject(node => {
+        function addNodeAsText(node) {
+            const fc4iTitle = node.fc4i?.r.title;
+            const txtShort = fc4iTitle ? fc4iTitle.slice(0, 15) + "…" : `Text ${node.id}`;
+            const txtLong = fc4iTitle ? fc4iTitle : `Dummy long ${node.id}`;
+            // const sprite = new SpriteText(`Text ${node.id}`);
+            const sprite = new SpriteText(txtShort);
+            // sprite.material.depthWrite = false; // make sprite background transparent
+            sprite.material.transparent = false;
+            sprite.backgroundColor = "yellow";
+            // sprite.backgroundColor = node.color;
+            sprite.padding = [1, 2];
+            sprite.borderRadius = 2;
+            sprite.borderWidth = 1;
+            sprite.borderColor = "yellowgreen";
+            // sprite.color = node.color;
+            sprite.color = "red";
+            sprite.textHeight = 11;
+            // sprite.ourCustom = "sprite our custom";
+            sprite.ourCustom = txtLong; // FIX-ME:
+            return sprite;
+        }
+        if (!added1html) {
+            added1html = true;
+            return addNodeAsHtml(node);
+        }
+        return addNodeAsText(node);
+    });
+}
+
+/////////////////
 async function testTF() {
     let ourDisplayer = graphDisplayer;
     const useHtml = true;
@@ -147,41 +283,13 @@ async function testTF() {
             extraRenderers: [new m.CSS2DRenderer()]
         });
     }
-    let graph = ourDisplayer.graphData(gData);
+    graph = ourDisplayer.graphData(gData);
     graph = graph.nodeOpacity(1.0);
 
     // await addHtml();
     addText();
     await waitSeconds(1);
     addOnClick();
-    async function addText() {
-        // const Graph = graphDisplayer.graphData(gData)
-        // .nodeAutoColorBy("group")
-        let added1html = true;
-        graph = graph.nodeThreeObject(node => {
-            function addNodeAsText(node) {
-                const sprite = new SpriteText(`Text ${node.id}`);
-                // sprite.material.depthWrite = false; // make sprite background transparent
-                sprite.material.transparent = false;
-                sprite.backgroundColor = "yellow";
-                // sprite.backgroundColor = node.color;
-                sprite.padding = [1, 2];
-                sprite.borderRadius = 2;
-                sprite.borderWidth = 1;
-                sprite.borderColor = "yellowgreen";
-                // sprite.color = node.color;
-                sprite.color = "red";
-                sprite.textHeight = 14;
-                sprite.ourCustom = "sprite our custom";
-                return sprite;
-            }
-            if (!added1html) {
-                added1html = true;
-                return addNodeAsHtml(node);
-            }
-            return addNodeAsText(node);
-        });
-    }
     function addNodeAsHtml(node) {
         console.log("  addHtml .nodeThreeObject >>>>> node", node);
         const nodeEl = document.createElement('div');
@@ -197,38 +305,6 @@ async function testTF() {
             return addNodeAsHtml(node);
         });
     }
-    let lastClickedNodeId;
-    function addOnClick() {
-        console.log("addOnClick >>>>>");
-        graph = graph.onNodeClick(node => {
-            nodeClickAction(node);
-            function nodeClickAction(node) {
-                console.log("  addOnClick onNodeClick >>>>> node", node);
-                if (lastClickedNodeId == node.id) {
-                    console.log("Clicked again", node.id);
-                    modMdc.mkMDCdialogAlert(`clicked again ${node.id}`);
-                    return;
-                }
-                lastClickedNodeId = node.id;
-                // Aim at node from outside it
-                let distance = 40;
-                distance = 300; // Should make text 14px easily readable
-                distance = 100; // Should make text 14px easily readable
-                const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
-
-                const newPos = node.x || node.y || node.z
-                    ? { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }
-                    : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
-
-                graph.cameraPosition(
-                    newPos, // new position
-                    node, // lookAt ({ x, y, z })
-                    // 3000  // ms transition duration
-                    2000  // ms transition duration
-                );
-            }
-        });
-    }
 
 }
 
@@ -242,15 +318,12 @@ async function testFH() {
             extraRenderers: [new m.CSS2DRenderer()]
         });
     }
-    let graph = ourDisplayer.graphData(gData);
+    graph = ourDisplayer.graphData(gData);
     graph = graph.nodeOpacity(1.0);
 
     addOnClick();
-    // addText();
     await addHtml();
 
-    async function addText() {
-    }
     async function addHtml() {
         console.log("addHTML >>>>>");
         let logged1 = false;
@@ -280,9 +353,11 @@ async function testFH() {
         })
 
     }
-    function addOnClick() {
+    function OLDaddOnClick() {
         console.log("addOnClick >>>>>");
         graph = graph.onNodeClick(node => {
+            nodeClickAction(node);
+            /*
             console.log("  addOnClick onNodeClick >>>>> node", node);
             // Aim at node from outside it
             const distance = 40;
@@ -297,6 +372,7 @@ async function testFH() {
                 node, // lookAt ({ x, y, z })
                 3000  // ms transition duration
             );
+            */
         });
     }
 
@@ -311,14 +387,12 @@ async function testMyOwn() {
             extraRenderers: [new m.CSS2DRenderer()]
         });
     }
-    let graph = ourDisplayer.graphData(gData);
+    graph = ourDisplayer.graphData(gData);
     graph = graph.nodeOpacity(1.0);
 
     // if (useHtml) await addHtml();
     addOnClick();
 
-    async function addText() {
-    }
     async function addHtml() {
         let logged1 = false;
         graph = graph.nodeThreeObject(node => {
@@ -343,8 +417,10 @@ async function testMyOwn() {
         })
 
     }
-    function addOnClick() {
+    function OLDaddOnClick() {
         graph = graph.onNodeClick(node => {
+            nodeClickAction(node);
+            /*
             // Aim at node from outside it
             const distance = 40;
             const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
@@ -358,6 +434,7 @@ async function testMyOwn() {
                 node, // lookAt ({ x, y, z })
                 3000  // ms transition duration
             );
+            */
         });
     }
 }
