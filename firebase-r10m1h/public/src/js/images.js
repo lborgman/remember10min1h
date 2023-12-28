@@ -244,6 +244,10 @@ export async function mkImageCard(blob, extraClass, debugInfo) {
 }
 
 export async function mkImageCardFromBigImage(blobIn, maxBlobOutSize) {
+    if (isNaN(maxBlobOutSize)) {
+        debugger;
+        throw Error("maxBlobOutSize is not a number");
+    }
     debugPasteLine(`addPasteButton 8, mkImageCardFromBigImage`);
     console.warn({ blobIn });
 

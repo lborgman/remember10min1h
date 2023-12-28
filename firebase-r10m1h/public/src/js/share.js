@@ -605,7 +605,8 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                     const toDiv = divPasteImage;
                     const maxBlobOutSize = 40 * 1000;
                     for (const blob of resultImageBlobs) {
-                        const eltImgCard = await modImages.mkImageCardFromBigImage(blob, toDiv, maxBlobOutSize);
+                        // const eltImgCard = await modImages.mkImageCardFromBigImage(blob, toDiv, maxBlobOutSize);
+                        const eltImgCard = await modImages.mkImageCardFromBigImage(blob, maxBlobOutSize);
                         modImages.addFunOnRemoveImageCard(eltImgCard, restartButtonStateTimer);
                         toDiv.appendChild(eltImgCard);
                     }
