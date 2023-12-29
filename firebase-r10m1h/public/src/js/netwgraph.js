@@ -33,14 +33,16 @@ const grHeightPx = document.documentElement.clientHeight * 0.8;
 
 
 let linkW = 1;
+let linkOp = 0.2;
 let textH = 3;
 let cameraDistance = 100;
-let disemvowel = true;
+let disemvowel = false;
 const colorsRainbow =
     "violet, deepskyblue, cyan, greenyellow, yellow, orange, red".split(",").map(c => c.trim());
 
 async function dialogGraph() {
     const inpLinkW = mkElt("input", { id: "linkW", type: "number", min: "1", max: "5", value: linkW });
+    const inpLinkOp = mkElt("input", {id:"linkOp", type: "range", value: linkOp, step:"0.1", min:"0", max:"1"});
     const inpTextH = mkElt("input", { id: "textH", type: "number", min: "3", max: "20", value: textH });
     const inpCameraDist = mkElt("input", { id: "camDist", type: "number", min: "40", max: "200", step: "20", value: cameraDistance });
     const inpDisemvwl = mkElt("input", { id: "disemw", type: "checkbox" });
@@ -64,6 +66,7 @@ async function dialogGraph() {
     const divSettings = mkElt("div", undefined, [
         // mkElt("div", undefined, [
         mkElt("label", { for: "linkW" }, "Link width:"), inpLinkW,
+        mkElt("label", { for: "linkOp" }, "Link opacity:"), inpLinkOp,
         // ]),
         // mkElt("div", undefined, [
         mkElt("label", { for: "textH" }, "Text height:"), inpTextH,
@@ -88,9 +91,10 @@ async function dialogGraph() {
     const answer = await modMdc.mkMDCdialogConfirm(body);
     if (answer) {
         linkW = +inpLinkW.value;
+        linkOp = +inpLinkOp.value;
         textH = +inpTextH.value;
         cameraDistance = +inpCameraDist.value;
-        // disemvowel = inpDisemw.checked;
+        disemvowel = inpDisemvwl.checked;
     }
 }
 await dialogGraph();
@@ -102,7 +106,7 @@ async function setupGraphDisplayer(opt) {
     // funGraph.linkColor("green");
     funGraph.linkColor("#ff0000");
     funGraph.linkWidth(linkW);
-    funGraph.linkOpacity(1.0);
+    funGraph.linkOpacity(linkOp);
     return funGraph(elt3dGraph);
 }
 const graphDisplayer = await setupGraphDisplayer();
