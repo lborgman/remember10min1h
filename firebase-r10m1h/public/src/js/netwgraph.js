@@ -254,6 +254,17 @@ async function chooseView() {
     const divFc4iNum = mkElt("div", undefined, `${numFc4i} records choosen from fc4i.`);
     divAltFc4i.appendChild(divFc4iNum);
 
+    const divReqTags = mkElt("p");
+    if (requiredTags.length == 0) {
+        divReqTags.appendChild(mkElt("span", undefined, "No required tags"));
+    } else {
+        requiredTags.forEach(t => {
+            const s = mkElt("span", {class:"tag-in-our-tags"}, `#${t}`);
+            divReqTags.appendChild(s);
+        });
+    }
+    divAltFc4i.appendChild(divReqTags);
+
     const inpNumNodes = mkElt("input", { type: "number", value: 10, min: 5, max: 20 });
     const divSource = mkElt("div", { class: "xmdc-card" }, [
         mkElt("h3", undefined, "Source"),
