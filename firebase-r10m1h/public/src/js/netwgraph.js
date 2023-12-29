@@ -32,23 +32,113 @@ const grWidthPx = document.documentElement.clientWidth * 0.8;
 const grHeightPx = document.documentElement.clientHeight * 0.8;
 
 
-function setupGraphDisplayer(opt) {
+let linkW = 1;
+let textH = 3;
+let cameraDistance = 100;
+let disemvowel = true;
+const colorsRainbow =
+    "violet, deepskyblue, cyan, greenyellow, yellow, orange, red".split(",").map(c => c.trim());
+
+async function dialogGraph() {
+    const inpLinkW = mkElt("input", { id: "linkW", type: "number", min: "1", max: "5", value: linkW });
+    const inpTextH = mkElt("input", { id: "textH", type: "number", min: "3", max: "20", value: textH });
+    const inpCameraDist = mkElt("input", { id: "camDist", type: "number", min: "40", max: "200", step: "20", value: cameraDistance });
+    const inpDisemw = mkElt("input", { id: "disemw", type: "checkbox" });
+    inpDisemw.checked = disemvowel;
+
+    const divColors = mkElt("p");
+    divColors.style = `
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    `;
+    colorsRainbow.forEach(c => {
+        const s = mkElt("span", undefined, c);
+        s.style = `
+            padding: 2px;
+            color: black;
+            background-color: ${c};
+        `;
+        divColors.appendChild(s);
+    })
+    const divSettings = mkElt("div", undefined, [
+        // mkElt("div", undefined, [
+        mkElt("label", { for: "linkW" }, "Link width:"), inpLinkW,
+        // ]),
+        // mkElt("div", undefined, [
+        mkElt("label", { for: "textH" }, "Text height:"), inpTextH,
+        // ]),
+        // mkElt("div", undefined, [
+        mkElt("label", { for: "camDist" }, "Camera distance:"), inpCameraDist,
+        // ]),
+        // mkElt("div", undefined, [
+        mkElt("label", { for: "disemw" }, "Disemvowel:"), inpDisemw,
+        // ]),
+        divColors,
+    ]);
+    divSettings.style = `
+        display: grid;
+        grid-template-columns: max-content max-content;
+        gap: 5px;
+    `;
+    const body = mkElt("div", undefined, [
+        divSettings,
+        divColors
+    ]);
+    const answer = await modMdc.mkMDCdialogConfirm(body);
+    if (answer) {
+        linkW = +inpLinkW.value;
+        textH = +inpTextH.value;
+        cameraDistance = +inpCameraDist.value;
+        disemvowel = inpDisemw.checked;
+    }
+}
+await dialogGraph();
+async function setupGraphDisplayer(opt) {
     const funGraph = ForceGraph3D(opt);
     // debugger;
     funGraph.width(grWidthPx);
     funGraph.height(grHeightPx);
     // funGraph.linkColor("green");
     funGraph.linkColor("#ff0000");
-    funGraph.linkWidth(3);
+    funGraph.linkWidth(linkW);
     funGraph.linkOpacity(1.0);
     return funGraph(elt3dGraph);
 }
-const graphDisplayer = setupGraphDisplayer();
+const graphDisplayer = await setupGraphDisplayer();
 
 let gData;
+
+let arrMatchAll;
+let numFc4i;
+let requiredTags;
+let minConf;
+let maxConf;
+await getFc4iRecs();
+async function getFc4iRecs() {
+    if (arrMatchAll) return;
+    const sp = new URLSearchParams(location.search);
+
+    const parSearchFor = sp.get("searchFor");
+    const searchFor = parSearchFor === null ? "" : parSearchFor;
+
+    const parRequiredTags = sp.get("requiredTags");
+    requiredTags = parRequiredTags === null ? [] : parRequiredTags.split(",");
+
+    const parMinConf = sp.get("minConf");
+    minConf = parMinConf === null ? 0 : +parMinConf;
+    const parMaxConf = sp.get("maxConf");
+    maxConf = parMaxConf === null ? 7 : +parMaxConf;
+
+    // function getDbMatching(searchFor, minConf, maxConf, requiredTags)
+    arrMatchAll = await dbFc4i.getDbMatching(searchFor, minConf, maxConf, requiredTags);
+    numFc4i = arrMatchAll.length;
+}
+
 chooseView();
 
 async function getNodesAndLinks(N, sourceName) {
+
     switch (sourceName) {
         case "random":
             randomGraph();
@@ -60,9 +150,7 @@ async function getNodesAndLinks(N, sourceName) {
             throw Error(`Unknown source name: ${sourceName}`);
     }
     async function fc4iGraph() {
-        const strSearch = "";
-        // const arrMatch = await dbFc4i.getDbMatching(strSearch, undefined, undefined, ["newtag"]);
-        const arrMatchAll = await dbFc4i.getDbMatching();
+        // await getFc4iRecs();
         const arrMatch = arrMatchAll.filter(r => r.tags && r.tags.length > 0);
         const lenMatch = arrMatch.length;
         const setI = new Set();
@@ -79,6 +167,9 @@ async function getNodesAndLinks(N, sourceName) {
         arrUse.forEach(r => {
             r.tags.forEach(t => setTags.add(t));
         });
+        requiredTags.forEach(t => {
+            setTags.delete(t);
+        });
         const links = [];
         setTags.forEach(t => {
             const arrT = [];
@@ -93,11 +184,26 @@ async function getNodesAndLinks(N, sourceName) {
                         target: r.id
                     }
                     links.push(link);
+                    const link2 = {
+                        source: r.id,
+                        target: a0.id
+                    }
+                    links.push(link2);
                 })
             }
         })
+        const setLinked = new Set();
+        links.forEach(l => {
+            setLinked.add(l.source);
+            setLinked.add(l.target);
+        })
         console.log("NIY");
-        gData = { nodes, links }
+        // const finNodes = [...setLinked]
+        const finNodes = nodes.filter(n => setLinked.has(n.id));
+        const numNodes = finNodes.length;
+        const eltShowFc4i = document.getElementById("show-fc4i-num");
+        eltShowFc4i.textContent = `, fc4i: ${numNodes} (${numFc4i})`;
+        gData = { nodes: finNodes, links }
     }
     function randomGraph() {
         // Random tree
@@ -126,13 +232,13 @@ async function chooseView() {
     }
 
     const divAlts = mkElt("div", undefined, [
+        mkViewAlt("TF", testTF),
         mkViewAlt("Basic", testBasic),
-        mkViewAlt("Text", testText),
-        mkViewAlt("Html class", testHtml),
-        mkViewAlt("Focus", testFocus),
+        // mkViewAlt("Text", testText),
+        // mkViewAlt("Html class", testHtml),
+        // mkViewAlt("Focus", testFocus),
         mkViewAlt("My own", testMyOwn),
         mkViewAlt("FH", testFH),
-        mkViewAlt("HF", testTF),
     ]);
     divAlts.querySelector("input").checked = true;
 
@@ -141,25 +247,30 @@ async function chooseView() {
         const eltLbl = mkElt("label", undefined, [eltRad, txt]);
         return mkElt("div", undefined, eltLbl);
     }
-    const divAltFc4i = mkElt("div", { class: "mdc-card" }, [
+    const divAltFc4i = mkElt("div", { class: "xmdc-card" }, [
         mkSourceAlt("fc4i", "fc4i")
     ]);
+    // getFc4iRecs();
+    const divFc4iNum = mkElt("div", undefined, `${numFc4i} records choosen from fc4i.`);
+    divAltFc4i.appendChild(divFc4iNum);
 
     const inpNumNodes = mkElt("input", { type: "number", value: 10, min: 5, max: 20 });
     const divSource = mkElt("div", { class: "xmdc-card" }, [
         mkElt("h3", undefined, "Source"),
-        mkElt("label", undefined, ["Num nodes: ", inpNumNodes]),
-        mkSourceAlt("random", "Random links, number nodes"),
-        divAltFc4i
+        mkElt("div", { style: "display:flex; flex-direction:column; gap:15px" }, [
+            divAltFc4i,
+            mkSourceAlt("random", "Random links, number nodes"),
+        ]),
     ]);
     divSource.querySelector("input[type=radio]").checked = true;
 
     const body = mkElt("div", undefined, [
         mkElt("h2", undefined, "Choose view"),
         divAlts,
+        mkElt("label", undefined, ["Num nodes to show: ", inpNumNodes]),
         mkElt("hr"),
         divSource
-    ])
+    ]);
     const answer = await modMdc.mkMDCdialogConfirm(body);
     console.log({ answer });
     if (!answer) return;
@@ -168,8 +279,8 @@ async function chooseView() {
     if (!radChecked) return;
     // testText();
     const fun = radChecked.altFun;
-    const eltShowAlt = document.getElementById("show-alt");
-    eltShowAlt.textContent = fun.name;
+    const eltShowViewAlt = document.getElementById("show-view-alt");
+    eltShowViewAlt.textContent = fun.name;
     const numNodes = Math.floor(Number(inpNumNodes.value));
     const sourceName = divSource.querySelector("input[name=source]:checked").value;
     await getNodesAndLinks(numNodes, sourceName);
@@ -179,16 +290,22 @@ async function chooseView() {
 /////////////////
 let lastClickedNodeId;
 let graph;
+function getLink2KeyInFc4i(keyFc4i) {
+    const objUrl = new URL("/", location);
+    objUrl.searchParams.set("showkey", keyFc4i)
+    // location = objUrl;
+    return objUrl.href;
+}
 function nodeClickAction(node) {
     console.log("  addOnClick onNodeClick >>>>> node", node);
-    if (lastClickedNodeId == node.id) {
+    if (true || (lastClickedNodeId == node.id)) {
         console.log("Clicked again", node);
         const body = mkElt("div");
         if (node.fc4i) {
             const rec = node.fc4i.r;
             const title = rec.title;
             body.appendChild(
-                mkElt("span", undefined, `${title}`),
+                mkElt("h3", undefined, `${title}`),
             );
             const imgBlob = rec.images ? rec.images[0] : undefined;
             if (imgBlob) {
@@ -199,10 +316,25 @@ function nodeClickAction(node) {
                 st.backgroundSize = "contain";
                 st.backgroundPosition = "center";
                 st.backgroundImage = `url(${URL.createObjectURL(imgBlob)})`;
-                const p =mkElt("p", undefined, divImg);
+                const p = mkElt("p", undefined, divImg);
                 p.style.display = "flex";
                 p.style.justifyContent = "center";
                 body.appendChild(p);
+            }
+            const linkRec = getLink2KeyInFc4i(rec.key);
+            const a = mkElt("a", { href: linkRec }, "Show entry in fc4i");
+            body.appendChild(mkElt("p", undefined, a));
+
+            if (rec.tags) {
+                body.appendChild(mkElt("h4", undefined, "Tags"));
+                const pTags = mkElt("p");
+                pTags.style.display = "flex";
+                pTags.style.flexWrap = "wrap";
+                pTags.style.gap = "10px";
+                rec.tags.forEach(t => {
+                    pTags.appendChild(mkElt("span", { class: "tag-in-our-tags" }, `#${t}`));
+                });
+                body.appendChild(pTags);
             }
         } else {
             body.appendChild(
@@ -217,6 +349,7 @@ function nodeClickAction(node) {
     let distance = 40;
     distance = 300; // Should make text 14px easily readable
     distance = 100; // Should make text 14px easily readable
+    distance = cameraDistance;
     const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
 
     const newPos = node.x || node.y || node.z
@@ -229,6 +362,8 @@ function nodeClickAction(node) {
         // 3000  // ms transition duration
         2000  // ms transition duration
     );
+    // graph.cooldownTime(200);
+    // graph.onEngineStop(() => graph.zoomToFit(100));
 }
 
 function addOnClick() {
@@ -244,22 +379,24 @@ async function addText() {
     let added1html = true;
     graph = graph.nodeThreeObject(node => {
         function addNodeAsText(node) {
+            const isFc4i = node.fc4i != undefined;
             const fc4iTitle = node.fc4i?.r.title;
-            const txtShort = fc4iTitle ? fc4iTitle.slice(0, 15) + "…" : `Text ${node.id}`;
-            const txtLong = fc4iTitle ? fc4iTitle : `Dummy long ${node.id}`;
-            // const sprite = new SpriteText(`Text ${node.id}`);
+            const txtLong = isFc4i ? fc4iTitle : `Dummy long ${node.id}`;
+            const txtShort = isFc4i ?
+                (disemvowel ? fc4iTitle.replace(/[aeiou]/gi, "") : fc4iTitle).slice(0, 15) + "…"
+                :
+                `Text ${node.id}`;
             const sprite = new SpriteText(txtShort);
-            // sprite.material.depthWrite = false; // make sprite background transparent
             sprite.material.transparent = false;
-            sprite.backgroundColor = "yellow";
-            // sprite.backgroundColor = node.color;
-            sprite.padding = [1, 2];
-            sprite.borderRadius = 2;
+            const numTags = node.fc4i.r.tags.length;
+            const idxClr = Math.min(numTags, colorsRainbow.length - 1);
+            sprite.backgroundColor = isFc4i ? colorsRainbow[idxClr] : "yellow";
             sprite.borderWidth = 1;
             sprite.borderColor = "yellowgreen";
+            sprite.borderColor = "yellowgreen";
             // sprite.color = node.color;
-            sprite.color = "red";
-            sprite.textHeight = 11;
+            sprite.color = "black";
+            sprite.textHeight = textH;
             // sprite.ourCustom = "sprite our custom";
             sprite.ourCustom = txtLong; // FIX-ME:
             return sprite;
@@ -279,7 +416,7 @@ async function testTF() {
     let m;
     if (useHtml) {
         m = await import('//unpkg.com/three/examples/jsm/renderers/CSS2DRenderer.js');
-        ourDisplayer = setupGraphDisplayer({
+        ourDisplayer = await setupGraphDisplayer({
             extraRenderers: [new m.CSS2DRenderer()]
         });
     }
@@ -290,6 +427,7 @@ async function testTF() {
     addText();
     await waitSeconds(1);
     addOnClick();
+    // graph.onEngineStop(() => graph.zoomToFit(100));
     function addNodeAsHtml(node) {
         console.log("  addHtml .nodeThreeObject >>>>> node", node);
         const nodeEl = document.createElement('div');
@@ -508,7 +646,7 @@ async function testText() {
             sprite.borderColor = "red";
             // sprite.color = node.color;
             sprite.color = "red";
-            sprite.textHeight = 14;
+            sprite.textHeight = textH;
             return sprite;
         });
 }

@@ -1040,6 +1040,22 @@ async function showTestTarget() {
 async function showSharedTo() {
     const secMain = clearMainSection("page-shared-to");
 }
+function mkTestNetwGraphURL() {
+    const url = new URL("/netwgraph.html", location.href);
+    const divSearchBanner = document.getElementById("div-search-banner");
+    const par = divSearchBanner.lastSearch;
+    const urlPar = new URLSearchParams();
+    for (const prop in par) {
+        const val = par[prop];
+        if (val) {
+            urlPar.set(prop, val);
+            url.searchParams.set(prop, val);
+        }
+    }
+    // url.searchParams = urlPar;
+    return url.href;
+}
+
 async function mkMenu() {
     const modMdc = await import("util-mdc");
 
@@ -1082,7 +1098,19 @@ async function mkMenu() {
     liTestShareWithArgs.addEventListener("click", evt => { showTestTarget(); })
     liTestShareWithArgs.classList.add("test-item");
 
-    const liTestNetwGraph = modMdc.mkMDCmenuItem(mkElt("a", { href: "/netwgraph.html" }, "Test network graph (not ready)"));
+    const OLDliTestNetwGraph = modMdc.mkMDCmenuItem( mkElt("a", { href: "/netwgraph.html" }, "Test network graph (not ready)"));
+    const aNetwGraph = mkElt("a", { href: "/netwgraph.html" }, "Test network graph (not ready)");
+    aNetwGraph.addEventListener("click", evt => {
+        aNetwGraph.href = mkTestNetwGraphURL();
+        // debugger;
+    });
+    aNetwGraph.addEventListener("contextmenu", evt => {
+        aNetwGraph.href = mkTestNetwGraphURL();
+        // debugger;
+    });
+    const liTestNetwGraph = modMdc.mkMDCmenuItem( aNetwGraph);
+
+
     // const liAbout = modMdc.mkMDCmenuItem(mkElt("a", { href: "/about.html#fc4i" }, "About"));
     // mm4i.html
     // liTestNetwGraph.classList.add("test-item");
