@@ -350,7 +350,10 @@ function nodeClickAction(node) {
                 pTags.style.gap = "10px";
                 rec.tags.forEach(t => {
                     const s = mkElt("span", { class: "tag-in-our-tags" }, `#${t}`);
-                    if (setRequiredTags.has(t)) { s.style.opacity = 0.5; }
+                    if (setRequiredTags.has(t)) {
+                        s.style.opacity = 0.5;
+                        s.style.filter = "grayscale(1)";
+                    }
                     pTags.appendChild(s);
                 });
                 body.appendChild(pTags);
