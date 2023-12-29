@@ -90,7 +90,7 @@ async function dialogGraph() {
         linkW = +inpLinkW.value;
         textH = +inpTextH.value;
         cameraDistance = +inpCameraDist.value;
-        disemvowel = inpDisemw.checked;
+        // disemvowel = inpDisemw.checked;
     }
 }
 await dialogGraph();
@@ -112,6 +112,7 @@ let gData;
 let arrMatchAll;
 let numFc4i;
 let requiredTags;
+const setRequiredTags = new Set();
 let minConf;
 let maxConf;
 await getFc4iRecs();
@@ -124,6 +125,7 @@ async function getFc4iRecs() {
 
     const parRequiredTags = sp.get("requiredTags");
     requiredTags = parRequiredTags === null ? [] : parRequiredTags.split(",");
+    requiredTags.forEach(t => setRequiredTags.add(t));
 
     const parMinConf = sp.get("minConf");
     minConf = parMinConf === null ? 0 : +parMinConf;
@@ -343,7 +345,9 @@ function nodeClickAction(node) {
                 pTags.style.flexWrap = "wrap";
                 pTags.style.gap = "10px";
                 rec.tags.forEach(t => {
-                    pTags.appendChild(mkElt("span", { class: "tag-in-our-tags" }, `#${t}`));
+                    const s = mkElt("span", { class: "tag-in-our-tags" }, `#${t}`);
+                    if (setRequiredTags.has(t)) { s.style.opacity = 0.5; }
+                    pTags.appendChild(s);
                 });
                 body.appendChild(pTags);
             }
