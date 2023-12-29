@@ -43,8 +43,8 @@ async function dialogGraph() {
     const inpLinkW = mkElt("input", { id: "linkW", type: "number", min: "1", max: "5", value: linkW });
     const inpTextH = mkElt("input", { id: "textH", type: "number", min: "3", max: "20", value: textH });
     const inpCameraDist = mkElt("input", { id: "camDist", type: "number", min: "40", max: "200", step: "20", value: cameraDistance });
-    const inpDisemw = mkElt("input", { id: "disemw", type: "checkbox" });
-    inpDisemw.checked = disemvowel;
+    const inpDisemvwl = mkElt("input", { id: "disemw", type: "checkbox" });
+    // inpDisemvwl.checked = disemvowel;
 
     const divColors = mkElt("p");
     divColors.style = `
@@ -72,7 +72,7 @@ async function dialogGraph() {
         mkElt("label", { for: "camDist" }, "Camera distance:"), inpCameraDist,
         // ]),
         // mkElt("div", undefined, [
-        mkElt("label", { for: "disemw" }, "Disemvowel:"), inpDisemw,
+        mkElt("label", { for: "disemw" }, "Disemvowel:"), inpDisemvwl,
         // ]),
         divColors,
     ]);
