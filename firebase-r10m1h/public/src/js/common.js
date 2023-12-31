@@ -1098,7 +1098,6 @@ async function mkMenu() {
     liTestShareWithArgs.addEventListener("click", evt => { showTestTarget(); })
     liTestShareWithArgs.classList.add("test-item");
 
-    const OLDliTestNetwGraph = modMdc.mkMDCmenuItem( mkElt("a", { href: "/netwgraph.html" }, "Test network graph (not ready)"));
     const aNetwGraph = mkElt("a", { href: "/netwgraph.html" }, "Test network graph (not ready)");
     aNetwGraph.addEventListener("click", evt => {
         aNetwGraph.href = mkTestNetwGraphURL();
@@ -1108,7 +1107,13 @@ async function mkMenu() {
         aNetwGraph.href = mkTestNetwGraphURL();
         // debugger;
     });
-    const liTestNetwGraph = modMdc.mkMDCmenuItem( aNetwGraph);
+    const liTestNetwGraph = modMdc.mkMDCmenuItem(aNetwGraph);
+
+    async function fixSizes() {
+        import("/src/js/mod/fixBigImg.js").then(m => { const modX = m; modX.fix(); });
+    }
+    const liFixSizes = modMdc.mkMDCmenuItem("Test fix image blob sizes");
+    liFixSizes.addEventListener("click", evt => { fixSizes(); })
 
 
     // const liAbout = modMdc.mkMDCmenuItem(mkElt("a", { href: "/about.html#fc4i" }, "About"));
@@ -1673,6 +1678,7 @@ async function mkMenu() {
         liAskPersistent,
         liAbout,
         liTestNetwGraph,
+        liFixSizes,
     ];
     const showDebugEntries = true;
     if (showDebugEntries) {
