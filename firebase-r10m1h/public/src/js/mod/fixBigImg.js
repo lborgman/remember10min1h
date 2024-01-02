@@ -37,13 +37,13 @@ export async function fix() {
     let maxOutSize = defMaxOutSize;
     const storageEstimate = await navigator.storage.estimate();
     const storageUsed = storageEstimate.usage;
-    const storageUsedB = addComma(Math.floor(storageEstimate.usage / 1000)) + "kB";
+    const storageUsedB = addComma(Math.floor(storageEstimate.usage / 1000 / 1000)) + " MB";
     const storageQuota = storageEstimate.quota;
     const storageUsedPerc = (100 * storageUsed / storageQuota).toFixed(2) + "%";
     console.log({ storageUsed, storageQuota, storageUsedPerc });
     const idbUsed = storageEstimate.usageDetails.indexedDB;
     const idbUsedB = idbUsed != undefined
-        ? addComma(Math.floor(idbUsed / 1000)) + "kB"
+        ? addComma(Math.floor(idbUsed / 1000 / 1000)) + " MB"
         : "(Not available)";
 
     // https://stackoverflow.com/questions/71028035/add-thousand-separator-with-javascript-when-add-input-dynamically
@@ -108,7 +108,7 @@ export async function fix() {
     const pSizeBugInfo = mkElt("p", undefined, divSizeBugInfo);
     const pStorageUse = mkElt("p", undefined, [
         mkElt("b", undefined, "Disk storage usage (compressed): "),
-        mkElt("div", undefined, `Used ${storageUsedPerc}, ${storageUsedB}`),
+        mkElt("div", undefined, `Used ${storageUsedPerc} of quota, ${storageUsedB}`),
         mkElt("div", undefined, `(indexedDB ${idbUsedB})`,),
     ]);
     const bodySize = mkElt("div", undefined, [
@@ -249,8 +249,8 @@ export async function fix() {
             ]),
             mkElt("div", undefined, [
                 "Total size: ",
-                addComma(Math.floor(totBigSize / 1000)),
-                " kB"
+                addComma(Math.floor(totBigSize / 1000 / 1000)),
+                " MB"
             ]),
             mkElt("div", undefined, [
                 btnFixAll,
