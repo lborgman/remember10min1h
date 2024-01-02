@@ -36,7 +36,15 @@ const defMaxOutSize = 30 * 1000;
 export async function fix() {
     let maxOutSize = defMaxOutSize;
     const storageEstimate = await navigator.storage.estimate();
-    const idbBytes = storageEstimate.usageDetails.indexedDB;
+    const storageUsed = storageEstimate.usage;
+    const storageUsedB = addComma(Math.floor(storageEstimate.usage / 1000)) + "kB";
+    const storageQuota = storageEstimate.quota;
+    const storageUsedPerc = (100 * storageUsed / storageQuota).toFixed(2) + "%";
+    console.log({ storageUsed, storageQuota, storageUsedPerc });
+    const idbUsed = storageEstimate.usageDetails.indexedDB;
+    const idbUsedB = idbUsed != undefined
+        ? addComma(Math.floor(idbUsed / 1000)) + "kB"
+        : "(Not available)";
 
     // https://stackoverflow.com/questions/71028035/add-thousand-separator-with-javascript-when-add-input-dynamically
     function formatWithComma(numericVal) {
@@ -84,24 +92,33 @@ export async function fix() {
             evt.target.value = val;
         }
     });
-    function setInpSize(num) { }
-    function getInpSize(num) { }
     inpSize.value = formatWithComma(maxOutSize);
 
-    const divSizeBugInfo = mkElt("p", undefined, `
+    const divSizeBugInfo = mkElt("p", { class: "mdc-card" },
+        `
         This fixes a bug.
-        Images were unfortunately during a short period stored without being shrinked.
-    `);
-    divSizeBugInfo.style.color = "darkred";
+        Images were unfortunately during a short period stored without being compressed.
+        `);
+    divSizeBugInfo.style.padding = "10px";
+    divSizeBugInfo.style.backgroundColor = "black";
+    divSizeBugInfo.style.color = "gray";
+    divSizeBugInfo.fontSize = "0.8rem";
     divSizeBugInfo.style.fontStyle = "italic";
-    const divIdbSize = mkElt("p", undefined, [
-        `Stored data size now (indexedDB): ${addComma(idbBytes)} B.`
+    divSizeBugInfo.style.lineHeight = "normal";
+    const pSizeBugInfo = mkElt("p", undefined, divSizeBugInfo);
+    const pStorageUse = mkElt("p", undefined, [
+        mkElt("b", undefined, "Disk storage usage (compressed): "),
+        mkElt("div", undefined, `Used ${storageUsedPerc}, ${storageUsedB}`),
+        mkElt("div", undefined, `(indexedDB ${idbUsedB})`,),
     ]);
     const bodySize = mkElt("div", undefined, [
         mkElt("h2", undefined, "Fix big images"),
-        divSizeBugInfo,
-        divIdbSize,
-        mkElt("label", undefined, ["Max image-blob size: ", inpSize]),
+        pSizeBugInfo,
+        pStorageUse,
+        mkElt("p", undefined, mkElt("label", undefined, [
+            mkElt("div", undefined, "Max image-blob uncompressed byte size: "),
+            inpSize
+        ]))
     ]);
     const ansSize = await modMdc.mkMDCdialogConfirm(bodySize);
     if (!ansSize) return;
@@ -232,8 +249,8 @@ export async function fix() {
             ]),
             mkElt("div", undefined, [
                 "Total size: ",
-                addComma(totBigSize),
-                " B"
+                addComma(Math.floor(totBigSize / 1000)),
+                " kB"
             ]),
             mkElt("div", undefined, [
                 btnFixAll,
