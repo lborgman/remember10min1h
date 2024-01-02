@@ -126,7 +126,7 @@ export async function fix() {
         pStorageUse,
         mkElt("p", undefined, mkElt("label", undefined, [
             mkElt("div", undefined, "Max image-blob uncompressed byte size: "),
-            inpSize, btnResetSize
+            inpSize, " ", btnResetSize
         ]))
     ]);
     const ansSize = await modMdc.mkMDCdialogConfirm(bodySize);
@@ -158,8 +158,8 @@ export async function fix() {
             totBigSize += img0.size;
         }
     }
-    showRes();
-    async function showRes() {
+    showFixing();
+    async function showFixing() {
         const divImgsStyle = ` display: flex; gap: 10px; `;
         const outline0 = "4px dotted red";
         const outlineNew = "4px dotted green";
@@ -233,9 +233,10 @@ export async function fix() {
 
         const btnFixAll = mkElt("button", undefined, "Fix all");
         const divShowNumFixed = mkElt("div", undefined, "Number of fixed big images: 0");
+        let nFixed = false;
         btnFixAll.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             alert("not ready");
-            let nFixed = 0;
+            nFixed = 0;
             for (let i = 0, len = allRecs.length; i < len; i++) {
                 const r = allRecs[i];
                 if (!r.images) continue;
@@ -249,6 +250,7 @@ export async function fix() {
                     divShowNumFixed.textContent = `Num fixed: ${++nFixed}`;
                 }
             }
+            nFixed = true;
             const d = btnFixAll.closest(".mdc-dialog__content");
             const arrBtnFix = [...d.querySelectorAll("button.fix-1-big")];
             arrBtnFix.forEach(btn => showBig1Fixed(btn));
@@ -276,7 +278,7 @@ export async function fix() {
             divOldest,
             divSums
         ])
-        const ans = await modMdc.mkMDCdialogConfirm(body);
+        const ans = await modMdc.mkMDCdialogAlert(body);
         console.log({ ans });
     }
 

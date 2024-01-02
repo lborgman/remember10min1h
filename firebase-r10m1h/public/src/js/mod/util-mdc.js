@@ -886,12 +886,15 @@ export function mkMDCdialogActions(buttons) {
     return mkElt("div", { class: "mdc-dialog__actions" }, buttons);
 }
 
-export async function mkMDCdialogConfirm(body, titleOk, titleCancel) {
+export async function mkMDCdialogConfirm(body, titleOk, titleCancel, noCancel) {
     titleOk = titleOk || "Ok";
     titleCancel = titleCancel || "Cancel";
     const btnOk = mkMDCdialogButton(titleOk, "confirm", true);
     const btnCancel = mkMDCdialogButton(titleCancel, "close");
-    const eltActions = mkMDCdialogActions([btnOk, btnCancel]);
+    // const eltActions = mkMDCdialogActions([btnOk, btnCancel]);
+    const arrBtns =[btnOk, btnCancel];
+    if (noCancel) arrBtns.length = 1;
+    const eltActions = mkMDCdialogActions(arrBtns);
     const dlg = await mkMDCdialog(body, eltActions);
     return await new Promise((resolve, reject) => {
         dlg.dom.addEventListener("MDCDialog:closed", errorHandlerAsyncEvent(async evt => {
