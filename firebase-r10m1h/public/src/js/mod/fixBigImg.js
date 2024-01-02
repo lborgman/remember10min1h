@@ -131,6 +131,7 @@ export async function fix() {
     ]);
     const ansSize = await modMdc.mkMDCdialogConfirm(bodySize);
     if (!ansSize) return;
+
     maxOutSize = +inpSize.value.replaceAll(",", "");
     if (isNaN(maxOutSize)) throw Error("maxOutSize is not a number");
     modImg.setMaxImageBlobSize(maxOutSize);
@@ -160,126 +161,160 @@ export async function fix() {
     }
     showFixing();
     async function showFixing() {
+        if (numBig == 0) {
+            alert("There were no such big images");
+            return;
+        }
         const divImgsStyle = ` display: flex; gap: 10px; `;
         const outline0 = "4px dotted red";
         const outlineNew = "4px dotted green";
 
-        const divInfoNewest = await showImgInfo(imgToShowNewest, recToShowNewest);
-        const dateNewest = recToShowNewest.key.slice(0, 10);
-        const divNewest = mkElt("div", { class: "mdc-card" }, [
-            mkElt("div", undefined, `Newest ${dateNewest}`),
-            divInfoNewest]);
-        divNewest.style.padding = "10px";
-        divNewest.style.backgroundColor = "wheat";
-        divNewest.style.marginBottom = "10px";
+        const bodyWrapper = mkElt("div");
+        bodyWrapper.style.filter = "grayscale(1)";
+        bodyWrapper.style.opacity = 0.2;
+        bodyWrapper.style.transitionDuration = "2s";
+        bodyWrapper.style.transitionProperty = "opacity, filter";
 
-        const divInfoOldest = await showImgInfo(imgToShowOldest, recToShowOldest);
-        const dateOldest = recToShowOldest.key.slice(0, 10);
-        const divOldest = mkElt("div", { class: "mdc-card" }, [
-            mkElt("div", undefined, `Oldest ${dateOldest}`),
-            divInfoOldest]);
-        divOldest.style.padding = "10px";
-        divOldest.style.backgroundColor = "wheat";
-        divOldest.style.marginBottom = "10px";
-
-        async function showImgInfo(imgToShow, recToShow) {
-            const img0 = imgToShow;
-            // const retResize = await modImg.shrinkImageBlob(img0, maxOutSize);
-            const retResize = await modImg.shrinkImageBlob(img0);
-            console.log({ retResize });
-            const img0New = retResize.blobOut;
-
-            const th0 = mkImageThumb(img0);
-            th0.classList.add("img-old");
-            const div0 = mkElt("div", undefined, [th0, mkElt("div", undefined, `${addComma(img0.size)} B`)]);
-            th0.style.outline = outline0;
-
-            const thNew = mkImageThumb(img0New);
-            const divNew = mkElt("div", undefined, [thNew, mkElt("div", undefined, `${addComma(img0New.size)} B`)]);
-            thNew.style.outline = outlineNew;
-
-            const divImgs0 = mkElt("p", undefined, [
-                div0,
-                divNew,
-            ]);
-            divImgs0.style = divImgsStyle;
-
-            const linkRec = getLink2KeyInFc4i(recToShow.key);
-            const a = mkElt("a", { href: linkRec }, "Show entry in fc4i");
-            const btnFix = mkElt("button", undefined, "Fix size");
-            btnFix.classList.add("fix-1-big");
-            btnFix.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-                console.log({ img0, img0New, recToShowNewest: recToShow, dbFc4i });
-                const key = recToShow.key;
-                recToShow.images[0] = img0New;
-                await dbFc4i.setDbKey(key, recToShow);
-                showBig1Fixed(btnFix);
-            }));
-            const divLink = mkElt("p", undefined, [a, mkElt("span", undefined, btnFix)]);
-            divLink.style.display = "flex";
-            divLink.style.gap = "10px";
-
-            return mkElt("div", undefined, [divImgs0, divLink]);
-        }
-        function showBig1Fixed(btnFix1) {
-            const c = btnFix1.closest("p").parentElement;
-            const imgBig = c.querySelector(".img-old");
-            imgBig.style.filter = "grayscale(1)";
-            imgBig.style.opacity = 0.5;
-            const parentBtn = btnFix1.parentElement;
-            parentBtn.textContent = "fixed!";
-            parentBtn.style.color = "red";
-        }
-
-        const btnFixAll = mkElt("button", undefined, "Fix all");
-        const divShowNumFixed = mkElt("div", undefined, "Number of fixed big images: 0");
         let nFixed = false;
-        btnFixAll.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            alert("not ready");
-            nFixed = 0;
-            for (let i = 0, len = allRecs.length; i < len; i++) {
-                const r = allRecs[i];
-                if (!r.images) continue;
-                const img0 = r.images[0];
-                if (!img0) continue;
-                if (img0.size > maxOutSize) {
-                    // const retResize = await modImg.shrinkImageBlob(img0, maxOutSize);
-                    const retResize = await modImg.shrinkImageBlob(img0);
-                    console.log({ retResize });
-                    const img0New = retResize.blobOut;
-                    divShowNumFixed.textContent = `Num fixed: ${++nFixed}`;
-                }
+
+        async function buildBody() {
+            const divInfoNewest = await showImgInfo(imgToShowNewest, recToShowNewest);
+            const dateNewest = recToShowNewest.key.slice(0, 10);
+            const divNewest = mkElt("div", { class: "mdc-card" }, [
+                mkElt("div", undefined, `Newest ${dateNewest}`),
+                divInfoNewest]);
+            divNewest.style.padding = "10px";
+            divNewest.style.backgroundColor = "wheat";
+            divNewest.style.marginBottom = "10px";
+            bodyWrapper.appendChild(divNewest);
+
+            const divInfoOldest = await showImgInfo(imgToShowOldest, recToShowOldest);
+            const dateOldest = recToShowOldest.key.slice(0, 10);
+            const divOldest = mkElt("div", { class: "mdc-card" }, [
+                mkElt("div", undefined, `Oldest ${dateOldest}`),
+                divInfoOldest]);
+            divOldest.style.padding = "10px";
+            divOldest.style.backgroundColor = "wheat";
+            divOldest.style.marginBottom = "10px";
+            bodyWrapper.appendChild(divOldest);
+
+            async function showImgInfo(imgToShow, recToShow) {
+                const img0 = imgToShow;
+                // const retResize = await modImg.shrinkImageBlob(img0, maxOutSize);
+                const retResize = await modImg.shrinkImageBlob(img0);
+                console.log({ retResize });
+                const img0New = retResize.blobOut;
+
+                const th0 = mkImageThumb(img0);
+                th0.classList.add("img-old");
+                const div0 = mkElt("div", undefined, [th0, mkElt("div", undefined, `${addComma(img0.size)} B`)]);
+                th0.style.outline = outline0;
+
+                const thNew = mkImageThumb(img0New);
+                const divNew = mkElt("div", undefined, [thNew, mkElt("div", undefined, `${addComma(img0New.size)} B`)]);
+                thNew.style.outline = outlineNew;
+
+                const divImgs0 = mkElt("p", undefined, [
+                    div0,
+                    divNew,
+                ]);
+                divImgs0.style = divImgsStyle;
+
+                const linkRec = getLink2KeyInFc4i(recToShow.key);
+                const a = mkElt("a", { href: linkRec }, "Show entry in fc4i");
+                const btnFix = mkElt("button", undefined, "Fix size");
+                btnFix.classList.add("fix-1-big");
+                btnFix.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+                    console.log({ img0, img0New, recToShowNewest: recToShow, dbFc4i });
+                    const key = recToShow.key;
+                    recToShow.images[0] = img0New;
+                    await dbFc4i.setDbKey(key, recToShow);
+                    showBig1Fixed(btnFix);
+                }));
+                const divLink = mkElt("p", undefined, [a, mkElt("span", undefined, btnFix)]);
+                divLink.style.display = "flex";
+                divLink.style.gap = "10px";
+
+                return mkElt("div", undefined, [divImgs0, divLink]);
             }
-            nFixed = true;
-            const d = btnFixAll.closest(".mdc-dialog__content");
-            const arrBtnFix = [...d.querySelectorAll("button.fix-1-big")];
-            arrBtnFix.forEach(btn => showBig1Fixed(btn));
-            debugger;
-        }));
-        const divSums = mkElt("p", undefined, [
-            mkElt("div", undefined, [
-                "Num big images: ",
-                addComma(numBig),
-            ]),
-            mkElt("div", undefined, [
-                "Total size: ",
-                addComma(Math.floor(totBigSize / 1000 / 1000)),
-                " MB"
-            ]),
-            mkElt("div", undefined, [
-                btnFixAll,
-                divShowNumFixed,
-            ]),
-        ]);
+            function showBig1Fixed(btnFix1) {
+                const c = btnFix1.closest("p").parentElement;
+                const imgBig = c.querySelector(".img-old");
+                imgBig.style.filter = "grayscale(1)";
+                imgBig.style.opacity = 0.5;
+                const parentBtn = btnFix1.parentElement;
+                parentBtn.textContent = "fixed!";
+                parentBtn.style.color = "red";
+            }
+
+            const btnFixAll = mkElt("button", undefined, "Fix all");
+            const divShowNumFixed = mkElt("div", undefined, "");
+            let fixingAll = false;
+            btnFixAll.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+                if (fixingAll) return;
+                fixingAll = true;
+                btnFixAll.style.opacity = 0;
+                alert("not ready");
+                nFixed = 0;
+                for (let i = 0, len = allRecs.length; i < len; i++) {
+                    if (nFixed == "abort") break;
+                    const r = allRecs[i];
+                    if (!r.images) continue;
+                    const img0 = r.images[0];
+                    if (!img0) continue;
+                    if (img0.size > maxOutSize) {
+                        // const retResize = await modImg.shrinkImageBlob(img0, maxOutSize);
+                        const retResize = await modImg.shrinkImageBlob(img0);
+                        console.log({ retResize });
+                        const img0New = retResize.blobOut;
+                        if (nFixed == "abort") break;
+                        divShowNumFixed.textContent = `Num fixed: ${++nFixed}`;
+                    }
+                }
+                nFixed = true;
+                const d = btnFixAll.closest(".mdc-dialog__content");
+                const arrBtnFix = [...d.querySelectorAll("button.fix-1-big")];
+                arrBtnFix.forEach(btn => showBig1Fixed(btn));
+            }));
+            const divSums = mkElt("p", undefined, [
+                mkElt("div", undefined, [
+                    "Num big images: ",
+                    addComma(numBig),
+                ]),
+                mkElt("div", undefined, [
+                    "Total size: ",
+                    addComma(Math.floor(totBigSize / 1000 / 1000)),
+                    " MB"
+                ]),
+                mkElt("div", undefined, [
+                    btnFixAll,
+                    divShowNumFixed,
+                ]),
+            ]);
+            bodyWrapper.appendChild(divSums);
+            setTimeout(() => {
+                bodyWrapper.style.filter = null;
+                bodyWrapper.style.opacity = null;
+            }, 500);
+        }
         const body = mkElt("div", undefined, [
             mkElt("h3", undefined, `Max size: ${addComma(maxOutSize)} B`),
-            // divImgs0, divLink,
-            divNewest,
-            divOldest,
-            divSums
+            // divNewest, divOldest, divSums,
+            bodyWrapper
         ])
-        const ans = await modMdc.mkMDCdialogAlert(body);
+        // const ans = await modMdc.mkMDCdialogConfirm(body, undefined, undefined, true);
+        buildBody();
+        const ans = await modMdc.mkMDCdialogAlertWait(body);
         console.log({ ans });
+        if (nFixed !== true) {
+            if (nFixed == false) {
+                modMdc.mkMDCdialogAlert(`Aborted, did not fix image sizes.`);
+                return;
+            }
+            const n = nFixed;
+            nFixed = "abort";
+            modMdc.mkMDCdialogAlert(`Aborted after fixing ${n} of ${numBig} images.`);
+        }
     }
 
 }

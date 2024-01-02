@@ -927,6 +927,9 @@ export async function mkMDCdialogGetValue(body, funValue, titleOk) {
         }));
     });
 }
+export function mkMDCdialogAlertWait(body, titleClose) {
+    return mkMDCdialogConfirm(body, titleClose, undefined, true);
+}
 export function mkMDCdialogAlert(body, titleClose) {
     titleClose = titleClose || "Ok";
     const btnClose = mkMDCdialogButton(titleClose, "close", true);
