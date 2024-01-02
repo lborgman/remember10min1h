@@ -10,7 +10,8 @@ function debugPasteLine(txt) {
     console.log("DEBUG", txt);
 }
 
-export async function resizeImage(imageBlobIn, maxBlobSize) {
+export async function shrinkImageBlob(imageBlobIn, maxBlobSize) {
+    maxBlobSize = maxBlobSize || getMaxImageBlobSize();
     // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob
     // Switch to OffscreenCanvas!
     // https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas
@@ -86,6 +87,17 @@ export async function resizeImage(imageBlobIn, maxBlobSize) {
         const urlBlobHelper = URL.createObjectURL(imageBlobIn);
         image.src = urlBlobHelper
     });
+}
+
+const keyMaxImageBlobSize = "fc4i-max-image-blob-size";
+export function getMaxImageBlobSize() {
+    return localStorage.getItem(keyMaxImageBlobSize) || 30 * 1000;
+}
+export function setMaxImageBlobSize(size) {
+    return localStorage.setItem(keyMaxImageBlobSize, size);
+}
+export function resetMaxImageBlobSize() {
+    return localStorage.removeItem(keyMaxImageBlobSize);
 }
 
 // https://web.dev/async-clipboard/
@@ -251,7 +263,7 @@ export async function mkImageCardFromBigImage(blobIn, maxBlobOutSize) {
     debugPasteLine(`addPasteButton 8, mkImageCardFromBigImage`);
     console.warn({ blobIn });
 
-    const maxBlobSize = maxBlobOutSize;
+    // const maxBlobSize = maxBlobOutSize;
     const {
         blobOut,
         shrinked,
@@ -259,7 +271,9 @@ export async function mkImageCardFromBigImage(blobIn, maxBlobOutSize) {
         typeIn,
         typeOut,
         quality
-    } = await resizeImage(blobIn, maxBlobSize);
+    } =
+        // await shrinkImageBlob(blobIn, maxBlobSize);
+        await shrinkImageBlob(blobIn);
 
     // FIX-ME: lastQuality
     const tS = shrinked.toFixed(3)

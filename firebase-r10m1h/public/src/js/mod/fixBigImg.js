@@ -32,9 +32,10 @@ function mkImageThumb(blob) {
     return eltImg;
 }
 
-const defMaxOutSize = 30 * 1000;
+// const defMaxOutSize = 30 * 1000;
 export async function fix() {
-    let maxOutSize = defMaxOutSize;
+    // let maxOutSize = defMaxOutSize;
+    let maxOutSize = modImg.getMaxImageBlobSize();
     const storageEstimate = await navigator.storage.estimate();
     const storageUsed = storageEstimate.usage;
     const storageUsedB = addComma(Math.floor(storageEstimate.usage / 1000 / 1000)) + " MB";
@@ -92,7 +93,15 @@ export async function fix() {
             evt.target.value = val;
         }
     });
-    inpSize.value = formatWithComma(maxOutSize);
+    // inpSize.value = formatWithComma(maxOutSize);
+    inpSize.value = formatWithComma(modImg.getMaxImageBlobSize());
+
+    const btnResetSize = mkElt("button", undefined, "Reset");
+    btnResetSize.addEventListener("click", evt => {
+        modImg.resetMaxImageBlobSize();
+        inpSize.value = formatWithComma(modImg.getMaxImageBlobSize());
+    });
+
 
     const divSizeBugInfo = mkElt("p", { class: "mdc-card" },
         `
@@ -117,13 +126,14 @@ export async function fix() {
         pStorageUse,
         mkElt("p", undefined, mkElt("label", undefined, [
             mkElt("div", undefined, "Max image-blob uncompressed byte size: "),
-            inpSize
+            inpSize, btnResetSize
         ]))
     ]);
     const ansSize = await modMdc.mkMDCdialogConfirm(bodySize);
     if (!ansSize) return;
     maxOutSize = +inpSize.value.replaceAll(",", "");
     if (isNaN(maxOutSize)) throw Error("maxOutSize is not a number");
+    modImg.setMaxImageBlobSize(maxOutSize);
 
     let imgToShowNewest; let recToShowNewest;
     let imgToShowOldest; let recToShowOldest;
@@ -174,7 +184,8 @@ export async function fix() {
 
         async function showImgInfo(imgToShow, recToShow) {
             const img0 = imgToShow;
-            const retResize = await modImg.resizeImage(img0, maxOutSize);
+            // const retResize = await modImg.shrinkImageBlob(img0, maxOutSize);
+            const retResize = await modImg.shrinkImageBlob(img0);
             console.log({ retResize });
             const img0New = retResize.blobOut;
 
@@ -231,7 +242,8 @@ export async function fix() {
                 const img0 = r.images[0];
                 if (!img0) continue;
                 if (img0.size > maxOutSize) {
-                    const retResize = await modImg.resizeImage(img0, maxOutSize);
+                    // const retResize = await modImg.shrinkImageBlob(img0, maxOutSize);
+                    const retResize = await modImg.shrinkImageBlob(img0);
                     console.log({ retResize });
                     const img0New = retResize.blobOut;
                     divShowNumFixed.textContent = `Num fixed: ${++nFixed}`;
