@@ -11,6 +11,13 @@ function addComma(num) {
     return num.toLocaleString("en-US");
 }
 
+function getLink2KeyInFc4i(keyFc4i) {
+    const objUrl = new URL("/", location);
+    objUrl.searchParams.set("showkey", keyFc4i)
+    // location = objUrl;
+    return objUrl.href;
+}
+
 function mkImageThumb(blob) {
     console.log({ blob });
     const eltImg = mkElt("span", { class: "image-bg-cover image-thumb-size" });
@@ -25,12 +32,11 @@ function mkImageThumb(blob) {
     return eltImg;
 }
 
-const defMaxOutSize = 20 * 1000;
+const defMaxOutSize = 30 * 1000;
 export async function fix() {
     let maxOutSize = defMaxOutSize;
-    // const step = 10 * 1000;
-    // const min = 10 * 1000;
-    // const max = 500 * 1000;
+    const storageEstimate = await navigator.storage.estimate();
+    const idbBytes = storageEstimate.usageDetails.indexedDB;
 
     // https://stackoverflow.com/questions/71028035/add-thousand-separator-with-javascript-when-add-input-dynamically
     function formatWithComma(numericVal) {
@@ -82,22 +88,44 @@ export async function fix() {
     function getInpSize(num) { }
     inpSize.value = formatWithComma(maxOutSize);
 
-    const bodySize = mkElt("div", undefined,
-        mkElt("label", undefined, ["Max image-blob size: ", inpSize]))
+    const divSizeBugInfo = mkElt("p", undefined, `
+        This fixes a bug.
+        Images were unfortunately during a short period stored without being shrinked.
+    `);
+    divSizeBugInfo.style.color = "darkred";
+    divSizeBugInfo.style.fontStyle = "italic";
+    const divIdbSize = mkElt("p", undefined, [
+        `Stored data size now (indexedDB): ${addComma(idbBytes)} B.`
+    ]);
+    const bodySize = mkElt("div", undefined, [
+        mkElt("h2", undefined, "Fix big images"),
+        divSizeBugInfo,
+        divIdbSize,
+        mkElt("label", undefined, ["Max image-blob size: ", inpSize]),
+    ]);
     const ansSize = await modMdc.mkMDCdialogConfirm(bodySize);
     if (!ansSize) return;
     maxOutSize = +inpSize.value.replaceAll(",", "");
     if (isNaN(maxOutSize)) throw Error("maxOutSize is not a number");
-    let imgToShow;
+
+    let imgToShowNewest; let recToShowNewest;
+    let imgToShowOldest; let recToShowOldest;
     let numBig = 0;
     let totBigSize = 0;
+
     for (let i = 0, len = allRecs.length; i < len; i++) {
         const r = allRecs[i];
         if (!r.images) continue;
         const img0 = r.images[0];
         if (!img0) continue;
         if (img0.size > maxOutSize) {
-            if (!imgToShow) imgToShow = img0;
+            if (!imgToShowNewest) {
+                imgToShowNewest = img0;
+                recToShowNewest = r;
+            } else {
+                imgToShowOldest = img0;
+                recToShowOldest = r;
+            }
             // break;
             numBig++;
             totBigSize += img0.size;
@@ -105,41 +133,118 @@ export async function fix() {
     }
     showRes();
     async function showRes() {
-        const img0 = imgToShow;
-        const retResize = await modImg.resizeImage(img0, maxOutSize);
-        console.log({ retResize });
-        const imgNew = retResize.blobOut;
+        const divImgsStyle = ` display: flex; gap: 10px; `;
+        const outline0 = "4px dotted red";
+        const outlineNew = "4px dotted green";
 
-        const th0 = mkImageThumb(img0);
-        const div0 = mkElt("div", undefined, [th0, mkElt("div", undefined, `${addComma(img0.size)} B`)]);
-        th0.style.outline = "4px dotted red";
+        const divInfoNewest = await showImgInfo(imgToShowNewest, recToShowNewest);
+        const dateNewest = recToShowNewest.key.slice(0, 10);
+        const divNewest = mkElt("div", { class: "mdc-card" }, [
+            mkElt("div", undefined, `Newest ${dateNewest}`),
+            divInfoNewest]);
+        divNewest.style.padding = "10px";
+        divNewest.style.backgroundColor = "wheat";
+        divNewest.style.marginBottom = "10px";
 
-        const thNew = mkImageThumb(imgNew);
-        const divNew = mkElt("div", undefined, [thNew, mkElt("div", undefined, `${addComma(imgNew.size)} B`)]);
-        thNew.style.outline = "4px dotted green";
+        const divInfoOldest = await showImgInfo(imgToShowOldest, recToShowOldest);
+        const dateOldest = recToShowOldest.key.slice(0, 10);
+        const divOldest = mkElt("div", { class: "mdc-card" }, [
+            mkElt("div", undefined, `Oldest ${dateOldest}`),
+            divInfoOldest]);
+        divOldest.style.padding = "10px";
+        divOldest.style.backgroundColor = "wheat";
+        divOldest.style.marginBottom = "10px";
 
-        const divImgs = mkElt("p", undefined, [
-            div0,
-            divNew,
-        ]);
-        divImgs.style = `
-            display: flex;
-            gap: 10px;
-        `;
+        async function showImgInfo(imgToShow, recToShow) {
+            const img0 = imgToShow;
+            const retResize = await modImg.resizeImage(img0, maxOutSize);
+            console.log({ retResize });
+            const img0New = retResize.blobOut;
+
+            const th0 = mkImageThumb(img0);
+            th0.classList.add("img-old");
+            const div0 = mkElt("div", undefined, [th0, mkElt("div", undefined, `${addComma(img0.size)} B`)]);
+            th0.style.outline = outline0;
+
+            const thNew = mkImageThumb(img0New);
+            const divNew = mkElt("div", undefined, [thNew, mkElt("div", undefined, `${addComma(img0New.size)} B`)]);
+            thNew.style.outline = outlineNew;
+
+            const divImgs0 = mkElt("p", undefined, [
+                div0,
+                divNew,
+            ]);
+            divImgs0.style = divImgsStyle;
+
+            const linkRec = getLink2KeyInFc4i(recToShow.key);
+            const a = mkElt("a", { href: linkRec }, "Show entry in fc4i");
+            const btnFix = mkElt("button", undefined, "Fix size");
+            btnFix.classList.add("fix-1-big");
+            btnFix.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+                console.log({ img0, img0New, recToShowNewest: recToShow, dbFc4i });
+                const key = recToShow.key;
+                recToShow.images[0] = img0New;
+                await dbFc4i.setDbKey(key, recToShow);
+                showBig1Fixed(btnFix);
+            }));
+            const divLink = mkElt("p", undefined, [a, mkElt("span", undefined, btnFix)]);
+            divLink.style.display = "flex";
+            divLink.style.gap = "10px";
+
+            return mkElt("div", undefined, [divImgs0, divLink]);
+        }
+        function showBig1Fixed(btnFix1) {
+            const c = btnFix1.closest("p").parentElement;
+            const imgBig = c.querySelector(".img-old");
+            imgBig.style.filter = "grayscale(1)";
+            imgBig.style.opacity = 0.5;
+            const parentBtn = btnFix1.parentElement;
+            parentBtn.textContent = "fixed!";
+            parentBtn.style.color = "red";
+        }
+
+        const btnFixAll = mkElt("button", undefined, "Fix all");
+        const divShowNumFixed = mkElt("div", undefined, "Number of fixed big images: 0");
+        btnFixAll.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            alert("not ready");
+            let nFixed = 0;
+            for (let i = 0, len = allRecs.length; i < len; i++) {
+                const r = allRecs[i];
+                if (!r.images) continue;
+                const img0 = r.images[0];
+                if (!img0) continue;
+                if (img0.size > maxOutSize) {
+                    const retResize = await modImg.resizeImage(img0, maxOutSize);
+                    console.log({ retResize });
+                    const img0New = retResize.blobOut;
+                    divShowNumFixed.textContent = `Num fixed: ${++nFixed}`;
+                }
+            }
+            const d = btnFixAll.closest(".mdc-dialog__content");
+            const arrBtnFix = [...d.querySelectorAll("button.fix-1-big")];
+            arrBtnFix.forEach(btn => showBig1Fixed(btn));
+            debugger;
+        }));
         const divSums = mkElt("p", undefined, [
             mkElt("div", undefined, [
                 "Num big images: ",
-                addComma(numBig)
+                addComma(numBig),
             ]),
             mkElt("div", undefined, [
                 "Total size: ",
                 addComma(totBigSize),
                 " B"
             ]),
+            mkElt("div", undefined, [
+                btnFixAll,
+                divShowNumFixed,
+            ]),
         ]);
         const body = mkElt("div", undefined, [
             mkElt("h3", undefined, `Max size: ${addComma(maxOutSize)} B`),
-            divImgs,
+            // divImgs0, divLink,
+            divNewest,
+            divOldest,
             divSums
         ])
         const ans = await modMdc.mkMDCdialogConfirm(body);

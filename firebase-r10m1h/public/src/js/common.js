@@ -255,7 +255,10 @@ async function justShowKey(key) {
     const keyRec = await dbFc4i.getDbKey(key);
     if (keyRec) {
         const eltH = mkElt("div", undefined, [
-            mkElt("p", undefined, "This is the item linked in the mindmap.")
+            mkElt("p", undefined, [
+                `Entry was added ${key.slice(0, 10)}.`,
+                " (This is the item linked in the mindmap.)"
+            ])
         ]);
         const modFc4iItems = await import("fc4i-items");
         const eltRem = await modFc4iItems.mkEltInputRemember(keyRec, eltH);
@@ -1108,12 +1111,14 @@ async function mkMenu() {
         // debugger;
     });
     const liTestNetwGraph = modMdc.mkMDCmenuItem(aNetwGraph);
+    liTestNetwGraph.classList.add("test4all-item");
 
     async function fixSizes() {
         import("/src/js/mod/fixBigImg.js").then(m => { const modX = m; modX.fix(); });
     }
     const liFixSizes = modMdc.mkMDCmenuItem("Test fix image blob sizes");
     liFixSizes.addEventListener("click", evt => { fixSizes(); })
+    liFixSizes.classList.add("test4all-item");
 
 
     // const liAbout = modMdc.mkMDCmenuItem(mkElt("a", { href: "/about.html#fc4i" }, "About"));

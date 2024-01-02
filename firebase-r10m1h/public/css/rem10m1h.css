@@ -983,6 +983,10 @@ li.test-item {
     background: gray;
 }
 
+li.test4all-item {
+    background: aquamarine;
+}
+
 body.no-test-items .test-item {
     display: none !important;
 }
