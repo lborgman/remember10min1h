@@ -1411,6 +1411,7 @@ async function mkMenu() {
         // const ret = objJson.forEach
         // const ret = arrJson.map
         const ret = [];
+        const setTagsImported = new Set();
         for (let j = 0, len = arrJson.length; j < len; j++) {
             const obj = arrJson[j];
             const key = obj.key;
@@ -1432,11 +1433,24 @@ async function mkMenu() {
                     images[i] = blob;
                 }
             }
+            // Import tags?
+            const tags = obj.tags;
+            if (tags) { tags.forEach(t => setTagsImported.add(t)); }
+
             // console.log(`Adding ${key}, ${obj.title}`);
             importedKeys.push(key);
-            ret.push(setDbKey(key, obj));
+            ret.push(modDbFc4i.setDbKey(key, obj));
         }
         console.log({ ret }, ret);
+
+        // debugger; // FIX-ME require tags
+        const arrOldTags = await modDbFc4i.getDbTagsArr();
+        arrOldTags.forEach(t => setTagsImported.add(t));
+        const arrNewTags = [...setTagsImported];
+        arrNewTags.sort();
+        // const dbFc4i = await getDbFc4i();
+        modDbFc4i.setDbTagsArr(arrNewTags);
+
         const promRes = await Promise.allSettled(ret);
         console.log({ promRes });
         console.log({ importedKeys });

@@ -1,5 +1,4 @@
 console.log("fixBidImg.js here again!!!!!!!");
-// dbfc4i
 const modImg = await import("images");
 const dbFc4i = await import("db-fc4i");
 const modMdc = await import("util-mdc");
