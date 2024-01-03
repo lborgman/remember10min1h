@@ -38,13 +38,13 @@ export async function fix() {
     let maxOutSize = modImg.getMaxImageBlobSize();
     const storageEstimate = await navigator.storage.estimate();
     const storageUsed = storageEstimate.usage;
-    const storageUsedB = addComma(Math.floor(storageEstimate.usage / 1000 / 1000)) + " MB";
+    const storageUsedB = addComma(Math.ceil(storageEstimate.usage / 1000 / 1000)) + " MB";
     const storageQuota = storageEstimate.quota;
     const storageUsedPerc = (100 * storageUsed / storageQuota).toFixed(2) + "%";
     console.log({ storageUsed, storageQuota, storageUsedPerc });
     const idbUsed = storageEstimate.usageDetails.indexedDB;
     const idbUsedB = idbUsed != undefined
-        ? addComma(Math.floor(idbUsed / 1000 / 1000)) + " MB"
+        ? addComma(Math.ceil(idbUsed / 1000 / 1000)) + " MB"
         : "(Not available)";
 
     // https://stackoverflow.com/questions/71028035/add-thousand-separator-with-javascript-when-add-input-dynamically
@@ -177,6 +177,8 @@ export async function fix() {
 
         let nFixed = false;
 
+        const eltWorking = mkElt("span", undefined, "Working...");
+        eltWorking.style = "color:red; background:black; padding: 4px; position:absolut";
         async function buildBody() {
             const divInfoNewest = await showImgInfo(imgToShowNewest, recToShowNewest);
             const dateNewest = recToShowNewest.key.slice(0, 10);
@@ -188,15 +190,17 @@ export async function fix() {
             divNewest.style.marginBottom = "10px";
             bodyWrapper.appendChild(divNewest);
 
-            const divInfoOldest = await showImgInfo(imgToShowOldest, recToShowOldest);
-            const dateOldest = recToShowOldest.key.slice(0, 10);
-            const divOldest = mkElt("div", { class: "mdc-card" }, [
-                mkElt("div", undefined, `Oldest ${dateOldest}`),
-                divInfoOldest]);
-            divOldest.style.padding = "10px";
-            divOldest.style.backgroundColor = "wheat";
-            divOldest.style.marginBottom = "10px";
-            bodyWrapper.appendChild(divOldest);
+            if (imgToShowOldest) {
+                const divInfoOldest = await showImgInfo(imgToShowOldest, recToShowOldest);
+                const dateOldest = recToShowOldest.key.slice(0, 10);
+                const divOldest = mkElt("div", { class: "mdc-card" }, [
+                    mkElt("div", undefined, `Oldest ${dateOldest}`),
+                    divInfoOldest]);
+                divOldest.style.padding = "10px";
+                divOldest.style.backgroundColor = "wheat";
+                divOldest.style.marginBottom = "10px";
+                bodyWrapper.appendChild(divOldest);
+            }
 
             async function showImgInfo(imgToShow, recToShow) {
                 const img0 = imgToShow;
@@ -225,7 +229,7 @@ export async function fix() {
                 const btnFix = mkElt("button", undefined, "Fix size");
                 btnFix.classList.add("fix-1-big");
                 btnFix.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-                    console.log({ img0, img0New, recToShowNewest: recToShow, dbFc4i });
+                    console.log({ img0, img0New, recToShow, dbFc4i });
                     const key = recToShow.key;
                     recToShow.images[0] = img0New;
                     await dbFc4i.setDbKey(key, recToShow);
@@ -254,7 +258,8 @@ export async function fix() {
                 if (fixingAll) return;
                 fixingAll = true;
                 btnFixAll.style.opacity = 0;
-                alert("not ready");
+                divShowNumFixed.textContent = "Working...";
+                // alert("not ready");
                 nFixed = 0;
                 for (let i = 0, len = allRecs.length; i < len; i++) {
                     if (nFixed == "abort") break;
@@ -267,24 +272,35 @@ export async function fix() {
                         const retResize = await modImg.shrinkImageBlob(img0);
                         console.log({ retResize });
                         const img0New = retResize.blobOut;
+
+                        const key = r.key;
+                        r.images[0] = img0New;
+                        await dbFc4i.setDbKey(key, r);
+
                         if (nFixed == "abort") break;
-                        divShowNumFixed.textContent = `Num fixed: ${++nFixed}`;
+                        divShowNumFixed.textContent = `Num fixed: ${++nFixed}...`;
                     }
                 }
+                divShowNumFixed.textContent = `Num fixed: ${nFixed} (all)`;
                 nFixed = true;
                 const d = btnFixAll.closest(".mdc-dialog__content");
                 const arrBtnFix = [...d.querySelectorAll("button.fix-1-big")];
                 arrBtnFix.forEach(btn => showBig1Fixed(btn));
             }));
+            let strTotBigSize;
+            if (totBigSize > 1000 * 1000) {
+                strTotBigSize = addComma(Math.ceil(totBigSize / 1000 / 1000)) + " MB";
+            } else {
+                strTotBigSize = addComma(Math.ceil(totBigSize / 1000)) + " kB";
+            }
             const divSums = mkElt("p", undefined, [
                 mkElt("div", undefined, [
                     "Num big images: ",
                     addComma(numBig),
                 ]),
                 mkElt("div", undefined, [
-                    "Total size: ",
-                    addComma(Math.floor(totBigSize / 1000 / 1000)),
-                    " MB"
+                    "Total size: ", strTotBigSize
+                    // addComma(Math.floor(totBigSize / 1000 / 1000)), " MB"
                 ]),
                 mkElt("div", undefined, [
                     btnFixAll,
@@ -293,14 +309,15 @@ export async function fix() {
             ]);
             bodyWrapper.appendChild(divSums);
             setTimeout(() => {
+                eltWorking.remove();
                 bodyWrapper.style.filter = null;
                 bodyWrapper.style.opacity = null;
             }, 500);
         }
         const body = mkElt("div", undefined, [
             mkElt("h3", undefined, `Max size: ${addComma(maxOutSize)} B`),
-            // divNewest, divOldest, divSums,
-            bodyWrapper
+            bodyWrapper,
+            eltWorking
         ])
         // const ans = await modMdc.mkMDCdialogConfirm(body, undefined, undefined, true);
         buildBody();
