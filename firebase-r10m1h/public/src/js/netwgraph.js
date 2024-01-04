@@ -426,11 +426,49 @@ async function addText() {
             const isFc4i = node.fc4i != undefined;
             const fc4iTitle = node.fc4i?.r.title;
             const txtLong = isFc4i ? fc4iTitle : `Dummy long ${node.id}`;
+            /*
             const txtShort = isFc4i ?
                 (disemvowel ? fc4iTitle.replace(/[aeiou]/gi, "") : fc4iTitle).slice(0, 15) + "…"
                 :
                 `Text ${node.id}`;
+            */
+            let maxNodeTextLines = 4;
+            let maxNodeTextWidth = 12;
+            const txtShort = mkShortTxt(txtLong);
+            function mkShortTxt(txt) {
+                const arrTxt = txt.split(" ");
+                const arrLines = [];
+                let i = 0;
+                const len = arrTxt.length;
+                let newLine = "";
+                let iLines = 0;
+                while (i < len) {
+                    const nextWord = arrTxt[i++];
+                    const nextLine = newLine + nextWord + " ";
+                    if (nextLine.length > maxNodeTextWidth) {
+                        if (newLine.length > 0) {
+                            arrLines[iLines++] = newLine.slice(0, -1);
+                            newLine = nextWord + " ";
+                        } else {
+                            arrLines[iLines++] = nextLine.slice(0, -1);
+                            newLine = "";
+                        }
+                    } else newLine = nextLine;
+                }
+                if (newLine.length > 0) {
+                    arrLines[iLines++] = newLine.slice(0, -1);
+                }
+                let allUsed = true;
+                if (arrLines.length > maxNodeTextLines) {
+                    arrLines.length = maxNodeTextLines;
+                    allUsed = false;
+                }
+                let retTxt = arrLines.join("\n");
+                if (!allUsed) retTxt += "…";
+                return retTxt;
+            }
             const sprite = new SpriteText(txtShort);
+            // const sprite = new SpriteText("hi\nthere");
             sprite.material.transparent = false;
             const numTags = node.fc4i.r.tags.length;
             const idxClr = Math.min(numTags, colorsRainbow.length - 1);
@@ -453,6 +491,33 @@ async function addText() {
     });
 }
 
+const highlightNodes = new Set();
+const highlightLinks = new Set();
+let hoverNode = null;
+async function addNodeHighlightOnHover() {
+    graph = graph
+        .nodeColor(node => highlightNodes.has(node) ? node === hoverNode ? 'rgb(255,0,0,1)' : 'rgba(255,160,0,0.8)' : 'rgba(0,255,255,0.6)')
+        .linkColor(link => highlightLinks.has(link) ? "rgba(255, 0, 0, 1)" : "rgba(255, 255, 0, 1)")
+        // .linkWidth(link => highlightLinks.has(link) ? 4 : 1)
+        // .linkDirectionalParticles(link => highlightLinks.has(link) ? 4 : 0)
+        // .linkDirectionalParticleWidth(4)
+        .onNodeHover(node => {
+            // no state change
+            if ((!node && !highlightNodes.size) || (node && hoverNode === node)) return;
+
+            highlightNodes.clear();
+            highlightLinks.clear();
+            if (node) {
+                highlightNodes.add(node);
+                node.neighbors.forEach(neighbor => highlightNodes.add(neighbor));
+                node.links.forEach(link => highlightLinks.add(link));
+            }
+
+            hoverNode = node || null;
+
+            updateHighlight();
+        });
+}
 
 function addNodeAsHtml(node) {
     console.log("  addHtml .nodeThreeObject >>>>> node", node);
@@ -541,9 +606,45 @@ async function testFH() {
 
     }
 }
+function updateHighlight() {
+    // trigger update of highlighted objects in scene
+    graph
+        .nodeColor(graph.nodeColor())
+        .linkWidth(graph.linkWidth())
+        .linkDirectionalParticles(graph.linkDirectionalParticles())
+        ;
+}
+
 async function testMyOwn() {
-    const useHtml = true;
+    // cross-link node objects
+    if (!gData.nodesById) {
+        gData.nodesById = {};
+    }
+    for (let i = 0, len = gData.nodes.length; i < len; i++) {
+        const n = gData.nodes[i];
+        const id = n.id;
+        gData.nodesById[id] = n;
+    }
+
+    gData.links.forEach(link => {
+        // const a = gData.nodes[link.source];
+        const a = gData.nodesById[link.source];
+        // const b = gData.nodes[link.target];
+        const b = gData.nodesById[link.target];
+        !a.neighbors && (a.neighbors = []);
+        !b.neighbors && (b.neighbors = []);
+        a.neighbors.push(b);
+        b.neighbors.push(a);
+
+        !a.links && (a.links = []);
+        !b.links && (b.links = []);
+        a.links.push(link);
+        b.links.push(link);
+    });
+
+    const graphDisplayer = await setupGraphDisplayer();
     let ourDisplayer = graphDisplayer;
+    const useHtml = true;
     if (useHtml) { ourDisplayer = await getHtmlGraphDisplayer(); }
     graph = ourDisplayer.graphData(gData);
     graph = graph.nodeOpacity(1.0);
@@ -552,6 +653,7 @@ async function testMyOwn() {
     addText();
     await waitSeconds(1);
     addOnClick();
+    addNodeHighlightOnHover();
 }
 async function testFocus() {
     // https://github.com/vasturiano/3d-force-graph/blob/master/example/click-to-focus/index.html
