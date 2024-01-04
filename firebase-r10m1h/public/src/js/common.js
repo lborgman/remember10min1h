@@ -35,9 +35,9 @@ async function checkUnusedTags() {
 
 }
 
-let divSearchTheTags;
+let divSelectTags;
 async function updateDivSearchTheTags() {
-    const oldTags = [...divSearchTheTags.querySelectorAll("label.tag-in-our-tags")]
+    const oldTags = [...divSelectTags.querySelectorAll("label.tag-in-our-tags")]
         .filter(lbl => {
             const chk = lbl.firstElementChild.checked;
             // console.log({ lbl, chk });
@@ -48,16 +48,16 @@ async function updateDivSearchTheTags() {
     const dbFc4i = await import("db-fc4i");
     const arrAllTags = await dbFc4i.getDbTagsArr();
     const arrUnusedTags = await dbFc4i.getUnusedTags();
-    divSearchTheTags.textContent = "";
+    divSelectTags.textContent = "";
     if (arrAllTags.length > arrUnusedTags.length) {
         arrAllTags.forEach(tag => {
             if (arrUnusedTags.includes(tag)) return;
             const checked = oldTags.includes(tag);
             const eltTag = mkEltTagChkbox(tag, checked);
-            divSearchTheTags.appendChild(eltTag);
+            divSelectTags.appendChild(eltTag);
         });
     } else {
-        divSearchTheTags.appendChild(mkElt("div", undefined, "(There are currently no tags in use.)"));
+        divSelectTags.appendChild(mkElt("div", undefined, "(There are currently no tags in use.)"));
     }
     // checkUnusedTags();
     return arrAllTags.length;
@@ -665,10 +665,11 @@ async function goHome() {
         "Match only items with confidence between:",
     ]);
 
-    divSearchTheTags = mkElt("div", { id: "div-search-the-tags" });
-    divSearchTheTags.addEventListener("change", evt => {
+    divSelectTags = mkElt("div", { id: "div-search-the-tags" });
+    divSelectTags.addEventListener("change", evt => {
         // console.log({ evt });
         restartSearchTimer();
+        updateRequiredTags();
     });
 
     // const dbFc4i = await getDbFc4i();
@@ -677,11 +678,39 @@ async function goHome() {
     await updateDivSearchTheTags();
     // await checkUnusedTags();
 
+    const divRequiredTags = mkElt("div", undefined, "(none)");
+    divRequiredTags.style.display = "flex";
+    divRequiredTags.style.gap = "10px";
+    divRequiredTags.style.padding = "10px";
 
+    function updateRequiredTags() {
+        const reqTags = [...divSelectTags.querySelectorAll(".tag-in-our-tags")]
+            .filter(span => {
+                const chk = span.firstElementChild;
+                const checked = chk.checked;
+                // const tag = span.textContent.substr(1);
+                return checked;
+            })
+            .map(span => span.textContent.substr(1));
+
+        if (reqTags.length == 0) {
+            divRequiredTags.textContent = "(none)";
+        } else {
+            divRequiredTags.textContent = "";
+            reqTags.forEach(t => {
+                const eltTag = mkElt("span", undefined, t);
+                divRequiredTags.appendChild(eltTag);
+            });
+        }
+    }
 
     const divTagsRequired = mkElt("div", { id: "div-required-tags" }, [
-        "Require tags: ",
-        divSearchTheTags,
+        "Required tags: ",
+        divRequiredTags,
+        mkElt("details", undefined, [
+            mkElt("summary", undefined, "Select tags"),
+            divSelectTags
+        ])
     ]);
 
     function doSearch(cantRefresh) {

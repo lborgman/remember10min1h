@@ -15,12 +15,14 @@ console.log({ __THREE__ });
 // debugger;
 */
 
+/*
 const modDbMm = await import("db-mindmaps");
 const allMm = await modDbMm.DBgetAllMindmaps();
 const mm0 = allMm[0];
 console.log({ mm0 });
 const mm0nodeArray = mm0.jsmindmap.data;
 // debugger;
+*/
 
 
 
@@ -42,7 +44,7 @@ const colorsRainbow =
 
 async function dialogGraph() {
     const inpLinkW = mkElt("input", { id: "linkW", type: "number", min: "1", max: "5", value: linkW });
-    const inpLinkOp = mkElt("input", {id:"linkOp", type: "range", value: linkOp, step:"0.1", min:"0", max:"1"});
+    const inpLinkOp = mkElt("input", { id: "linkOp", type: "range", value: linkOp, step: "0.1", min: "0", max: "1" });
     const inpTextH = mkElt("input", { id: "textH", type: "number", min: "3", max: "20", value: textH });
     const inpCameraDist = mkElt("input", { id: "camDist", type: "number", min: "40", max: "200", step: "20", value: cameraDistance });
     const inpDisemvwl = mkElt("input", { id: "disemw", type: "checkbox" });
@@ -171,7 +173,7 @@ async function getNodesAndLinks(N, sourceName) {
         const nodes = nodesR.map(r => ({ id: r.id, fc4i: r }));
         const setTags = new Set();
         arrUse.forEach(r => {
-            r.tags.forEach(t => setTags.add(t));
+            r.tags?.forEach(t => setTags.add(t));
         });
         requiredTags.forEach(t => {
             setTags.delete(t);
@@ -187,7 +189,8 @@ async function getNodesAndLinks(N, sourceName) {
                 arrT.forEach(r => {
                     const link = {
                         source: a0.id,
-                        target: r.id
+                        target: r.id,
+                        text: t
                     }
                     links.push(link);
                     const link2 = {
@@ -225,9 +228,6 @@ async function getNodesAndLinks(N, sourceName) {
     }
 }
 async function chooseView() {
-    // testBasic();
-    // testText();
-    // testHtml();
 
     function mkViewAlt(txt, fun) {
         const eltRad = mkElt("input", { type: "radio", name: "view-alt" });
@@ -238,13 +238,13 @@ async function chooseView() {
     }
 
     const divAlts = mkElt("div", undefined, [
-        mkViewAlt("TF", testTF),
-        mkViewAlt("Basic", testBasic),
+        mkViewAlt("My own", testMyOwn),
+        mkViewAlt("TC", testTC),
+        // mkViewAlt("FH", testFH),
+        // mkViewAlt("Basic", testBasic),
         // mkViewAlt("Text", testText),
         // mkViewAlt("Html class", testHtml),
         // mkViewAlt("Focus", testFocus),
-        mkViewAlt("My own", testMyOwn),
-        mkViewAlt("FH", testFH),
     ]);
     divAlts.querySelector("input").checked = true;
 
@@ -265,7 +265,7 @@ async function chooseView() {
         divReqTags.appendChild(mkElt("span", undefined, "No required tags"));
     } else {
         requiredTags.forEach(t => {
-            const s = mkElt("span", {class:"tag-in-our-tags"}, `#${t}`);
+            const s = mkElt("span", { class: "tag-in-our-tags" }, `#${t}`);
             divReqTags.appendChild(s);
         });
     }
@@ -395,9 +395,31 @@ function addOnClick() {
     });
 }
 
+async function addLinkText() {
+    // https://github.com/vasturiano/3d-force-graph/blob/master/example/text-links/index.html
+    graph = graph.linkThreeObjectExtend(true);
+    graph = graph.linkThreeObject(link => {
+        if (link.text) {
+            // extend link with text sprite
+            // const sprite = new SpriteText(`${link.source} > ${link.target}`);
+            const sprite = new SpriteText(`${link.text}`);
+            sprite.color = 'lightgrey';
+            sprite.textHeight = 4;
+            return sprite;
+        }
+        return link;
+    });
+    graph = graph.linkPositionUpdate((sprite, { start, end }) => {
+        if (sprite) {
+            const middlePos = Object.assign(...['x', 'y', 'z'].map(c => ({
+                [c]: start[c] + (end[c] - start[c]) / 2 // calc middle point
+            })));
+            // Position sprite
+            Object.assign(sprite.position, middlePos);
+        }
+    });
+}
 async function addText() {
-    // const Graph = graphDisplayer.graphData(gData)
-    // .nodeAutoColorBy("group")
     let added1html = true;
     graph = graph.nodeThreeObject(node => {
         function addNodeAsText(node) {
@@ -431,17 +453,35 @@ async function addText() {
     });
 }
 
+
+function addNodeAsHtml(node) {
+    console.log("  addHtml .nodeThreeObject >>>>> node", node);
+    const nodeEl = document.createElement('div');
+    nodeEl.textContent = `Html ${node.id}`;
+    nodeEl.classList.add("node-label");
+    const ret = new m.CSS2DObject(nodeEl);
+    console.log("  addHtml .nodeThreeObject <<<< ret", ret);
+    return ret;
+}
+async function addHtml() {
+    console.log("addHTML >>>>>");
+    graph = graph.nodeThreeObject(node => {
+        return addNodeAsHtml(node);
+    });
+}
+
 /////////////////
-async function testTF() {
+async function getHtmlGraphDisplayer() {
+    const m = await import('//unpkg.com/three/examples/jsm/renderers/CSS2DRenderer.js');
+    const htmlDisplayer = await setupGraphDisplayer({
+        extraRenderers: [new m.CSS2DRenderer()]
+    });
+    return htmlDisplayer;
+}
+async function testTC() {
     let ourDisplayer = graphDisplayer;
-    const useHtml = true;
-    let m;
-    if (useHtml) {
-        m = await import('//unpkg.com/three/examples/jsm/renderers/CSS2DRenderer.js');
-        ourDisplayer = await setupGraphDisplayer({
-            extraRenderers: [new m.CSS2DRenderer()]
-        });
-    }
+    const useHtml = false;
+    if (useHtml) { ourDisplayer = await getHtmlGraphDisplayer(); }
     graph = ourDisplayer.graphData(gData);
     graph = graph.nodeOpacity(1.0);
 
@@ -450,27 +490,12 @@ async function testTF() {
     await waitSeconds(1);
     addOnClick();
     // graph.onEngineStop(() => graph.zoomToFit(100));
-    function addNodeAsHtml(node) {
-        console.log("  addHtml .nodeThreeObject >>>>> node", node);
-        const nodeEl = document.createElement('div');
-        nodeEl.textContent = `Html ${node.id}`;
-        nodeEl.classList.add("node-label");
-        const ret = new m.CSS2DObject(nodeEl);
-        console.log("  addHtml .nodeThreeObject <<<< ret", ret);
-        return ret;
-    }
-    async function addHtml() {
-        console.log("addHTML >>>>>");
-        graph = graph.nodeThreeObject(node => {
-            return addNodeAsHtml(node);
-        });
-    }
 
 }
 
 async function testFH() {
     let ourDisplayer = graphDisplayer;
-    const useHtml = true;
+    const useHtml = false;
     let m;
     if (useHtml) {
         m = await import('//unpkg.com/three/examples/jsm/renderers/CSS2DRenderer.js');
@@ -481,10 +506,12 @@ async function testFH() {
     graph = ourDisplayer.graphData(gData);
     graph = graph.nodeOpacity(1.0);
 
+    // await addHtml();
+    addText();
+    await waitSeconds(1);
     addOnClick();
-    await addHtml();
 
-    async function addHtml() {
+    async function OLDaddHtml() {
         console.log("addHTML >>>>>");
         let logged1 = false;
         graph = graph.nodeThreeObject(node => {
@@ -513,90 +540,18 @@ async function testFH() {
         })
 
     }
-    function OLDaddOnClick() {
-        console.log("addOnClick >>>>>");
-        graph = graph.onNodeClick(node => {
-            nodeClickAction(node);
-            /*
-            console.log("  addOnClick onNodeClick >>>>> node", node);
-            // Aim at node from outside it
-            const distance = 40;
-            const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
-
-            const newPos = node.x || node.y || node.z
-                ? { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }
-                : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
-
-            graph.cameraPosition(
-                newPos, // new position
-                node, // lookAt ({ x, y, z })
-                3000  // ms transition duration
-            );
-            */
-        });
-    }
-
 }
 async function testMyOwn() {
     const useHtml = true;
     let ourDisplayer = graphDisplayer;
-    let m;
-    if (useHtml) {
-        m = await import('//unpkg.com/three/examples/jsm/renderers/CSS2DRenderer.js');
-        ourDisplayer = setupGraphDisplayer({
-            extraRenderers: [new m.CSS2DRenderer()]
-        });
-    }
+    if (useHtml) { ourDisplayer = await getHtmlGraphDisplayer(); }
     graph = ourDisplayer.graphData(gData);
     graph = graph.nodeOpacity(1.0);
 
-    // if (useHtml) await addHtml();
+    addLinkText();
+    addText();
+    await waitSeconds(1);
     addOnClick();
-
-    async function addHtml() {
-        let logged1 = false;
-        graph = graph.nodeThreeObject(node => {
-            const nodeEl = document.createElement('div');
-            nodeEl.textContent = `Html ${node.id}`;
-
-            const btn = mkElt("button", undefined, `Html ${node.id}`);
-            btn.addEventListener("click", evt => {
-                console.log(`clicked ${node.id}`);
-                alert(node.id);
-            });
-            nodeEl.appendChild(btn);
-
-            nodeEl.classList.add("node-label");
-
-            if (!logged1) {
-                console.log(nodeEl);
-                logged1 = true;
-            }
-
-            return new m.CSS2DObject(nodeEl);
-        })
-
-    }
-    function OLDaddOnClick() {
-        graph = graph.onNodeClick(node => {
-            nodeClickAction(node);
-            /*
-            // Aim at node from outside it
-            const distance = 40;
-            const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
-
-            const newPos = node.x || node.y || node.z
-                ? { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }
-                : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
-
-            graph.cameraPosition(
-                newPos, // new position
-                node, // lookAt ({ x, y, z })
-                3000  // ms transition duration
-            );
-            */
-        });
-    }
 }
 async function testFocus() {
     // https://github.com/vasturiano/3d-force-graph/blob/master/example/click-to-focus/index.html
