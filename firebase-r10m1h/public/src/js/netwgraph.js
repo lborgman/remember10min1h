@@ -34,11 +34,37 @@ const grWidthPx = document.documentElement.clientWidth * 0.8;
 const grHeightPx = document.documentElement.clientHeight * 0.8;
 
 
-let linkW = 1;
+class LocalSetting {
+    #key; #defaultValue; #numeric;
+    constructor(prefix, key, defaultValue) {
+        this.#key = prefix + key;
+        this.#defaultValue = defaultValue;
+        this.#numeric = !isNaN(defaultValue);
+    }
+    set value(val) {
+        localStorage.setItem(this.#key, val);
+    }
+    get value() {
+        const stored = localStorage.getItem(this.#key);
+        if (stored == null) { return this.#defaultValue; }
+        if (this.#numeric) { return +stored; }
+        return stored;
+    }
+}
+
+class settingNetwG extends LocalSetting {
+    constructor(key, defaultValue) {
+        super("netwg-", key, defaultValue);
+    }
+}
+
+
+const settingLinkW = new settingNetwG("linkW", 1);
+let linkW = settingLinkW.value;
 let linkOp = 0.2;
 let textH = 3;
 let cameraDistance = 100;
-let disemvowel = false;
+// let disemvowel = false;
 const colorsRainbow =
     "violet, deepskyblue, cyan, greenyellow, yellow, orange, red".split(",").map(c => c.trim());
 
@@ -47,8 +73,6 @@ async function dialogGraph() {
     const inpLinkOp = mkElt("input", { id: "linkOp", type: "range", value: linkOp, step: "0.1", min: "0", max: "1" });
     const inpTextH = mkElt("input", { id: "textH", type: "number", min: "3", max: "20", value: textH });
     const inpCameraDist = mkElt("input", { id: "camDist", type: "number", min: "40", max: "200", step: "20", value: cameraDistance });
-    const inpDisemvwl = mkElt("input", { id: "disemw", type: "checkbox" });
-    // inpDisemvwl.checked = disemvowel;
 
     const divColors = mkElt("p");
     divColors.style = `
@@ -66,19 +90,10 @@ async function dialogGraph() {
         divColors.appendChild(s);
     })
     const divSettings = mkElt("div", undefined, [
-        // mkElt("div", undefined, [
         mkElt("label", { for: "linkW" }, "Link width:"), inpLinkW,
         mkElt("label", { for: "linkOp" }, "Link opacity:"), inpLinkOp,
-        // ]),
-        // mkElt("div", undefined, [
         mkElt("label", { for: "textH" }, "Text height:"), inpTextH,
-        // ]),
-        // mkElt("div", undefined, [
         mkElt("label", { for: "camDist" }, "Camera distance:"), inpCameraDist,
-        // ]),
-        // mkElt("div", undefined, [
-        mkElt("label", { for: "disemw" }, "Disemvowel:"), inpDisemvwl,
-        // ]),
         divColors,
     ]);
     divSettings.style = `
@@ -92,11 +107,13 @@ async function dialogGraph() {
     ]);
     const answer = await modMdc.mkMDCdialogConfirm(body);
     if (answer) {
-        linkW = +inpLinkW.value;
+        settingLinkW.value = inpLinkW.value;
+        linkW = settingLinkW.value;
+
         linkOp = +inpLinkOp.value;
         textH = +inpTextH.value;
         cameraDistance = +inpCameraDist.value;
-        disemvowel = inpDisemvwl.checked;
+        // disemvowel = inpDisemvwl.checked;
     }
 }
 await dialogGraph();
