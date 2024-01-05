@@ -399,11 +399,13 @@ async function addLinkText() {
     // https://github.com/vasturiano/3d-force-graph/blob/master/example/text-links/index.html
     graph = graph.linkThreeObjectExtend(true);
     graph = graph.linkThreeObject(link => {
+        return false;
         if (link.text) {
             // extend link with text sprite
             // const sprite = new SpriteText(`${link.source} > ${link.target}`);
             const sprite = new SpriteText(`${link.text}`);
             sprite.color = 'lightgrey';
+            sprite.color = 'rgba(255, 0, 0, 0.7)';
             sprite.textHeight = 4;
             return sprite;
         }
@@ -493,30 +495,58 @@ async function addText() {
 
 const highlightNodes = new Set();
 const highlightLinks = new Set();
-let hoverNode = null;
-async function addNodeHighlightOnHover() {
+let hilightNode = null;
+function hiliteNode(node) {
+    // no state change
+    if ((!node && !highlightNodes.size) || (node && hilightNode === node)) return;
+
+    highlightNodes.clear();
+    highlightLinks.clear();
+    if (node) {
+        highlightNodes.add(node);
+        node.neighbors.forEach(neighbor => highlightNodes.add(neighbor));
+        node.links.forEach(link => highlightLinks.add(link));
+    }
+
+    hilightNode = node || null;
+
+    updateHighlight();
+}
+
+async function addNodeLinkHighlighter() {
     graph = graph
-        .nodeColor(node => highlightNodes.has(node) ? node === hoverNode ? 'rgb(255,0,0,1)' : 'rgba(255,160,0,0.8)' : 'rgba(0,255,255,0.6)')
-        .linkColor(link => highlightLinks.has(link) ? "rgba(255, 0, 0, 1)" : "rgba(255, 255, 0, 1)")
+        .nodeColor(node => highlightNodes.has(node) ? node === hilightNode ? 'rgb(255,0,0,1)' : 'rgba(255,160,0,0.8)' : 'rgba(0,255,255,0.6)')
+        .linkColor(link => {
+            // highlightLinks.has(link) ? "rgba(255, 0, 0, 1)" : "rgba(255, 255, 0, 1)";
+            if (highlightLinks.has(link)) {
+                return "rgba(255, 0, 0, 1)";
+            } else {
+                return "rgba(255, 255, 0, 1)";
+            }
+        })
         // .linkWidth(link => highlightLinks.has(link) ? 4 : 1)
         // .linkDirectionalParticles(link => highlightLinks.has(link) ? 4 : 0)
         // .linkDirectionalParticleWidth(4)
+        .linkThreeObject(link => {
+            if (highlightLinks.has(link)) {
+                if (link.text) {
+                    // extend link with text sprite
+                    // const sprite = new SpriteText(`${link.source} > ${link.target}`);
+                    const sprite = new SpriteText(`${link.text}`);
+                    sprite.color = 'lightgrey';
+                    sprite.color = 'rgba(255, 0, 0, 0.7)';
+                    sprite.textHeight = 4;
+                    return sprite;
+                }
+                return link;
+            } else return false;
+        })
         .onNodeHover(node => {
-            // no state change
-            if ((!node && !highlightNodes.size) || (node && hoverNode === node)) return;
-
-            highlightNodes.clear();
-            highlightLinks.clear();
-            if (node) {
-                highlightNodes.add(node);
-                node.neighbors.forEach(neighbor => highlightNodes.add(neighbor));
-                node.links.forEach(link => highlightLinks.add(link));
-            }
-
-            hoverNode = node || null;
-
-            updateHighlight();
-        });
+            hiliteNode(node);
+        })
+        .onNodeDrag(node => {
+            hiliteNode(node);
+        })
 }
 
 function addNodeAsHtml(node) {
@@ -653,7 +683,7 @@ async function testMyOwn() {
     addText();
     await waitSeconds(1);
     addOnClick();
-    addNodeHighlightOnHover();
+    addNodeLinkHighlighter();
 }
 async function testFocus() {
     // https://github.com/vasturiano/3d-force-graph/blob/master/example/click-to-focus/index.html
