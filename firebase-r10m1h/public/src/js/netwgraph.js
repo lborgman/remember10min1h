@@ -179,6 +179,7 @@ async function getNodesAndLinks(N, sourceName) {
             setTags.delete(t);
         });
         const links = [];
+        const linksByKey = {};
         setTags.forEach(t => {
             const arrT = [];
             nodesR.forEach(n => {
@@ -187,25 +188,42 @@ async function getNodesAndLinks(N, sourceName) {
             while (arrT.length > 0) {
                 const a0 = arrT.pop();
                 arrT.forEach(r => {
-                    const link = {
-                        source: a0.id,
-                        target: r.id,
-                        text: t
+                    const linkKey = `${a0.id - r.id}`;
+                    const oldLink = linksByKey[linkKey];
+                    if (!oldLink) {
+                        const tagSet = new Set();
+                        tagSet.add(t);
+                        const link = {
+                            source: a0.id,
+                            target: r.id,
+                            // text: t,
+                            tags: tagSet
+                        }
+                        linksByKey[linkKey] = link;
+                        // links.push(link);
+                    } else {
+                        oldLink.tags.add(t);
                     }
-                    links.push(link);
+                    /*
                     const link2 = {
                         source: r.id,
                         target: a0.id
                     }
                     links.push(link2);
+                    */
                 })
             }
-        })
+        });
+        links.push(...Object.values(linksByKey));
+        links.forEach(l => {
+            l.text = [...l.tags].join("\n");
+            delete l.tags;
+        });
         const setLinked = new Set();
         links.forEach(l => {
             setLinked.add(l.source);
             setLinked.add(l.target);
-        })
+        });
         console.log("NIY");
         // const finNodes = [...setLinked]
         const finNodes = nodes.filter(n => setLinked.has(n.id));
@@ -495,10 +513,10 @@ async function addText() {
 
 const highlightNodes = new Set();
 const highlightLinks = new Set();
-let hilightNode = null;
-function hiliteNode(node) {
+let theHilightNode = null;
+function hilightNode(node) {
     // no state change
-    if ((!node && !highlightNodes.size) || (node && hilightNode === node)) return;
+    if ((!node && !highlightNodes.size) || (node && theHilightNode === node)) return;
 
     highlightNodes.clear();
     highlightLinks.clear();
@@ -508,14 +526,14 @@ function hiliteNode(node) {
         node.links.forEach(link => highlightLinks.add(link));
     }
 
-    hilightNode = node || null;
+    theHilightNode = node || null;
 
     updateHighlight();
 }
 
 async function addNodeLinkHighlighter() {
     graph = graph
-        .nodeColor(node => highlightNodes.has(node) ? node === hilightNode ? 'rgb(255,0,0,1)' : 'rgba(255,160,0,0.8)' : 'rgba(0,255,255,0.6)')
+        .nodeColor(node => highlightNodes.has(node) ? node === theHilightNode ? 'rgb(255,0,0,1)' : 'rgba(255,160,0,0.8)' : 'rgba(0,255,255,0.6)')
         .linkColor(link => {
             // highlightLinks.has(link) ? "rgba(255, 0, 0, 1)" : "rgba(255, 255, 0, 1)";
             if (highlightLinks.has(link)) {
@@ -542,10 +560,10 @@ async function addNodeLinkHighlighter() {
             } else return false;
         })
         .onNodeHover(node => {
-            hiliteNode(node);
+            hilightNode(node);
         })
         .onNodeDrag(node => {
-            hiliteNode(node);
+            hilightNode(node);
         })
 }
 
