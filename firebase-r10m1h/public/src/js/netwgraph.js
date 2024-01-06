@@ -35,11 +35,10 @@ const grHeightPx = document.documentElement.clientHeight * 0.8;
 
 
 class LocalSetting {
-    #key; #defaultValue; #numeric;
+    #key; #defaultValue; #onInputFun;
     constructor(prefix, key, defaultValue) {
         this.#key = prefix + key;
         this.#defaultValue = defaultValue;
-        this.#numeric = !isNaN(defaultValue);
     }
     set value(val) {
         localStorage.setItem(this.#key, val);
@@ -47,8 +46,54 @@ class LocalSetting {
     get value() {
         const stored = localStorage.getItem(this.#key);
         if (stored == null) { return this.#defaultValue; }
-        if (this.#numeric) { return +stored; }
+        if (!isNaN(this.#defaultValue)) { return +stored; }
+        if ("boolean" == typeof this.#defaultValue) {
+            switch (stored) {
+                case "true": return true;
+                case "false": return false;
+                default:
+                    throw Error(`String does not match boolean: ${stored}`);
+            }
+        }
         return stored;
+    }
+    get defaultValue() {
+        return this.#defaultValue;
+    }
+    bindToInput(inp) {
+        switch (inp.type) {
+            case "checkbox":
+                inp.checked = this.value;
+            default:
+                console.log(inp.type);
+                inp.value = this.value;
+        }
+        const handleInput = (evt) => {
+            let val;
+            switch (inp.type) {
+                case "checkbox":
+                    val = inp.checked;
+                    break;
+                default:
+                    console.log(inp.type);
+                    val = inp.value;
+            }
+            console.log({ inp, evt, val });
+            this.value = val;
+            if (this.#onInputFun) {
+                this.#onInputFun(val);
+            } else {
+                console.warn("No #onInputFun");
+            }
+        }
+        inp.addEventListener("input", evt => {
+            handleInput(evt);
+        });
+    }
+    set onInputFun(fun) {
+        if ("function" != typeof fun) throw Error(`fun is not function: ${typeof fun}`);
+        if (1 != fun.length) throw Error(`fun should take one parameter: ${fun.length}`);
+        this.#onInputFun = fun;
     }
 }
 
@@ -61,7 +106,43 @@ class settingNetwG extends LocalSetting {
 
 const settingLinkW = new settingNetwG("linkW", 1);
 let linkW = settingLinkW.value;
-let linkOp = 0.2;
+settingLinkW.onInputFun = (val) => linkW = val;
+
+const settingLinkWHi = new settingNetwG("linkWHi", 1);
+let linkWHi = settingLinkWHi.value;
+settingLinkWHi.onInputFun = (val) => linkWHi = val;
+
+const settingLinkOp = new settingNetwG("linkOp", 0.2);
+let linkOp = settingLinkOp.value;
+settingLinkOp.onInputFun = (val) => linkOp = val;
+
+const settingLinkOpHi = new settingNetwG("linkOpHi", 0.2);
+let linkOpHi = settingLinkOp.value;
+settingLinkOpHi.onInputFun = (val) => linkOpHi = val;
+
+
+
+const settingLinkColor = new settingNetwG("linkColor", "#ffff00");
+let linkColor = settingLinkColor.value;
+settingLinkColor.onInputFun = (val) => linkColor = val;
+
+const settingLinkColorHi = new settingNetwG("linkColorHi", "#ff0000");
+let linkColorHi = settingLinkColorHi.value;
+settingLinkColorHi.onInputFun = (val) => linkColorHi = val;
+
+
+
+const settingHiHover = new settingNetwG("hi-hover", true);
+let boolHiHover = settingHiHover.value;
+settingHiHover.onInputFun = (val) => boolHiHover = val;
+
+const settingHiDrag = new settingNetwG("hi-drag", true);
+let boolHiDrag = settingHiDrag.value;
+settingHiDrag.onInputFun = (val) => boolHiDrag = val;
+
+
+
+
 let textH = 3;
 let cameraDistance = 100;
 // let disemvowel = false;
@@ -70,7 +151,20 @@ const colorsRainbow =
 
 async function dialogGraph() {
     const inpLinkW = mkElt("input", { id: "linkW", type: "number", min: "1", max: "5", value: linkW });
+    settingLinkW.bindToInput(inpLinkW);
+    const inpLinkWHi = mkElt("input", { id: "linkWHi", type: "number", min: "1", max: "5", value: linkWHi });
+    settingLinkWHi.bindToInput(inpLinkWHi);
+
     const inpLinkOp = mkElt("input", { id: "linkOp", type: "range", value: linkOp, step: "0.1", min: "0", max: "1" });
+    settingLinkOp.bindToInput(inpLinkOp);
+    const inpLinkOpHi = mkElt("input", { id: "linkOpHi", type: "range", value: linkOpHi, step: "0.1", min: "0", max: "1" });
+    settingLinkOpHi.bindToInput(inpLinkOpHi);
+
+    const inpLinkColor = mkElt("input", { id: "linkColor", type: "color", value: linkColor });
+    settingLinkColor.bindToInput(inpLinkColor);
+    const inpLinkColorHi = mkElt("input", { id: "linkColorHi", type: "color", value: linkColorHi });
+    settingLinkColorHi.bindToInput(inpLinkColorHi);
+
     const inpTextH = mkElt("input", { id: "textH", type: "number", min: "3", max: "20", value: textH });
     const inpCameraDist = mkElt("input", { id: "camDist", type: "number", min: "40", max: "200", step: "20", value: cameraDistance });
 
@@ -88,33 +182,59 @@ async function dialogGraph() {
             background-color: ${c};
         `;
         divColors.appendChild(s);
-    })
-    const divSettings = mkElt("div", undefined, [
-        mkElt("label", { for: "linkW" }, "Link width:"), inpLinkW,
-        mkElt("label", { for: "linkOp" }, "Link opacity:"), inpLinkOp,
-        mkElt("label", { for: "textH" }, "Text height:"), inpTextH,
-        mkElt("label", { for: "camDist" }, "Camera distance:"), inpCameraDist,
-        divColors,
+    });
+
+    const chkHiHover = mkElt("input", { id: "hi-hover", type: "checkbox" });
+    settingHiHover.bindToInput(chkHiHover);
+    const chkHiDrag = mkElt("input", { id: "hi-drag", type: "checkbox" });
+    settingHiDrag.bindToInput(chkHiDrag);
+
+    const lbl4Hover = mkElt("label", { for: "hi-hover" }, "Hilite on node hover:");
+    const lbl4Drag = mkElt("label", { for: "hi-drag" }, "Hilite on node Drag:");
+    const divHiSettings = mkElt("div", undefined, [
+        lbl4Hover, chkHiHover,
+        lbl4Drag, chkHiDrag,
+        mkElt("label", { for: "linkColorHi" }, "Link color (hilite):"), inpLinkColorHi,
+        mkElt("label", { for: "linkWHi" }, "Link width (hilite):"), inpLinkWHi,
+        mkElt("label", { for: "linkOpHi" }, "Link opacity (hilite):"), inpLinkOpHi,
     ]);
-    divSettings.style = `
+    const divHiSettingsBody = mkElt("div", undefined, [
+        mkElt("p", undefined, "This settings are applied during node hover or drag."),
+        divHiSettings,
+    ]);
+    const divHiSettingsCard = mkElt("div", { class: "mdc-card" }, [
+        mkElt("details", undefined, [
+            mkElt("summary", undefined, "Hilite settings"),
+            divHiSettingsBody
+        ])
+    ]);
+    divHiSettingsCard.style.backgroundColor = "yellow";
+    divHiSettingsCard.style.padding = "10px";
+
+    const divSettingsstyle = `
         display: grid;
         grid-template-columns: max-content max-content;
         gap: 5px;
     `;
+
+    const divSettings = mkElt("div", undefined, [
+        mkElt("label", { for: "linkColor" }, "Link color:"), inpLinkColor,
+        mkElt("label", { for: "linkW" }, "Link width:"), inpLinkW,
+        mkElt("label", { for: "linkOp" }, "Link opacity:"), inpLinkOp,
+        // mkElt("label", { for: "textH" }, "Text height:"), inpTextH,
+        // mkElt("label", { for: "camDist" }, "Camera distance:"), inpCameraDist,
+    ]);
+    divSettings.style = divSettingsstyle;
+    divHiSettings.style = divSettingsstyle;
+
     const body = mkElt("div", undefined, [
+        mkElt("h2", undefined, "Network graph view settings"),
         divSettings,
+        divHiSettingsCard,
         divColors
     ]);
-    const answer = await modMdc.mkMDCdialogConfirm(body);
-    if (answer) {
-        settingLinkW.value = inpLinkW.value;
-        linkW = settingLinkW.value;
-
-        linkOp = +inpLinkOp.value;
-        textH = +inpTextH.value;
-        cameraDistance = +inpCameraDist.value;
-        // disemvowel = inpDisemvwl.checked;
-    }
+    // FIX-ME:
+    const answer = await modMdc.mkMDCdialogAlertWait(body, "Close");
 }
 await dialogGraph();
 async function setupGraphDisplayer(opt) {
@@ -530,10 +650,10 @@ async function addText() {
 
 const highlightNodes = new Set();
 const highlightLinks = new Set();
-let theHilightNode = null;
-function hilightNode(node) {
+let theHiliteNode = null;
+function hiliteNode(node) {
     // no state change
-    if ((!node && !highlightNodes.size) || (node && theHilightNode === node)) return;
+    if ((!node && !highlightNodes.size) || (node && theHiliteNode === node)) return;
 
     highlightNodes.clear();
     highlightLinks.clear();
@@ -543,21 +663,26 @@ function hilightNode(node) {
         node.links.forEach(link => highlightLinks.add(link));
     }
 
-    theHilightNode = node || null;
+    theHiliteNode = node || null;
 
     updateHighlight();
 }
 
 async function addNodeLinkHighlighter() {
     graph = graph
-        .nodeColor(node => highlightNodes.has(node) ? node === theHilightNode ? 'rgb(255,0,0,1)' : 'rgba(255,160,0,0.8)' : 'rgba(0,255,255,0.6)')
+        .nodeColor(node => highlightNodes.has(node) ? node === theHiliteNode ? 'rgb(255,0,0,1)' : 'rgba(255,160,0,0.8)' : 'rgba(0,255,255,0.6)')
         .linkColor(link => {
-            // highlightLinks.has(link) ? "rgba(255, 0, 0, 1)" : "rgba(255, 255, 0, 1)";
             if (highlightLinks.has(link)) {
                 return "rgba(255, 0, 0, 1)";
             } else {
                 return "rgba(255, 255, 0, 1)";
             }
+        })
+        .linkOpacity(link => {
+            if (highlightLinks.has(link)) { return linkOpHi; } else { return linkOp; }
+        })
+        .linkWidth(link => {
+            if (highlightLinks.has(link)) { return linkWHi; } else { return linkW; }
         })
         // .linkWidth(link => highlightLinks.has(link) ? 4 : 1)
         // .linkDirectionalParticles(link => highlightLinks.has(link) ? 4 : 0)
@@ -569,7 +694,7 @@ async function addNodeLinkHighlighter() {
                     // const sprite = new SpriteText(`${link.source} > ${link.target}`);
                     const sprite = new SpriteText(`${link.text}`);
                     sprite.color = 'lightgrey';
-                    sprite.color = 'rgba(255, 0, 0, 0.7)';
+                    sprite.color = 'rgba(255, 255, 0, 1)';
                     sprite.textHeight = 4;
                     return sprite;
                 }
@@ -577,10 +702,10 @@ async function addNodeLinkHighlighter() {
             } else return false;
         })
         .onNodeHover(node => {
-            hilightNode(node);
+            hiliteNode(node);
         })
         .onNodeDrag(node => {
-            hilightNode(node);
+            hiliteNode(node);
         })
 }
 
