@@ -114,7 +114,10 @@ settingLinkWHi.onInputFun = (val) => linkWHi = val;
 
 const settingLinkOp = new settingNetwG("linkOp", 0.2);
 let linkOp = settingLinkOp.value;
-settingLinkOp.onInputFun = (val) => linkOp = val;
+settingLinkOp.onInputFun = (val) => {
+    console.log("linkOp = val", val);
+    linkOp = val;
+}
 
 const settingLinkOpHi = new settingNetwG("linkOpHi", 0.2);
 let linkOpHi = settingLinkOp.value;
@@ -149,106 +152,8 @@ let cameraDistance = 100;
 const colorsRainbow =
     "violet, deepskyblue, cyan, greenyellow, yellow, orange, red".split(",").map(c => c.trim());
 
-async function dialogGraph() {
-    const inpLinkW = mkElt("input", { id: "linkW", type: "number", min: "1", max: "5", value: linkW });
-    settingLinkW.bindToInput(inpLinkW);
-    const inpLinkWHi = mkElt("input", { id: "linkWHi", type: "number", min: "1", max: "5", value: linkWHi });
-    settingLinkWHi.bindToInput(inpLinkWHi);
-
-    const inpLinkOp = mkElt("input", { id: "linkOp", type: "range", value: linkOp, step: "0.1", min: "0", max: "1" });
-    settingLinkOp.bindToInput(inpLinkOp);
-    const inpLinkOpHi = mkElt("input", { id: "linkOpHi", type: "range", value: linkOpHi, step: "0.1", min: "0", max: "1" });
-    settingLinkOpHi.bindToInput(inpLinkOpHi);
-
-    const inpLinkColor = mkElt("input", { id: "linkColor", type: "color", value: linkColor });
-    settingLinkColor.bindToInput(inpLinkColor);
-    const inpLinkColorHi = mkElt("input", { id: "linkColorHi", type: "color", value: linkColorHi });
-    settingLinkColorHi.bindToInput(inpLinkColorHi);
-
-    const inpTextH = mkElt("input", { id: "textH", type: "number", min: "3", max: "20", value: textH });
-    const inpCameraDist = mkElt("input", { id: "camDist", type: "number", min: "40", max: "200", step: "20", value: cameraDistance });
-
-    const divColors = mkElt("p");
-    divColors.style = `
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-    `;
-    colorsRainbow.forEach(c => {
-        const s = mkElt("span", undefined, c);
-        s.style = `
-            padding: 2px;
-            color: black;
-            background-color: ${c};
-        `;
-        divColors.appendChild(s);
-    });
-
-    const chkHiHover = mkElt("input", { id: "hi-hover", type: "checkbox" });
-    settingHiHover.bindToInput(chkHiHover);
-    const chkHiDrag = mkElt("input", { id: "hi-drag", type: "checkbox" });
-    settingHiDrag.bindToInput(chkHiDrag);
-
-    const lbl4Hover = mkElt("label", { for: "hi-hover" }, "Hilite on node hover:");
-    const lbl4Drag = mkElt("label", { for: "hi-drag" }, "Hilite on node Drag:");
-    const divHiSettings = mkElt("div", undefined, [
-        lbl4Hover, chkHiHover,
-        lbl4Drag, chkHiDrag,
-        mkElt("label", { for: "linkColorHi" }, "Link color (hilite):"), inpLinkColorHi,
-        mkElt("label", { for: "linkWHi" }, "Link width (hilite):"), inpLinkWHi,
-        mkElt("label", { for: "linkOpHi" }, "Link opacity (hilite):"), inpLinkOpHi,
-    ]);
-    const divHiSettingsBody = mkElt("div", undefined, [
-        mkElt("p", undefined, "This settings are applied during node hover or drag."),
-        divHiSettings,
-    ]);
-    const divHiSettingsCard = mkElt("div", { class: "mdc-card" }, [
-        mkElt("details", undefined, [
-            mkElt("summary", undefined, "Hilite settings"),
-            divHiSettingsBody
-        ])
-    ]);
-    divHiSettingsCard.style.backgroundColor = "yellow";
-    divHiSettingsCard.style.padding = "10px";
-
-    const divSettingsstyle = `
-        display: grid;
-        grid-template-columns: max-content max-content;
-        gap: 5px;
-    `;
-
-    const divSettings = mkElt("div", undefined, [
-        mkElt("label", { for: "linkColor" }, "Link color:"), inpLinkColor,
-        mkElt("label", { for: "linkW" }, "Link width:"), inpLinkW,
-        mkElt("label", { for: "linkOp" }, "Link opacity:"), inpLinkOp,
-        // mkElt("label", { for: "textH" }, "Text height:"), inpTextH,
-        // mkElt("label", { for: "camDist" }, "Camera distance:"), inpCameraDist,
-    ]);
-    divSettings.style = divSettingsstyle;
-    divHiSettings.style = divSettingsstyle;
-
-    const body = mkElt("div", undefined, [
-        mkElt("h2", undefined, "Network graph view settings"),
-        divSettings,
-        divHiSettingsCard,
-        divColors
-    ]);
-    // FIX-ME:
-    const answer = await modMdc.mkMDCdialogAlertWait(body, "Close");
-}
-await dialogGraph();
-async function setupGraphDisplayer(opt) {
-    const funGraph = ForceGraph3D(opt);
-    // debugger;
-    funGraph.width(grWidthPx);
-    funGraph.height(grHeightPx);
-    // funGraph.linkColor("green");
-    funGraph.linkColor("#ff0000");
-    funGraph.linkWidth(linkW);
-    funGraph.linkOpacity(linkOp);
-    return funGraph(elt3dGraph);
-}
-const graphDisplayer = await setupGraphDisplayer();
+// await dialogGraph();
+addDialogGraphButton();
 
 let gData;
 
@@ -446,6 +351,7 @@ async function chooseView() {
     const answer = await modMdc.mkMDCdialogConfirm(body);
     console.log({ answer });
     if (!answer) return;
+    // await modMdc.mkMDCdialogAlertWait(body, "Close");
     // debugger;
     const radChecked = divAlts.querySelector("input:checked");
     if (!radChecked) return;
@@ -458,6 +364,129 @@ async function chooseView() {
     await getNodesAndLinks(numNodes, sourceName);
     fun();
 }
+
+
+
+/////////////////
+async function addDialogGraphButton() {
+    // const btnDialogGraph = mkElt("button", undefined, "⚙");
+    const btnDialogGraph = modMdc.mkMDCbutton("⚙");
+    btnDialogGraph.style.fontSize = "2rem";
+    btnDialogGraph.title = "Graph style settings";
+    btnDialogGraph.addEventListener("click", async evt => {
+        await dialogGraph();
+        // trigger
+        updateHighlight();
+    });
+    const eltContainer = mkElt("span", undefined, btnDialogGraph);
+    eltContainer.style = `
+        position: fixed;
+        top: 0;
+        right: 0;
+    `;
+    document.body.appendChild(eltContainer);
+}
+async function dialogGraph() {
+    const inpLinkW = mkElt("input", { id: "linkW", type: "number", min: "1", max: "5", value: linkW });
+    settingLinkW.bindToInput(inpLinkW);
+    const inpLinkWHi = mkElt("input", { id: "linkWHi", type: "number", min: "1", max: "5", value: linkWHi });
+    settingLinkWHi.bindToInput(inpLinkWHi);
+
+    const inpLinkOp = mkElt("input", { id: "linkOp", type: "range", value: linkOp, step: "0.1", min: "0", max: "1" });
+    settingLinkOp.bindToInput(inpLinkOp);
+    const inpLinkOpHi = mkElt("input", { id: "linkOpHi", type: "range", value: linkOpHi, step: "0.1", min: "0", max: "1" });
+    settingLinkOpHi.bindToInput(inpLinkOpHi);
+
+    const inpLinkColor = mkElt("input", { id: "linkColor", type: "color", value: linkColor });
+    settingLinkColor.bindToInput(inpLinkColor);
+    const inpLinkColorHi = mkElt("input", { id: "linkColorHi", type: "color", value: linkColorHi });
+    settingLinkColorHi.bindToInput(inpLinkColorHi);
+
+    const inpTextH = mkElt("input", { id: "textH", type: "number", min: "3", max: "20", value: textH });
+    const inpCameraDist = mkElt("input", { id: "camDist", type: "number", min: "40", max: "200", step: "20", value: cameraDistance });
+
+    const divColors = mkElt("p");
+    divColors.style = `
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    `;
+    colorsRainbow.forEach(c => {
+        const s = mkElt("span", undefined, c);
+        s.style = `
+            padding: 2px;
+            color: black;
+            background-color: ${c};
+        `;
+        divColors.appendChild(s);
+    });
+
+    const chkHiHover = mkElt("input", { id: "hi-hover", type: "checkbox" });
+    settingHiHover.bindToInput(chkHiHover);
+    const chkHiDrag = mkElt("input", { id: "hi-drag", type: "checkbox" });
+    settingHiDrag.bindToInput(chkHiDrag);
+
+    const lbl4Hover = mkElt("label", { for: "hi-hover" }, "Hilite on node hover:");
+    const lbl4Drag = mkElt("label", { for: "hi-drag" }, "Hilite on node Drag:");
+    const divHiSettings = mkElt("div", undefined, [
+        lbl4Hover, chkHiHover,
+        lbl4Drag, chkHiDrag,
+        mkElt("label", { for: "linkColorHi" }, "Link color (hilite):"), inpLinkColorHi,
+        mkElt("label", { for: "linkWHi" }, "Link width (hilite):"), inpLinkWHi,
+        mkElt("label", { for: "linkOpHi" }, "Link opacity (hilite):"), inpLinkOpHi,
+    ]);
+    const divHiSettingsBody = mkElt("div", undefined, [
+        mkElt("p", undefined, "This settings are applied during node hover or drag."),
+        divHiSettings,
+    ]);
+    const divHiSettingsCard = mkElt("div", { class: "mdc-card" }, [
+        mkElt("details", undefined, [
+            mkElt("summary", undefined, "Hilite settings"),
+            divHiSettingsBody
+        ])
+    ]);
+    divHiSettingsCard.style.backgroundColor = "yellow";
+    divHiSettingsCard.style.padding = "10px";
+
+    const divSettingsstyle = `
+        display: grid;
+        grid-template-columns: max-content max-content;
+        gap: 5px;
+    `;
+
+    const divSettings = mkElt("div", undefined, [
+        mkElt("label", { for: "linkColor" }, "Link color:"), inpLinkColor,
+        mkElt("label", { for: "linkW" }, "Link width:"), inpLinkW,
+        mkElt("label", { for: "linkOp" }, "Link opacity:"), inpLinkOp,
+        // mkElt("label", { for: "textH" }, "Text height:"), inpTextH,
+        // mkElt("label", { for: "camDist" }, "Camera distance:"), inpCameraDist,
+    ]);
+    divSettings.style = divSettingsstyle;
+    divHiSettings.style = divSettingsstyle;
+
+    const body = mkElt("div", undefined, [
+        mkElt("h2", undefined, "Network graph view settings"),
+        divSettings,
+        divHiSettingsCard,
+        divColors
+    ]);
+    // FIX-ME:
+    const answer = await modMdc.mkMDCdialogAlertWait(body, "Close");
+}
+async function setupGraphDisplayer(opt) {
+    const funGraph = ForceGraph3D(opt);
+    // debugger;
+    funGraph.width(grWidthPx);
+    funGraph.height(grHeightPx);
+    // funGraph.linkColor("green");
+    // funGraph.linkColor("#ff0000");
+    funGraph.linkColor(linkColor);
+    funGraph.linkWidth(linkW);
+    funGraph.linkOpacity(linkOp);
+    return funGraph(elt3dGraph);
+}
+
+
 
 /////////////////
 let lastClickedNodeId;
@@ -673,14 +702,22 @@ async function addNodeLinkHighlighter() {
         .nodeColor(node => highlightNodes.has(node) ? node === theHiliteNode ? 'rgb(255,0,0,1)' : 'rgba(255,160,0,0.8)' : 'rgba(0,255,255,0.6)')
         .linkColor(link => {
             if (highlightLinks.has(link)) {
-                return "rgba(255, 0, 0, 1)";
+                // return "rgba(255, 0, 0, 1)";
+                // const hexOpacity = (linkOp * 255).toString(16).slice(0, 2);
+                const hexOpacity = Math.round(linkOpHi * 255).toString(16);
+                return linkColorHi + hexOpacity;
             } else {
-                return "rgba(255, 255, 0, 1)";
+                // return "rgba(255, 255, 0, 1)";
+                const hexOpacity = Math.round(linkOp * 255).toString(16);
+                return linkColor + hexOpacity;
             }
         })
+        // FIX-ME: linkOpacity is never called. add opacity to linkColor instead
+        /*
         .linkOpacity(link => {
             if (highlightLinks.has(link)) { return linkOpHi; } else { return linkOp; }
         })
+        */
         .linkWidth(link => {
             if (highlightLinks.has(link)) { return linkWHi; } else { return linkW; }
         })
@@ -734,6 +771,7 @@ async function getHtmlGraphDisplayer() {
     return htmlDisplayer;
 }
 async function testTC() {
+    const graphDisplayer = await setupGraphDisplayer();
     let ourDisplayer = graphDisplayer;
     const useHtml = false;
     if (useHtml) { ourDisplayer = await getHtmlGraphDisplayer(); }
@@ -749,6 +787,7 @@ async function testTC() {
 }
 
 async function testFH() {
+    const graphDisplayer = await setupGraphDisplayer();
     let ourDisplayer = graphDisplayer;
     const useHtml = false;
     let m;
@@ -801,6 +840,7 @@ function updateHighlight() {
     graph
         .nodeColor(graph.nodeColor())
         .linkWidth(graph.linkWidth())
+        .linkOpacity(graph.linkOpacity())
         .linkDirectionalParticles(graph.linkDirectionalParticles())
         ;
 }
