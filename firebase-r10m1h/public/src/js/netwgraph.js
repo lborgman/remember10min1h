@@ -41,13 +41,16 @@ class LocalSetting {
         this.#defaultValue = defaultValue;
     }
     set value(val) {
-        localStorage.setItem(this.#key, val);
+        // localStorage.setItem(this.#key, val);
+        localStorage.setItem(this.#key, val.toString());
     }
     get value() {
         const stored = localStorage.getItem(this.#key);
         if (stored == null) { return this.#defaultValue; }
-        if (!isNaN(this.#defaultValue)) { return +stored; }
-        if ("boolean" == typeof this.#defaultValue) {
+        const defValType = typeof this.#defaultValue;
+        if ("string" === defValType) { return stored; }
+        if ("number" === defValType) { return +stored; }
+        if ("boolean" === defValType) {
             switch (stored) {
                 case "true": return true;
                 case "false": return false;
@@ -55,6 +58,7 @@ class LocalSetting {
                     throw Error(`String does not match boolean: ${stored}`);
             }
         }
+        throw Error(`Can't handle default value type: ${defValType}`);
         return stored;
     }
     get defaultValue() {
@@ -93,7 +97,7 @@ class LocalSetting {
     set onInputFun(fun) {
         if ("function" != typeof fun) throw Error(`fun is not function: ${typeof fun}`);
         if (1 != fun.length) throw Error(`fun should take one parameter: ${fun.length}`);
-        this.#onInputFun = fun;
+        this.#onInputFun = debounce(fun, 1000);
     }
 }
 
@@ -117,11 +121,15 @@ let linkOp = settingLinkOp.value;
 settingLinkOp.onInputFun = (val) => {
     console.log("linkOp = val", val);
     linkOp = val;
-}
+};
 
 const settingLinkOpHi = new settingNetwG("linkOpHi", 0.2);
 let linkOpHi = settingLinkOp.value;
-settingLinkOpHi.onInputFun = (val) => linkOpHi = val;
+settingLinkOpHi.onInputFun = (val) => {
+    // mkMDCsnackbar(msg, msTimeout, buttons)
+    modMdc.mkMDCsnackbar(`linkOpHi=${val}`);
+    linkOpHi = val;
+}
 
 
 
@@ -153,7 +161,7 @@ const colorsRainbow =
     "violet, deepskyblue, cyan, greenyellow, yellow, orange, red".split(",").map(c => c.trim());
 
 // await dialogGraph();
-addDialogGraphButton();
+addDialogGraphButtons();
 
 let gData;
 
@@ -368,21 +376,57 @@ async function chooseView() {
 
 
 /////////////////
-async function addDialogGraphButton() {
+let focusOnNodeClick = false;
+let hilightOnNodeClick = false;
+async function addDialogGraphButtons() {
     // const btnDialogGraph = mkElt("button", undefined, "⚙");
-    const btnDialogGraph = modMdc.mkMDCbutton("⚙");
-    btnDialogGraph.style.fontSize = "2rem";
-    btnDialogGraph.title = "Graph style settings";
+    // const btnDialogGraph = modMdc.mkMDCbutton("⚙");
+    // btnDialogGraph.style.fontSize = "2rem";
+    // btnDialogGraph.title = "Graph style settings";
+
+    const btnDialogGraph = modMdc.mkMDCiconButton("settings");
     btnDialogGraph.addEventListener("click", async evt => {
         await dialogGraph();
         // trigger
         updateHighlight();
     });
-    const eltContainer = mkElt("span", undefined, btnDialogGraph);
+
+    const btnHilightNode = modMdc.mkMDCiconButton("highlight");
+    btnHilightNode.addEventListener("click", evt => {
+        hilightOnNodeClick = !hilightOnNodeClick;
+        if (hilightOnNodeClick) {
+            btnHilightNode.style.color = "red";
+        } else {
+            btnHilightNode.style.color = "unset";
+        }
+    });
+
+    const btnFocusNode = modMdc.mkMDCiconButton("center_focus_strong");
+    btnFocusNode.addEventListener("click", evt => {
+        focusOnNodeClick = !focusOnNodeClick;
+        if (focusOnNodeClick) {
+            btnFocusNode.style.color = "red";
+        } else {
+            btnFocusNode.style.color = "unset";
+        }
+    });
+
+    const btnFitAll = modMdc.mkMDCiconButton("crop_free");
+    btnFitAll.addEventListener("click", evt => {
+        // graph.onEngineStop(() => graph.zoomToFit(100));
+        graph.zoomToFit(100, 0);
+    });
+    const eltContainer = mkElt("span", undefined, [
+        btnHilightNode,
+        btnFocusNode,
+        btnFitAll,
+        btnDialogGraph,
+    ]);
     eltContainer.style = `
         position: fixed;
         top: 0;
         right: 0;
+        display: flex;
     `;
     document.body.appendChild(eltContainer);
 }
@@ -498,8 +542,13 @@ function getLink2KeyInFc4i(keyFc4i) {
     return objUrl.href;
 }
 function nodeClickAction(node) {
-    console.log("  addOnClick onNodeClick >>>>> node", node);
-    if (true || (lastClickedNodeId == node.id)) {
+    if (focusOnNodeClick) { focusNode(node); }
+    if (hilightOnNodeClick) { hiliteNode(node); }
+    // return;
+    if ((lastClickedNodeId != node.id)) {
+        lastClickedNodeId = node.id;
+        return;
+    } else {
         console.log("Clicked again", node);
         const body = mkElt("div");
         if (node.fc4i) {
@@ -547,10 +596,11 @@ function nodeClickAction(node) {
                 mkElt("span", { style: "color:red;" }, `clicked again ${node.id}`)
             );
         }
-        modMdc.mkMDCdialogAlert(body);
+        modMdc.mkMDCdialogAlert(body, "Close");
         return;
     }
-    lastClickedNodeId = node.id;
+    return;
+
     // Aim at node from outside it
     let distance = 40;
     distance = 300; // Should make text 14px easily readable
@@ -702,28 +752,22 @@ async function addNodeLinkHighlighter() {
         .nodeColor(node => highlightNodes.has(node) ? node === theHiliteNode ? 'rgb(255,0,0,1)' : 'rgba(255,160,0,0.8)' : 'rgba(0,255,255,0.6)')
         .linkColor(link => {
             if (highlightLinks.has(link)) {
-                // return "rgba(255, 0, 0, 1)";
-                // const hexOpacity = (linkOp * 255).toString(16).slice(0, 2);
-                const hexOpacity = Math.round(linkOpHi * 255).toString(16);
-                return linkColorHi + hexOpacity;
+                const hexOpacityHi = Math.round(linkOpHi * 255).toString(16);
+                return linkColorHi + hexOpacityHi;
             } else {
-                // return "rgba(255, 255, 0, 1)";
                 const hexOpacity = Math.round(linkOp * 255).toString(16);
                 return linkColor + hexOpacity;
             }
         })
-        // FIX-ME: linkOpacity is never called. add opacity to linkColor instead
         /*
         .linkOpacity(link => {
+            // FIX-ME: linkOpacity is never called. add opacity to linkColor instead
             if (highlightLinks.has(link)) { return linkOpHi; } else { return linkOp; }
         })
         */
         .linkWidth(link => {
             if (highlightLinks.has(link)) { return linkWHi; } else { return linkW; }
         })
-        // .linkWidth(link => highlightLinks.has(link) ? 4 : 1)
-        // .linkDirectionalParticles(link => highlightLinks.has(link) ? 4 : 0)
-        // .linkDirectionalParticleWidth(4)
         .linkThreeObject(link => {
             if (highlightLinks.has(link)) {
                 if (link.text) {
@@ -739,9 +783,11 @@ async function addNodeLinkHighlighter() {
             } else return false;
         })
         .onNodeHover(node => {
+            if (!boolHiHover) return;
             hiliteNode(node);
         })
         .onNodeDrag(node => {
+            if (!boolHiDrag) return;
             hiliteNode(node);
         })
 }
@@ -804,36 +850,6 @@ async function testFH() {
     addText();
     await waitSeconds(1);
     addOnClick();
-
-    async function OLDaddHtml() {
-        console.log("addHTML >>>>>");
-        let logged1 = false;
-        graph = graph.nodeThreeObject(node => {
-            console.log("  addHtml .nodeThreeObject >>>>> node", node);
-            const nodeEl = document.createElement('div');
-            nodeEl.textContent = `Html ${node.id}`;
-
-            const btn = mkElt("button", undefined, `Html ${node.id}`);
-            btn.addEventListener("click", evt => {
-                console.log(`clicked ${node.id}`);
-                alert(node.id);
-            });
-            nodeEl.appendChild(btn);
-
-            nodeEl.classList.add("node-label");
-
-            if (!logged1) {
-                console.log(nodeEl);
-                logged1 = true;
-            }
-
-            // return new m.CSS2DObject(nodeEl);
-            const ret = new m.CSS2DObject(nodeEl);
-            console.log("  addHtml .nodeThreeObject <<<< ret", ret);
-            return ret;
-        })
-
-    }
 }
 function updateHighlight() {
     // trigger update of highlighted objects in scene
@@ -841,7 +857,7 @@ function updateHighlight() {
         .nodeColor(graph.nodeColor())
         .linkWidth(graph.linkWidth())
         .linkOpacity(graph.linkOpacity())
-        .linkDirectionalParticles(graph.linkDirectionalParticles())
+        // .linkDirectionalParticles(graph.linkDirectionalParticles())
         ;
 }
 
@@ -885,24 +901,28 @@ async function testMyOwn() {
     addOnClick();
     addNodeLinkHighlighter();
 }
+function focusNode(node) {
+    // https://github.com/vasturiano/3d-force-graph/blob/master/example/click-to-focus/index.html
+    // Aim at node from outside it
+    const distance = 40;
+    const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+
+    const newPos = node.x || node.y || node.z
+        ? { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }
+        : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
+
+    // Graph.cameraPosition
+    graph.cameraPosition(
+        newPos, // new position
+        node, // lookAt ({ x, y, z })
+        3000  // ms transition duration
+    );
+}
 async function testFocus() {
     // https://github.com/vasturiano/3d-force-graph/blob/master/example/click-to-focus/index.html
     const Graph = graphDisplayer.graphData(gData)
         .nodeLabel("id")
         .onNodeClick(node => {
-            // Aim at node from outside it
-            const distance = 40;
-            const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
-
-            const newPos = node.x || node.y || node.z
-                ? { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }
-                : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
-
-            Graph.cameraPosition(
-                newPos, // new position
-                node, // lookAt ({ x, y, z })
-                3000  // ms transition duration
-            );
         });
 }
 async function testHtml() {
