@@ -161,7 +161,6 @@ const colorsRainbow =
     "violet, deepskyblue, cyan, greenyellow, yellow, orange, red".split(",").map(c => c.trim());
 
 // await dialogGraph();
-addDialogGraphButtons();
 
 let gData;
 
@@ -171,13 +170,22 @@ let requiredTags;
 const setRequiredTags = new Set();
 let minConf;
 let maxConf;
+let searchFor;
+const setNoLinkTags = new Set();
+const setLinkTags = new Set();
+let prelNodes;
+let numNodes;
+let sourceName;
+
+addDialogGraphButtons();
 await getFc4iRecs();
+
 async function getFc4iRecs() {
     if (arrMatchAll) return;
     const sp = new URLSearchParams(location.search);
 
     const parSearchFor = sp.get("searchFor");
-    const searchFor = parSearchFor === null ? "" : parSearchFor;
+    searchFor = parSearchFor === null ? "" : parSearchFor;
 
     const parRequiredTags = sp.get("requiredTags");
     requiredTags = parRequiredTags === null ? [] : parRequiredTags.split(",");
@@ -192,10 +200,52 @@ async function getFc4iRecs() {
     arrMatchAll = await dbFc4i.getDbMatching(searchFor, minConf, maxConf, requiredTags);
     numFc4i = arrMatchAll.length;
 }
+function showSelection(searchFor, setLinkTags) {
+    const divSelection = document.getElementById("netwg-our-selection")
+    requiredTags.forEach(tag => {
+        const elt = mkElt("span", { class: "tag-in-our-tags" }, [`#${tag}`]);
+        divSelection.appendChild(elt);
+    });
+    [...setLinkTags].sort().forEach(tag => {
+        const elt = mkEltTagChkbox(tag, true);
+        divSelection.appendChild(elt);
+    });
+    divSelection.addEventListener("click", evt => {
+        const target = evt.target;
+        console.log({ evt, target });
+        if ("INPUT" != target.tagName) return;
+        if ("checkbox" != target.type) return;
+        console.log("CHECKBOX!!!");
+        const eltCont = target.closest("#netwg-our-selection");
+        const arrChk = [...eltCont.querySelectorAll("input[type=checkbox]")];
+        const arrTagsNoLink = arrChk
+            .filter(chk => !chk.checked)
+            .map(elt => elt.parentElement.textContent.slice(1));
+        setNoLinkTags.clear();
+        arrTagsNoLink.forEach(t => setNoLinkTags.add(t));
+        console.log({ setNoLinkTags });
 
-chooseView();
+        // updateGraph();
+        graph._destructor();
+        const eltGraph = document.getElementById("3d-graph");
+        eltGraph.textContent = "";
+        computeNodesAndLinks();
+        testMyOwn();
+    });
+}
+function mkEltTagChkbox(tag, checked) {
+    const chkbox = mkElt("input", { type: "checkbox" });
+    chkbox.checked = checked;
+    return mkElt("label", { class: "tag-in-our-tags" }, [chkbox, `#${tag}`]);
+}
 
-async function getNodesAndLinks(N, sourceName) {
+
+await chooseView();
+showSelection(searchFor, setLinkTags);
+
+async function getNodesAndLinks(
+    // numNodes, sourceName
+) {
 
     switch (sourceName) {
         case "random":
@@ -213,79 +263,30 @@ async function getNodesAndLinks(N, sourceName) {
         const lenMatch = arrMatch.length;
         const setI = new Set();
         let s = 0;
-        while (s++ < 2 * N && setI.size < N) {
+        while (s++ < 2 * numNodes && setI.size < numNodes) {
             const i = Math.floor(Math.random() * lenMatch);
             setI.add(i);
         }
         const arrUse = [...setI].map(i => arrMatch[i]);
-        let nodeNum = 0;
-        const nodesR = arrUse.map(r => ({ id: nodeNum++, r }));
-        const nodes = nodesR.map(r => ({ id: r.id, fc4i: r }));
-        const setTags = new Set();
-        arrUse.forEach(r => {
-            r.tags?.forEach(t => setTags.add(t));
-        });
-        requiredTags.forEach(t => {
-            setTags.delete(t);
-        });
-        const links = [];
-        const linksByKey = {};
-        setTags.forEach(t => {
-            const arrT = [];
-            nodesR.forEach(n => {
-                if (n.r.tags.includes(t)) { arrT.push(n) }
-            });
-            while (arrT.length > 0) {
-                const a0 = arrT.pop();
-                arrT.forEach(r => {
-                    const linkKey = `${a0.id - r.id}`;
-                    const oldLink = linksByKey[linkKey];
-                    if (!oldLink) {
-                        const tagSet = new Set();
-                        tagSet.add(t);
-                        const link = {
-                            source: a0.id,
-                            target: r.id,
-                            // text: t,
-                            tags: tagSet
-                        }
-                        linksByKey[linkKey] = link;
-                        // links.push(link);
-                    } else {
-                        oldLink.tags.add(t);
-                    }
-                    /*
-                    const link2 = {
-                        source: r.id,
-                        target: a0.id
-                    }
-                    links.push(link2);
-                    */
-                })
-            }
-        });
-        links.push(...Object.values(linksByKey));
-        links.forEach(l => {
-            l.text = [...l.tags].join("\n");
-            delete l.tags;
-        });
-        const setLinked = new Set();
-        links.forEach(l => {
-            setLinked.add(l.source);
-            setLinked.add(l.target);
-        });
-        console.log("NIY");
-        // const finNodes = [...setLinked]
-        const finNodes = nodes.filter(n => setLinked.has(n.id));
-        const numNodes = finNodes.length;
-        const eltShowFc4i = document.getElementById("show-fc4i-num");
-        eltShowFc4i.textContent = `, fc4i: ${numNodes} (${numFc4i})`;
-        gData = { nodes: finNodes, links }
+        arrUse.forEach(r => { r.tags?.forEach(t => setLinkTags.add(t)); });
+        requiredTags.forEach(t => { setLinkTags.delete(t); });
+
+
+        function getPrelNodes() {
+            let nodeNum = 0;
+            const nodesR = arrUse.map(r => ({ id: nodeNum++, r }));
+            const nodes = nodesR.map(r => ({ id: r.id, fc4i: r }));
+            return { nodesR, nodes }
+        }
+        // const prelNodes = { nodesR, nodes }
+        prelNodes = getPrelNodes();
+
+        computeNodesAndLinks();
     }
     function randomGraph() {
         // Random tree
-        const nodes = [...Array(N).keys()].map(i => ({ id: i }));
-        const links = [...Array(N).keys()]
+        const nodes = [...Array(numNodes).keys()].map(i => ({ id: i }));
+        const links = [...Array(numNodes).keys()]
             .filter(id => id)
             .map(id => ({
                 source: id,
@@ -295,6 +296,67 @@ async function getNodesAndLinks(N, sourceName) {
         gData = { nodes, links }
     }
 }
+function computeNodesAndLinks() {
+    const links = [];
+    const linksByKey = {};
+    setLinkTags.forEach(t => {
+        if (setNoLinkTags.has(t)) {
+            console.log("no link for ", t);
+            return;
+        }
+        const arrT = [];
+        prelNodes.nodesR.forEach(n => {
+            if (n.r.tags.includes(t)) { arrT.push(n) }
+        });
+        while (arrT.length > 0) {
+            const a0 = arrT.pop();
+            arrT.forEach(r => {
+                const linkKey = `${a0.id - r.id}`;
+                const oldLink = linksByKey[linkKey];
+                if (!oldLink) {
+                    const tagSet = new Set();
+                    tagSet.add(t);
+                    const link = {
+                        source: a0.id,
+                        target: r.id,
+                        // text: t,
+                        tags: tagSet
+                    }
+                    linksByKey[linkKey] = link;
+                    // links.push(link);
+                } else {
+                    oldLink.tags.add(t);
+                }
+                /*
+                const link2 = {
+                    source: r.id,
+                    target: a0.id
+                }
+                links.push(link2);
+                */
+            })
+        }
+    });
+    links.push(...Object.values(linksByKey));
+    links.forEach(l => {
+        l.text = [...l.tags].join("\n");
+        delete l.tags;
+    });
+    const setLinked = new Set();
+    links.forEach(l => {
+        setLinked.add(l.source);
+        setLinked.add(l.target);
+    });
+    console.log("NIY");
+    // const finNodes = [...setLinked]
+    const nodes = prelNodes.nodes.filter(n => setLinked.has(n.id));
+    const numFinNodes = nodes.length;
+    const eltShowFc4i = document.getElementById("show-fc4i-num");
+    eltShowFc4i.textContent = `, fc4i: ${numFinNodes} (${numFc4i})`;
+    gData = { nodes, links }
+    // showSelection(searchFor, setLinkTags);
+}
+
 async function chooseView() {
 
     function mkViewAlt(txt, fun) {
@@ -367,9 +429,10 @@ async function chooseView() {
     const fun = radChecked.altFun;
     const eltShowViewAlt = document.getElementById("show-view-alt");
     eltShowViewAlt.textContent = fun.name;
-    const numNodes = Math.floor(Number(inpNumNodes.value));
-    const sourceName = divSource.querySelector("input[name=source]:checked").value;
-    await getNodesAndLinks(numNodes, sourceName);
+    numNodes = Math.floor(Number(inpNumNodes.value));
+    sourceName = divSource.querySelector("input[name=source]:checked").value;
+    // await getNodesAndLinks(numNodes, sourceName);
+    await getNodesAndLinks(sourceName);
     fun();
 }
 
@@ -414,6 +477,8 @@ async function addDialogGraphButtons() {
     const btnFitAll = modMdc.mkMDCiconButton("crop_free");
     btnFitAll.addEventListener("click", evt => {
         // graph.onEngineStop(() => graph.zoomToFit(100));
+        // highlightNodes.has
+        // graph.zoomToFit(100, 0, (node) => highlightNodes.has(node));
         graph.zoomToFit(100, 0);
     });
     const eltContainer = mkElt("span", undefined, [
