@@ -171,8 +171,9 @@ const setRequiredTags = new Set();
 let minConf;
 let maxConf;
 let searchFor;
-const setNoLinkTags = new Set();
 const setLinkTags = new Set();
+const setNoLinkTags = new Set();
+const setUsedLinkTags = new Set();
 let prelNodes;
 let numNodes;
 let sourceName;
@@ -200,15 +201,37 @@ async function getFc4iRecs() {
     arrMatchAll = await dbFc4i.getDbMatching(searchFor, minConf, maxConf, requiredTags);
     numFc4i = arrMatchAll.length;
 }
-function showSelection(searchFor, setLinkTags) {
-    const divSelection = document.getElementById("netwg-our-selection")
+function showSelection() {
+    const spanSearchFor = mkElt("span", undefined, `Search: "${searchFor}",`);
+    spanSearchFor.style.paddingRight = "10px";
+    const spanConf = mkElt("span", undefined, `confidence: ${minConf}-${maxConf}`);
+    spanConf.style.paddingRight = "10px";
+
+    const divSearchEtc = mkElt("div", undefined, [spanSearchFor, spanConf]);
+    divSearchEtc.style = `
+        display: flex;
+        gap: 5px;
+        padding: 0 5px;
+    `;
+
+    const divSelectTags = mkElt("div");
+    divSelectTags.style = `
+        display: flex;
+        gap: 5px;
+        padding: 5px;
+    `;
+    const divSelection = document.getElementById("netwg-our-selection");
+    divSelection.appendChild(divSearchEtc);
+    divSelection.appendChild(divSelectTags);
+
     requiredTags.forEach(tag => {
         const elt = mkElt("span", { class: "tag-in-our-tags" }, [`#${tag}`]);
-        divSelection.appendChild(elt);
+        elt.style.filter = "grayscale(1)";
+        divSearchEtc.appendChild(elt);
     });
-    [...setLinkTags].sort().forEach(tag => {
+    [...setUsedLinkTags].sort().forEach(tag => {
         const elt = mkEltTagChkbox(tag, true);
-        divSelection.appendChild(elt);
+        divSelectTags.appendChild(elt);
     });
     divSelection.addEventListener("click", evt => {
         const target = evt.target;
@@ -299,6 +322,7 @@ async function getNodesAndLinks(
 function computeNodesAndLinks() {
     const links = [];
     const linksByKey = {};
+    setUsedLinkTags.clear();
     setLinkTags.forEach(t => {
         if (setNoLinkTags.has(t)) {
             console.log("no link for ", t);
@@ -314,6 +338,7 @@ function computeNodesAndLinks() {
                 const linkKey = `${a0.id - r.id}`;
                 const oldLink = linksByKey[linkKey];
                 if (!oldLink) {
+                    setUsedLinkTags.add(t);
                     const tagSet = new Set();
                     tagSet.add(t);
                     const link = {
@@ -355,6 +380,7 @@ function computeNodesAndLinks() {
     eltShowFc4i.textContent = `, fc4i: ${numFinNodes} (${numFc4i})`;
     gData = { nodes, links }
     // showSelection(searchFor, setLinkTags);
+    console.log({ setUsedLinkTags });
 }
 
 async function chooseView() {
