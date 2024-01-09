@@ -386,7 +386,10 @@ async function getNodesAndLinks(
             setI.add(i);
         }
         const arrUse = [...setI].map(i => arrMatch[i]);
-        arrUse.forEach(r => { r.tags?.forEach(t => setLinkTags.add(t)); });
+        arrUse.forEach(r => {
+            if (!r.tags) return;
+            r.tags.forEach(t => setLinkTags.add(t));
+        });
         requiredTags.forEach(t => { setLinkTags.delete(t); });
 
 
