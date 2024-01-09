@@ -270,13 +270,12 @@ function mkEltTagSelector(tag, checked) {
     let selectedChip;
     function mkChip(iconName, ariaLabel) {
         const btn = modMdc.mkMDCiconButton(iconName, ariaLabel, chipFontSize);
-        btn.addEventListener("click", evt => {
+        btn.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             const target = evt.target;
             console.log({ target, iconName });
             // debugger;
-            selectChipAction(iconName);
-            selectChip(iconName);
-        });
+            if (await selectChipAction(iconName)) selectChip(iconName);
+        }));
         btn.classList.add("chip-tag");
         return btn;
     }
@@ -294,12 +293,20 @@ function mkEltTagSelector(tag, checked) {
             });
         selectedChip = iconName;
     }
-    function selectChipAction(iconName) {
+    async function selectChipAction(iconName) {
         if (selectedChip == iconName) return;
         const needLinksUpdate =
             iconName == "visibility_off"
             ||
             selectedChip == "visibility_off";
+        const needRedraw =
+            iconName == "delete"
+            ||
+            selectedChip == "delete";
+        if (needRedraw) {
+            const ans = await modMdc.mkMDCdialogConfirm("This will redraw the graph and change perspektive, et.");
+            if (!ans) return false;
+        }
         if (selectedChip == "visibility_off") {
             console.log({ tag, needLinksUpdate });
             // debugger;
@@ -307,10 +314,10 @@ function mkEltTagSelector(tag, checked) {
         }
         switch (iconName) {
             case "visibility":
-                invisibleTags.delete(iconName);
+                invisibleTags.delete(tag);
                 break;
             case "visibility_off":
-                invisibleTags.add(iconName);
+                invisibleTags.add(tag);
                 break;
             case "delete":
                 break;
@@ -318,6 +325,7 @@ function mkEltTagSelector(tag, checked) {
                 throw Error(`Did not handle chip name ${iconName}`);
         }
         if (needLinksUpdate) updateHighlight();
+        return true;
     }
     // const btnRemove = modMdc.mkMDCiconButton("delete", "Redraw without these links", 24);
 
@@ -1041,6 +1049,7 @@ function updateHighlight() {
         .nodeColor(graph.nodeColor())
         .linkWidth(graph.linkWidth())
         .linkOpacity(graph.linkOpacity())
+        .linkColor(graph.linkColor())
         // .linkDirectionalParticles(graph.linkDirectionalParticles())
         ;
 }
