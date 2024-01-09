@@ -834,7 +834,8 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                 arrAllTags.forEach(tag => {
                     const checked = ourOldTags.includes(tag) ? true : false;
                     const unused = arrUnusedTags.includes(tag) ? true : false;
-                    const eltTag = mkEltTagChkbox(tag, checked);
+                    // const eltTag = mkEltTagChkbox(tag, checked);
+                    const eltTag = mkEltTagSelector(tag, checked);
                     if (unused) eltTag.style.outline = outlineUnused;
                     divAllTags.appendChild(eltTag);
                 });
@@ -859,7 +860,8 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                         inpNewTag.focus();
                         return;
                     }
-                    const eltNewTag = mkEltTagChkbox(newTag, true);
+                    // const eltNewTag = mkEltTagChkbox(newTag, true);
+                    const eltNewTag = mkEltTagSelector(newTag, true);
                     divAllTags.appendChild(eltNewTag);
                     arrAllTags.push(newTag);
                     arrAllTags.sort();
