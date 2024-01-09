@@ -230,10 +230,10 @@ function showSelection() {
         divSearchEtc.appendChild(elt);
     });
     [...setUsedLinkTags].sort().forEach(tag => {
-        const elt = mkEltTagChkbox(tag, true);
+        const elt = mkEltTagSelector(tag, true);
         divSelectTags.appendChild(elt);
     });
-    divSelection.addEventListener("click", evt => {
+    divSelection.addEventListener("NOclick", evt => {
         const target = evt.target;
         console.log({ evt, target });
         if ("INPUT" != target.tagName) return;
@@ -256,10 +256,97 @@ function showSelection() {
         testMyOwn();
     });
 }
-function mkEltTagChkbox(tag, checked) {
+function mkEltTagSelector(tag, checked) {
     const chkbox = mkElt("input", { type: "checkbox" });
     chkbox.checked = checked;
-    return mkElt("label", { class: "tag-in-our-tags" }, [chkbox, `#${tag}`]);
+    // const eltHidden = modMdc.mkMDCicon("visibilty_off");
+    // const eltHidden = mkElt("span", { class: "material-icons" }, "visibility_off");
+    // const eltRemove = modMdc.mkMDCicon("delete");
+    // const eltRemove = mkElt("span", { class: "material-icons" }, "delete");
+
+    const eltChips = mkElt("span");
+    eltChips.classList.add("chip-tags");
+    const chipFontSize = 24;
+    let selectedChip;
+    function mkChip(iconName, ariaLabel) {
+        const btn = modMdc.mkMDCiconButton(iconName, ariaLabel, chipFontSize);
+        btn.addEventListener("click", evt => {
+            const target = evt.target;
+            console.log({ target, iconName });
+            // debugger;
+            selectChipAction(iconName);
+            selectChip(iconName);
+        });
+        btn.classList.add("chip-tag");
+        return btn;
+    }
+    function addChip(iconName, ariaLabel) {
+        const btn = mkChip(iconName, ariaLabel);
+        eltChips.appendChild(btn);
+    }
+    function selectChip(iconName) {
+        [...eltChips.querySelectorAll(".chip-tag")]
+            .forEach(elt => {
+                elt.classList.remove("chip-tag-selected");
+                if (elt.textContent == iconName) {
+                    elt.classList.add("chip-tag-selected");
+                }
+            });
+        selectedChip = iconName;
+    }
+    function selectChipAction(iconName) {
+        if (selectedChip == iconName) return;
+        const needLinksUpdate =
+            iconName == "visibility_off"
+            ||
+            selectedChip == "visibility_off";
+        if (selectedChip == "visibility_off") {
+            console.log({ tag, needLinksUpdate });
+            // debugger;
+            invisibleTags.delete(tag);
+        }
+        switch (iconName) {
+            case "visibility":
+                invisibleTags.delete(iconName);
+                break;
+            case "visibility_off":
+                invisibleTags.add(iconName);
+                break;
+            case "delete":
+                break;
+            default:
+                throw Error(`Did not handle chip name ${iconName}`);
+        }
+        if (needLinksUpdate) updateHighlight();
+    }
+    // const btnRemove = modMdc.mkMDCiconButton("delete", "Redraw without these links", 24);
+
+    // const eltInclude = mkChip("visibility", "Redraw with these links");
+    addChip("visibility", "Redraw with these links");
+    // const eltHidden = mkChip("visibility_off", "Hide these links");
+    addChip("visibility_off", "Hide these links");
+    // const btnRemove = mkChip("delete", "Redraw without these links");
+    addChip("delete", "Redraw without these links");
+    selectChip("visibility");
+    /*
+    const eltChips = mkElt("span", undefined, [
+        // "(",
+        eltInclude,
+        eltHidden,
+        btnRemove,
+        // ")",
+    ])
+    */
+    const eltLabel = mkElt("label", { class: "tag-chk xtag-in-our-tags" }, [
+        `#${tag}`,
+        // chkbox,
+    ]);
+    const ret0 = mkElt("span", { class: "xtag-in-our-tags" }, [
+        eltLabel,
+        eltChips,
+    ]);
+    return ret0;
+    return mkElt("span", undefined, ret0);
 }
 
 
@@ -818,6 +905,8 @@ async function addText() {
     });
 }
 
+const invisibleTags = new Set();
+
 const highlightNodes = new Set();
 const highlightLinks = new Set();
 let theHiliteNode = null;
@@ -842,6 +931,10 @@ async function addNodeLinkHighlighter() {
     graph = graph
         .nodeColor(node => highlightNodes.has(node) ? node === theHiliteNode ? 'rgb(255,0,0,1)' : 'rgba(255,160,0,0.8)' : 'rgba(0,255,255,0.6)')
         .linkColor(link => {
+            if (invisibleTags.has(link.text)) {
+                return "#0000";
+                return;
+            }
             if (highlightLinks.has(link)) {
                 const hexOpacityHi = Math.round(linkOpHi * 255).toString(16);
                 return linkColorHi + hexOpacityHi;

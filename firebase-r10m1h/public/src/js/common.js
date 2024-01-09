@@ -53,7 +53,7 @@ async function updateDivSearchTheTags() {
         arrAllTags.forEach(tag => {
             if (arrUnusedTags.includes(tag)) return;
             const checked = oldTags.includes(tag);
-            const eltTag = mkEltTagChkbox(tag, checked);
+            const eltTag = mkEltTagSelector(tag, checked);
             divSelectTags.appendChild(eltTag);
         });
     } else {
@@ -2045,7 +2045,7 @@ function getColorThemeBrowser() {
     return undefined;
 }
 
-function mkEltTagChkbox(tag, checked) {
+function mkEltTagSelector(tag, checked) {
     const chkbox = mkElt("input", { type: "checkbox" });
     chkbox.checked = checked;
     return mkElt("label", { class: "tag-in-our-tags" }, [chkbox, `#${tag}`]);

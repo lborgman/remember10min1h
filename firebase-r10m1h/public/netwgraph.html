@@ -34,7 +34,7 @@
     <link id="jsmind-my-colors" rel="stylesheet" href="css/var-colors.css">
 
     <style>
-        .node-label {
+        .NOnode-label {
             font-size: 12px;
             padding: 1px 4px;
             border-radius: 4px;
@@ -42,6 +42,24 @@
             color: green;
             user-select: none;
             border: 1px solid blue;
+        }
+        .tag-chk {
+            width: fit-content;
+        }
+        .tag-chk * {
+            display: inline-block;
+            width: min-content;
+        }
+        .chip-tag {
+            background-color: rgba(0, 255, 0, 0.3);
+            border-radius: 10px;
+        }
+        .chip-tag-selected {
+            background-color: rgba(0, 255, 0, 1);
+        }
+        .chip-tags {
+            display: flex;
+            gap: 5px;
         }
     </style>
 
