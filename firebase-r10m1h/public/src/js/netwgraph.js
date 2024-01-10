@@ -327,7 +327,7 @@ function mkEltTagSelector(tag, checked) {
             default:
                 throw Error(`Did not handle chip name ${iconName}`);
         }
-        if (needLinksUpdate) updateHighlight();
+        if (needLinksUpdate) updateLinksView();
         return true;
     }
     // const btnRemove = modMdc.mkMDCiconButton("delete", "Redraw without these links", 24);
@@ -464,9 +464,9 @@ function computeNodesAndLinks() {
         }
     });
     links.push(...Object.values(linksByKey));
-    links.forEach(l => {
-        l.text = [...l.tags].join("\n");
-        delete l.tags;
+    links.forEach(link => {
+        link.text = [...link.tags].join("\n");
+        // delete link.tags;
     });
     const setLinked = new Set();
     links.forEach(l => {
@@ -574,7 +574,7 @@ async function addDialogGraphButtons() {
     // btnDialogGraph.style.fontSize = "2rem";
     // btnDialogGraph.title = "Graph style settings";
 
-    const btnHideGraph = modMdc.mkMDCiconButton("settings");
+    const btnHideGraph = modMdc.mkMDCiconButton("visibility");
     btnHideGraph.addEventListener("click", async evt => {
         const elt = document.getElementById("3d-graph");
         const st = elt.style;
@@ -589,7 +589,7 @@ async function addDialogGraphButtons() {
     btnDialogGraph.addEventListener("click", async evt => {
         await dialogGraph();
         // trigger
-        updateHighlight();
+        updateLinksView();
     });
 
     const btnHilightNode = modMdc.mkMDCiconButton("highlight");
@@ -851,9 +851,17 @@ async function addLinkText() {
     });
     graph = graph.linkPositionUpdate((sprite, { start, end }) => {
         if (sprite) {
-            const middlePos = Object.assign(...['x', 'y', 'z'].map(c => ({
-                [c]: start[c] + (end[c] - start[c]) / 2 // calc middle point
-            })));
+            // FIX-ME: I don't understand this syntax???
+            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
+            const middlePos = Object.assign(
+                ...['x', 'y', 'z']
+                    .map(c => ({
+                        [c]: start[c] + (end[c] - start[c]) / 2 // calc middle point
+                    }))
+            );
+            // FIX-ME: move closer to camera. Scale?
+            // middlePos["z"] = middlePos["z"] - 100;
+            // console.log({ middlePos });
             // Position sprite
             Object.assign(sprite.position, middlePos);
         }
@@ -950,7 +958,7 @@ function hiliteNode(node) {
 
     theHiliteNode = node || null;
 
-    updateHighlight();
+    updateLinksView();
 }
 
 async function addNodeLinkHighlighter() {
@@ -976,15 +984,20 @@ async function addNodeLinkHighlighter() {
         })
         */
         .linkWidth(link => {
-            if (highlightLinks.has(link)) { return linkWHi; } else { return linkW; }
+            // let arrText = link.text.split("\n");
+            // const emphase = 1.3 ** arrText.length;
+            const emphase = 1.5 ** link.tags.size;
+            if (highlightLinks.has(link)) { return linkWHi * emphase; } else { return linkW * emphase; }
         })
         .linkThreeObject(link => {
             if (highlightLinks.has(link)) {
-                if (link.text) {
+                // if (link.text)
+                if (link.tags) {
                     // extend link with text sprite
                     // const sprite = new SpriteText(`${link.source} > ${link.target}`);
-                    const sprite = new SpriteText(`${link.text}`);
-                    sprite.color = 'lightgrey';
+                    // const sprite = new SpriteText(`${link.text}`);
+                    const txt = [...link.tags].filter(t => !invisibleTags.has(t)).join("\n");
+                    const sprite = new SpriteText(txt);
                     sprite.color = 'rgba(255, 255, 0, 1)';
                     sprite.textHeight = 4;
                     return sprite;
@@ -1061,7 +1074,7 @@ async function testFH() {
     await waitSeconds(1);
     addOnClick();
 }
-function updateHighlight() {
+function updateLinksView() {
     // trigger update of highlighted objects in scene
     graph
         .nodeColor(graph.nodeColor())
