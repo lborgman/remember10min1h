@@ -1241,6 +1241,13 @@ summary {
     border-radius: 6px;
 }
 
+.icon-button-30 {
+    width: 30px;
+    height: 30px;
+    padding: 6px;
+    border-radius: 4px;
+}
+
 
 /* https://css-tricks.com/css-grid-can-do-auto-height-transitions/ */
 /*

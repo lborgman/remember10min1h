@@ -34,6 +34,19 @@
     <link id="jsmind-my-colors" rel="stylesheet" href="css/var-colors.css">
 
     <style>
+        .tag-selector {
+            display: inline-flex;
+            position: relative;
+            border: 1px solid olive;
+            border-radius: 2px;
+            background-color: yellow;
+            height: fit-content;
+            padding: 4px;
+            padding-right: 4px;
+            padding-left: 10px;
+            border-radius: 18px 7px 7px 18px;
+        }
+
         .NOnode-label {
             font-size: 12px;
             padding: 1px 4px;
@@ -43,20 +56,25 @@
             user-select: none;
             border: 1px solid blue;
         }
+
         .tag-chk {
             width: fit-content;
         }
+
         .tag-chk * {
             display: inline-block;
             width: min-content;
         }
+
         .chip-tag {
             background-color: rgba(0, 255, 0, 0.3);
             border-radius: 10px;
         }
+
         .chip-tag-selected {
             background-color: rgba(0, 255, 0, 1);
         }
+
         .chip-tags {
             display: flex;
             gap: 5px;

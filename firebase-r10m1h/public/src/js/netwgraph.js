@@ -217,6 +217,7 @@ function showSelection() {
     const divSelectTags = mkElt("div");
     divSelectTags.style = `
         display: flex;
+        flex-wrap: wrap;
         gap: 5px;
         padding: 5px;
     `;
@@ -269,7 +270,9 @@ function mkEltTagSelector(tag, checked) {
     const chipFontSize = 24;
     let selectedChip;
     function mkChip(iconName, ariaLabel) {
-        const btn = modMdc.mkMDCiconButton(iconName, ariaLabel, chipFontSize);
+        // const btn = modMdc.mkMDCiconButton(iconName, ariaLabel, chipFontSize);
+        const btn = modMdc.mkMDCiconButton(iconName, ariaLabel);
+        btn.classList.add("icon-button-30");
         btn.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             const target = evt.target;
             console.log({ target, iconName });
@@ -345,11 +348,11 @@ function mkEltTagSelector(tag, checked) {
         // ")",
     ])
     */
-    const eltLabel = mkElt("label", { class: "tag-chk xtag-in-our-tags" }, [
+    const eltLabel = mkElt("label", { class: "tag-chk" }, [
         `#${tag}`,
         // chkbox,
     ]);
-    const ret0 = mkElt("span", { class: "xtag-in-our-tags" }, [
+    const ret0 = mkElt("span", { class: "tag-selector" }, [
         eltLabel,
         eltChips,
     ]);
@@ -571,6 +574,17 @@ async function addDialogGraphButtons() {
     // btnDialogGraph.style.fontSize = "2rem";
     // btnDialogGraph.title = "Graph style settings";
 
+    const btnHideGraph = modMdc.mkMDCiconButton("settings");
+    btnHideGraph.addEventListener("click", async evt => {
+        const elt = document.getElementById("3d-graph");
+        const st = elt.style;
+        if (st.display == "none") {
+            st.display = "block";
+        } else {
+            st.display = "none";
+        }
+    });
+
     const btnDialogGraph = modMdc.mkMDCiconButton("settings");
     btnDialogGraph.addEventListener("click", async evt => {
         await dialogGraph();
@@ -610,6 +624,7 @@ async function addDialogGraphButtons() {
         btnFocusNode,
         btnFitAll,
         btnDialogGraph,
+        btnHideGraph,
     ]);
     eltContainer.style = `
         position: fixed;
