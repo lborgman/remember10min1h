@@ -178,6 +178,8 @@ let prelNodes;
 let numNodes;
 let sourceName;
 
+const setManExclTags = new Set();
+
 addDialogGraphButtons();
 await getFc4iRecs();
 
@@ -214,7 +216,7 @@ function showSelection() {
         padding: 0 5px;
     `;
 
-    const divSelectTags = mkElt("div");
+    const divSelectTags = mkElt("div", { id: "select-tags" });
     divSelectTags.style = `
         display: flex;
         flex-wrap: wrap;
@@ -224,6 +226,7 @@ function showSelection() {
     const divSelection = document.getElementById("netwg-our-selection");
     divSelection.appendChild(divSearchEtc);
     divSelection.appendChild(divSelectTags);
+
 
     requiredTags.forEach(tag => {
         const elt = mkElt("span", { class: "tag-in-our-tags" }, [`#${tag}`]);
@@ -250,13 +253,35 @@ function showSelection() {
         console.log({ setNoLinkTags });
 
         // updateGraph();
-        graph._destructor();
-        const eltGraph = document.getElementById("3d-graph");
-        eltGraph.textContent = "";
-        computeNodesAndLinks();
-        testMyOwn();
+        redrawGraph();
     });
 }
+
+function getManuallyExcludedTags() {
+    const divCont = document.getElementById("select-tags");
+    const chips = divCont
+        .querySelectorAll(".tag-selector .chip-tags .chip-tag-selected");
+    const arrManExcl = [...chips].filter(c => c.textContent == "delete")
+    const tags = arrManExcl.map(btn => {
+        const ts = btn.closest(".tag-selector");
+        const lbl = ts.firstElementChild;
+        const tn = lbl.tagName;
+        if (tn != "LABEL") throw Error(`Expected LABEL, got ${tn}`);
+        return lbl.textContent.slice(1);
+    });
+    setManExclTags.clear();
+    tags.forEach(t => setManExclTags.add(t));
+    debugger;
+}
+
+function redrawGraph() {
+    graph._destructor();
+    const eltGraph = document.getElementById("3d-graph");
+    eltGraph.textContent = "";
+    computeNodesAndLinks();
+    testMyOwn();
+}
+
 function mkEltTagSelector(tag, checked) {
     const chkbox = mkElt("input", { type: "checkbox" });
     chkbox.checked = checked;
@@ -313,21 +338,32 @@ function mkEltTagSelector(tag, checked) {
         if (selectedChip == "visibility_off") {
             console.log({ tag, needLinksUpdate });
             // debugger;
-            invisibleTags.delete(tag);
+            setInvisibleTags.delete(tag);
         }
         switch (iconName) {
             case "visibility":
-                invisibleTags.delete(tag);
+                setInvisibleTags.delete(tag);
                 break;
             case "visibility_off":
-                invisibleTags.add(tag);
+                setInvisibleTags.add(tag);
                 break;
             case "delete":
+                setInvisibleTags.delete(tag);
                 break;
             default:
                 throw Error(`Did not handle chip name ${iconName}`);
         }
         if (needLinksUpdate) updateLinksView();
+        if (needRedraw) {
+            getManuallyExcludedTags();
+            if (iconName == "delete") {
+                setManExclTags.add(tag);
+            } else {
+                setManExclTags.delete(tag);
+            }
+            debugger;
+            redrawGraph();
+        }
         return true;
     }
     // const btnRemove = modMdc.mkMDCiconButton("delete", "Redraw without these links", 24);
@@ -362,7 +398,8 @@ function mkEltTagSelector(tag, checked) {
 
 
 await chooseView();
-showSelection(searchFor, setLinkTags);
+// showSelection(searchFor, setLinkTags);
+showSelection();
 
 async function getNodesAndLinks(
     // numNodes, sourceName
@@ -423,9 +460,12 @@ async function getNodesAndLinks(
 function computeNodesAndLinks() {
     const links = [];
     const linksByKey = {};
+    const setExclTags = new Set(setManExclTags);
+    setExclTags.forEach(t => setNoLinkTags.add(t));
     setUsedLinkTags.clear();
     setLinkTags.forEach(t => {
-        if (setNoLinkTags.has(t)) {
+        // if (setNoLinkTags.has(t)) {
+        if (setExclTags.has(t)) {
             console.log("no link for ", t);
             return;
         }
@@ -480,7 +520,6 @@ function computeNodesAndLinks() {
     const eltShowFc4i = document.getElementById("show-fc4i-num");
     eltShowFc4i.textContent = `, fc4i: ${numFinNodes} (${numFc4i})`;
     gData = { nodes, links }
-    // showSelection(searchFor, setLinkTags);
     console.log({ setUsedLinkTags });
 }
 
@@ -939,21 +978,21 @@ async function addText() {
     });
 }
 
-const invisibleTags = new Set();
+const setInvisibleTags = new Set();
 
-const highlightNodes = new Set();
-const highlightLinks = new Set();
+const setHighlightNodes = new Set();
+const setHighlightLinks = new Set();
 let theHiliteNode = null;
 function hiliteNode(node) {
     // no state change
-    if ((!node && !highlightNodes.size) || (node && theHiliteNode === node)) return;
+    if ((!node && !setHighlightNodes.size) || (node && theHiliteNode === node)) return;
 
-    highlightNodes.clear();
-    highlightLinks.clear();
+    setHighlightNodes.clear();
+    setHighlightLinks.clear();
     if (node) {
-        highlightNodes.add(node);
-        node.neighbors.forEach(neighbor => highlightNodes.add(neighbor));
-        node.links.forEach(link => highlightLinks.add(link));
+        setHighlightNodes.add(node);
+        node.neighbors.forEach(neighbor => setHighlightNodes.add(neighbor));
+        node.links.forEach(link => setHighlightLinks.add(link));
     }
 
     theHiliteNode = node || null;
@@ -963,13 +1002,13 @@ function hiliteNode(node) {
 
 async function addNodeLinkHighlighter() {
     graph = graph
-        .nodeColor(node => highlightNodes.has(node) ? node === theHiliteNode ? 'rgb(255,0,0,1)' : 'rgba(255,160,0,0.8)' : 'rgba(0,255,255,0.6)')
+        .nodeColor(node => setHighlightNodes.has(node) ? node === theHiliteNode ? 'rgb(255,0,0,1)' : 'rgba(255,160,0,0.8)' : 'rgba(0,255,255,0.6)')
         .linkColor(link => {
-            if (invisibleTags.has(link.text)) {
+            if (setInvisibleTags.has(link.text)) {
                 return "#0000";
                 return;
             }
-            if (highlightLinks.has(link)) {
+            if (setHighlightLinks.has(link)) {
                 const hexOpacityHi = Math.round(linkOpHi * 255).toString(16);
                 return linkColorHi + hexOpacityHi;
             } else {
@@ -986,17 +1025,18 @@ async function addNodeLinkHighlighter() {
         .linkWidth(link => {
             // let arrText = link.text.split("\n");
             // const emphase = 1.3 ** arrText.length;
-            const emphase = 1.5 ** link.tags.size;
-            if (highlightLinks.has(link)) { return linkWHi * emphase; } else { return linkW * emphase; }
+            const emphase = 1.3 ** link.tags.size;
+            const emp = Math.min(emphase, 2.5);
+            if (setHighlightLinks.has(link)) { return linkWHi * emp; } else { return linkW * emp; }
         })
         .linkThreeObject(link => {
-            if (highlightLinks.has(link)) {
+            if (setHighlightLinks.has(link)) {
                 // if (link.text)
                 if (link.tags) {
                     // extend link with text sprite
                     // const sprite = new SpriteText(`${link.source} > ${link.target}`);
                     // const sprite = new SpriteText(`${link.text}`);
-                    const txt = [...link.tags].filter(t => !invisibleTags.has(t)).join("\n");
+                    const txt = [...link.tags].filter(t => !setInvisibleTags.has(t)).join("\n");
                     const sprite = new SpriteText(txt);
                     sprite.color = 'rgba(255, 255, 0, 1)';
                     sprite.textHeight = 4;
