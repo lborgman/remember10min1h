@@ -174,6 +174,7 @@ let searchFor;
 const setLinkTags = new Set();
 const setNoLinkTags = new Set();
 const setUsedLinkTags = new Set();
+const setActuallyUsedLinkTags = new Set();
 let prelNodes;
 let numNodes;
 let sourceName;
@@ -233,10 +234,13 @@ function showSelection() {
         elt.style.filter = "grayscale(1)";
         divSearchEtc.appendChild(elt);
     });
-    [...setUsedLinkTags].sort().forEach(tag => {
-        const elt = mkEltTagSelector(tag, true);
-        divSelectTags.appendChild(elt);
-    });
+    // [...setUsedLinkTags]
+    // [...setLinkTags]
+    [...setActuallyUsedLinkTags]
+        .sort().forEach(tag => {
+            const elt = mkEltTagSelector(tag, true);
+            divSelectTags.appendChild(elt);
+        });
     divSelection.addEventListener("NOclick", evt => {
         const target = evt.target;
         console.log({ evt, target });
@@ -463,6 +467,7 @@ function computeNodesAndLinks() {
     const setExclTags = new Set(setManExclTags);
     setExclTags.forEach(t => setNoLinkTags.add(t));
     setUsedLinkTags.clear();
+    // setActuallyUsedLinkTags.clear();
     setLinkTags.forEach(t => {
         // if (setNoLinkTags.has(t)) {
         if (setExclTags.has(t)) {
@@ -513,14 +518,29 @@ function computeNodesAndLinks() {
         setLinked.add(l.source);
         setLinked.add(l.target);
     });
-    console.log("NIY");
+    // console.log("NIY");
     // const finNodes = [...setLinked]
     const nodes = prelNodes.nodes.filter(n => setLinked.has(n.id));
     const numFinNodes = nodes.length;
     const eltShowFc4i = document.getElementById("show-fc4i-num");
     eltShowFc4i.textContent = `, fc4i: ${numFinNodes} (${numFc4i})`;
     gData = { nodes, links }
-    console.log({ setUsedLinkTags });
+
+    setActuallyUsedLinkTags.clear();
+    links.forEach(l => {
+        l.tags.forEach(t => setActuallyUsedLinkTags.add(t));
+    });
+
+    console.log("-------------------------- computed!");
+    console.log({
+        setRequiredTags,
+        setNoLinkTags,
+        setUsedLinkTags,
+        setActuallyUsedLinkTags,
+        setExclTags,
+        setLinkTags,
+        gData,
+    });
 }
 
 async function chooseView() {
@@ -1008,6 +1028,10 @@ async function addNodeLinkHighlighter() {
                 return "#0000";
                 return;
             }
+            let numTags = link.tags.size;
+            [...link.tags].forEach(t => { if (setInvisibleTags.has(t)) numTags--; });
+            if (numTags == 0) return "#0000";
+
             if (setHighlightLinks.has(link)) {
                 const hexOpacityHi = Math.round(linkOpHi * 255).toString(16);
                 return linkColorHi + hexOpacityHi;
@@ -1025,8 +1049,15 @@ async function addNodeLinkHighlighter() {
         .linkWidth(link => {
             // let arrText = link.text.split("\n");
             // const emphase = 1.3 ** arrText.length;
-            const emphase = 1.3 ** link.tags.size;
-            const emp = Math.min(emphase, 2.5);
+            // invisible
+            let numTags = link.tags.size;
+            [...link.tags].forEach(t => { if (setInvisibleTags.has(t)) numTags--; });
+            if (numTags == 0) return 0;
+            let emp = 1;
+            if (numTags > 1) {
+                const emphase = 1.3 ** (numTags - 1);
+                emp = Math.min(emphase, 2.5);
+            }
             if (setHighlightLinks.has(link)) { return linkWHi * emp; } else { return linkW * emp; }
         })
         .linkThreeObject(link => {
