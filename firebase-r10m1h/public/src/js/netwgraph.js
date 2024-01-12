@@ -806,6 +806,80 @@ function getLink2KeyInFc4i(keyFc4i) {
     // location = objUrl;
     return objUrl.href;
 }
+function showNodeInfo(node) {
+    const rec = node.fc4i.r;
+    const title = rec.title;
+    const body = mkElt("div");
+    const imgBlob = rec.images ? rec.images[0] : undefined;
+    let eltImg;
+    if (imgBlob) {
+        const divImg = mkElt("div");
+        const st = divImg.style;
+        st.height = "40px";
+        st.width = "50px";
+        st.backgroundSize = "contain";
+        st.backgroundPosition = "center";
+        st.backgroundImage = `url(${URL.createObjectURL(imgBlob)})`;
+        // const p = mkElt("p", undefined, divImg);
+        // p.style.display = "flex";
+        // p.style.justifyContent = "center";
+        // body.appendChild(p);
+        eltImg = divImg;
+    }
+    const divHeading = mkElt("div", undefined, [
+        mkElt("div", undefined, `${title}`),
+    ])
+    if (eltImg) divHeading.appendChild(eltImg);
+    divHeading.style = `
+        display: flex;
+        gap: 10px;
+    `;
+    body.appendChild( divHeading);
+    const linkRec = getLink2KeyInFc4i(rec.key);
+    const a = mkElt("a", { href: linkRec }, "Show entry in fc4i");
+    body.appendChild(mkElt("p", undefined, a));
+
+    if (rec.tags) {
+        body.appendChild(mkElt("h4", undefined, "Tags"));
+        const pTags = mkElt("p");
+        pTags.style.display = "flex";
+        pTags.style.flexWrap = "wrap";
+        pTags.style.gap = "10px";
+        rec.tags.forEach(t => {
+            const s = mkElt("span", { class: "tag-in-our-tags" }, `#${t}`);
+            if (setRequiredTags.has(t)) {
+                s.style.opacity = 0.5;
+                s.style.filter = "grayscale(1)";
+            }
+            pTags.appendChild(s);
+        });
+        body.appendChild(pTags);
+    }
+    // modMdc.mkMDCdialogAlert(body, "Close");
+    body.style =`
+        position : fixed;
+        bottom : 0;
+        left : 0;
+        width : auto;
+        background : white;
+        padding : 5px;
+    `;
+
+    const eltScrim = mkElt("div", undefined, body);
+    eltScrim.style = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+    `;
+    eltScrim.addEventListener("click", evt => {
+        if (evt.target == eltScrim) eltScrim.remove();
+    });
+
+    document.body.appendChild(eltScrim);
+}
+
 function nodeClickAction(node) {
     if (focusOnNodeClick) { focusNode(node); }
     if (hilightOnNodeClick) { hiliteNode(node); }
@@ -815,53 +889,15 @@ function nodeClickAction(node) {
         return;
     } else {
         console.log("Clicked again", node);
-        const body = mkElt("div");
         if (node.fc4i) {
-            const rec = node.fc4i.r;
-            const title = rec.title;
-            body.appendChild(
-                mkElt("h3", undefined, `${title}`),
-            );
-            const imgBlob = rec.images ? rec.images[0] : undefined;
-            if (imgBlob) {
-                const divImg = mkElt("div");
-                const st = divImg.style;
-                st.height = "100px";
-                st.width = "150px";
-                st.backgroundSize = "contain";
-                st.backgroundPosition = "center";
-                st.backgroundImage = `url(${URL.createObjectURL(imgBlob)})`;
-                const p = mkElt("p", undefined, divImg);
-                p.style.display = "flex";
-                p.style.justifyContent = "center";
-                body.appendChild(p);
-            }
-            const linkRec = getLink2KeyInFc4i(rec.key);
-            const a = mkElt("a", { href: linkRec }, "Show entry in fc4i");
-            body.appendChild(mkElt("p", undefined, a));
-
-            if (rec.tags) {
-                body.appendChild(mkElt("h4", undefined, "Tags"));
-                const pTags = mkElt("p");
-                pTags.style.display = "flex";
-                pTags.style.flexWrap = "wrap";
-                pTags.style.gap = "10px";
-                rec.tags.forEach(t => {
-                    const s = mkElt("span", { class: "tag-in-our-tags" }, `#${t}`);
-                    if (setRequiredTags.has(t)) {
-                        s.style.opacity = 0.5;
-                        s.style.filter = "grayscale(1)";
-                    }
-                    pTags.appendChild(s);
-                });
-                body.appendChild(pTags);
-            }
+            showNodeInfo(node);
         } else {
+            const body = mkElt("div");
             body.appendChild(
                 mkElt("span", { style: "color:red;" }, `clicked again ${node.id}`)
             );
+            modMdc.mkMDCdialogAlert(body, "Close");
         }
-        modMdc.mkMDCdialogAlert(body, "Close");
         return;
     }
     return;
