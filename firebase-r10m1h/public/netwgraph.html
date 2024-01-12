@@ -36,15 +36,17 @@
     <style>
         .tag-selector {
             display: inline-flex;
-            position: relative;
+            gap: 5px;
+            align-items: center;
             border: 1px solid olive;
-            border-radius: 2px;
+            border: 1px solid #80800061;
+            border-radius: 18px 7px 7px 18px;
             background-color: yellow;
-            height: fit-content;
             padding: 4px;
             padding-right: 4px;
-            padding-left: 10px;
-            border-radius: 18px 7px 7px 18px;
+            padding-left: 8px;
+            NOposition: relative;
+            NOheight: fit-content;
         }
 
         .NOnode-label {
@@ -104,15 +106,15 @@
 </head>
 
 <body>
-    <div style="height:40px">
-        <span id="show-view-alt" style="color:red;"></span>
+    <div style="display: none; height:40px">
+        <span id="show-view-alt" style="color:red; opacity: 0.3;"></span>
         <span id="fc4i-info">
-            <span id="show-fc4i-num" style="color:red;"></span>
+            <span id="show-fc4i-num" style="color:red; opacity: 0.3;"></span>
         </span>
     </div>
-    <section id="main">
+    <section id="main" style="margin-top:20px;">
         <div id="netwg-our-selection"></div>
-        <div id="3d-graph"></div>
+        <div id="3d-graph-container" style="border:1px dotted red; height:calc(100vh - 40px); width:100vw;"></div>
     </section>
     <!-- <script src="/src/js/common.js"></script> -->
     <script src="/src/js/netwgraph.js" type="module"></script>

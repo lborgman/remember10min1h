@@ -26,8 +26,8 @@ const mm0nodeArray = mm0.jsmindmap.data;
 
 
 
-const elt3dGraph = document.getElementById('3d-graph');
-const st3d = elt3dGraph.style;
+const elt3dGraph = document.getElementById('3d-graph-container');
+// const st3d = elt3dGraph.style;
 // st3d.width = "60vw";
 // st3d.height = "60vh";
 const grWidthPx = document.documentElement.clientWidth * 0.8;
@@ -225,8 +225,13 @@ function showSelection() {
         padding: 5px;
     `;
     const divSelection = document.getElementById("netwg-our-selection");
-    divSelection.appendChild(divSearchEtc);
-    divSelection.appendChild(divSelectTags);
+
+    divSelection.appendChild(
+        mkElt("details", undefined, [
+            mkElt("summary", undefined, "Select tag links"),
+            divSearchEtc,
+            divSelectTags,
+        ]));
 
 
     requiredTags.forEach(tag => {
@@ -280,7 +285,7 @@ function getManuallyExcludedTags() {
 
 function redrawGraph() {
     graph._destructor();
-    const eltGraph = document.getElementById("3d-graph");
+    const eltGraph = document.getElementById("3d-graph-container");
     eltGraph.textContent = "";
     computeNodesAndLinks();
     testMyOwn();
@@ -296,7 +301,7 @@ function mkEltTagSelector(tag, checked) {
 
     const eltChips = mkElt("span");
     eltChips.classList.add("chip-tags");
-    const chipFontSize = 24;
+    // const chipFontSize = 24;
     let selectedChip;
     function mkChip(iconName, ariaLabel) {
         // const btn = modMdc.mkMDCiconButton(iconName, ariaLabel, chipFontSize);
@@ -370,13 +375,9 @@ function mkEltTagSelector(tag, checked) {
         }
         return true;
     }
-    // const btnRemove = modMdc.mkMDCiconButton("delete", "Redraw without these links", 24);
 
-    // const eltInclude = mkChip("visibility", "Redraw with these links");
     addChip("visibility", "Redraw with these links");
-    // const eltHidden = mkChip("visibility_off", "Hide these links");
     addChip("visibility_off", "Hide these links");
-    // const btnRemove = mkChip("delete", "Redraw without these links");
     addChip("delete", "Redraw without these links");
     selectChip("visibility");
     /*
@@ -628,14 +629,11 @@ async function chooseView() {
 let focusOnNodeClick = false;
 let hilightOnNodeClick = false;
 async function addDialogGraphButtons() {
-    // const btnDialogGraph = mkElt("button", undefined, "⚙");
-    // const btnDialogGraph = modMdc.mkMDCbutton("⚙");
-    // btnDialogGraph.style.fontSize = "2rem";
-    // btnDialogGraph.title = "Graph style settings";
 
     const btnHideGraph = modMdc.mkMDCiconButton("visibility");
+    btnHideGraph.style.color = "yellowgreen";
     btnHideGraph.addEventListener("click", async evt => {
-        const elt = document.getElementById("3d-graph");
+        const elt = document.getElementById("3d-graph-container");
         const st = elt.style;
         if (st.display == "none") {
             st.display = "block";
@@ -690,6 +688,7 @@ async function addDialogGraphButtons() {
         top: 0;
         right: 0;
         display: flex;
+        background-color: darkviolet;
     `;
     document.body.appendChild(eltContainer);
 }
@@ -783,6 +782,9 @@ async function dialogGraph() {
 async function setupGraphDisplayer(opt) {
     const funGraph = ForceGraph3D(opt);
     // debugger;
+    const bcr = elt3dGraph.getBoundingClientRect();
+    const grWidthPx = bcr.width;
+    const grHeightPx = bcr.height;
     funGraph.width(grWidthPx);
     funGraph.height(grHeightPx);
     // funGraph.linkColor("green");
