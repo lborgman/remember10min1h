@@ -228,7 +228,7 @@ function showSelection() {
 
     divSelection.appendChild(
         mkElt("details", undefined, [
-            mkElt("summary", undefined, "Select tag links"),
+            mkElt("summary", undefined, "Select tags"),
             divSearchEtc,
             divSelectTags,
         ]));
@@ -676,21 +676,21 @@ async function addDialogGraphButtons() {
         // graph.zoomToFit(100, 0, (node) => highlightNodes.has(node));
         graph.zoomToFit(100, 0);
     });
-    const eltContainer = mkElt("span", undefined, [
+    const eltBtnContainer = mkElt("span", undefined, [
         btnHilightNode,
         btnFocusNode,
         btnFitAll,
         btnDialogGraph,
         btnHideGraph,
     ]);
-    eltContainer.style = `
+    eltBtnContainer.style = `
         position: fixed;
         top: 0;
         right: 0;
         display: flex;
-        background-color: darkviolet;
+        background-color: violet;
     `;
-    document.body.appendChild(eltContainer);
+    document.body.appendChild(eltBtnContainer);
 }
 async function dialogGraph() {
     const inpLinkW = mkElt("input", { id: "linkW", type: "number", min: "1", max: "5", value: linkW });
@@ -826,43 +826,67 @@ function showNodeInfo(node) {
         // body.appendChild(p);
         eltImg = divImg;
     }
+    const linkRec = getLink2KeyInFc4i(rec.key);
+    const aSource = mkElt("a", { href: linkRec }, title);
+    aSource.style.textDecoration = "none";
     const divHeading = mkElt("div", undefined, [
-        mkElt("div", undefined, `${title}`),
+        // mkElt("div", undefined, `${title}`),
+        aSource,
     ])
     if (eltImg) divHeading.appendChild(eltImg);
     divHeading.style = `
         display: flex;
         gap: 10px;
+        justify-content: space-between;
     `;
-    body.appendChild( divHeading);
-    const linkRec = getLink2KeyInFc4i(rec.key);
-    const a = mkElt("a", { href: linkRec }, "Show entry in fc4i");
-    body.appendChild(mkElt("p", undefined, a));
+    body.appendChild(divHeading);
+
+    // const a = mkElt("a", { href: linkRec }, "Show entry in fc4i");
+    // body.appendChild(mkElt("p", undefined, a));
 
     if (rec.tags) {
-        body.appendChild(mkElt("h4", undefined, "Tags"));
-        const pTags = mkElt("p");
+        const pTags = mkElt("div");
+        pTags.style.marginTop = "10px";
         pTags.style.display = "flex";
         pTags.style.flexWrap = "wrap";
         pTags.style.gap = "10px";
         rec.tags.forEach(t => {
-            const s = mkElt("span", { class: "tag-in-our-tags" }, `#${t}`);
-            if (setRequiredTags.has(t)) {
-                s.style.opacity = 0.5;
-                s.style.filter = "grayscale(1)";
+            const eltInfo = mkElt("span", undefined, `#${t}`);
+            // const eltTag = mkElt("span", { class: "tag-in-our-tags" }, `#${t}`);
+            const eltTag = mkElt("span", { class: "tag-in-our-tags" }, eltInfo);
+            let icon;
+            if (setInvisibleTags.has(t)) {
+                icon = modMdc.mkMDCicon("visibility_off");
+                eltTag.appendChild(icon);
             }
-            pTags.appendChild(s);
+            if (setNoLinkTags.has(t)) {
+                icon = modMdc.mkMDCicon("delete");
+            }
+            if (icon) {
+                icon.style.fontSize = "inherit";
+                icon.style.marginLeft = "5px";
+                eltTag.style.opacity = "0.5";
+                eltTag.appendChild(icon);
+            }
+            if (setRequiredTags.has(t)) {
+                eltTag.style.opacity = 0.5;
+                eltTag.style.filter = "grayscale(1)";
+            }
+            if (setLinkTags.has(t)) {
+                pTags.appendChild(eltTag);
+            }
         });
         body.appendChild(pTags);
     }
     // modMdc.mkMDCdialogAlert(body, "Close");
-    body.style =`
-        position : fixed;
-        bottom : 0;
-        left : 0;
-        width : auto;
-        background : white;
-        padding : 5px;
+    body.style = `
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: auto;
+        background-color: white;
+        padding: 10px;
+        border-radius: 15px 15px 0 0;
     `;
 
     const eltScrim = mkElt("div", undefined, body);
@@ -872,6 +896,7 @@ function showNodeInfo(node) {
         left: 0;
         width: 100vw;
         height: 100vh;
+        background-color: #00008b75;
     `;
     eltScrim.addEventListener("click", evt => {
         if (evt.target == eltScrim) eltScrim.remove();
