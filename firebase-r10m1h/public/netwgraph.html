@@ -81,6 +81,26 @@
             display: flex;
             gap: 5px;
         }
+
+        #main {
+            margin-top: 20px;
+            height: calc(100vh - 20px - 8px);
+            display: grid;
+            grid-template-rows: min-content 1fr;
+        }
+
+        #netwg-our-selection {
+            min-height: 40px;
+        }
+
+        #the3d-graph-container {
+            border: 1px dotted red;
+            width: calc(100vw - 2 * 8px);
+        }
+
+        body {
+            overflow: hidden;
+        }
     </style>
 
     <script src="src/js/fc4i-importmaps.js"></script>
@@ -112,9 +132,9 @@
             <span id="show-fc4i-num" style="color:red; opacity: 0.3;"></span>
         </span>
     </div>
-    <section id="main" style="margin-top:20px;">
+    <section id="main">
         <div id="netwg-our-selection"></div>
-        <div id="3d-graph-container" style="border:1px dotted red; height:calc(100vh - 40px); width:100vw;"></div>
+        <div id="the3d-graph-container"></div>
     </section>
     <!-- <script src="/src/js/common.js"></script> -->
     <script src="/src/js/netwgraph.js" type="module"></script>

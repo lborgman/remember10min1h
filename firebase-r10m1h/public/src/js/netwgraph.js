@@ -26,7 +26,7 @@ const mm0nodeArray = mm0.jsmindmap.data;
 
 
 
-const elt3dGraph = document.getElementById('3d-graph-container');
+const elt3dGraph = document.getElementById('the3d-graph-container');
 // const st3d = elt3dGraph.style;
 // st3d.width = "60vw";
 // st3d.height = "60vh";
@@ -285,7 +285,7 @@ function getManuallyExcludedTags() {
 
 function redrawGraph() {
     graph._destructor();
-    const eltGraph = document.getElementById("3d-graph-container");
+    const eltGraph = document.getElementById("the3d-graph-container");
     eltGraph.textContent = "";
     computeNodesAndLinks();
     testMyOwn();
@@ -633,7 +633,7 @@ async function addDialogGraphButtons() {
     const btnHideGraph = modMdc.mkMDCiconButton("visibility");
     btnHideGraph.style.color = "yellowgreen";
     btnHideGraph.addEventListener("click", async evt => {
-        const elt = document.getElementById("3d-graph-container");
+        const elt = document.getElementById("the3d-graph-container");
         const st = elt.style;
         if (st.display == "none") {
             st.display = "block";
