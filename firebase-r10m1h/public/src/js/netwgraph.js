@@ -26,12 +26,12 @@ const mm0nodeArray = mm0.jsmindmap.data;
 
 
 
-const elt3dGraph = document.getElementById('the3d-graph-container');
+// const elt3dGraph = document.getElementById('the3d-graph-container');
 // const st3d = elt3dGraph.style;
 // st3d.width = "60vw";
 // st3d.height = "60vh";
-const grWidthPx = document.documentElement.clientWidth * 0.8;
-const grHeightPx = document.documentElement.clientHeight * 0.8;
+// const grWidthPx = document.documentElement.clientWidth * 0.8;
+// const grHeightPx = document.documentElement.clientHeight * 0.8;
 
 
 class LocalSetting {
@@ -782,6 +782,7 @@ async function dialogGraph() {
 async function setupGraphDisplayer(opt) {
     const funGraph = ForceGraph3D(opt);
     // debugger;
+    const elt3dGraph = document.getElementById('the3d-graph-container');
     const bcr = elt3dGraph.getBoundingClientRect();
     const grWidthPx = bcr.width;
     const grHeightPx = bcr.height;
@@ -891,7 +892,7 @@ function showNodeInfo(node) {
         background-color: white;
         padding: 10px;
         border-radius: 15px 15px 0 0;
-        height: ${imgSize+20}px;
+        height: ${imgSize + 20}px;
         transition: 1s height;
     `;
 
