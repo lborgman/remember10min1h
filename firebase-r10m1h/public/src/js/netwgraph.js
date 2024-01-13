@@ -809,16 +809,18 @@ function getLink2KeyInFc4i(keyFc4i) {
 function showNodeInfo(node) {
     const rec = node.fc4i.r;
     const title = rec.title;
-    const body = mkElt("div");
+    const bodyInner = mkElt("div");
     const imgBlob = rec.images ? rec.images[0] : undefined;
     let eltImg;
+    const imgSize = 70;
     if (imgBlob) {
         const divImg = mkElt("div");
         const st = divImg.style;
-        st.height = "40px";
-        st.width = "50px";
+        st.height = `${imgSize}px`;
+        st.width = `${imgSize}px`;
         st.backgroundSize = "contain";
-        st.backgroundPosition = "center";
+        st.backgroundPosition = "top left";
+        st.backgroundRepeat = "no-repeat";
         st.backgroundImage = `url(${URL.createObjectURL(imgBlob)})`;
         // const p = mkElt("p", undefined, divImg);
         // p.style.display = "flex";
@@ -839,7 +841,7 @@ function showNodeInfo(node) {
         gap: 10px;
         justify-content: space-between;
     `;
-    body.appendChild(divHeading);
+    bodyInner.appendChild(divHeading);
 
     // const a = mkElt("a", { href: linkRec }, "Show entry in fc4i");
     // body.appendChild(mkElt("p", undefined, a));
@@ -876,20 +878,40 @@ function showNodeInfo(node) {
                 pTags.appendChild(eltTag);
             }
         });
-        body.appendChild(pTags);
+        bodyInner.appendChild(pTags);
     }
     // modMdc.mkMDCdialogAlert(body, "Close");
-    body.style = `
+    const bodyOuter = mkElt("div", undefined, bodyInner);
+    bodyOuter.style = `
         position: fixed;
         bottom: 0;
         left: 0;
-        width: auto;
+        margin-left: 0;
+        margin-right: 0;
         background-color: white;
         padding: 10px;
         border-radius: 15px 15px 0 0;
+        height: ${imgSize+20}px;
+        transition: 1s height;
     `;
 
-    const eltScrim = mkElt("div", undefined, body);
+    const btnMore = modMdc.mkMDCbutton("Tags...", "raised");
+    btnMore.addEventListener("click", evt => {
+        const bcr = bodyInner.getBoundingClientRect();
+        bodyOuter.style.height = `${bcr.height + 2 * 10}px`;
+        btnMore.remove();
+    });
+    btnMore.style = `
+        position: absolute;
+        right: 10px;
+        bottom: 2px;
+        padding: 0;
+        background: yellow;
+    `
+    bodyInner.appendChild(btnMore);
+
+
+    const eltScrim = mkElt("div", undefined, bodyOuter);
     eltScrim.style = `
         position: fixed;
         top: 0;
