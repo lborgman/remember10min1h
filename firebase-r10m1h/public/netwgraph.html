@@ -84,7 +84,7 @@
 
         #main {
             margin-top: 20px;
-            height: calc(100vh - 20px - 8px);
+            height: calc(100 * var(--vh, vh) - 20px - 8px);
             display: grid;
             grid-template-rows: min-content 1fr;
         }
@@ -126,6 +126,13 @@
 </head>
 
 <body>
+    <script>
+        // https://css-tricks.com/the-trick-to-viewport-units-on-mobile/
+        // First we get the viewport height and we multiple it by 1% to get a value for a vh unit
+        const vh = window.innerHeight * 0.01;
+        // Then we set the value in the --vh custom property to the root of the document
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+    </script>
     <div style="display: none; height:40px">
         <span id="show-view-alt" style="color:red; opacity: 0.3;"></span>
         <span id="fc4i-info">

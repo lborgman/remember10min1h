@@ -15,23 +15,8 @@ console.log({ __THREE__ });
 // debugger;
 */
 
-/*
-const modDbMm = await import("db-mindmaps");
-const allMm = await modDbMm.DBgetAllMindmaps();
-const mm0 = allMm[0];
-console.log({ mm0 });
-const mm0nodeArray = mm0.jsmindmap.data;
-// debugger;
-*/
 
 
-
-// const elt3dGraph = document.getElementById('the3d-graph-container');
-// const st3d = elt3dGraph.style;
-// st3d.width = "60vw";
-// st3d.height = "60vh";
-// const grWidthPx = document.documentElement.clientWidth * 0.8;
-// const grHeightPx = document.documentElement.clientHeight * 0.8;
 
 
 class LocalSetting {
