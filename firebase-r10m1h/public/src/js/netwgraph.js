@@ -778,6 +778,7 @@ async function dialogGraph() {
 async function setupGraphDisplayer(opt) {
     const funGraph = ForceGraph3D(opt);
     // debugger;
+    await promiseDOMready();
     const elt3dGraph = document.getElementById('the3d-graph-container');
     const bcr = elt3dGraph.getBoundingClientRect();
     const grWidthPx = bcr.width;
