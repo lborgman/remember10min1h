@@ -589,7 +589,7 @@ div.div-images {
     position: relative;
 }
 
-canvas {
+NOcanvas {
     border: 1px dotted red;
     display: inline-block;
     xheight: 200px;

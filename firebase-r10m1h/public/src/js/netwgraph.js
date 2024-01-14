@@ -137,6 +137,8 @@ let boolHiDrag = settingHiDrag.value;
 settingHiDrag.onInputFun = (val) => boolHiDrag = val;
 
 
+const secondsBottom = 0.5;
+// let secondsBottom = 3;
 
 
 let textH = 3;
@@ -165,6 +167,9 @@ let numNodes;
 let sourceName;
 
 const setManExclTags = new Set();
+
+let focusOnNodeClick = false;
+let theBtnFocusNode;
 
 addDialogGraphButtons();
 await getFc4iRecs();
@@ -517,6 +522,7 @@ function computeNodesAndLinks() {
         l.tags.forEach(t => setActuallyUsedLinkTags.add(t));
     });
 
+    /*
     console.log("-------------------------- computed!");
     console.log({
         setRequiredTags,
@@ -527,6 +533,7 @@ function computeNodesAndLinks() {
         setLinkTags,
         gData,
     });
+    */
 }
 
 async function chooseView() {
@@ -549,6 +556,7 @@ async function chooseView() {
         // mkViewAlt("Focus", testFocus),
     ]);
     divAlts.querySelector("input").checked = true;
+    divAlts.style.display = "none";
 
     function mkSourceAlt(sourceName, txt) {
         const eltRad = mkElt("input", { type: "radio", name: "source", value: sourceName });
@@ -578,7 +586,7 @@ async function chooseView() {
         mkElt("h3", undefined, "Source"),
         mkElt("div", { style: "display:flex; flex-direction:column; gap:15px" }, [
             divAltFc4i,
-            mkSourceAlt("random", "Random links, number nodes"),
+            // mkSourceAlt("random", "Random links, number nodes"),
         ]),
     ]);
     divSource.querySelector("input[type=radio]").checked = true;
@@ -611,9 +619,21 @@ async function chooseView() {
 
 
 /////////////////
-let focusOnNodeClick = false;
+
 let hilightOnNodeClick = false;
+
 async function addDialogGraphButtons() {
+
+    const btnFocusNode = modMdc.mkMDCiconButton("center_focus_strong");
+    theBtnFocusNode = btnFocusNode;
+    btnFocusNode.addEventListener("click", evt => {
+        focusOnNodeClick = !focusOnNodeClick;
+        if (focusOnNodeClick) {
+            btnFocusNode.style.color = "red";
+        } else {
+            btnFocusNode.style.color = "unset";
+        }
+    });
 
     const btnHideGraph = modMdc.mkMDCiconButton("visibility");
     btnHideGraph.style.color = "yellowgreen";
@@ -644,15 +664,6 @@ async function addDialogGraphButtons() {
         }
     });
 
-    const btnFocusNode = modMdc.mkMDCiconButton("center_focus_strong");
-    btnFocusNode.addEventListener("click", evt => {
-        focusOnNodeClick = !focusOnNodeClick;
-        if (focusOnNodeClick) {
-            btnFocusNode.style.color = "red";
-        } else {
-            btnFocusNode.style.color = "unset";
-        }
-    });
 
     const btnFitAll = modMdc.mkMDCiconButton("crop_free");
     btnFitAll.addEventListener("click", evt => {
@@ -662,11 +673,11 @@ async function addDialogGraphButtons() {
         graph.zoomToFit(100, 0);
     });
     const eltBtnContainer = mkElt("span", undefined, [
-        btnHilightNode,
-        btnFocusNode,
+        // btnHilightNode,
         btnFitAll,
+        btnFocusNode,
         btnDialogGraph,
-        btnHideGraph,
+        // btnHideGraph,
     ]);
     eltBtnContainer.style = `
         position: fixed;
@@ -797,22 +808,18 @@ function showNodeInfo(node) {
     const title = rec.title;
     const bodyInner = mkElt("div");
     const imgBlob = rec.images ? rec.images[0] : undefined;
-    let eltImg;
-    const imgSize = 70;
+    // let eltImg;
+    const imgSize = 100;
+    const eltImg = mkElt("div");
+    const st = eltImg.style;
+    st.height = `${imgSize}px`;
+    st.width = `${imgSize}px`;
+    st.backgroundSize = "contain";
+    st.backgroundPosition = "top left";
+    st.backgroundRepeat = "no-repeat";
+    st.backgroundColor = "#0001";
     if (imgBlob) {
-        const divImg = mkElt("div");
-        const st = divImg.style;
-        st.height = `${imgSize}px`;
-        st.width = `${imgSize}px`;
-        st.backgroundSize = "contain";
-        st.backgroundPosition = "top left";
-        st.backgroundRepeat = "no-repeat";
         st.backgroundImage = `url(${URL.createObjectURL(imgBlob)})`;
-        // const p = mkElt("p", undefined, divImg);
-        // p.style.display = "flex";
-        // p.style.justifyContent = "center";
-        // body.appendChild(p);
-        eltImg = divImg;
     }
     const linkRec = getLink2KeyInFc4i(rec.key);
     const aSource = mkElt("a", { href: linkRec }, title);
@@ -820,12 +827,15 @@ function showNodeInfo(node) {
     const divHeading = mkElt("div", undefined, [
         // mkElt("div", undefined, `${title}`),
         aSource,
-    ])
+    ]);
     if (eltImg) divHeading.appendChild(eltImg);
     divHeading.style = `
-        display: flex;
-        gap: 10px;
-        justify-content: space-between;
+        NOdisplay: flex;
+        NOjustify-content: space-between;
+        display: grid;
+        grid-template-columns: 1fr ${imgSize}px;
+        gap: 5px;
+        height: ${imgSize}px;
     `;
     bodyInner.appendChild(divHeading);
 
@@ -868,6 +878,7 @@ function showNodeInfo(node) {
     }
     // modMdc.mkMDCdialogAlert(body, "Close");
     const bodyOuter = mkElt("div", undefined, bodyInner);
+    bodyOuter.id = "bottom-outer";
     bodyOuter.style = `
         position: fixed;
         bottom: 0;
@@ -878,10 +889,15 @@ function showNodeInfo(node) {
         padding: 10px;
         border-radius: 15px 15px 0 0;
         height: ${imgSize + 20}px;
-        transition: 1s height;
+        height: 0;
+        transition-property: height, padding;
+        transition-duration: ${secondsBottom}s;
     `;
 
-    const btnMore = modMdc.mkMDCbutton("Tags...", "raised");
+    // const btnMore = modMdc.mkMDCbutton("Tags...", "raised");
+    // const btnMore = modMdc.mkMDCiconButton("#", "raised");
+    const iconTag = modMdc.mkMDCicon("tag");
+    const btnMore = modMdc.mkMDCfab(iconTag, "Show tags", true);
     btnMore.addEventListener("click", evt => {
         const bcr = bodyInner.getBoundingClientRect();
         bodyOuter.style.height = `${bcr.height + 2 * 10}px`;
@@ -889,9 +905,8 @@ function showNodeInfo(node) {
     });
     btnMore.style = `
         position: absolute;
-        right: 10px;
-        bottom: 2px;
-        padding: 0;
+        right: calc(${imgSize}px - 10px);
+        bottom: 0px;
         background: yellow;
     `
     bodyInner.appendChild(btnMore);
@@ -904,24 +919,40 @@ function showNodeInfo(node) {
         left: 0;
         width: 100vw;
         height: 100vh;
-        background-color: #00008b75;
+        transition: ${secondsBottom} background-color;
+        background-color: #00008b00;
     `;
     eltScrim.addEventListener("click", evt => {
-        if (evt.target == eltScrim) eltScrim.remove();
+        if (evt.target == eltScrim) {
+            bodyOuter.style.height = "0";
+            bodyOuter.style.paddingTop = "0";
+            bodyOuter.style.paddingBottom = "0";
+            eltScrim.style.backgroundColor = "#00008b00";
+            btnMore.remove();
+            setTimeout(() => eltScrim.remove(), secondsBottom * 1000 + 10);
+        }
     });
 
     document.body.appendChild(eltScrim);
+    setTimeout(() => {
+        eltScrim.style.backgroundColor = "#00008b75";
+        bodyOuter.style.height = `${imgSize + 20}px`;
+    }, 20);
 }
 
 function nodeClickAction(node) {
-    if (focusOnNodeClick) { focusNode(node); }
+    if (focusOnNodeClick) {
+        focusOnNodeClick = false;
+        theBtnFocusNode.style.color = "unset";
+        focusNode(node);
+    }
     if (hilightOnNodeClick) { hiliteNode(node); }
     // return;
     if ((lastClickedNodeId != node.id)) {
         lastClickedNodeId = node.id;
         return;
     } else {
-        console.log("Clicked again", node);
+        // console.log("Clicked again", node);
         if (node.fc4i) {
             showNodeInfo(node);
         } else {
@@ -957,7 +988,7 @@ function nodeClickAction(node) {
 }
 
 function addOnClick() {
-    console.log("addOnClick >>>>>");
+    // console.log("addOnClick >>>>>");
     graph = graph.onNodeClick(node => {
         nodeClickAction(node);
     });
