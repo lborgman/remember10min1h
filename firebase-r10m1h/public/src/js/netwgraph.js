@@ -635,7 +635,8 @@ async function addDialogGraphButtons() {
         showCube = !showCube;
         if (showCube) {
             if (!theCube) {
-                btnCube.style.color = "lightskyblue";
+                // btnCube.style.color = "darkgoldenrod";
+                btnCube.style.color = "#b8440b";
                 const elt3dCont = document.getElementById("the3d-graph-container");
                 const bcr = elt3dCont.getBoundingClientRect();
                 theCubeSize = Math.min(bcr.width, bcr.height);
@@ -694,7 +695,8 @@ async function addDialogGraphButtons() {
                 // const meshRight = makeSide(0x00009F);
                 // meshRight.position.set(-x, 0, z);
                 // meshRight.rotation.set(0, 0.5 * Math.PI, 0);
-                const meshRight = mkBackSide(0x00006F);
+                // const meshRight = mkBackSide(0x00006F);
+                const meshRight = mkBackSide(0x0F0FBD);
                 meshRight.position.set(halfSize, 0, 0);
                 meshRight.rotation.set(0, 1.5 * Math.PI, 0);
 
@@ -711,7 +713,8 @@ async function addDialogGraphButtons() {
                 // const zAxis = new THREE.Vector3(0, 0, 1);
                 // meshLeft.rotateOnWorldAxis(xAxis, 0.5 * Math.PI);
 
-                const meshBack = mkBackSide(0xFFFF00);
+                // const meshBack = mkBackSide(0xFFFF00);
+                const meshBack = mkBackSide(0xAAAA00);
                 meshBack.position.set(0, 0, -halfSize);
 
 
@@ -796,7 +799,7 @@ async function addDialogGraphButtons() {
         top: 0;
         right: 0;
         display: flex;
-        background-color: violet;
+        background-color: #b1dff1;
     `;
     document.body.appendChild(eltBtnContainer);
 }
