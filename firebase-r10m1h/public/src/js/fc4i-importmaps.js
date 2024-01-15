@@ -1,4 +1,4 @@
-console.log("here is fc4i-importmaps");
+// console.log("here is fc4i-importmaps");
 
 const importMap = {
     imports: {
@@ -39,4 +39,5 @@ const im = document.createElement('script');
 im.type = 'importmap';
 im.textContent = JSON.stringify(importMap);
 document.currentScript.after(im);
+
 console.log("END fc4i-importmaps");

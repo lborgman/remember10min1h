@@ -1,6 +1,7 @@
 import("pwa");
 
 const modMdc = await import("util-mdc");
+console.warn("import d3");
 const modD3 = await import("d3");
 const dbFc4i = await import("db-fc4i");
 
@@ -621,8 +622,66 @@ async function chooseView() {
 /////////////////
 
 let hilightOnNodeClick = false;
+let theCube;
+let theCubeSize = 1000;
+let showCube = false;
 
 async function addDialogGraphButtons() {
+
+    // https://github.com/vasturiano/3d-force-graph/blob/master/example/scene/index.html
+    // https://vasturiano.github.io/3d-force-graph/example/scene/
+    const btnCube = modMdc.mkMDCiconButton("view_in_ar");
+    btnCube.addEventListener("click", evt => {
+        showCube = !showCube;
+        if (showCube) {
+            if (!theCube) {
+                btnCube.style.color = "lightskyblue";
+                const elt3dCont = document.getElementById("the3d-graph-container");
+                const bcr = elt3dCont.getBoundingClientRect();
+                theCubeSize = Math.min(bcr.width, bcr.height);
+                // const planeGeometry = new THREE.PlaneGeometry(1000, 1000, 1, 1);
+                // mesh.position.set(-100, -200, -100);
+                let x = -theCubeSize / 2;
+                let y = -theCubeSize / 2;
+                let z = -theCubeSize / 2;
+
+                function makeSide(color) {
+                    const planeGeometry = new THREE.PlaneGeometry(theCubeSize, theCubeSize, 1, 1);
+                    const planeMaterial = new THREE.MeshLambertMaterial({
+                        color: color,
+                        // side: THREE.DoubleSide
+                        // side: THREE.FrontSide
+                        side: THREE.BackSide
+                    });
+                    const mesh = new THREE.Mesh(planeGeometry, planeMaterial);
+                    return mesh;
+                }
+                // planeMaterial.color = 0xFF0000;
+                // planeMaterial.color = 0x00FF00;
+                // const meshBottom = new THREE.Mesh(planeGeometry, planeMaterial);
+                const meshBottom = makeSide( 0x00FF00);
+                meshBottom.position.set(0, y, z);
+                meshBottom.rotation.set(0.5 * Math.PI, 0, 0);
+
+                const meshTop = makeSide( 0x0000FF);
+                meshTop.position.set(0, -y, z);
+                meshTop.rotation.set(1.5 * Math.PI, 0, 0);
+                /*
+                */
+
+
+                theCube = [
+                    meshBottom,
+                    meshTop,
+                ];
+            }
+            theCube.forEach(cubeSide => graph.scene().add(cubeSide));
+        } else {
+            btnCube.style.color = "unset";
+            theCube.forEach(cubeSide => graph.scene().remove(cubeSide));
+            theCube = undefined;
+        }
+    });
 
     const btnFocusNode = modMdc.mkMDCiconButton("center_focus_strong");
     theBtnFocusNode = btnFocusNode;
@@ -670,12 +729,17 @@ async function addDialogGraphButtons() {
         // graph.onEngineStop(() => graph.zoomToFit(100));
         // highlightNodes.has
         // graph.zoomToFit(100, 0, (node) => highlightNodes.has(node));
-        graph.zoomToFit(100, 0);
+        // graph.zoomToFit(100, 0);
+        const px = 0;
+        const objFilterFun = (obj) => true;
+        console.log("zoomToFit", { px, objFilterFun });
+        graph.zoomToFit(90, px, objFilterFun);
     });
     const eltBtnContainer = mkElt("span", undefined, [
         // btnHilightNode,
         btnFitAll,
         btnFocusNode,
+        btnCube,
         btnDialogGraph,
         // btnHideGraph,
     ]);
@@ -1207,6 +1271,7 @@ async function addHtml() {
 
 /////////////////
 async function getHtmlGraphDisplayer() {
+    console.warn("getHtmlGraphDisplayer, import CSS2Renderer.js");
     const m = await import('//unpkg.com/three/examples/jsm/renderers/CSS2DRenderer.js');
     const htmlDisplayer = await setupGraphDisplayer({
         extraRenderers: [new m.CSS2DRenderer()]
@@ -1230,11 +1295,13 @@ async function testTC() {
 }
 
 async function testFH() {
+    console.warn("testFH, setupGraphDisplayer");
     const graphDisplayer = await setupGraphDisplayer();
     let ourDisplayer = graphDisplayer;
     const useHtml = false;
     let m;
     if (useHtml) {
+        console.warn("testFH, import CSS2DRenderer");
         m = await import('//unpkg.com/three/examples/jsm/renderers/CSS2DRenderer.js');
         ourDisplayer = setupGraphDisplayer({
             extraRenderers: [new m.CSS2DRenderer()]
@@ -1302,7 +1369,11 @@ async function testMyOwn() {
 function focusNode(node) {
     // https://github.com/vasturiano/3d-force-graph/blob/master/example/click-to-focus/index.html
     // Aim at node from outside it
-    const distance = 40;
+    // const distance = 40;
+    // const distance = 60;
+    // const distance = 70;
+    // const distance = 80;
+    const distance = 90;
     const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
 
     const newPos = node.x || node.y || node.z
@@ -1326,6 +1397,7 @@ async function testFocus() {
 async function testHtml() {
     console.log("TEST HTLM");
     // https://github.com/vasturiano/3d-force-graph/blob/master/example/html-nodes/index.html
+    console.warn("testFH, import CSS2DRenderer");
     const m = await import('//unpkg.com/three/examples/jsm/renderers/CSS2DRenderer.js');
     const graphDisplayer = setupGraphDisplayer({
         extraRenderers: [new m.CSS2DRenderer()]
