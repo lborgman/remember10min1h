@@ -650,7 +650,7 @@ async function addDialogGraphButtons() {
                 });
                 // FIX-ME:
                 theCubeSize = newCS * 3;
-                
+
                 const halfSize = theCubeSize / 2;
                 let x = -halfSize;
                 let y = -halfSize;
@@ -717,6 +717,9 @@ async function addDialogGraphButtons() {
                 const meshBack = mkBackSide(0xAAAA00);
                 meshBack.position.set(0, 0, -halfSize);
 
+                const meshFront = mkBackSide(0x444444);
+                meshFront.rotation.set(0, 1 * Math.PI, 0);
+                meshFront.position.set(0, 0, halfSize);
 
                 theCube = [
                     meshLeft,
@@ -724,6 +727,7 @@ async function addDialogGraphButtons() {
                     meshTop,
                     meshBottom,
                     meshBack,
+                    meshFront,
                 ];
             }
             theCube.forEach(cubeSide => graph.scene().add(cubeSide));
