@@ -641,9 +641,19 @@ async function addDialogGraphButtons() {
                 theCubeSize = Math.min(bcr.width, bcr.height);
                 // const planeGeometry = new THREE.PlaneGeometry(1000, 1000, 1, 1);
                 // mesh.position.set(-100, -200, -100);
-                let x = -theCubeSize / 2;
-                let y = -theCubeSize / 2;
-                let z = -theCubeSize / 2;
+
+                let newCS = 0;
+                graph.graphData().nodes.forEach(n => {
+                    const mx = Math.max(Math.abs(n.x), Math.abs(n.y), Math.abs(n.z));
+                    newCS = Math.max(newCS, mx);
+                });
+                // FIX-ME:
+                theCubeSize = newCS * 3;
+                
+                const halfSize = theCubeSize / 2;
+                let x = -halfSize;
+                let y = -halfSize;
+                let z = -halfSize;
 
                 function makeSide(color) {
                     const planeGeometry = new THREE.PlaneGeometry(theCubeSize, theCubeSize, 1, 1);
@@ -656,27 +666,53 @@ async function addDialogGraphButtons() {
                     const mesh = new THREE.Mesh(planeGeometry, planeMaterial);
                     return mesh;
                 }
-                // planeMaterial.color = 0xFF0000;
-                // planeMaterial.color = 0x00FF00;
-                // const meshBottom = new THREE.Mesh(planeGeometry, planeMaterial);
-                const meshBottom = makeSide(0x009F00);
-                meshBottom.position.set(0, y, z);
-                meshBottom.rotation.set(0.5 * Math.PI, 0, 0);
+                function mkBackSide(color) {
+                    const planeGeometry = new THREE.PlaneGeometry(theCubeSize, theCubeSize, 1, 1);
+                    const planeMaterial = new THREE.MeshLambertMaterial({
+                        color: color,
+                        // side: THREE.DoubleSide
+                        side: THREE.FrontSide
+                        // side: THREE.BackSide
+                    });
+                    const mesh = new THREE.Mesh(planeGeometry, planeMaterial);
+                    return mesh;
+                }
+                // const meshBottom = makeSide(0x003F00);
+                // meshBottom.position.set(0, y, z);
+                // meshBottom.rotation.set(0.5 * Math.PI, 0, 0);
+                const meshBottom = mkBackSide(0x003F00);
+                meshBottom.position.set(0, -halfSize, 0);
+                meshBottom.rotation.set(1.5 * Math.PI, 0, 0);
 
-                const meshTop = makeSide(0x9090FF);
-                meshTop.position.set(0, -y, z);
-                meshTop.rotation.set(1.5 * Math.PI, 0, 0);
+                // const meshTop = makeSide(0x9090FF);
+                // meshTop.position.set(0, -y, z);
+                // meshTop.rotation.set(1.5 * Math.PI, 0, 0);
+                const meshTop = mkBackSide(0x9090FF);
+                meshTop.position.set(0, halfSize, 0);
+                meshTop.rotation.set(0.5 * Math.PI, 0, 0);
 
-                const meshRight = makeSide(0x00009F);
-                meshRight.position.set(-x, 0, z);
-                meshRight.rotation.set(0, 0.5 * Math.PI, 0);
+                // const meshRight = makeSide(0x00009F);
+                // meshRight.position.set(-x, 0, z);
+                // meshRight.rotation.set(0, 0.5 * Math.PI, 0);
+                const meshRight = mkBackSide(0x00006F);
+                meshRight.position.set(halfSize, 0, 0);
+                meshRight.rotation.set(0, 1.5 * Math.PI, 0);
 
-                const meshLeft = makeSide(0x9F0000);
-                meshLeft.position.set(x, 0, z);
-                meshLeft.rotation.set(0, 1.5 * Math.PI, 0);
+                // const meshLeft = makeSide(0x9F0000);
+                // meshLeft.position.set(x, 0, z);
+                // meshLeft.rotation.set(0, 1.5 * Math.PI, 0);
+                const meshLeft = mkBackSide(0x3F0000);
+                // meshLeft.rotation.set(0, 0.5 * Math.PI, 0);
+                meshLeft.position.set(-halfSize, 0, 0);
+                meshLeft.rotation.set(0, 0.5 * Math.PI, 0);
 
-                /*
-                */
+                // const xAxis = new THREE.Vector3(1, 0, 0);
+                // const yAxis = new THREE.Vector3(0, 1, 0);
+                // const zAxis = new THREE.Vector3(0, 0, 1);
+                // meshLeft.rotateOnWorldAxis(xAxis, 0.5 * Math.PI);
+
+                const meshBack = mkBackSide(0xFFFF00);
+                meshBack.position.set(0, 0, -halfSize);
 
 
                 theCube = [
@@ -684,6 +720,7 @@ async function addDialogGraphButtons() {
                     meshRight,
                     meshTop,
                     meshBottom,
+                    meshBack,
                 ];
             }
             theCube.forEach(cubeSide => graph.scene().add(cubeSide));
