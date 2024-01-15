@@ -659,20 +659,31 @@ async function addDialogGraphButtons() {
                 // planeMaterial.color = 0xFF0000;
                 // planeMaterial.color = 0x00FF00;
                 // const meshBottom = new THREE.Mesh(planeGeometry, planeMaterial);
-                const meshBottom = makeSide( 0x00FF00);
+                const meshBottom = makeSide(0x009F00);
                 meshBottom.position.set(0, y, z);
                 meshBottom.rotation.set(0.5 * Math.PI, 0, 0);
 
-                const meshTop = makeSide( 0x0000FF);
+                const meshTop = makeSide(0x9090FF);
                 meshTop.position.set(0, -y, z);
                 meshTop.rotation.set(1.5 * Math.PI, 0, 0);
+
+                const meshRight = makeSide(0x00009F);
+                meshRight.position.set(-x, 0, z);
+                meshRight.rotation.set(0, 0.5 * Math.PI, 0);
+
+                const meshLeft = makeSide(0x9F0000);
+                meshLeft.position.set(x, 0, z);
+                meshLeft.rotation.set(0, 1.5 * Math.PI, 0);
+
                 /*
                 */
 
 
                 theCube = [
-                    meshBottom,
+                    meshLeft,
+                    meshRight,
                     meshTop,
+                    meshBottom,
                 ];
             }
             theCube.forEach(cubeSide => graph.scene().add(cubeSide));
