@@ -142,7 +142,10 @@ const secondsBottom = 0.5;
 // let secondsBottom = 3;
 
 
-let textH = 3;
+const maxNodeTextLines = 4;
+const maxNodeTextWidth = 12;
+const textH = 3;
+
 let cameraDistance = 100;
 // let disemvowel = false;
 const colorsRainbow =
@@ -170,6 +173,7 @@ let sourceName;
 const setManExclTags = new Set();
 
 let focusOnNodeClick = false;
+let showInfoOnNodeClick = false;
 let theBtnFocusNode;
 
 addDialogGraphButtons();
@@ -749,6 +753,21 @@ async function addDialogGraphButtons() {
         }
     });
 
+    const btnDoc = modMdc.mkMDCiconButton("description");
+    btnDoc.addEventListener("click", evt => {
+        showInfoOnNodeClick = !showInfoOnNodeClick;
+        if (showInfoOnNodeClick) {
+            btnDoc.style.color = "red";
+        } else {
+            btnDoc.style.color = "unset";
+        }
+    });
+
+    const btnHome = modMdc.mkMDCiconButton("home");
+    btnHome.addEventListener("click", evt => {
+        graph.cameraPosition({ x: 0, y: 0, z: 400 }, undefined, 2000);
+    });
+
     const btnHideGraph = modMdc.mkMDCiconButton("visibility");
     btnHideGraph.style.color = "yellowgreen";
     btnHideGraph.addEventListener("click", async evt => {
@@ -792,8 +811,10 @@ async function addDialogGraphButtons() {
     });
     const eltBtnContainer = mkElt("span", undefined, [
         // btnHilightNode,
-        btnFitAll,
         btnFocusNode,
+        btnDoc,
+        btnHome,
+        btnFitAll,
         btnCube,
         btnDialogGraph,
         // btnHideGraph,
@@ -1061,13 +1082,21 @@ function showNodeInfo(node) {
 }
 
 function nodeClickAction(node) {
+    if (showInfoOnNodeClick) {
+        showNodeInfo(node);
+    }
     if (focusOnNodeClick) {
         focusOnNodeClick = false;
         theBtnFocusNode.style.color = "unset";
-        focusNode(node);
+        if (confirm("use new focusNode")) {
+            focusNode(node);
+        } else {
+            OLDfocusNode(node);
+        }
     }
     if (hilightOnNodeClick) { hiliteNode(node); }
-    // return;
+    return;
+
     if ((lastClickedNodeId != node.id)) {
         lastClickedNodeId = node.id;
         return;
@@ -1086,6 +1115,7 @@ function nodeClickAction(node) {
     }
     return;
 
+    /*
     // Aim at node from outside it
     let distance = 40;
     distance = 300; // Should make text 14px easily readable
@@ -1105,6 +1135,7 @@ function nodeClickAction(node) {
     );
     // graph.cooldownTime(200);
     // graph.onEngineStop(() => graph.zoomToFit(100));
+    */
 }
 
 function addOnClick() {
@@ -1121,7 +1152,6 @@ async function addLinkText() {
         return false;
         if (link.text) {
             // extend link with text sprite
-            // const sprite = new SpriteText(`${link.source} > ${link.target}`);
             const sprite = new SpriteText(`${link.text}`);
             sprite.color = 'lightgrey';
             sprite.color = 'rgba(255, 0, 0, 0.7)';
@@ -1161,8 +1191,6 @@ async function addText() {
                 :
                 `Text ${node.id}`;
             */
-            let maxNodeTextLines = 4;
-            let maxNodeTextWidth = 12;
             const txtShort = mkShortTxt(txtLong);
             function mkShortTxt(txt) {
                 const arrTxt = txt.split(" ");
@@ -1287,8 +1315,6 @@ async function addNodeLinkHighlighter() {
                 // if (link.text)
                 if (link.tags) {
                     // extend link with text sprite
-                    // const sprite = new SpriteText(`${link.source} > ${link.target}`);
-                    // const sprite = new SpriteText(`${link.text}`);
                     const txt = [...link.tags].filter(t => !setInvisibleTags.has(t)).join("\n");
                     const sprite = new SpriteText(txt);
                     sprite.color = 'rgba(255, 255, 0, 1)';
@@ -1422,6 +1448,27 @@ async function testMyOwn() {
     addNodeLinkHighlighter();
 }
 function focusNode(node) {
+    // const assumedW = 20; // new sprite
+    const assumedW = maxNodeTextWidth * textH;
+    const fov = graph.camera().fov; // degrees
+    const rad = fov * Math.PI / 180;
+    // const rCamera = Math.atan(rad / 2) * (assumedW / 2);
+    const rCamera = (assumedW / 2) / Math.atan(rad / 2);
+    const rNode = Math.hypot(node.x, node.y, node.z);
+    let ratio = rCamera / rNode;
+    ratio = ratio * 2; // FIX-ME: ???
+    const x = node.x * ratio;
+    const y = node.y * ratio;
+    const z = node.z * ratio;
+    const newPos = { x, y, z };
+    console.log("focusNode", newPos, node);
+    graph.cameraPosition(
+        newPos, // new position
+        node, // lookAt ({ x, y, z })
+        3000  // ms transition duration
+    );
+}
+function OLDfocusNode(node) {
     // https://github.com/vasturiano/3d-force-graph/blob/master/example/click-to-focus/index.html
     // Aim at node from outside it
     // const distance = 40;
@@ -1435,6 +1482,7 @@ function focusNode(node) {
         ? { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }
         : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
 
+    console.log("OLDfocusNode", newPos, node);
     // Graph.cameraPosition
     graph.cameraPosition(
         newPos, // new position
@@ -1484,6 +1532,8 @@ async function testHtml() {
         })
         ;
 }
+
+/*
 async function testText() {
     // https://github.com/vasturiano/3d-force-graph/blob/master/example/text-nodes/index.html
     const Graph = graphDisplayer.graphData(gData)
@@ -1508,3 +1558,4 @@ function testBasic() {
     // https://github.com/vasturiano/3d-force-graph/blob/master/example/basic/index.html
     const Graph = graphDisplayer.graphData(gData);
 }
+*/
