@@ -202,6 +202,7 @@ async function getToNotifyNow(matchValues) {
 }
 
 export async function getDbMatching(searchFor, minConf, maxConf, requiredTags) {
+    // console.log("getDbMatching", searchFor, minConf, maxConf, requiredTags);
     const allRem = [];
     allRem.length = 0;
     const allRemStored = await getAllReminders();
@@ -253,6 +254,7 @@ export async function getDbMatching(searchFor, minConf, maxConf, requiredTags) {
 
     // const msNow = new Date().getTime();
     allRem.sort(sortObjectBy("key", true)); // newest first
+    // console.log("getDbMatching", allRem);
     return allRem;
 }
 

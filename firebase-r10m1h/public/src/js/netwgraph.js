@@ -187,7 +187,14 @@ async function getFc4iRecs() {
     searchFor = parSearchFor === null ? "" : parSearchFor;
 
     const parRequiredTags = sp.get("requiredTags");
-    requiredTags = parRequiredTags === null ? [] : parRequiredTags.split(",");
+    // requiredTags = parRequiredTags === null ? [] : parRequiredTags.split(",");
+    if (parRequiredTags === null) {
+        requiredTags = [];
+    } else if (parRequiredTags === "") {
+        requiredTags = [];
+    } else {
+        parRequiredTags.split(",");
+    }
     requiredTags.forEach(t => setRequiredTags.add(t));
 
     const parMinConf = sp.get("minConf");
@@ -223,7 +230,7 @@ function showSelection() {
 
     divSelection.appendChild(
         mkElt("details", undefined, [
-            mkElt("summary", undefined, "Select tags"),
+            mkElt("summary", undefined, "Links"),
             divSearchEtc,
             divSelectTags,
         ]));
@@ -427,6 +434,7 @@ async function getNodesAndLinks(
         }
         const arrUse = [...setI].map(i => arrMatch[i]);
         arrUse.forEach(r => {
+            console.log(r);
             if (!r.tags) return;
             r.tags.forEach(t => setLinkTags.add(t));
         });
@@ -1448,12 +1456,11 @@ async function testMyOwn() {
     addNodeLinkHighlighter();
 }
 function focusNode(node) {
-    // const assumedW = 20; // new sprite
-    const assumedW = maxNodeTextWidth * textH;
-    const fov = graph.camera().fov; // degrees
-    const rad = fov * Math.PI / 180;
-    // const rCamera = Math.atan(rad / 2) * (assumedW / 2);
-    const rCamera = (assumedW / 2) / Math.atan(rad / 2);
+    const spriteW = maxNodeTextWidth * textH;
+    let assumedW = spriteW;
+    const degFov = graph.camera().fov; // degrees
+    const radFov = degFov * Math.PI / 180;
+    const rCamera = (assumedW / 2) / Math.atan(radFov / 2);
     const rNode = Math.hypot(node.x, node.y, node.z);
     let ratio = rCamera / rNode;
     ratio = ratio * 2; // FIX-ME: ???
