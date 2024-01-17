@@ -176,8 +176,13 @@ let focusOnNodeClick = false;
 let showInfoOnNodeClick = false;
 let theBtnFocusNode;
 
-addDialogGraphButtons();
+// addDialogGraphButtons();
 await getFc4iRecs();
+await chooseView();
+// showSelection(searchFor, setLinkTags);
+showSelection();
+addDialogGraphButtons();
+
 
 async function getFc4iRecs() {
     if (arrMatchAll) return;
@@ -404,9 +409,6 @@ function mkEltTagSelector(tag, checked) {
 }
 
 
-await chooseView();
-// showSelection(searchFor, setLinkTags);
-showSelection();
 
 async function getNodesAndLinks(
     // numNodes, sourceName
