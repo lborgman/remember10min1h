@@ -1,5 +1,74 @@
 import("pwa");
 
+// https://stackoverflow.com/questions/50360821/how-do-i-influence-link-distance-in-3d-force-graph
+// https://stackoverflow.com/questions/60072100/3d-force-graph-and-three-js-add-geometric-glow-atmospheric-material-simple
+// https://stackoverflow.com/questions/75798624/d3-force-graph-zoom-to-node
+// https://github.com/jackyzha0/quartz
+
+/// >>>> debug
+// running async here...
+window.getDeb = () => {
+    window.g = graph;
+    window.camera = g.camera;
+    console.log("%cDEBUG after set", "background:red; color:black; font-size:1.6rem;", { g, camera });
+}
+window.rotateMe = () => {
+    if (!window.g) window.getDeb();
+    const vector = new THREE.Vector4(0, 0, 300);
+    let az = 0;
+    // debugger;
+    az = +prompt("az", az);
+    console.log({ az, vector });
+    if (confirm("Use cameraPosition")) {
+        const rotz = (new THREE.Matrix4).makeRotationZ(az);
+        // const rotz = (new THREE.Matrix4).makeRotationZ(0.33 * Math.PI);
+        const rotx = (new THREE.Matrix4).makeRotationX(0);
+        const roty = (new THREE.Matrix4).makeRotationX(0);
+        const rotmat = rotx.multiply(roty).multiply(rotx).multiply(rotz);
+        // vector.applyMatrix4(rotz);
+        vector.applyMatrix4(rotmat);
+        g.cameraPosition(vector);
+    } else {
+
+        // https://stackoverflow.com/questions/66750786/update-camera-position-based-on-rotation-three-js
+        //x <- left/right  y <- up/down  z <- forward backward
+        // const vector = new Vector(x, y, z);
+        // const vector = new THREE.Vector4(0, 0, 300);
+        const vector = new THREE.Vector4(0, 0, 0);
+        const rotz = (new THREE.Matrix4).makeRotationZ(az);
+        const rotx = (new THREE.Matrix4).makeRotationX(0);
+        const roty = (new THREE.Matrix4).makeRotationX(0);
+
+        //make matrices
+        // const rotx = (new THREE.Matrix4).makeRotationX(camera.rotation.x);
+        // const roty = (new THREE.Matrix4).makeRotationY(camera.rotation.y);
+        // const rotz = (new THREE.Matrix4).makeRotationZ(camera.rotation.z);
+
+        //multiply all matrices together
+        const rotmat = rotx.multiply(roty).multiply(rotx).multiply(rotz);
+
+        //multiply vector by matrix
+        vector.applyMatrix4(rotmat);
+
+        //finally add the vector to position
+        // camera().position.add(vector);
+        // camera().position.set(vector);
+        // camera().rotation.set(vector);
+
+        const cameraBase = new THREE.Object3D();
+        cameraBase.add(camera());
+        scene.add(cameraBase);
+        console.log("BEFORE", camera().rotation);
+        // camera().rotation.z = az;
+        cameraBase.rotation.z = az;
+        console.log("AFTER", camera().rotation);
+    }
+    // https://stackoverflow.com/questions/65823815/threejs-rotating-the-camera-by-90-degrees-not-objects
+    g.renderer().render(scene, camera());
+    console.log("RENDER", camera().rotation);
+}
+/// <<<< debug
+
 const modMdc = await import("util-mdc");
 console.warn("import d3");
 const modD3 = await import("d3");
@@ -436,7 +505,7 @@ async function getNodesAndLinks(
         }
         const arrUse = [...setI].map(i => arrMatch[i]);
         arrUse.forEach(r => {
-            console.log(r);
+            // console.log(r);
             if (!r.tags) return;
             r.tags.forEach(t => setLinkTags.add(t));
         });
@@ -563,7 +632,7 @@ async function chooseView() {
 
     const divAlts = mkElt("div", undefined, [
         mkViewAlt("My own", testMyOwn),
-        mkViewAlt("TC", testTC),
+        // mkViewAlt("TC", testTC),
         // mkViewAlt("FH", testFH),
         // mkViewAlt("Basic", testBasic),
         // mkViewAlt("Text", testText),
@@ -649,6 +718,7 @@ async function addDialogGraphButtons() {
         showCube = !showCube;
         if (showCube) {
             if (!theCube) {
+                // getDeb();
                 // btnCube.style.color = "darkgoldenrod";
                 btnCube.style.color = "#b8440b";
                 const elt3dCont = document.getElementById("the3d-graph-container");
@@ -1369,6 +1439,7 @@ async function getHtmlGraphDisplayer() {
     });
     return htmlDisplayer;
 }
+/*
 async function testTC() {
     const graphDisplayer = await setupGraphDisplayer();
     let ourDisplayer = graphDisplayer;
@@ -1384,7 +1455,8 @@ async function testTC() {
     // graph.onEngineStop(() => graph.zoomToFit(100));
 
 }
-
+*/
+/*
 async function testFH() {
     console.warn("testFH, setupGraphDisplayer");
     const graphDisplayer = await setupGraphDisplayer();
@@ -1406,6 +1478,7 @@ async function testFH() {
     await waitSeconds(1);
     addOnClick();
 }
+*/
 function updateLinksView() {
     // trigger update of highlighted objects in scene
     graph
@@ -1499,6 +1572,7 @@ function OLDfocusNode(node) {
         3000  // ms transition duration
     );
 }
+/*
 async function testFocus() {
     // https://github.com/vasturiano/3d-force-graph/blob/master/example/click-to-focus/index.html
     const Graph = graphDisplayer.graphData(gData)
@@ -1506,6 +1580,8 @@ async function testFocus() {
         .onNodeClick(node => {
         });
 }
+*/
+/*
 async function testHtml() {
     console.log("TEST HTLM");
     // https://github.com/vasturiano/3d-force-graph/blob/master/example/html-nodes/index.html
@@ -1541,6 +1617,7 @@ async function testHtml() {
         })
         ;
 }
+*/
 
 /*
 async function testText() {
@@ -1563,6 +1640,8 @@ async function testText() {
             return sprite;
         });
 }
+*/
+/*
 function testBasic() {
     // https://github.com/vasturiano/3d-force-graph/blob/master/example/basic/index.html
     const Graph = graphDisplayer.graphData(gData);
