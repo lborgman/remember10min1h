@@ -267,7 +267,7 @@ async function getFc4iRecs() {
     } else if (parRequiredTags === "") {
         requiredTags = [];
     } else {
-        parRequiredTags.split(",");
+        requiredTags = parRequiredTags.split(",");
     }
     requiredTags.forEach(t => setRequiredTags.add(t));
 
@@ -676,11 +676,11 @@ async function chooseView() {
     divSource.querySelector("input[type=radio]").checked = true;
 
     const body = mkElt("div", undefined, [
-        mkElt("h2", undefined, "Choose view"),
+        mkElt("h2", undefined, "Network graph source"),
         divAlts,
-        mkElt("label", undefined, ["Num nodes to show: ", inpNumNodes]),
+        divSource,
         mkElt("hr"),
-        divSource
+        mkElt("label", undefined, ["Num nodes to show: ", inpNumNodes]),
     ]);
     const answer = await modMdc.mkMDCdialogConfirm(body);
     console.log({ answer });
