@@ -383,6 +383,7 @@ let divActive;
 async function displayMatchingReminders(searchFor, minConf, maxConf, requiredTags, cantRefresh) {
     // const dbFc4i = await getDbFc4i();
     const dbFc4i = await import("db-fc4i");
+    const modMdc = await import("util-mdc");
     if (![false, true, undefined].includes(cantRefresh)) {
         console.error(`cantRefresh: ${cantRefresh}`);
         throw Error(`cantRefresh: ${cantRefresh}`);
@@ -470,6 +471,11 @@ async function displayMatchingReminders(searchFor, minConf, maxConf, requiredTag
     eltSearchBanner.textContent = "- ";
     eltSearchBanner.appendChild(mkElt("i", undefined,
         `Search result (${allMatchingItems.length} of ${await dbFc4i.countAllReminders()}):`));
+    const btnNetwG = modMdc.mkMDCiconButton("hub");
+    eltSearchBanner.appendChild(btnNetwG);
+    const iconHub = modMdc.mkMDCicon("hub");
+    const fabNetwG = modMdc.mkMDCfab(iconHub, "Investigate as a graphical network", true)
+    eltSearchBanner.appendChild(fabNetwG);
     divSearchBanner.style.display = (searchFor == undefined) ? "none" : "block";
 
     divSearchBanner.oldKeys = strAllMatchingKeys;

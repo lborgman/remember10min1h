@@ -12,14 +12,17 @@ window.getDeb = () => {
     window.camera = g.camera;
     console.log("%cDEBUG after set", "background:red; color:black; font-size:1.6rem;", { g, camera });
 }
+
+let cameraBase;
 window.rotateMe = () => {
     if (!window.g) window.getDeb();
-    const vector = new THREE.Vector4(0, 0, 300);
-    let az = 0;
-    // debugger;
-    az = +prompt("az", az);
-    console.log({ az, vector });
-    if (confirm("Use cameraPosition")) {
+    // const vector = new THREE.Vector4(0, 0, 300);
+    let az;
+    // az = +prompt("az", az);
+    // console.log({ az, vector });
+    // const useCameraPosition = confirm("Use cameraPosition")) {
+    const useCameraPosition = false;
+    if (useCameraPosition) {
         const rotz = (new THREE.Matrix4).makeRotationZ(az);
         // const rotz = (new THREE.Matrix4).makeRotationZ(0.33 * Math.PI);
         const rotx = (new THREE.Matrix4).makeRotationX(0);
@@ -34,10 +37,10 @@ window.rotateMe = () => {
         //x <- left/right  y <- up/down  z <- forward backward
         // const vector = new Vector(x, y, z);
         // const vector = new THREE.Vector4(0, 0, 300);
-        const vector = new THREE.Vector4(0, 0, 0);
-        const rotz = (new THREE.Matrix4).makeRotationZ(az);
-        const rotx = (new THREE.Matrix4).makeRotationX(0);
-        const roty = (new THREE.Matrix4).makeRotationX(0);
+        // const vector = new THREE.Vector4(0, 0, 0);
+        // const rotz = (new THREE.Matrix4).makeRotationZ(az);
+        // const rotx = (new THREE.Matrix4).makeRotationX(0);
+        // const roty = (new THREE.Matrix4).makeRotationX(0);
 
         //make matrices
         // const rotx = (new THREE.Matrix4).makeRotationX(camera.rotation.x);
@@ -45,27 +48,35 @@ window.rotateMe = () => {
         // const rotz = (new THREE.Matrix4).makeRotationZ(camera.rotation.z);
 
         //multiply all matrices together
-        const rotmat = rotx.multiply(roty).multiply(rotx).multiply(rotz);
+        // const rotmat = rotx.multiply(roty).multiply(rotx).multiply(rotz);
+        // const rotmat = rotz;
 
         //multiply vector by matrix
-        vector.applyMatrix4(rotmat);
+        // vector.applyMatrix4(rotmat);
 
         //finally add the vector to position
         // camera().position.add(vector);
         // camera().position.set(vector);
         // camera().rotation.set(vector);
 
-        const cameraBase = new THREE.Object3D();
-        cameraBase.add(camera());
-        scene.add(cameraBase);
-        console.log("BEFORE", camera().rotation);
+        if (!cameraBase) {
+            cameraBase = new THREE.Object3D();
+            cameraBase.position.set(0, 0, 0);
+            cameraBase.add(camera());
+            scene.add(cameraBase);
+            window.cameraBase = cameraBase;
+        }
+        console.log("BEFORE", camera().rotation, cameraBase.rotation);
         // camera().rotation.z = az;
+        az = -camera().rotation.z;
+        console.log("set az", az);
+        debugger;
         cameraBase.rotation.z = az;
-        console.log("AFTER", camera().rotation);
+        console.log("AFTER", camera().rotation, cameraBase.rotation);
     }
     // https://stackoverflow.com/questions/65823815/threejs-rotating-the-camera-by-90-degrees-not-objects
     g.renderer().render(scene, camera());
-    console.log("RENDER", camera().rotation);
+    console.log("RENDER", camera().rotation, cameraBase.rotation);
 }
 /// <<<< debug
 

@@ -2116,14 +2116,14 @@ export function addMDCrow2Table(row, table) {
     table.eltBody.appendChild(row.tr);
 }
 
-let useSvgIgon = true;
+let useSvgIcon = false;
 // debugger;
 // https://developers.google.com/fonts/docs/material_icons
 export function mkMDCicon(iconMaterialName) {
     const icon = mkMDCsvgIcon(iconMaterialName);
     // icon is always a HTML element because of the fetch.
     // So this does not work to check if the SVG icon is there.
-    if (useSvgIgon && icon) return icon;
+    if (useSvgIcon && icon) return icon;
     return mkElt("span", { class: "material-icons" }, iconMaterialName);
 }
 // The font icons does not work offline (and does not scale well).
