@@ -515,10 +515,14 @@ async function getNodesAndLinks(
             const i = Math.floor(Math.random() * lenMatch);
             setI.add(i);
         }
-        const arrUse = [...setI].map(i => arrMatch[i]);
+        const arrUse = [...setI].map(i => arrMatch[i]).filter(r => r.tags);
         arrUse.forEach(r => {
             // console.log(r);
-            if (!r.tags) return;
+            // if (!r.tags) return;
+            if (!r.tags) {
+                console.error("No tags", r);
+                throw Error(`No tags`);
+            }
             r.tags.forEach(t => setLinkTags.add(t));
         });
         requiredTags.forEach(t => { setLinkTags.delete(t); });
@@ -585,32 +589,50 @@ function computeNodesAndLinks() {
                 } else {
                     oldLink.tags.add(t);
                 }
-                /*
-                const link2 = {
-                    source: r.id,
-                    target: a0.id
-                }
-                links.push(link2);
-                */
-            })
+            });
         }
     });
     links.push(...Object.values(linksByKey));
-    links.forEach(link => {
-        link.text = [...link.tags].join("\n");
-        // delete link.tags;
-    });
-    const setLinked = new Set();
+    links.forEach(link => { link.text = [...link.tags].join("\n"); });
+    // const setLinked = new Set();
+    let setLinked;
+    const subsetsLinked = [];
     links.forEach(l => {
-        setLinked.add(l.source);
-        setLinked.add(l.target);
+        const src = l.source;
+        const trg = l.target;
+        // setLinked.add(l.source);
+        // setLinked.add(l.target);
+        if (subsetsLinked.length == 0) {
+            const ns = new Set();
+            subsetsLinked[0] = ns;
+            ns.add(src);
+            ns.add(trg);
+        } else {
+            let foundSet = false;
+            for (let iSet = 0, len = subsetsLinked.length; iSet < len; iSet++) {
+                const s = subsetsLinked[iSet];
+                if (s.has(src) || s.has(trg)) {
+                    s.add(src); s.add(trg);
+                    foundSet = true;
+                }
+            }
+            if (!foundSet) {
+                const ns = new Set();
+                subsetsLinked[subsetsLinked.length] = ns;
+                ns.add(src); ns.add(trg);
+            }
+        }
     });
-    // console.log("NIY");
-    // const finNodes = [...setLinked]
+    // FIX-ME: Merge subsets
+    setLinked = subsetsLinked[0];
+    console.log({ links, setLinked });
+
     const nodes = prelNodes.nodes.filter(n => setLinked.has(n.id));
+
     const numFinNodes = nodes.length;
     const eltShowFc4i = document.getElementById("show-fc4i-num");
     eltShowFc4i.textContent = `, fc4i: ${numFinNodes} (${numFc4i})`;
+
     gData = { nodes, links }
 
     setActuallyUsedLinkTags.clear();
@@ -1539,12 +1561,6 @@ async function testMyOwn() {
     if (useHtml) { ourDisplayer = await getHtmlGraphDisplayer(); }
     graph = ourDisplayer.graphData(gData);
 
-    // https://stackoverflow.com/questions/69914793/three-js-rotate-around-axis-at-an-absoulte-angle
-    setTimeout(() => {
-        const obj = graph.camera();
-        obj.userData.oldMatrix = obj.matrix.clone();
-    }, 1000);
-
     graph = graph.nodeOpacity(1.0);
 
     addLinkText();
@@ -1552,6 +1568,14 @@ async function testMyOwn() {
     await waitSeconds(1);
     addOnClick();
     addNodeLinkHighlighter();
+
+    // https://stackoverflow.com/questions/69914793/three-js-rotate-around-axis-at-an-absoulte-angle
+    // setTimeout(() => {
+    const obj = graph.camera();
+    obj.userData.oldMatrix = obj.matrix.clone();
+    // }, 1000);
+
+
 }
 function focusNode(node) {
     const spriteW = maxNodeTextWidth * textH;
