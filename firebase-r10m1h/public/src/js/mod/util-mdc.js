@@ -849,7 +849,8 @@ export function mkMDCfab(eltIcon, title, mini, extendTitle) {
     */
     const btn = mkElt("button", {
         class: "mdc-fab",
-        "aria-label": title,
+        // "aria-label": title,
+        title,
     }, [
         mkElt("div", { class: "mdc-fab__ripple" }),
         mkElt("span", { class: "mdc-fab__icon" }, eltIcon),

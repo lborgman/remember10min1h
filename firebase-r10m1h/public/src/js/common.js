@@ -471,11 +471,23 @@ async function displayMatchingReminders(searchFor, minConf, maxConf, requiredTag
     eltSearchBanner.textContent = "- ";
     eltSearchBanner.appendChild(mkElt("i", undefined,
         `Search result (${allMatchingItems.length} of ${await dbFc4i.countAllReminders()}):`));
-    const btnNetwG = modMdc.mkMDCiconButton("hub");
-    eltSearchBanner.appendChild(btnNetwG);
+
+    // const btnNetwG = modMdc.mkMDCiconButton("hub");
+    // eltSearchBanner.appendChild(btnNetwG);
+
     const iconHub = modMdc.mkMDCicon("hub");
-    const fabNetwG = modMdc.mkMDCfab(iconHub, "Investigate as a graphical network", true)
+    const aIconHub = mkElt("a", { href: mkTestNetwGraphURL() }, iconHub);
+    aIconHub.addEventListener("click", evt => {
+        // aIconHub.href = mkTestNetwGraphURL();
+    });
+
+    aIconHub.style.lineHeight = "1rem";
+    const titleNetwg = "Investigate as a graphical network";
+    const fabNetwG = modMdc.mkMDCfab(aIconHub, titleNetwg, true)
+    // fabNetwG.title = titleNetwg;
+    fabNetwG.style.marginLeft = "30px";
     eltSearchBanner.appendChild(fabNetwG);
+
     divSearchBanner.style.display = (searchFor == undefined) ? "none" : "block";
 
     divSearchBanner.oldKeys = strAllMatchingKeys;

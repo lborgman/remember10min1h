@@ -14,6 +14,7 @@ window.getDeb = () => {
 }
 
 let cameraBase;
+// https://stackoverflow.com/questions/69914793/three-js-rotate-around-axis-at-an-absoulte-angle
 window.rotateMe = () => {
     if (!window.g) window.getDeb();
     // const vector = new THREE.Vector4(0, 0, 300);
@@ -21,7 +22,8 @@ window.rotateMe = () => {
     // az = +prompt("az", az);
     // console.log({ az, vector });
     // const useCameraPosition = confirm("Use cameraPosition")) {
-    const useCameraPosition = false;
+    let useCameraPosition = true;
+    debugger;
     if (useCameraPosition) {
         const rotz = (new THREE.Matrix4).makeRotationZ(az);
         // const rotz = (new THREE.Matrix4).makeRotationZ(0.33 * Math.PI);
@@ -70,7 +72,6 @@ window.rotateMe = () => {
         // camera().rotation.z = az;
         az = -camera().rotation.z;
         console.log("set az", az);
-        debugger;
         cameraBase.rotation.z = az;
         console.log("AFTER", camera().rotation, cameraBase.rotation);
     }
@@ -856,7 +857,11 @@ async function addDialogGraphButtons() {
 
     const btnHome = modMdc.mkMDCiconButton("home");
     btnHome.addEventListener("click", evt => {
-        graph.cameraPosition({ x: 0, y: 0, z: 400 }, undefined, 2000);
+        // graph.cameraPosition({ x: 0, y: -10, z: cameraDistance }, { x: 0, y: 10, z: 0 }, 1200);
+        // https://stackoverflow.com/questions/69914793/three-js-rotate-around-axis-at-an-absoulte-angle
+        const obj = graph.camera();
+        obj.matrix.copy(obj.userData.oldMatrix);
+        obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
     });
 
     const btnHideGraph = modMdc.mkMDCiconButton("visibility");
@@ -1533,6 +1538,13 @@ async function testMyOwn() {
     const useHtml = true;
     if (useHtml) { ourDisplayer = await getHtmlGraphDisplayer(); }
     graph = ourDisplayer.graphData(gData);
+
+    // https://stackoverflow.com/questions/69914793/three-js-rotate-around-axis-at-an-absoulte-angle
+    setTimeout(() => {
+        const obj = graph.camera();
+        obj.userData.oldMatrix = obj.matrix.clone();
+    }, 1000);
+
     graph = graph.nodeOpacity(1.0);
 
     addLinkText();
@@ -1576,7 +1588,6 @@ function OLDfocusNode(node) {
         : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
 
     console.log("OLDfocusNode", newPos, node);
-    // Graph.cameraPosition
     graph.cameraPosition(
         newPos, // new position
         node, // lookAt ({ x, y, z })
