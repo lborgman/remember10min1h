@@ -511,7 +511,8 @@ async function getNodesAndLinks(
         const lenMatch = arrMatch.length;
         const setI = new Set();
         let s = 0;
-        while (s++ < 2 * numNodes && setI.size < numNodes) {
+        const n = 4;
+        while (s++ < 2 * n * numNodes && setI.size < n * numNodes) {
             const i = Math.floor(Math.random() * lenMatch);
             setI.add(i);
         }
@@ -598,6 +599,7 @@ function computeNodesAndLinks() {
     let setLinked;
     const subsetsLinked = [];
     links.forEach(l => {
+        if (setLinked) return;
         const src = l.source;
         const trg = l.target;
         // setLinked.add(l.source);
@@ -614,6 +616,10 @@ function computeNodesAndLinks() {
                 if (s.has(src) || s.has(trg)) {
                     s.add(src); s.add(trg);
                     foundSet = true;
+                    if (s.size >= numNodes) {
+                        setLinked = s;
+                        break;
+                    }
                 }
             }
             if (!foundSet) {
@@ -624,8 +630,16 @@ function computeNodesAndLinks() {
         }
     });
     // FIX-ME: Merge subsets
-    setLinked = subsetsLinked[0];
-    console.log({ links, setLinked });
+    console.log({ setLinked });
+    setLinked = setLinked || subsetsLinked[0];
+    // Remove links not used
+    const usedLinks = links.filter(link => {
+        if (!setLinked.has(link.source)) return false;
+        if (!setLinked.has(link.target)) return false;
+        return true;
+    });
+    console.log({ links, setLinked, usedLinks });
+    if (usedLinks.length == 0) debugger;
 
     const nodes = prelNodes.nodes.filter(n => setLinked.has(n.id));
 
@@ -633,7 +647,8 @@ function computeNodesAndLinks() {
     const eltShowFc4i = document.getElementById("show-fc4i-num");
     eltShowFc4i.textContent = `, fc4i: ${numFinNodes} (${numFc4i})`;
 
-    gData = { nodes, links }
+    // gData = { nodes, links };
+    gData = { nodes, links: usedLinks };
 
     setActuallyUsedLinkTags.clear();
     links.forEach(l => {
@@ -1540,10 +1555,15 @@ async function testMyOwn() {
     }
 
     gData.links.forEach(link => {
-        // const a = gData.nodes[link.source];
         const a = gData.nodesById[link.source];
-        // const b = gData.nodes[link.target];
         const b = gData.nodesById[link.target];
+
+        // Links are from all selected nodes.
+        // But all nodes are not used here:
+        // FIX-ME: Too late to check here?
+        // if (!a) return;
+        // if (!b) return;
+
         !a.neighbors && (a.neighbors = []);
         !b.neighbors && (b.neighbors = []);
         a.neighbors.push(b);
