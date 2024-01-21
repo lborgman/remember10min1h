@@ -714,7 +714,17 @@ async function chooseView() {
     }
     divAltFc4i.appendChild(divReqTags);
 
-    const inpNumNodes = mkElt("input", { type: "number", value: 10, min: 5, max: 20 });
+    // localStorage
+    // const settingLinkW = new settingNetwG("linkW", 1);
+    // let linkW = settingLinkW.value;
+    // settingLinkW.onInputFun = (val) => linkW = val;
+
+    const settingNumNodes = new settingNetwG("numNodes", 7);
+    numNodes = settingNumNodes.value;
+    const inpNumNodes = mkElt("input", { type: "number", value: numNodes, min: 4, max: 20 });
+    settingNumNodes.bindToInput(inpNumNodes);
+    settingNumNodes.onInputFun = (val) => linkW = val;
+
     const divSource = mkElt("div", { class: "xmdc-card" }, [
         mkElt("h3", undefined, "Source"),
         mkElt("div", { style: "display:flex; flex-direction:column; gap:15px" }, [
