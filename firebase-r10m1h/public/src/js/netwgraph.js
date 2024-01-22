@@ -777,6 +777,7 @@ let hilightOnNodeClick = false;
 let theCube;
 let theCubeSize = 1000;
 let showCube = false;
+let imagesMode = false;
 
 async function addDialogGraphButtons() {
 
@@ -912,6 +913,22 @@ async function addDialogGraphButtons() {
         }
     });
 
+    const btnImages = modMdc.mkMDCiconButton("imagesmode");
+    btnImages.addEventListener("click", evt => {
+        // https://github.com/vasturiano/3d-force-graph/issues/61
+        imagesMode = !imagesMode;
+        if (imagesMode) {
+            btnImages.style.backgroundColor = "yellowgreen";
+            graph.nodeThreeObject(node => showNodeAsImg(node));
+        } else {
+            btnImages.style.backgroundColor = "unset";
+            graph.nodeThreeObject(node => showNodeAsText(node));
+        }
+        // FIX-ME: lines above works but not the line below??? 
+        //   Is is something with async...
+        // graph.nodeThreeObject(node => showNode(node));
+    });
+
     const btnHome = modMdc.mkMDCiconButton("home");
     btnHome.addEventListener("click", evt => {
         // graph.cameraPosition({ x: 0, y: -10, z: cameraDistance }, { x: 0, y: 10, z: 0 }, 1200);
@@ -969,6 +986,7 @@ async function addDialogGraphButtons() {
         btnHome,
         btnFitAll,
         btnCube,
+        btnImages,
         btnDialogGraph,
         // btnHideGraph,
     ]);
@@ -1331,7 +1349,7 @@ async function addLinkText() {
         }
     });
 }
-function addNodeAsText(node) {
+function showNodeAsText(node) {
     const isFc4i = node.fc4i != undefined;
     const fc4iTitle = node.fc4i?.r.title;
     const txtLong = isFc4i ? fc4iTitle : `Dummy long ${node.id}`;
@@ -1384,9 +1402,9 @@ function addNodeAsText(node) {
     sprite.ourCustom = txtLong; // FIX-ME:
     return sprite;
 }
-function addNodeAsImg(node) {
+function showNodeAsImg(node) {
     // const imgTexture = new THREE.TextureLoader().load(`./imgs/${img}`);
-    if (node.fc4i.r.images.length == 0) return addNodeAsText(node);
+    if (node.fc4i.r.images.length == 0) return showNodeAsText(node);
     const blobImg = node.fc4i.r.images[0];
     // st.backgroundImage = `url(${URL.createObjectURL(imgBlob)})`;
     const urlImg = URL.createObjectURL(blobImg);
@@ -1408,19 +1426,12 @@ function addNodeAsImg(node) {
     img.src = urlImg;
     return sprite;
 }
-let textOrImg = 0;
-async function addText() {
-    let added1html = true;
+// let textOrImg = 0;
+// async function showNode() 
+function showNode() {
     graph = graph.nodeThreeObject(node => {
-        if (!added1html) {
-            added1html = true;
-            return addNodeAsHtml(node);
-        }
-        if (textOrImg++ % 2 == 0) {
-            return addNodeAsText(node);
-        } else {
-            return addNodeAsImg(node);
-        }
+        if (imagesMode) return showNodeAsImg(node);
+        return showNodeAsText(node);
     });
 }
 
@@ -1627,7 +1638,7 @@ async function testMyOwn() {
     graph = graph.nodeOpacity(1.0);
 
     addLinkText();
-    addText();
+    showNode();
     await waitSeconds(1);
     addOnClick();
     addNodeLinkHighlighter();

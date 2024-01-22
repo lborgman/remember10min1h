@@ -486,6 +486,7 @@ async function displayMatchingReminders(searchFor, minConf, maxConf, requiredTag
     const fabNetwG = modMdc.mkMDCfab(aIconHub, titleNetwg, true)
     // fabNetwG.title = titleNetwg;
     fabNetwG.style.marginLeft = "30px";
+    fabNetwG.style.backgroundColor = "goldenrod";
     eltSearchBanner.appendChild(fabNetwG);
 
     divSearchBanner.style.display = (searchFor == undefined) ? "none" : "block";
