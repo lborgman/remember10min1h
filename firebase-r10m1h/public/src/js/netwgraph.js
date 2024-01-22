@@ -714,6 +714,16 @@ async function chooseView() {
     }
     divAltFc4i.appendChild(divReqTags);
 
+    const eltSearchFor = searchFor.length == 0 ?
+        mkElt("i", undefined, "(no search string)")
+        :
+        mkElt("b", undefined, searchFor);
+    const divSearched = mkElt("p", undefined, [
+        "Searched: ",
+        eltSearchFor
+    ]);
+    divAltFc4i.appendChild(divSearched);
+
     // localStorage
     // const settingLinkW = new settingNetwG("linkW", 1);
     // let linkW = settingLinkW.value;
@@ -1321,73 +1331,96 @@ async function addLinkText() {
         }
     });
 }
+function addNodeAsText(node) {
+    const isFc4i = node.fc4i != undefined;
+    const fc4iTitle = node.fc4i?.r.title;
+    const txtLong = isFc4i ? fc4iTitle : `Dummy long ${node.id}`;
+    const txtShort = mkShortTxt(txtLong);
+    function mkShortTxt(txt) {
+        const arrTxt = txt.split(" ");
+        const arrLines = [];
+        let i = 0;
+        const len = arrTxt.length;
+        let newLine = "";
+        let iLines = 0;
+        while (i < len) {
+            const nextWord = arrTxt[i++];
+            const nextLine = newLine + nextWord + " ";
+            if (nextLine.length > maxNodeTextWidth) {
+                if (newLine.length > 0) {
+                    arrLines[iLines++] = newLine.slice(0, -1);
+                    newLine = nextWord + " ";
+                } else {
+                    arrLines[iLines++] = nextLine.slice(0, -1);
+                    newLine = "";
+                }
+            } else newLine = nextLine;
+        }
+        if (newLine.length > 0) {
+            arrLines[iLines++] = newLine.slice(0, -1);
+        }
+        let allUsed = true;
+        if (arrLines.length > maxNodeTextLines) {
+            arrLines.length = maxNodeTextLines;
+            allUsed = false;
+        }
+        let retTxt = arrLines.join("\n");
+        if (!allUsed) retTxt += "…";
+        return retTxt;
+    }
+    const sprite = new SpriteText(txtShort);
+    // const sprite = new SpriteText("hi\nthere");
+    sprite.material.transparent = false;
+    const numTags = node.fc4i.r.tags.length;
+    const idxClr = Math.min(numTags, colorsRainbow.length - 1);
+    sprite.backgroundColor = isFc4i ? colorsRainbow[idxClr] : "yellow";
+    sprite.borderWidth = 1;
+    sprite.borderColor = "yellowgreen";
+    sprite.borderColor = "yellowgreen";
+    // sprite.color = node.color;
+    sprite.color = "black";
+    sprite.textHeight = textH;
+    // sprite.ourCustom = "sprite our custom";
+    sprite.ourCustom = txtLong; // FIX-ME:
+    return sprite;
+}
+function addNodeAsImg(node) {
+    // const imgTexture = new THREE.TextureLoader().load(`./imgs/${img}`);
+    if (node.fc4i.r.images.length == 0) return addNodeAsText(node);
+    const blobImg = node.fc4i.r.images[0];
+    // st.backgroundImage = `url(${URL.createObjectURL(imgBlob)})`;
+    const urlImg = URL.createObjectURL(blobImg);
+    const imgTexture = new THREE.TextureLoader().load(urlImg);
+    imgTexture.colorSpace = THREE.SRGBColorSpace;
+    const material = new THREE.SpriteMaterial({ map: imgTexture });
+    const sprite = new THREE.Sprite(material);
+    sprite.scale.set(20, 12.4);
+    const img = new Image();
+    img.onload = () => {
+        const h = img.height;
+        const w = img.width;
+        const sc = (20 * 12.4) / (w * h);
+        const sc2 = Math.sqrt(sc);
+        const scW = w * sc2;
+        const scH = h * sc2;
+        sprite.scale.set(scW, scH);
+    }
+    img.src = urlImg;
+    return sprite;
+}
+let textOrImg = 0;
 async function addText() {
     let added1html = true;
     graph = graph.nodeThreeObject(node => {
-        function addNodeAsText(node) {
-            const isFc4i = node.fc4i != undefined;
-            const fc4iTitle = node.fc4i?.r.title;
-            const txtLong = isFc4i ? fc4iTitle : `Dummy long ${node.id}`;
-            /*
-            const txtShort = isFc4i ?
-                (disemvowel ? fc4iTitle.replace(/[aeiou]/gi, "") : fc4iTitle).slice(0, 15) + "…"
-                :
-                `Text ${node.id}`;
-            */
-            const txtShort = mkShortTxt(txtLong);
-            function mkShortTxt(txt) {
-                const arrTxt = txt.split(" ");
-                const arrLines = [];
-                let i = 0;
-                const len = arrTxt.length;
-                let newLine = "";
-                let iLines = 0;
-                while (i < len) {
-                    const nextWord = arrTxt[i++];
-                    const nextLine = newLine + nextWord + " ";
-                    if (nextLine.length > maxNodeTextWidth) {
-                        if (newLine.length > 0) {
-                            arrLines[iLines++] = newLine.slice(0, -1);
-                            newLine = nextWord + " ";
-                        } else {
-                            arrLines[iLines++] = nextLine.slice(0, -1);
-                            newLine = "";
-                        }
-                    } else newLine = nextLine;
-                }
-                if (newLine.length > 0) {
-                    arrLines[iLines++] = newLine.slice(0, -1);
-                }
-                let allUsed = true;
-                if (arrLines.length > maxNodeTextLines) {
-                    arrLines.length = maxNodeTextLines;
-                    allUsed = false;
-                }
-                let retTxt = arrLines.join("\n");
-                if (!allUsed) retTxt += "…";
-                return retTxt;
-            }
-            const sprite = new SpriteText(txtShort);
-            // const sprite = new SpriteText("hi\nthere");
-            sprite.material.transparent = false;
-            const numTags = node.fc4i.r.tags.length;
-            const idxClr = Math.min(numTags, colorsRainbow.length - 1);
-            sprite.backgroundColor = isFc4i ? colorsRainbow[idxClr] : "yellow";
-            sprite.borderWidth = 1;
-            sprite.borderColor = "yellowgreen";
-            sprite.borderColor = "yellowgreen";
-            // sprite.color = node.color;
-            sprite.color = "black";
-            sprite.textHeight = textH;
-            // sprite.ourCustom = "sprite our custom";
-            sprite.ourCustom = txtLong; // FIX-ME:
-            return sprite;
-        }
         if (!added1html) {
             added1html = true;
             return addNodeAsHtml(node);
         }
-        return addNodeAsText(node);
+        if (textOrImg++ % 2 == 0) {
+            return addNodeAsText(node);
+        } else {
+            return addNodeAsImg(node);
+        }
     });
 }
 
@@ -1448,8 +1481,8 @@ async function addNodeLinkHighlighter() {
             if (numTags == 0) return 0;
             let emp = 1;
             if (numTags > 1) {
-                const emphase = 1.3 ** (numTags - 1);
-                emp = Math.min(emphase, 2.5);
+                const emphase = 1.14 ** (numTags - 1);
+                emp = Math.min(emphase, 2);
             }
             if (setHighlightLinks.has(link)) { return linkWHi * emp; } else { return linkW * emp; }
         })
