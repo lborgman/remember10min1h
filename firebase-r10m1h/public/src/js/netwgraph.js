@@ -993,11 +993,57 @@ async function addDialogGraphButtons() {
     eltBtnContainer.style = `
         position: fixed;
         top: 0;
-        right: 0;
+        left: 0;
         display: flex;
         background-color: #b1dff1;
+        transition-duration: 0.7s;
+        transition-property: left, right;
     `;
     document.body.appendChild(eltBtnContainer);
+
+    const btnLeft = modMdc.mkMDCiconButton("first_page");
+    btnLeft.addEventListener("click", evt => {
+        btnLeft.style.display = "none";
+        btnRight.style.display = "block";
+        eltBtnContainer.style.left = 0;
+    });
+    btnLeft.style = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: orange;
+        display: none;
+    `;
+
+    function getBtnContLeft() {
+        const needW = eltBtnContainer.childElementCount * 48;
+        const availW = document.documentElement.clientWidth;
+        const left = availW - needW;
+        return left;
+    }
+    const btnRight = modMdc.mkMDCiconButton("last_page");
+    btnRight.addEventListener("click", evt => {
+        btnRight.style.display = "none";
+        btnLeft.style.display = "block";
+        const left = getBtnContLeft();
+        eltBtnContainer.style.left = `${left}px`;
+    });
+    btnRight.style = `
+        position: fixed;
+        top: 0;
+        right: 0;
+        background-color: orange;
+        display: none;
+    `;
+    (async () => {
+        await promiseDOMready();
+        const left = getBtnContLeft();
+        if (left < 0) btnRight.style.display = "block";
+    })();
+
+    document.body.appendChild(btnLeft);
+    document.body.appendChild(btnRight);
+
 }
 async function dialogGraph() {
     const inpLinkW = mkElt("input", { id: "linkW", type: "number", min: "1", max: "5", value: linkW });
