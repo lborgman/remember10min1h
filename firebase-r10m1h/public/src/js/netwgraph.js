@@ -252,6 +252,7 @@ let numNodes;
 let sourceName;
 
 const setManExclTags = new Set();
+let pendingRedrawGraph = false;
 
 let focusOnNodeClick = false;
 let showInfoOnNodeClick = false;
@@ -323,14 +324,6 @@ function showSelection() {
     divSelectionInner.classList.add("expanding-inner");
     divSelection.appendChild(divSelectionInner);
 
-    /*
-    divSelection.appendChild(
-        mkElt("details", undefined, [
-            mkElt("summary", undefined, "Links"),
-            divSearchEtc,
-            divSelectTags,
-        ]));
-    */
 
 
     requiredTags.forEach(tag => {
@@ -345,6 +338,8 @@ function showSelection() {
             const elt = mkEltTagSelector(tag, true);
             divSelectTags.appendChild(elt);
         });
+
+    /*
     divSelection.addEventListener("NOclick", evt => {
         const target = evt.target;
         console.log({ evt, target });
@@ -360,12 +355,15 @@ function showSelection() {
         arrTagsNoLink.forEach(t => setNoLinkTags.add(t));
         console.log({ setNoLinkTags });
 
-        // updateGraph();
-        redrawGraph();
+        // FIX-ME: delay redraw until the select tags div is closed
+        // redrawGraph();
+        pendingRedrawGraph = true;
     });
+    */
 }
 
-function getManuallyExcludedTags() {
+function OLDgetManuallyExcludedTags() {
+    debugger;
     const divCont = document.getElementById("select-tags");
     const chips = divCont
         .querySelectorAll(".tag-selector .chip-tags .chip-tag-selected");
@@ -383,6 +381,7 @@ function getManuallyExcludedTags() {
 }
 
 function redrawGraph() {
+    pendingRedrawGraph = false;
     graph._destructor();
     const eltGraph = document.getElementById("the3d-graph-container");
     eltGraph.textContent = "";
@@ -391,8 +390,8 @@ function redrawGraph() {
 }
 
 function mkEltTagSelector(tag, checked) {
-    const eltLabel = mkElt("label", { class: "tag-chk" }, [ `#${tag}`, ]);
-    const eltTagSelector = mkElt("span", { class: "tag-selector" }, [ eltLabel]);
+    const eltLabel = mkElt("label", { class: "tag-chk" }, [`#${tag}`,]);
+    const eltTagSelector = mkElt("span", { class: "tag-selector" }, [eltLabel]);
 
     // const chkbox = mkElt("input", { type: "checkbox" });
     // chkbox.checked = checked;
@@ -412,8 +411,8 @@ function mkEltTagSelector(tag, checked) {
         btn.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             const target = evt.target;
             console.log({ target, iconName });
-            // debugger;
-            if (await selectChipAction(iconName)) {
+            // if (await selectChipAction(iconName))
+            if (await selectChipAction(btn.textContent)) {
                 // selectChip(iconName);
                 toggleChipBtnStateDefault(btn);
             }
@@ -460,16 +459,16 @@ function mkEltTagSelector(tag, checked) {
     }
     let btnVisible;
     let btnInclude;
-    async function selectChipAction(iconName) {
+    async function selectChipAction(currentState) {
         // if (selectedChip == iconName) return;
         let needLinksUpdate = false;
         let needRedraw = false;
-        switch (iconName) {
-            case "visibility_off":
+        switch (currentState) {
+            case "visibility":
                 setInvisibleTags.add(tag);
                 needLinksUpdate = true;
                 break;
-            case "visibility":
+            case "visibility_off":
                 setInvisibleTags.delete(tag);
                 needLinksUpdate = true;
                 break;
@@ -479,7 +478,7 @@ function mkEltTagSelector(tag, checked) {
                 needRedraw = true;
                 break;
             default:
-                throw Error(`Unexpected iconName: ${iconName}`);
+                throw Error(`Unexpected iconName: ${currentState}`);
 
         }
         if (needRedraw) {
@@ -488,7 +487,8 @@ function mkEltTagSelector(tag, checked) {
         }
         if (needLinksUpdate) updateLinksView();
         if (needRedraw) {
-            console.log({eltTagSelector, btnInclude});
+            console.log({ eltTagSelector, btnInclude });
+            modMdc.mkMDCsnackbar("Will redraw graph");
             if (btnInclude.textContent == "check_box") {
                 setManExclTags.add(tag);
                 eltTagSelector.classList.add("manually-excluded");
@@ -497,14 +497,15 @@ function mkEltTagSelector(tag, checked) {
                 setManExclTags.delete(tag);
                 eltTagSelector.classList.remove("manually-excluded");
             }
-            getManuallyExcludedTags();
+            // getManuallyExcludedTags();
             // debugger;
-            redrawGraph();
+            // redrawGraph();
+            pendingRedrawGraph = true;
         }
         return true;
     }
 
-    btnVisible= addChip("visibility", "visibility_off", "Show/hide with these links");
+    btnVisible = addChip("visibility", "visibility_off", "Show/hide with these links");
     // addChip("visibility_off", "Hide these links");
     // addChip("delete", "Redraw with/without these links");
     btnInclude = addChip("check_box", "check_box_outline_blank", "Redraw with/without these links");
@@ -684,22 +685,10 @@ function computeNodesAndLinks() {
     gData = { nodes, links: usedLinks };
 
     setActuallyUsedLinkTags.clear();
-    links.forEach(l => {
+    usedLinks.forEach(l => {
         l.tags.forEach(t => setActuallyUsedLinkTags.add(t));
     });
 
-    /*
-    console.log("-------------------------- computed!");
-    console.log({
-        setRequiredTags,
-        setNoLinkTags,
-        setUsedLinkTags,
-        setActuallyUsedLinkTags,
-        setExclTags,
-        setLinkTags,
-        gData,
-    });
-    */
 }
 
 async function chooseView() {
@@ -972,9 +961,16 @@ async function addDialogGraphButtons() {
     });
 
     const btnSelection = modMdc.mkMDCiconButton("#");
+    let tmrPendingRedrawGraph = false;
     btnSelection.addEventListener("click", evt => {
         const divSelection = document.getElementById("netwg-our-selection");
         divSelection.classList.toggle("is-open");
+        if (pendingRedrawGraph) {
+            clearTimeout(tmrPendingRedrawGraph);
+            if (!divSelection.classList.contains("is-open")) {
+                tmrPendingRedrawGraph = setTimeout(redrawGraph, 2000);
+            }
+        }
     });
 
     const btnHideGraph = modMdc.mkMDCiconButton("visibility");
