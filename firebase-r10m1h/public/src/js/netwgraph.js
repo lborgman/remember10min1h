@@ -312,14 +312,25 @@ function showSelection() {
         gap: 5px;
         padding: 5px;
     `;
-    const divSelection = document.getElementById("netwg-our-selection");
 
+    // https://keithjgrant.com/posts/2023/04/transitioning-to-height-auto/
+    const divSelection = document.getElementById("netwg-our-selection");
+    divSelection.classList.add("expanding-wrapper");
+    const divSelectionInner = mkElt("div", undefined, [
+        divSearchEtc,
+        divSelectTags,
+    ]);
+    divSelectionInner.classList.add("expanding-inner");
+    divSelection.appendChild(divSelectionInner);
+
+    /*
     divSelection.appendChild(
         mkElt("details", undefined, [
             mkElt("summary", undefined, "Links"),
             divSearchEtc,
             divSelectTags,
         ]));
+    */
 
 
     requiredTags.forEach(tag => {
@@ -938,6 +949,12 @@ async function addDialogGraphButtons() {
         obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
     });
 
+    const btnSelection = modMdc.mkMDCiconButton("rule");
+    btnSelection.addEventListener("click", evt => {
+        const divSelection = document.getElementById("netwg-our-selection");
+        divSelection.classList.toggle("is-open");
+    });
+
     const btnHideGraph = modMdc.mkMDCiconButton("visibility");
     btnHideGraph.style.color = "yellowgreen";
     btnHideGraph.addEventListener("click", async evt => {
@@ -987,6 +1004,7 @@ async function addDialogGraphButtons() {
         btnFitAll,
         btnCube,
         btnImages,
+        btnSelection,
         btnDialogGraph,
         // btnHideGraph,
     ]);

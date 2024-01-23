@@ -92,9 +92,30 @@
         }
         */
 
+        /*
         #netwg-our-selection summary {
             height: 50px;
             padding: 10px;
+        }
+        */
+
+        #netwg-our-selection {
+            margin-top: 48px;
+        }
+
+        /* https://keithjgrant.com/posts/2023/04/transitioning-to-height-auto/ */
+        .expanding-wrapper {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.7s ease-out;
+        }
+
+        .expanding-wrapper.is-open {
+            grid-template-rows: 1fr;
+        }
+
+        .expanding-inner {
+            overflow: hidden;
         }
 
         #the3d-graph-container {
