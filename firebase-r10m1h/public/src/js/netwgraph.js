@@ -379,7 +379,7 @@ function getManuallyExcludedTags() {
     });
     setManExclTags.clear();
     tags.forEach(t => setManExclTags.add(t));
-    debugger;
+    // debugger;
 }
 
 function redrawGraph() {
@@ -391,8 +391,11 @@ function redrawGraph() {
 }
 
 function mkEltTagSelector(tag, checked) {
-    const chkbox = mkElt("input", { type: "checkbox" });
-    chkbox.checked = checked;
+    const eltLabel = mkElt("label", { class: "tag-chk" }, [ `#${tag}`, ]);
+    const eltTagSelector = mkElt("span", { class: "tag-selector" }, [ eltLabel]);
+
+    // const chkbox = mkElt("input", { type: "checkbox" });
+    // chkbox.checked = checked;
     // const eltHidden = modMdc.mkMDCicon("visibilty_off");
     // const eltHidden = mkElt("span", { class: "material-icons" }, "visibility_off");
     // const eltRemove = modMdc.mkMDCicon("delete");
@@ -401,7 +404,7 @@ function mkEltTagSelector(tag, checked) {
     const eltChips = mkElt("span");
     eltChips.classList.add("chip-tags");
     // const chipFontSize = 24;
-    let selectedChip;
+    // let selectedChip;
     function mkChip(iconName, ariaLabel) {
         // const btn = modMdc.mkMDCiconButton(iconName, ariaLabel, chipFontSize);
         const btn = modMdc.mkMDCiconButton(iconName, ariaLabel);
@@ -410,16 +413,41 @@ function mkEltTagSelector(tag, checked) {
             const target = evt.target;
             console.log({ target, iconName });
             // debugger;
-            if (await selectChipAction(iconName)) selectChip(iconName);
+            if (await selectChipAction(iconName)) {
+                // selectChip(iconName);
+                toggleChipBtnStateDefault(btn);
+            }
         }));
         btn.classList.add("chip-tag");
         return btn;
     }
-    function addChip(iconName, ariaLabel) {
-        const btn = mkChip(iconName, ariaLabel);
+    function addChip(iconNameDefault, iconNameAltState, ariaLabel) {
+        const btn = mkChip(iconNameDefault, ariaLabel);
+        btn.iconNameDefault = iconNameDefault;
+        btn.iconNameAltState = iconNameAltState;
+        btn.classList.add("chip-default-state");
         eltChips.appendChild(btn);
+        return btn;
+    }
+    function setChipBtnState(btn, stateDefault) {
+        btn.lastChild.remove();
+        const newState = stateDefault ? btn.iconNameDefault : btn.iconNameAltState;
+        btn.appendChild(document.createTextNode(newState));
+        if (stateDefault) {
+            btn.classList.add("chip-default-state");
+        } else {
+            btn.classList.remove("chip-default-state");
+        }
+    }
+    function isChipBtnStateDefault(btn) {
+        return btn.textContent == btn.iconNameDefault;
+    }
+    function toggleChipBtnStateDefault(btn) {
+        const isDefault = isChipBtnStateDefault(btn);
+        setChipBtnState(btn, !isDefault);
     }
     function selectChip(iconName) {
+        /*
         [...eltChips.querySelectorAll(".chip-tag")]
             .forEach(elt => {
                 elt.classList.remove("chip-tag-selected");
@@ -427,58 +455,60 @@ function mkEltTagSelector(tag, checked) {
                     elt.classList.add("chip-tag-selected");
                 }
             });
-        selectedChip = iconName;
+        */
+        // selectedChip = iconName;
     }
+    let btnVisible;
+    let btnInclude;
     async function selectChipAction(iconName) {
-        if (selectedChip == iconName) return;
-        const needLinksUpdate =
-            iconName == "visibility_off"
-            ||
-            selectedChip == "visibility_off";
-        const needRedraw =
-            iconName == "delete"
-            ||
-            selectedChip == "delete";
+        // if (selectedChip == iconName) return;
+        let needLinksUpdate = false;
+        let needRedraw = false;
+        switch (iconName) {
+            case "visibility_off":
+                setInvisibleTags.add(tag);
+                needLinksUpdate = true;
+                break;
+            case "visibility":
+                setInvisibleTags.delete(tag);
+                needLinksUpdate = true;
+                break;
+            case "check_box":
+            case "check_box_outline_blank":
+                // setInvisibleTags.delete(tag);
+                needRedraw = true;
+                break;
+            default:
+                throw Error(`Unexpected iconName: ${iconName}`);
+
+        }
         if (needRedraw) {
             const ans = await modMdc.mkMDCdialogConfirm("This will redraw the graph and change perspektive, et.");
             if (!ans) return false;
         }
-        if (selectedChip == "visibility_off") {
-            console.log({ tag, needLinksUpdate });
-            // debugger;
-            setInvisibleTags.delete(tag);
-        }
-        switch (iconName) {
-            case "visibility":
-                setInvisibleTags.delete(tag);
-                break;
-            case "visibility_off":
-                setInvisibleTags.add(tag);
-                break;
-            case "delete":
-                setInvisibleTags.delete(tag);
-                break;
-            default:
-                throw Error(`Did not handle chip name ${iconName}`);
-        }
         if (needLinksUpdate) updateLinksView();
         if (needRedraw) {
-            getManuallyExcludedTags();
-            if (iconName == "delete") {
+            console.log({eltTagSelector, btnInclude});
+            if (btnInclude.textContent == "check_box") {
                 setManExclTags.add(tag);
+                eltTagSelector.classList.add("manually-excluded");
+                // selectedChip
             } else {
                 setManExclTags.delete(tag);
+                eltTagSelector.classList.remove("manually-excluded");
             }
-            debugger;
+            getManuallyExcludedTags();
+            // debugger;
             redrawGraph();
         }
         return true;
     }
 
-    addChip("visibility", "Redraw with these links");
-    addChip("visibility_off", "Hide these links");
-    addChip("delete", "Redraw without these links");
-    selectChip("visibility");
+    btnVisible= addChip("visibility", "visibility_off", "Show/hide with these links");
+    // addChip("visibility_off", "Hide these links");
+    // addChip("delete", "Redraw with/without these links");
+    btnInclude = addChip("check_box", "check_box_outline_blank", "Redraw with/without these links");
+    // selectChip("visibility");
     /*
     const eltChips = mkElt("span", undefined, [
         // "(",
@@ -488,16 +518,8 @@ function mkEltTagSelector(tag, checked) {
         // ")",
     ])
     */
-    const eltLabel = mkElt("label", { class: "tag-chk" }, [
-        `#${tag}`,
-        // chkbox,
-    ]);
-    const ret0 = mkElt("span", { class: "tag-selector" }, [
-        eltLabel,
-        eltChips,
-    ]);
-    return ret0;
-    return mkElt("span", undefined, ret0);
+    eltTagSelector.appendChild(eltChips);
+    return eltTagSelector;
 }
 
 
@@ -949,7 +971,7 @@ async function addDialogGraphButtons() {
         obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
     });
 
-    const btnSelection = modMdc.mkMDCiconButton("rule");
+    const btnSelection = modMdc.mkMDCiconButton("#");
     btnSelection.addEventListener("click", evt => {
         const divSelection = document.getElementById("netwg-our-selection");
         divSelection.classList.toggle("is-open");
@@ -1589,7 +1611,7 @@ function addNodeAsHtml(node) {
     console.log("  addHtml .nodeThreeObject >>>>> node", node);
     const nodeEl = document.createElement('div');
     nodeEl.textContent = `Html ${node.id}`;
-    nodeEl.classList.add("node-label");
+    nodeEl.classList.add("html-node");
     const ret = new m.CSS2DObject(nodeEl);
     console.log("  addHtml .nodeThreeObject <<<< ret", ret);
     return ret;
