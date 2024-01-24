@@ -136,7 +136,7 @@ class LocalSetting {
             case "checkbox":
                 inp.checked = this.value;
             default:
-                console.log(inp.type);
+                // console.log(inp.type);
                 inp.value = this.value;
         }
         const handleInput = (evt) => {
@@ -643,6 +643,10 @@ function computeNodesAndLinks() {
             subsetsLinked[0] = ns;
             ns.add(src);
             ns.add(trg);
+            if (numNodes == 2) {
+                setLinked = ns;
+                return;
+            }
         } else {
             let foundSet = false;
             for (let iSet = 0, len = subsetsLinked.length; iSet < len; iSet++) {
@@ -718,14 +722,11 @@ async function chooseView() {
         const eltLbl = mkElt("label", undefined, [eltRad, txt]);
         return mkElt("div", undefined, eltLbl);
     }
-    const divAltFc4i = mkElt("div", { class: "xmdc-card" }, [
-        mkSourceAlt("fc4i", "fc4i")
-    ]);
     // getFc4iRecs();
-    const divFc4iNum = mkElt("div", undefined, `${numFc4i} records choosen from fc4i.`);
-    divAltFc4i.appendChild(divFc4iNum);
+    // const divFc4iNum = mkElt("div", undefined, `${numFc4i} records choosen from fc4i.`);
+    // divAltFc4i.appendChild(divFc4iNum);
 
-    const divReqTags = mkElt("p");
+    const divReqTags = mkElt("div");
     if (requiredTags.length == 0) {
         divReqTags.appendChild(mkElt("span", undefined, "No required tags"));
     } else {
@@ -734,17 +735,25 @@ async function chooseView() {
             divReqTags.appendChild(s);
         });
     }
-    divAltFc4i.appendChild(divReqTags);
+    // divAltFc4i.appendChild(divReqTags);
 
     const eltSearchFor = searchFor.length == 0 ?
         mkElt("i", undefined, "(no search string)")
         :
         mkElt("b", undefined, searchFor);
-    const divSearched = mkElt("p", undefined, [
+    const divSearched = mkElt("div", undefined, [
         "Searched: ",
         eltSearchFor
     ]);
-    divAltFc4i.appendChild(divSearched);
+    const divAltFc4i = mkElt("div", { class: "xmdc-card" }, [
+        // mkSourceAlt("fc4i", "fc4i")
+        mkElt("b", undefined, "Flashcard 4 Internet"),
+        divSearched,
+        divReqTags,
+        mkElt("p", undefined, `${numFc4i} records found`),
+    ]);
+
+    // divAltFc4i.appendChild(divSearched);
 
     // localStorage
     // const settingLinkW = new settingNetwG("linkW", 1);
@@ -753,28 +762,34 @@ async function chooseView() {
 
     const settingNumNodes = new settingNetwG("numNodes", 7);
     numNodes = settingNumNodes.value;
-    const inpNumNodes = mkElt("input", { type: "number", value: numNodes, min: 4, max: 20 });
+    // const inpNumNodes = mkElt("input", { type: "number", value: numNodes, min: 2 });
+    const inpNumNodes = modMdc.mkMDCtextFieldInput(undefined, "number");
+    // inpNumNodes.value = numNodes;
+    inpNumNodes.min = 2;
     settingNumNodes.bindToInput(inpNumNodes);
     settingNumNodes.onInputFun = (val) => linkW = val;
+    const tfNumNodes = modMdc.mkMDCtextFieldOutlined("Nodes to show", inpNumNodes, numNodes);
 
     const divSource = mkElt("div", { class: "xmdc-card" }, [
-        mkElt("h3", undefined, "Source"),
         mkElt("div", { style: "display:flex; flex-direction:column; gap:15px" }, [
             divAltFc4i,
             // mkSourceAlt("random", "Random links, number nodes"),
         ]),
     ]);
-    divSource.querySelector("input[type=radio]").checked = true;
+    // divSource.querySelector("input[type=radio]").checked = true;
 
     const body = mkElt("div", undefined, [
-        mkElt("h2", undefined, "Network graph source"),
+        mkElt("h2", undefined, "Network graph"),
         divAlts,
+        mkElt("h3", undefined, "Source"),
         divSource,
-        mkElt("hr"),
-        mkElt("label", undefined, ["Num nodes to show: ", inpNumNodes]),
+        // mkElt("hr"),
+        // mkElt("label", undefined, ["Num nodes to show: ", inpNumNodes]),
+        mkElt("h3", undefined, "Output"),
+        tfNumNodes,
     ]);
-    const answer = await modMdc.mkMDCdialogConfirm(body);
-    console.log({ answer });
+    const answer = await modMdc.mkMDCdialogConfirm(body, "Show Graph");
+    // console.log({ answer });
     if (!answer) return;
     // await modMdc.mkMDCdialogAlertWait(body, "Close");
     // debugger;
@@ -785,7 +800,8 @@ async function chooseView() {
     const eltShowViewAlt = document.getElementById("show-view-alt");
     eltShowViewAlt.textContent = fun.name;
     numNodes = Math.floor(Number(inpNumNodes.value));
-    sourceName = divSource.querySelector("input[name=source]:checked").value;
+    // sourceName = divSource.querySelector("input[name=source]:checked").value;
+    sourceName = "fc4i";
     // await getNodesAndLinks(numNodes, sourceName);
     await getNodesAndLinks(sourceName);
     fun();
