@@ -335,7 +335,7 @@ function showSelection() {
     // [...setLinkTags]
     [...setActuallyUsedLinkTags]
         .sort().forEach(tag => {
-            const elt = mkEltTagSelector(tag, true);
+            const elt = mkEltTagSelector(tag);
             divSelectTags.appendChild(elt);
         });
 
@@ -389,21 +389,11 @@ function redrawGraph() {
     testMyOwn();
 }
 
-function mkEltTagSelector(tag, checked) {
+function mkEltTagSelector(tag) {
     const eltLabel = mkElt("label", { class: "tag-chk" }, [`#${tag}`,]);
     const eltTagSelector = mkElt("span", { class: "tag-selector" }, [eltLabel]);
-
-    // const chkbox = mkElt("input", { type: "checkbox" });
-    // chkbox.checked = checked;
-    // const eltHidden = modMdc.mkMDCicon("visibilty_off");
-    // const eltHidden = mkElt("span", { class: "material-icons" }, "visibility_off");
-    // const eltRemove = modMdc.mkMDCicon("delete");
-    // const eltRemove = mkElt("span", { class: "material-icons" }, "delete");
-
     const eltChips = mkElt("span");
     eltChips.classList.add("chip-tags");
-    // const chipFontSize = 24;
-    // let selectedChip;
     function mkChip(iconName, ariaLabel) {
         // const btn = modMdc.mkMDCiconButton(iconName, ariaLabel, chipFontSize);
         const btn = modMdc.mkMDCiconButton(iconName, ariaLabel);
@@ -976,7 +966,7 @@ async function addDialogGraphButtons() {
         obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
     });
 
-    const btnSelection = modMdc.mkMDCiconButton("#");
+    const btnSelection = modMdc.mkMDCiconButton("tag");
     let tmrPendingRedrawGraph = false;
     btnSelection.addEventListener("click", evt => {
         const divSelection = document.getElementById("netwg-our-selection");
@@ -1258,29 +1248,47 @@ function showNodeInfo(node) {
         pTags.style.display = "flex";
         pTags.style.flexWrap = "wrap";
         pTags.style.gap = "10px";
+        let oldWay = false;
         rec.tags.forEach(t => {
-            const eltInfo = mkElt("span", undefined, `#${t}`);
-            // const eltTag = mkElt("span", { class: "tag-in-our-tags" }, `#${t}`);
-            const eltTag = mkElt("span", { class: "tag-in-our-tags" }, eltInfo);
-            let icon;
-            if (setInvisibleTags.has(t)) {
-                icon = modMdc.mkMDCicon("visibility_off");
-                eltTag.appendChild(icon);
-            }
-            if (setNoLinkTags.has(t)) {
-                icon = modMdc.mkMDCicon("delete");
-            }
-            if (icon) {
-                icon.style.fontSize = "inherit";
-                icon.style.marginLeft = "5px";
-                eltTag.style.opacity = "0.5";
-                eltTag.appendChild(icon);
-            }
-            if (setRequiredTags.has(t)) {
-                eltTag.style.opacity = 0.5;
-                eltTag.style.filter = "grayscale(1)";
-            }
-            if (setLinkTags.has(t)) {
+            // tag-selector
+            if (oldWay) {
+                const eltInfo = mkElt("span", undefined, `#${t}`);
+                // const eltTag = mkElt("span", { class: "tag-in-our-tags" }, `#${t}`);
+                const eltTag = mkElt("span", { class: "tag-in-our-tags" }, eltInfo);
+                let icon;
+                if (setInvisibleTags.has(t)) {
+                    icon = modMdc.mkMDCicon("visibility_off");
+                    eltTag.appendChild(icon);
+                }
+                if (setNoLinkTags.has(t)) {
+                    icon = modMdc.mkMDCicon("delete");
+                }
+                if (icon) {
+                    icon.style.fontSize = "inherit";
+                    icon.style.marginLeft = "5px";
+                    eltTag.style.opacity = "0.5";
+                    eltTag.appendChild(icon);
+                }
+                if (setRequiredTags.has(t)) {
+                    eltTag.style.opacity = 0.5;
+                    eltTag.style.filter = "grayscale(1)";
+                }
+                if (setLinkTags.has(t)) {
+                    pTags.appendChild(eltTag);
+                }
+            } else {
+                const eltTag = mkEltTagSelector(t);
+                // FIX-ME: A bit fragile
+                const btnDel = eltTag.lastElementChild.lastElementChild;
+                const tn = btnDel.tagName;
+                if (tn != "BUTTON") throw Error(`Expected <BUTTON> but found <${tn}`);
+                btnDel.remove();
+                if (!setActuallyUsedLinkTags.has(t)) {
+                    const btnHide = eltTag.lastElementChild.lastElementChild;
+                    const tn = btnHide.tagName;
+                    if (tn != "BUTTON") throw Error(`Expected <BUTTON> but found <${tn}`);
+                    btnHide.remove();
+                }
                 pTags.appendChild(eltTag);
             }
         });
