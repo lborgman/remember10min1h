@@ -816,7 +816,7 @@ async function addDialogGraphButtons() {
 
     // https://github.com/vasturiano/3d-force-graph/blob/master/example/scene/index.html
     // https://vasturiano.github.io/3d-force-graph/example/scene/
-    const btnCube = modMdc.mkMDCiconButton("view_in_ar");
+    const btnCube = modMdc.mkMDCiconButton("view_in_ar", "Show/hide cube");
     btnCube.addEventListener("click", evt => {
         showCube = !showCube;
         if (showCube) {
@@ -925,7 +925,7 @@ async function addDialogGraphButtons() {
         }
     });
 
-    const btnFocusNode = modMdc.mkMDCiconButton("center_focus_strong");
+    const btnFocusNode = modMdc.mkMDCiconButton("center_focus_strong", "Focus node (on click)");
     theBtnFocusNode = btnFocusNode;
     btnFocusNode.addEventListener("click", evt => {
         focusOnNodeClick = !focusOnNodeClick;
@@ -936,7 +936,7 @@ async function addDialogGraphButtons() {
         }
     });
 
-    const btnDoc = modMdc.mkMDCiconButton("description");
+    const btnDoc = modMdc.mkMDCiconButton("description", "Node description (on click)");
     btnDoc.addEventListener("click", evt => {
         showInfoOnNodeClick = !showInfoOnNodeClick;
         if (showInfoOnNodeClick) {
@@ -946,7 +946,7 @@ async function addDialogGraphButtons() {
         }
     });
 
-    const btnImages = modMdc.mkMDCiconButton("imagesmode");
+    const btnImages = modMdc.mkMDCiconButton("imagesmode", "Show images");
     btnImages.addEventListener("click", evt => {
         // https://github.com/vasturiano/3d-force-graph/issues/61
         imagesMode = !imagesMode;
@@ -962,7 +962,7 @@ async function addDialogGraphButtons() {
         // graph.nodeThreeObject(node => showNode(node));
     });
 
-    const btnHome = modMdc.mkMDCiconButton("home");
+    const btnHome = modMdc.mkMDCiconButton("home", "Show initial view");
     btnHome.addEventListener("click", evt => {
         // graph.cameraPosition({ x: 0, y: -10, z: cameraDistance }, { x: 0, y: 10, z: 0 }, 1200);
         // https://stackoverflow.com/questions/69914793/three-js-rotate-around-axis-at-an-absoulte-angle
@@ -972,7 +972,7 @@ async function addDialogGraphButtons() {
     });
 
     buildDivTags();
-    const btnTags = modMdc.mkMDCiconButton("tag");
+    const btnTags = modMdc.mkMDCiconButton("tag", "Tags as links");
     btnTags.id = "netwg-btn-tags";
     let tmrPendingRedrawGraph = false;
     btnTags.addEventListener("click", evt => {
@@ -1008,7 +1008,7 @@ async function addDialogGraphButtons() {
     }
     buildDivLinks();
     // const btnLinks = modMdc.mkMDCiconButton("line_start"); // FIX-ME: does not show???
-    const btnLinks = modMdc.mkMDCiconButton("linked_services");
+    const btnLinks = modMdc.mkMDCiconButton("linked_services", "Links appearance");
     btnLinks.id = "netwg-btn-links";
     btnLinks.addEventListener("click", evt => {
         closeOtherExpanded("links");
@@ -1023,7 +1023,8 @@ async function addDialogGraphButtons() {
     });
 
 
-    const btnHideGraph = modMdc.mkMDCiconButton("visibility");
+    /*
+    const btnHideGraph = modMdc.mkMDCiconButton("visibility", "Hide/show network graph");
     btnHideGraph.style.color = "yellowgreen";
     btnHideGraph.addEventListener("click", async evt => {
         const elt = document.getElementById("the3d-graph-container");
@@ -1034,15 +1035,17 @@ async function addDialogGraphButtons() {
             st.display = "none";
         }
     });
+    */
 
-    const btnDialogGraph = modMdc.mkMDCiconButton("settings");
+    const btnDialogGraph = modMdc.mkMDCiconButton("settings", "Old settings variant");
     btnDialogGraph.addEventListener("click", async evt => {
         await dialogLinks();
         // trigger
         triggerUpdateLinksView();
     });
 
-    const btnHilightNode = modMdc.mkMDCiconButton("highlight");
+    /*
+    const btnHilightNode = modMdc.mkMDCiconButton("highlight", "Highlight node (on click)");
     btnHilightNode.addEventListener("click", evt => {
         hilightOnNodeClick = !hilightOnNodeClick;
         if (hilightOnNodeClick) {
@@ -1051,9 +1054,10 @@ async function addDialogGraphButtons() {
             btnHilightNode.style.color = "unset";
         }
     });
+    */
 
 
-    const btnFitAll = modMdc.mkMDCiconButton("crop_free");
+    const btnFitAll = modMdc.mkMDCiconButton("crop_free", "Zoom to fit all nodes");
     btnFitAll.addEventListener("click", evt => {
         // graph.onEngineStop(() => graph.zoomToFit(100));
         // highlightNodes.has
@@ -1089,7 +1093,7 @@ async function addDialogGraphButtons() {
     `;
     document.body.appendChild(eltBtnContainer);
 
-    const btnLeft = modMdc.mkMDCiconButton("first_page");
+    const btnLeft = modMdc.mkMDCiconButton("first_page", "Show left part of button bar");
     btnLeft.addEventListener("click", evt => {
         btnLeft.style.display = "none";
         btnRight.style.display = "block";
@@ -1109,7 +1113,7 @@ async function addDialogGraphButtons() {
         const left = availW - needW;
         return left;
     }
-    const btnRight = modMdc.mkMDCiconButton("last_page");
+    const btnRight = modMdc.mkMDCiconButton("last_page", "Show right part of button bar");
     btnRight.addEventListener("click", evt => {
         btnRight.style.display = "none";
         btnLeft.style.display = "block";

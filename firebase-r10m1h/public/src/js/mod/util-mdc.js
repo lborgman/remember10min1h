@@ -218,6 +218,7 @@ export function mkMDCbutton(txtLabel, emphasis, icon) {
 }
 
 // https://material.io/develop/web/components/buttons/icon-buttons
+// https://m2.material.io/develop/web/components/buttons/icon-buttons
 export function mkMDCiconButton(icon, ariaLabel, sizePx) {
     const btn = mkElt("button", { class: "mdc-icon-button material-icons" }, [
         mkElt("div", { class: "mdc-icon-button__ripple" }),
@@ -228,7 +229,12 @@ export function mkMDCiconButton(icon, ariaLabel, sizePx) {
         btn.classList.add("icon-button-sized");
         btn.style.setProperty("--icon-button-size", sizePx);
     }
-    btn.setAttribute("aria-label", ariaLabel);
+    if (ariaLabel) {
+        btn.setAttribute("aria-label", ariaLabel);
+        btn.title = ariaLabel;
+    } else {
+        console.warn("Missing ariaLabel");
+    }
     const iconButtonRipple = new mdc.ripple.MDCRipple(btn);
     iconButtonRipple.unbounded = true;
     return btn;
@@ -893,7 +899,7 @@ export async function mkMDCdialogConfirm(body, titleOk, titleCancel, noCancel) {
     const btnOk = mkMDCdialogButton(titleOk, "confirm", true);
     const btnCancel = mkMDCdialogButton(titleCancel, "close");
     // const eltActions = mkMDCdialogActions([btnOk, btnCancel]);
-    const arrBtns =[btnOk, btnCancel];
+    const arrBtns = [btnOk, btnCancel];
     if (noCancel) arrBtns.length = 1;
     const eltActions = mkMDCdialogActions(arrBtns);
     const dlg = await mkMDCdialog(body, eltActions);
