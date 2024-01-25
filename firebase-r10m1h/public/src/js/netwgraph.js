@@ -98,6 +98,12 @@ console.log({ __THREE__ });
 */
 
 
+// FIX-ME: move
+const divLinkSettingsstyle = `
+    display: grid;
+    grid-template-columns: max-content max-content;
+    gap: 5px;
+`;
 
 
 
@@ -261,8 +267,6 @@ let theBtnFocusNode;
 // addDialogGraphButtons();
 await getFc4iRecs();
 await chooseView();
-// showSelection(searchFor, setLinkTags);
-showSelection();
 addDialogGraphButtons();
 
 
@@ -293,7 +297,7 @@ async function getFc4iRecs() {
     arrMatchAll = await dbFc4i.getDbMatching(searchFor, minConf, maxConf, requiredTags);
     numFc4i = arrMatchAll.length;
 }
-function showSelection() {
+function buildDivTags() {
     const spanSearchFor = mkElt("span", undefined, `Search: "${searchFor}",`);
     spanSearchFor.style.paddingRight = "10px";
     const spanConf = mkElt("span", undefined, `confidence: ${minConf}-${maxConf}`);
@@ -315,14 +319,15 @@ function showSelection() {
     `;
 
     // https://keithjgrant.com/posts/2023/04/transitioning-to-height-auto/
-    const divSelection = document.getElementById("netwg-our-selection");
-    divSelection.classList.add("expanding-wrapper");
-    const divSelectionInner = mkElt("div", undefined, [
+    const divTags = document.getElementById("netwg-tags");
+    // divTags.classList.add("expanding-wrapper");
+    const divTagsInner = mkElt("div", undefined, [
         divSearchEtc,
         divSelectTags,
     ]);
-    divSelectionInner.classList.add("expanding-inner");
-    divSelection.appendChild(divSelectionInner);
+    // divTagsInner.classList.add("expanding-inner");
+    divTags.appendChild(divTagsInner);
+    makeExpandible(divTags);
 
 
 
@@ -346,7 +351,7 @@ function showSelection() {
         if ("INPUT" != target.tagName) return;
         if ("checkbox" != target.type) return;
         console.log("CHECKBOX!!!");
-        const eltCont = target.closest("#netwg-our-selection");
+        const eltCont = target.closest("#netwg-tags");
         const arrChk = [...eltCont.querySelectorAll("input[type=checkbox]")];
         const arrTagsNoLink = arrChk
             .filter(chk => !chk.checked)
@@ -475,7 +480,7 @@ function mkEltTagSelector(tag) {
             const ans = await modMdc.mkMDCdialogConfirm("This will redraw the graph and change perspektive, et.");
             if (!ans) return false;
         }
-        if (needLinksUpdate) updateLinksView();
+        if (needLinksUpdate) triggerUpdateLinksView();
         if (needRedraw) {
             console.log({ eltTagSelector, btnInclude });
             modMdc.mkMDCsnackbar("Will redraw graph");
@@ -966,18 +971,57 @@ async function addDialogGraphButtons() {
         obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
     });
 
-    const btnSelection = modMdc.mkMDCiconButton("tag");
+    buildDivTags();
+    const btnTags = modMdc.mkMDCiconButton("tag");
+    btnTags.id = "netwg-btn-tags";
     let tmrPendingRedrawGraph = false;
-    btnSelection.addEventListener("click", evt => {
-        const divSelection = document.getElementById("netwg-our-selection");
-        divSelection.classList.toggle("is-open");
+    btnTags.addEventListener("click", evt => {
+        closeOtherExpanded("tags");
+
+        const divTags = document.getElementById("netwg-tags");
+        toggleDiv(divTags);
+        if (isExpanded(divTags)) {
+            btnTags.classList.add("is-open");
+        } else {
+            btnTags.classList.remove("is-open");
+        }
+
         if (pendingRedrawGraph) {
             clearTimeout(tmrPendingRedrawGraph);
-            if (!divSelection.classList.contains("is-open")) {
+            if (!divTags.classList.contains("is-open")) {
                 tmrPendingRedrawGraph = setTimeout(redrawGraph, 2000);
             }
         }
     });
+
+
+    function buildDivLinks() {
+        const divLinksAndHiSettings = mkDivLinksSettings();
+        const divLinks = document.getElementById("netwg-links");
+        const divLinksInner = mkElt("div", undefined, [
+            // view settings
+            // mkElt("p", undefined, "Just a test, again and again"),
+            divLinksAndHiSettings,
+        ]);
+        divLinks.appendChild(divLinksInner);
+        makeExpandible(divLinks);
+    }
+    buildDivLinks();
+    // const btnLinks = modMdc.mkMDCiconButton("line_start"); // FIX-ME: does not show???
+    const btnLinks = modMdc.mkMDCiconButton("linked_services");
+    btnLinks.id = "netwg-btn-links";
+    btnLinks.addEventListener("click", evt => {
+        closeOtherExpanded("links");
+        const divLinks = document.getElementById("netwg-links");
+        // divLinks.classList.toggle("is-open");
+        toggleDiv(divLinks);
+        if (isExpanded(divLinks)) {
+            btnLinks.classList.add("is-open");
+        } else {
+            btnLinks.classList.remove("is-open");
+        }
+    });
+
 
     const btnHideGraph = modMdc.mkMDCiconButton("visibility");
     btnHideGraph.style.color = "yellowgreen";
@@ -993,9 +1037,9 @@ async function addDialogGraphButtons() {
 
     const btnDialogGraph = modMdc.mkMDCiconButton("settings");
     btnDialogGraph.addEventListener("click", async evt => {
-        await dialogGraph();
+        await dialogLinks();
         // trigger
-        updateLinksView();
+        triggerUpdateLinksView();
     });
 
     const btnHilightNode = modMdc.mkMDCiconButton("highlight");
@@ -1028,10 +1072,12 @@ async function addDialogGraphButtons() {
         btnFitAll,
         btnCube,
         btnImages,
-        btnSelection,
-        btnDialogGraph,
+        btnTags,
+        btnLinks,
+        // btnDialogGraph,
         // btnHideGraph,
     ]);
+    eltBtnContainer.id = "graph-buttons";
     eltBtnContainer.style = `
         position: fixed;
         top: 0;
@@ -1087,7 +1133,13 @@ async function addDialogGraphButtons() {
     document.body.appendChild(btnRight);
 
 }
-async function dialogGraph() {
+
+
+
+
+
+
+function mkDivLinksSettings() {
     const inpLinkW = mkElt("input", { id: "linkW", type: "number", min: "1", max: "5", value: linkW });
     settingLinkW.bindToInput(inpLinkW);
     const inpLinkWHi = mkElt("input", { id: "linkWHi", type: "number", min: "1", max: "5", value: linkWHi });
@@ -1140,36 +1192,39 @@ async function dialogGraph() {
         mkElt("p", undefined, "This settings are applied during node hover or drag."),
         divHiSettings,
     ]);
-    const divHiSettingsCard = mkElt("div", { class: "mdc-card" }, [
+    const divLinkHiSettings = mkElt("div", { class: "mdc-card" }, [
         mkElt("details", undefined, [
             mkElt("summary", undefined, "Hilite settings"),
             divHiSettingsBody
         ])
     ]);
-    divHiSettingsCard.style.backgroundColor = "yellow";
-    divHiSettingsCard.style.padding = "10px";
+    divLinkHiSettings.style.backgroundColor = "yellow";
+    divLinkHiSettings.style.padding = "10px";
 
-    const divSettingsstyle = `
-        display: grid;
-        grid-template-columns: max-content max-content;
-        gap: 5px;
-    `;
-
-    const divSettings = mkElt("div", undefined, [
+    const divLinksSettings = mkElt("div", undefined, [
         mkElt("label", { for: "linkColor" }, "Link color:"), inpLinkColor,
         mkElt("label", { for: "linkW" }, "Link width:"), inpLinkW,
         mkElt("label", { for: "linkOp" }, "Link opacity:"), inpLinkOp,
         // mkElt("label", { for: "textH" }, "Text height:"), inpTextH,
         // mkElt("label", { for: "camDist" }, "Camera distance:"), inpCameraDist,
     ]);
-    divSettings.style = divSettingsstyle;
-    divHiSettings.style = divSettingsstyle;
+    divLinksSettings.style = divLinkSettingsstyle;
+    divHiSettings.style = divLinkSettingsstyle;
 
+    const divLinksAndHiSettings = mkElt("div", undefined, [
+        divLinksSettings,
+        divLinkHiSettings,
+    ]);
+    return divLinksAndHiSettings;
+}
+async function dialogLinks() {
+    const divLinksAndHiSettings = mkDivLinksSettings();
     const body = mkElt("div", undefined, [
         mkElt("h2", undefined, "Network graph view settings"),
-        divSettings,
-        divHiSettingsCard,
-        divColors
+        // divLinksSettings,
+        // divLinkHiSettings,
+        divLinksAndHiSettings,
+        // divColors
     ]);
     // FIX-ME:
     const answer = await modMdc.mkMDCdialogAlertWait(body, "Close");
@@ -1560,7 +1615,7 @@ function hiliteNode(node) {
 
     theHiliteNode = node || null;
 
-    updateLinksView();
+    triggerUpdateLinksView();
 }
 
 async function addNodeLinkHighlighter() {
@@ -1692,7 +1747,7 @@ async function testFH() {
     addOnClick();
 }
 */
-function updateLinksView() {
+function triggerUpdateLinksView() {
     // trigger update of highlighted objects in scene
     graph
         .nodeColor(graph.nodeColor())
@@ -1873,3 +1928,54 @@ function testBasic() {
     const Graph = graphDisplayer.graphData(gData);
 }
 */
+
+function makeExpandible(divWrapper) {
+    const tnW = divWrapper.tagName;
+    if (tnW != "DIV") throw Error(`Expected wrapper <DIV>, got ${tnW}`);
+    const cnt = divWrapper.childElementCount;
+    if (cnt != 1) throw Error(`Wrapper should have exactly 1 child, has ${cnt} `);
+    const divInner = divWrapper.firstElementChild;
+    const tnI = divInner.tagName;
+    if (tnI != "DIV") throw Error(`Expected inner <DIV>, got ${tnI}`);
+    divWrapper.classList.add("expanding-wrapper");
+    divInner.classList.add("expanding-inner");
+}
+function checkIsExpandable(divWrapper) {
+    if (!divWrapper.classList.contains("expanding-wrapper")) {
+        throw Error(`Wrapper div does not contain class "expanding-wrapper"`); j
+    }
+}
+/*
+function expandDiv(divWrapper) {
+    checkIsExpandable(divWrapper);
+    divWrapper.classList.add("is-open");
+}
+*/
+function collapseDiv(divWrapper) {
+    checkIsExpandable(divWrapper);
+    divWrapper.classList.remove("is-open");
+}
+function toggleDiv(divWrapper) {
+    checkIsExpandable(divWrapper);
+    divWrapper.classList.toggle("is-open");
+}
+function isExpanded(divWrapper) {
+    checkIsExpandable(divWrapper);
+    return divWrapper.classList.contains("is-open");
+}
+
+
+function closeOtherExpanded(notThis) {
+    if (notThis != "tags") {
+        const divTags = document.getElementById("netwg-tags");
+        collapseDiv(divTags);
+        const btnTags = document.getElementById("netwg-btn-tags");
+        btnTags.classList.remove("is-open");
+    }
+    if (notThis != "links") {
+        const divLinks = document.getElementById("netwg-links");
+        collapseDiv(divLinks)
+        const btnLinks = document.getElementById("netwg-btn-links");
+        btnLinks.classList.remove("is-open");
+    }
+}

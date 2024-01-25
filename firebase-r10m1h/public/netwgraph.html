@@ -17,10 +17,10 @@
 
 
     <!-- for MWC, https://github.com/material-components/material-web -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <!-- <link rel="preconnect" href="https://fonts.googleapis.com"> -->
+    <!-- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""> -->
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Material+Icons&amp;display=block" rel="stylesheet">
+    <!-- <link href="https://fonts.googleapis.com/css?family=Material+Icons&amp;display=block" rel="stylesheet"> -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <!-- Required styles for Material Web -->
@@ -46,6 +46,7 @@
             padding-right: 3px;
             padding-left: 6px;
         }
+
         .tag-selector.manually-excluded {
             background-color: gray;
         }
@@ -69,6 +70,7 @@
             background-color: rgba(0, 255, 0, 1);
             background-color: blue !important;
         }
+
         .chip-default-state {
             background-color: rgba(0, 255, 0, 1);
         }
@@ -81,24 +83,16 @@
         #main {
             height: calc(100 * var(--vh, vh) - 20px - 8px);
             display: grid;
-            grid-template-rows: min-content 1fr;
+            grid-template-rows: min-content min-content 1fr;
         }
 
-        /*
-        #netwg-our-selection {
-            min-height: 40px;
-        }
-        */
 
-        /*
-        #netwg-our-selection summary {
-            height: 50px;
-            padding: 10px;
-        }
-        */
-
-        #netwg-our-selection {
+        #netwg-tags {
             margin-top: 48px;
+        }
+
+        #netwg-links {
+            margin-top: 0px;
         }
 
         /* https://keithjgrant.com/posts/2023/04/transitioning-to-height-auto/ */
@@ -123,6 +117,10 @@
         body {
             overflow: hidden;
             background-color: goldenrod;
+        }
+
+        #graph-buttons button.is-open {
+            background-color: yellow;
         }
     </style>
 
@@ -167,7 +165,8 @@
         </span>
     </div>
     <section id="main">
-        <div id="netwg-our-selection"></div>
+        <div id="netwg-tags"></div>
+        <div id="netwg-links"></div>
         <div id="the3d-graph-container"></div>
     </section>
     <!-- <script src="/src/js/common.js"></script> -->
