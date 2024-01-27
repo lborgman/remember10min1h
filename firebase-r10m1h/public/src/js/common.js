@@ -332,7 +332,7 @@ async function appendRem(rem, toDiv) {
     card.classList.add("subject-card");
 
     // https://fonts.google.com/icons
-    const btnDeleteWastebasket = modMdc.mkMDCiconButton("delete_forever");
+    const btnDeleteWastebasket = modMdc.mkMDCiconButton("delete_forever", "Delete");
     btnDeleteWastebasket.classList.add("mdc-theme--secondary-bg");
     btnDeleteWastebasket.addEventListener("click", errorHandlerAsyncEvent(async evt => {
         deleteEntry(rem.key, card);
@@ -667,7 +667,7 @@ async function goHome() {
 
     // const btnSearch = modMdc.mkMDCiconButton("search", "search your items");
     const svgSearch = modMdc.mkMDCsvgIcon("search");
-    const btnSearch = modMdc.mkMDCiconButton(svgSearch, "search your items");
+    const btnSearch = modMdc.mkMDCiconButton(svgSearch, "Search your items");
     btnSearch.classList.add("mdc-theme--secondary-bg");
 
     const inpSearch = modMdc.mkMDCtextFieldInput("search-input", "search");

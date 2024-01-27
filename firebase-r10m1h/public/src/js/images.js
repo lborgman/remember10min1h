@@ -231,7 +231,7 @@ export async function mkImageCard(blob, extraClass, debugInfo) {
     const eltImg = mkElt("span", { class: "image-bg-contain image-bg-size mdc-card" });
     // const toFun = typeof funCheckSave;
     // if (toFun != "function") throw Error(`funCheckSave is not funtion (${toFun})`);
-    const btnDeleteImage = modMdc.mkMDCiconButton("delete_forever");
+    const btnDeleteImage = modMdc.mkMDCiconButton("delete_forever", "Delete");
     btnDeleteImage.classList.add("image-delete");
     btnDeleteImage.addEventListener("click", errorHandlerAsyncEvent(async evt => {
         // FIX-ME: ask

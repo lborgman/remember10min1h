@@ -82,6 +82,9 @@ window.rotateMe = () => {
 /// <<<< debug
 
 const modMdc = await import("util-mdc");
+// export function setMaterialIconClass(className) {
+modMdc.setMaterialIconClass("material-symbols-outlined");
+
 console.warn("import d3");
 const modD3 = await import("d3");
 const dbFc4i = await import("db-fc4i");

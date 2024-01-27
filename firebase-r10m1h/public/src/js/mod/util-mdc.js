@@ -3,6 +3,16 @@
 
 // FIXME: useful? https://codepen.io/oneezy/pen/qwRVaq
 
+let materialIconsClass = "material-icons";
+export function getMaterialIconClass() { return materialIconsClass; }
+export function setMaterialIconClass(className) {
+    if (
+        !className.startsWith("material-icons")
+        &&
+        !className.startsWith("material-symbols-")
+    ) throw Error(`Must be a Google Material Icons/Symbols class name: ${className}`);
+    materialIconsClass = className;
+}
 // https://m2.material.io/components/cards/web#card
 export function mkMDCcard() {
     return mkElt("div", { class: "mdc-card" });
@@ -220,10 +230,13 @@ export function mkMDCbutton(txtLabel, emphasis, icon) {
 // https://material.io/develop/web/components/buttons/icon-buttons
 // https://m2.material.io/develop/web/components/buttons/icon-buttons
 export function mkMDCiconButton(icon, ariaLabel, sizePx) {
-    const btn = mkElt("button", { class: "mdc-icon-button material-icons" }, [
-        mkElt("div", { class: "mdc-icon-button__ripple" }),
-        icon
-    ]);
+    const btn = mkElt("button",
+        // { class: `mdc-icon-button material-icons` },
+        { class: `mdc-icon-button ${materialIconsClass}` },
+        [
+            mkElt("div", { class: "mdc-icon-button__ripple" }),
+            icon
+        ]);
     // if (small) btn.classList.add("icon-button-small");
     if (sizePx) {
         btn.classList.add("icon-button-sized");
@@ -2127,11 +2140,16 @@ let useSvgIcon = false;
 // debugger;
 // https://developers.google.com/fonts/docs/material_icons
 export function mkMDCicon(iconMaterialName) {
-    const icon = mkMDCsvgIcon(iconMaterialName);
-    // icon is always a HTML element because of the fetch.
-    // So this does not work to check if the SVG icon is there.
-    if (useSvgIcon && icon) return icon;
-    return mkElt("span", { class: "material-icons" }, iconMaterialName);
+    if (useSvgIcon) {
+        const icon = mkMDCsvgIcon(iconMaterialName);
+        // icon is always a HTML element because of the fetch.
+        // So this does not work to check if the SVG icon is there.
+        if (icon) return icon;
+    }
+    return mkElt("span",
+        // { class: "material-icons" },
+        { class: materialIconsClass },
+        iconMaterialName);
 }
 // The font icons does not work offline (and does not scale well).
 // Here is an alternative.

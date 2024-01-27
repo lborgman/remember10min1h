@@ -163,8 +163,8 @@ export class CustomRenderer4jsMind {
         if (nodeLink && nodeLink.length > 0) {
             const oldBtn = eltJmnode.querySelector("a.jsmind-plain-link");
             oldBtn?.remove();
-            const iconBtn = modMdc.mkMDCiconButton("link");
-            iconBtn.title = "Visit web page";
+            const iconBtn = modMdc.mkMDCiconButton("link", "Visit web page");
+            // iconBtn.title = "Visit web page";
             iconBtn.classList.add("icon-button-40");
             const eltA3 = mkElt("a", { href: nodeLink, class: "jsmind-plain-link" }, iconBtn);
             eltJmnode.appendChild(eltA3);
