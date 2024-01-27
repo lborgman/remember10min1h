@@ -1092,7 +1092,7 @@ async function showSharedTo() {
     const secMain = clearMainSection("page-shared-to");
 }
 function mkTestNetwGraphURL() {
-    const url = new URL("/netwgraph.html", location.href);
+    const url = new URL("/nwg/netwgraph.html", location.href);
     const divSearchBanner = document.getElementById("div-search-banner");
     const par = divSearchBanner.lastSearch;
     const urlPar = new URLSearchParams();
@@ -1149,7 +1149,7 @@ async function mkMenu() {
     liTestShareWithArgs.addEventListener("click", evt => { showTestTarget(); })
     liTestShareWithArgs.classList.add("test-item");
 
-    const aNetwGraph = mkElt("a", { href: "/netwgraph.html" }, "Test network graph (not ready)");
+    const aNetwGraph = mkElt("a", { href: "/nwg/netwgraph.html" }, "Test network graph (not ready)");
     aNetwGraph.addEventListener("click", evt => {
         aNetwGraph.href = mkTestNetwGraphURL();
         // debugger;
