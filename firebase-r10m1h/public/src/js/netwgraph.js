@@ -81,6 +81,8 @@ window.rotateMe = () => {
 }
 /// <<<< debug
 
+const menuId = "menu-right";
+
 const modMdc = await import("util-mdc");
 // export function setMaterialIconClass(className) {
 modMdc.setMaterialIconClass("material-symbols-outlined");
@@ -323,14 +325,14 @@ function buildDivTags() {
 
     // https://keithjgrant.com/posts/2023/04/transitioning-to-height-auto/
     const divTags = document.getElementById("netwg-tags");
-    // divTags.classList.add("expanding-wrapper");
+    // divTags.classList.add("expanding-wrapper-h");
     const divTagsInner = mkElt("div", undefined, [
         divSearchEtc,
         divSelectTags,
     ]);
     // divTagsInner.classList.add("expanding-inner");
     divTags.appendChild(divTagsInner);
-    makeExpandible(divTags);
+    makeExpandible(divTags, "h");
 
 
 
@@ -994,7 +996,7 @@ async function addDialogGraphButtons() {
         closeOtherExpanded("tags");
 
         const divTags = document.getElementById("netwg-tags");
-        toggleDiv(divTags);
+        toggleExpandibleDiv(divTags);
         if (isExpanded(divTags)) {
             btnTags.classList.add("is-open");
         } else {
@@ -1019,7 +1021,7 @@ async function addDialogGraphButtons() {
             divLinksAndHiSettings,
         ]);
         divLinks.appendChild(divLinksInner);
-        makeExpandible(divLinks);
+        makeExpandible(divLinks, "h");
     }
     buildDivLinks();
     // const btnLinks = modMdc.mkMDCiconButton("line_start"); // FIX-ME: does not show???
@@ -1029,7 +1031,7 @@ async function addDialogGraphButtons() {
         closeOtherExpanded("links");
         const divLinks = document.getElementById("netwg-links");
         // divLinks.classList.toggle("is-open");
-        toggleDiv(divLinks);
+        toggleExpandibleDiv(divLinks);
         if (isExpanded(divLinks)) {
             btnLinks.classList.add("is-open");
         } else {
@@ -1118,13 +1120,13 @@ async function addDialogGraphButtons() {
         position: fixed;
         top: 0;
         left: 0;
-        background-color: orange;
+        background-color: skyblue;
         display: none;
     `;
 
     function getBtnContLeft() {
         const needW = eltBtnContainer.childElementCount * 48;
-        const availW = document.documentElement.clientWidth;
+        const availW = document.documentElement.clientWidth - 48;
         const left = availW - needW;
         return left;
     }
@@ -1138,8 +1140,8 @@ async function addDialogGraphButtons() {
     btnRight.style = `
         position: fixed;
         top: 0;
-        right: 0;
-        background-color: orange;
+        right: 48px;
+        background-color: skyblue;
         display: none;
     `;
     (async () => {
@@ -1150,6 +1152,36 @@ async function addDialogGraphButtons() {
 
     document.body.appendChild(btnLeft);
     document.body.appendChild(btnRight);
+
+    addMenu();
+    async function addMenu() {
+        const divMenuInner = mkElt("div", undefined, "Menu inner");
+        // const divMenuWrapper = mkElt("div", undefined, divMenuInner);
+        // divMenuWrapper.id = menuId;
+        const divMenuWrapper = document.getElementById(menuId);
+        divMenuWrapper.appendChild(divMenuInner);
+        divMenuWrapper.style = `
+            NOposition: absolute;
+            NOtop: 0;
+            NOright: 0;
+        `;
+        makeExpandible(divMenuWrapper, "w");
+        // await promiseDOMready;
+        // document.body.appendChild(divMenuWrapper);
+    }
+    const btnMore = modMdc.mkMDCiconButton("more_vert", "Hide/show menu");
+    btnMore.addEventListener("click", evt => {
+        const menu = document.getElementById(menuId);
+        toggleExpandibleDiv(menu);
+    });
+    btnMore.id = "btn-more";
+    btnMore.style = `
+        position: fixed;
+        top: 0;
+        right: 0;
+        background-color: orange;
+    `;
+    document.body.appendChild(btnMore);
 
 }
 
@@ -1948,7 +1980,8 @@ function testBasic() {
 }
 */
 
-function makeExpandible(divWrapper) {
+function makeExpandible(divWrapper, dir) {
+    if (!["h", "w"].includes(dir)) throw Error(`Parameter dir must be "h" or "w", but is "${dir}"`)
     const tnW = divWrapper.tagName;
     if (tnW != "DIV") throw Error(`Expected wrapper <DIV>, got ${tnW}`);
     const cnt = divWrapper.childElementCount;
@@ -1956,13 +1989,13 @@ function makeExpandible(divWrapper) {
     const divInner = divWrapper.firstElementChild;
     const tnI = divInner.tagName;
     if (tnI != "DIV") throw Error(`Expected inner <DIV>, got ${tnI}`);
-    divWrapper.classList.add("expanding-wrapper");
+    divWrapper.classList.add(`expanding-wrapper-${dir}`);
     divInner.classList.add("expanding-inner");
 }
 function checkIsExpandable(divWrapper) {
-    if (!divWrapper.classList.contains("expanding-wrapper")) {
-        throw Error(`Wrapper div does not contain class "expanding-wrapper"`); j
-    }
+    if (divWrapper.classList.contains("expanding-wrapper-h")) return;
+    if (divWrapper.classList.contains("expanding-wrapper-w")) return;
+    throw Error(`Wrapper div does not contain class "expanding-wrapper-h"`); j
 }
 /*
 function expandDiv(divWrapper) {
@@ -1974,7 +2007,7 @@ function collapseDiv(divWrapper) {
     checkIsExpandable(divWrapper);
     divWrapper.classList.remove("is-open");
 }
-function toggleDiv(divWrapper) {
+function toggleExpandibleDiv(divWrapper) {
     checkIsExpandable(divWrapper);
     divWrapper.classList.toggle("is-open");
 }

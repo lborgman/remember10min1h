@@ -90,6 +90,21 @@
             height: calc(100 * var(--vh, vh) - 20px - 8px);
             display: grid;
             grid-template-rows: min-content min-content 1fr;
+            NOposition: relative;
+        }
+
+        #menu-right {
+            background-color: white;
+            padding: 10px;
+            position: fixed;
+            top: 48px;
+            right: -20px;
+            transition-property: right, grid-template-columns;
+            transition-duration: 0.5s;
+            text-wrap: nowrap;
+        }
+        #menu-right.is-open {
+            right: 0;
         }
 
 
@@ -102,14 +117,24 @@
         }
 
         /* https://keithjgrant.com/posts/2023/04/transitioning-to-height-auto/ */
-        .expanding-wrapper {
+        .expanding-wrapper-h {
             display: grid;
             grid-template-rows: 0fr;
             transition: grid-template-rows 0.7s ease-out;
         }
 
-        .expanding-wrapper.is-open {
+        .expanding-wrapper-h.is-open {
             grid-template-rows: 1fr;
+        }
+
+        .expanding-wrapper-w {
+            display: grid;
+            grid-template-columns: 0fr;
+            transition: grid-template-columns 0.7s ease-out;
+        }
+
+        .expanding-wrapper-w.is-open {
+            grid-template-columns: 1fr;
         }
 
         .expanding-inner {
@@ -175,6 +200,7 @@
         <div id="netwg-links"></div>
         <div id="the3d-graph-container"></div>
     </section>
+    <div id="menu-right"></div>
     <!-- <script src="/src/js/common.js"></script> -->
     <script src="/src/js/netwgraph.js" type="module"></script>
 
