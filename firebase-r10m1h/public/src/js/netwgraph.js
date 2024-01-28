@@ -776,8 +776,20 @@ async function chooseView() {
     ]);
     // divSource.querySelector("input[type=radio]").checked = true;
 
+    // const btnHelp = modMdc.mkMDCiconButton("home", "Help");
+    // mkMDCfab "hub"
+    const iconHelp = modMdc.mkMDCicon("help");
+    const aIconHelp = mkElt("a", { href: "/about.html#nwg", target: "_blank" }, iconHelp);
+    aIconHelp.style.lineHeight = "1rem";
+    const titleHelp = "Help";
+    const fabHelp = modMdc.mkMDCfab(aIconHelp, titleHelp, true)
+    // fabNetwG.title = titleNetwg;
+    fabHelp.style.marginLeft = "30px";
+    // fabHelp.style.backgroundColor = "goldenrod";
+    fabHelp.style.backgroundColor = "aliceblue";
+
     const body = mkElt("div", undefined, [
-        mkElt("h2", undefined, "Network graph"),
+        mkElt("h2", undefined, ["Network graph", fabHelp]),
         divAlts,
         mkElt("h3", undefined, "Source"),
         divSource,
