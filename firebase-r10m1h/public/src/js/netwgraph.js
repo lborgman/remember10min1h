@@ -1153,26 +1153,74 @@ async function addDialogGraphButtons() {
     document.body.appendChild(btnLeft);
     document.body.appendChild(btnRight);
 
-    addMenu();
-    async function addMenu() {
-        const divMenuInner = mkElt("div", undefined, "Menu inner");
+    const guessMenuRight = 300;
+    addMenuRight();
+    async function addMenuRight() {
+        // const divMenuInner = mkElt("div", undefined, "Menu inner");
+
+        const liSaveThisView = modMdc.mkMDCmenuItem("Save this view");
+        liSaveThisView.addEventListener("click", evt => { modMdc.mkMDCdialogAlert("Not ready"); });
+        const liLoadView = modMdc.mkMDCmenuItem("Load view");
+        liLoadView.addEventListener("click", evt => { modMdc.mkMDCdialogAlert("Not ready"); });
+
+        let arrEntries = [
+            liSaveThisView,
+            liLoadView,
+        ];
+        const ulMenu = modMdc.mkMDCmenuUl(arrEntries);
+        const divMenuSurface = modMdc.mkMDCmenuDiv(ulMenu);
+        // FIX-ME: mdc docs are a mess. Trying this:
+        // divMenuSurface.classList.add("mdc-menu-surface--open");
+        divMenuSurface.classList.remove("mdc-menu-surface");
+        divMenuSurface.classList.add("is-menu-div");
+
         // const divMenuWrapper = mkElt("div", undefined, divMenuInner);
         // divMenuWrapper.id = menuId;
-        const divMenuWrapper = document.getElementById(menuId);
-        divMenuWrapper.appendChild(divMenuInner);
-        divMenuWrapper.style = `
-            NOposition: absolute;
-            NOtop: 0;
-            NOright: 0;
+        const divMenuContainer = document.getElementById(menuId);
+        divMenuContainer.appendChild(divMenuSurface);
+        divMenuContainer.style = `
+            right: -${guessMenuRight}px; 
         `;
-        makeExpandible(divMenuWrapper, "w");
+        // makeExpandible(divMenuWrapper, "w");
         // await promiseDOMready;
         // document.body.appendChild(divMenuWrapper);
+        divMenuContainer.addEventListener("click", evt => {
+            if (!divMenuContainer.classList.contains("is-open")) {
+                debugger;
+            }
+            // divMenuContainer.classList.remove("is-open");
+            closeRightMenu();
+        });
+    }
+    function closeRightMenu() {
+        const menu = document.getElementById(menuId);
+        if (!menu.classList.contains("is-open")) debugger;
+        menu.classList.remove("is-open");
+        let r = menu.dataset.bcrwidth || guessMenuRight;
+        if (r < 100) r = guessMenuRight;
+        menu.style.right = `-${r}px`;
     }
     const btnMore = modMdc.mkMDCiconButton("more_vert", "Hide/show menu");
     btnMore.addEventListener("click", evt => {
         const menu = document.getElementById(menuId);
-        toggleExpandibleDiv(menu);
+        // toggleExpandibleDiv(menu);
+        const bcrw = menu.dataset.bcrwidth;
+        if (!menu.classList.contains("is-open")) {
+            menu.classList.add("is-open");
+            menu.style.right = "0px";
+            if (!bcrw || bcrw < 100) {
+                setTimeout(() => {
+                    const bcr = menu.getBoundingClientRect();
+                    console.log({ bcr });
+                    menu.dataset.bcrwidth = bcr.width;
+                }, 1000);
+            }
+        } else {
+            // let r = bcrw || guessMenuRight;
+            // if (r < 100) r = guessMenuRight;
+            // menu.style.right = `-${r}px`;
+            closeRightMenu();
+        }
     });
     btnMore.id = "btn-more";
     btnMore.style = `
