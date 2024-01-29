@@ -1184,17 +1184,18 @@ async function addDialogGraphButtons() {
         // makeExpandible(divMenuWrapper, "w");
         // await promiseDOMready;
         // document.body.appendChild(divMenuWrapper);
-        divMenuContainer.addEventListener("click", evt => {
+        divMenuContainer.addEventListener("NOclick", evt => {
             if (!divMenuContainer.classList.contains("is-open")) {
                 debugger;
             }
             // divMenuContainer.classList.remove("is-open");
             closeRightMenu();
         });
+        document.documentElement.addEventListener("click", evt=> closeRightMenu());
     }
     function closeRightMenu() {
         const menu = document.getElementById(menuId);
-        if (!menu.classList.contains("is-open")) debugger;
+        // if (!menu.classList.contains("is-open")) debugger;
         menu.classList.remove("is-open");
         let r = menu.dataset.bcrwidth || guessMenuRight;
         if (r < 100) r = guessMenuRight;
@@ -1202,6 +1203,7 @@ async function addDialogGraphButtons() {
     }
     const btnMore = modMdc.mkMDCiconButton("more_vert", "Hide/show menu");
     btnMore.addEventListener("click", evt => {
+        evt.stopPropagation();
         const menu = document.getElementById(menuId);
         // toggleExpandibleDiv(menu);
         const bcrw = menu.dataset.bcrwidth;
