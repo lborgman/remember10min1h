@@ -82,6 +82,7 @@ window.rotateMe = () => {
 /// <<<< debug
 
 const menuId = "menu-right";
+const buildFrom = {};
 
 const modMdc = await import("util-mdc");
 // export function setMaterialIconClass(className) {
@@ -246,6 +247,7 @@ const colorsRainbow =
 // await dialogGraph();
 
 let gData;
+let gDataUsed;
 
 let arrMatchAll;
 let numFc4i;
@@ -396,7 +398,7 @@ function redrawGraph() {
     const eltGraph = document.getElementById("the3d-graph-container");
     eltGraph.textContent = "";
     computeNodesAndLinks();
-    testMyOwn();
+    testMyOwn(gData);
 }
 
 function mkEltTagSelector(tag) {
@@ -524,7 +526,6 @@ function mkEltTagSelector(tag) {
 }
 
 
-
 async function getNodesAndLinks(
     // numNodes, sourceName
 ) {
@@ -545,13 +546,16 @@ async function getNodesAndLinks(
         const lenMatch = arrMatch.length;
         const setI = new Set();
         let s = 0;
-        const n = 4;
-        while (s++ < 2 * n * numNodes && setI.size < n * numNodes) {
+        const n = 1;
+        // while (s++ < 2 * n * numNodes && setI.size < n * numNodes)
+        while (s++ < 4 * lenMatch && setI.size < n * numNodes) {
             const i = Math.floor(Math.random() * lenMatch);
             setI.add(i);
         }
         const arrUse = [...setI].map(i => arrMatch[i]).filter(r => r.tags);
-        arrUse.forEach(r => {
+        buildFrom.arrUse = arrUse;
+        buildFrom.requiredTags = requiredTags;
+        buildFrom.arrUse.forEach(r => {
             // console.log(r);
             // if (!r.tags) return;
             if (!r.tags) {
@@ -560,7 +564,7 @@ async function getNodesAndLinks(
             }
             r.tags.forEach(t => setLinkTags.add(t));
         });
-        requiredTags.forEach(t => { setLinkTags.delete(t); });
+        buildFrom.requiredTags.forEach(t => { setLinkTags.delete(t); });
 
 
         function getPrelNodes() {
@@ -687,11 +691,30 @@ function computeNodesAndLinks() {
 
     // gData = { nodes, links };
     gData = { nodes, links: usedLinks };
-
+    // https://www.javascripttutorial.net/object/3-ways-to-copy-objects-in-javascript/
+    // const gDataSpread = { ...gData };
+    // gDataUsed = gDataSpread;
+    if (gData.nodes[0].__threeObj) {
+        debugger;
+        throw Error("gData nodes have __threeObj");
+    }
     setActuallyUsedLinkTags.clear();
     usedLinks.forEach(l => {
         l.tags.forEach(t => setActuallyUsedLinkTags.add(t));
     });
+
+    // Note: This changes usedLinks!
+    const linksArr = usedLinks.map(l => {
+        const t = l.tags;
+        const tArr = [...t];
+        delete l.tags;
+        l.arrTags = tArr;
+        return l;
+    });
+    const gData4json = { nodes, linksArr };
+    const gDataJson = JSON.parse(JSON.stringify(gData4json));
+    gDataUsed = gDataJson;
+
 
 }
 
@@ -816,7 +839,7 @@ async function chooseView() {
     sourceName = "fc4i";
     // await getNodesAndLinks(numNodes, sourceName);
     await getNodesAndLinks(sourceName);
-    fun();
+    fun(gData);
 }
 
 
@@ -1159,9 +1182,64 @@ async function addDialogGraphButtons() {
         // const divMenuInner = mkElt("div", undefined, "Menu inner");
 
         const liSaveThisView = modMdc.mkMDCmenuItem("Save this view");
-        liSaveThisView.addEventListener("click", evt => { modMdc.mkMDCdialogAlert("Not ready"); });
+        liSaveThisView.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            // btnHome, userData
+            // obj.userData.oldMatrix = obj.matrix.clone();
+            const obj = graph.camera();
+            const oldMatrix = obj.matrix.clone();
+            // const nodes = gData.nodes.map(n => { const fc4i = n.fc4i.r.key; const id = n.id; return { fc4i, id } })
+            // console.log({ gData, setInvisibleTags, nodes, oldMatrix, graph });
+            // console.log({ buildFrom });
+            console.log({ gData, gDataUsed, oldMatrix });
+            const savedView = { gDataUsed, oldMatrix }
+            // const strSaved = JSON.stringify(savedView);
+            const strSaved = await jsonStringifyWithSets(savedView);
+            async function jsonStringifyWithSets(obj) {
+                // https://www.npmjs.com/package/tree-walk
+                // https://unpkg.com/browse/tree-walk@0.4.0/
+                debugger;
+                return JSON.stringify(obj);
+            }
+            localStorage.setItem("netwg-savedView", strSaved);
+            modMdc.mkMDCdialogAlert("Not ready");
+        }));
         const liLoadView = modMdc.mkMDCmenuItem("Load view");
-        liLoadView.addEventListener("click", evt => { modMdc.mkMDCdialogAlert("Not ready"); });
+        liLoadView.addEventListener("click", evt => {
+            debugger;
+            const strSaved = localStorage.getItem("netwg-savedView");
+            const jsonSaved = JSON.parse(strSaved);
+            console.log({ strSaved, jsonSaved });
+            const gDataUsed = jsonSaved.gDataUsed;
+            const linksArr = gDataUsed.linksArr;
+            /*
+            const linksArr = usedLinks.map(l => {
+                const t = l.tags;
+                const tArr = [...t];
+                delete l.tags;
+                l.arrTags = tArr;
+                return l;
+            })
+            */
+           /*
+            const linksSet = linksArr.map(l => {
+                const t = l.arrTags;
+                const tSet = new Set(t);
+                delete l.arrTags;
+                l.tags = tSet;
+                return l;
+            });
+           */
+            const gData = { nodes: gDataUsed.nodes, links: linksArr }
+
+            // redrawGraph();
+            pendingRedrawGraph = false;
+            graph._destructor();
+            const eltGraph = document.getElementById("the3d-graph-container");
+            eltGraph.textContent = "";
+            // computeNodesAndLinks();
+            testMyOwn(gData);
+            modMdc.mkMDCdialogAlert("Not ready");
+        });
 
         let arrEntries = [
             liSaveThisView,
@@ -1191,7 +1269,7 @@ async function addDialogGraphButtons() {
             // divMenuContainer.classList.remove("is-open");
             closeRightMenu();
         });
-        document.documentElement.addEventListener("click", evt=> closeRightMenu());
+        document.documentElement.addEventListener("click", evt => closeRightMenu());
     }
     function closeRightMenu() {
         const menu = document.getElementById(menuId);
@@ -1727,8 +1805,10 @@ async function addNodeLinkHighlighter() {
                 return "#0000";
                 return;
             }
-            let numTags = link.tags.size;
-            [...link.tags].forEach(t => { if (setInvisibleTags.has(t)) numTags--; });
+            // let numTags = link.tags.size;
+            let numTags = link.arrTags.length;
+            // [...link.tags].forEach(t => { if (setInvisibleTags.has(t)) numTags--; });
+            link.arrTags.forEach(t => { if (setInvisibleTags.has(t)) numTags--; });
             if (numTags == 0) return "#0000";
 
             if (setHighlightLinks.has(link)) {
@@ -1749,8 +1829,10 @@ async function addNodeLinkHighlighter() {
             // let arrText = link.text.split("\n");
             // const emphase = 1.3 ** arrText.length;
             // invisible
-            let numTags = link.tags.size;
-            [...link.tags].forEach(t => { if (setInvisibleTags.has(t)) numTags--; });
+            // let numTags = link.tags.size;
+            let numTags = link.arrTags.length;
+            // [...link.tags].forEach(t => { if (setInvisibleTags.has(t)) numTags--; });
+            link.arrTags.forEach(t => { if (setInvisibleTags.has(t)) numTags--; });
             if (numTags == 0) return 0;
             let emp = 1;
             if (numTags > 1) {
@@ -1859,7 +1941,7 @@ function triggerUpdateLinksView() {
         ;
 }
 
-async function testMyOwn() {
+async function testMyOwn(gData) {
     // cross-link node objects
     if (!gData.nodesById) {
         gData.nodesById = {};
