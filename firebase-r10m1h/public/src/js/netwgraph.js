@@ -246,8 +246,64 @@ const colorsRainbow =
 
 // await dialogGraph();
 
+
+let graph;
 let gData;
 let gDataUsed;
+let showCube = false;
+let imagesMode = false;
+const setInvisibleTags = new Set();
+const setHighlightNodes = new Set();
+const setHighlightLinks = new Set();
+let theHiliteNode = null;
+
+
+async function loadGraphFromJson(gDataUsed) {
+    const links4json = gDataUsed.links4json;
+    const nodes4json = gDataUsed.nodes4json;
+    /*
+    // Note: This changes usedLinks!
+    const links4json = usedLinks.map(l => {
+        const t = l.tags;
+        const tArr = [...t];
+        l.arrTags = tArr;
+        delete l.tags;
+        delete l.text;
+        return l;
+    });
+    const nodes4json = nodes.map(n => {
+        const newN = { id: n.fc4i.id, fc4ikey: n.fc4i.r.key };
+        console.log({ n, newN });
+        return newN;
+    });
+    */
+    const arrProm = [];
+    const nodesProm = nodes4json.map(async n => {
+        const key = n.fc4ikey;
+        const rProm = dbFc4i.getDbKey(key);
+        arrProm.push(rProm);
+        const r = await rProm;
+        n.fc4i = {};
+        n.fc4i.r = r;
+        return n;
+    });
+    // await Promise.all(arrProm);
+    const nodes = await Promise.all(nodesProm);
+    const links = links4json.map(l => {
+        l.tags = new Set(l.arrTags)
+        l.text = l.arrTags.join("\n");
+        return l;
+    });
+
+    const gData = { nodes, links };
+
+    modMdc.mkMDCsnackbar("Not ready");
+    pendingRedrawGraph = false;
+    graph?._destructor();
+    const eltGraph = document.getElementById("the3d-graph-container");
+    eltGraph.textContent = "";
+    await testMyOwn(gData);
+}
 
 let arrMatchAll;
 let numFc4i;
@@ -798,7 +854,21 @@ async function chooseView() {
     inpNumNodes.min = 2;
     settingNumNodes.bindToInput(inpNumNodes);
     settingNumNodes.onInputFun = (val) => linkW = val;
-    const tfNumNodes = modMdc.mkMDCtextFieldOutlined("Nodes to show", inpNumNodes, numNodes);
+    const tfNumNodes = modMdc.mkMDCtextFieldOutlined(
+        `Number of nodes (available ${numFc4i})`, inpNumNodes, numNodes);
+    const divNumNodes = mkElt("div", undefined, [
+        tfNumNodes,
+        mkElt("div", undefined, `
+            If more nodes are available
+            then only this many will be shown.
+        `)
+    ]);
+    divNumNodes.style = `
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        line-height: 1rem;
+    `;
 
     const divSource = mkElt("div", { class: "xmdc-card" }, [
         mkElt("div", { style: "display:flex; flex-direction:column; gap:15px" }, [
@@ -820,15 +890,34 @@ async function chooseView() {
     // fabHelp.style.backgroundColor = "goldenrod";
     fabHelp.style.backgroundColor = "aliceblue";
 
+    let divLoadView = "";
+    const strJson = localStorage.getItem("netwg-savedView");
+    if (strJson) {
+        // const btnLoadSaved = modMdc.mkMDCbutton("Load saved view", "raised");
+        // const btnLoadSaved = modMdc.mkMDCbutton("Load saved view");
+        const btnLoadSaved = modMdc.mkMDCbutton("Load saved view", "outlined");
+        btnLoadSaved.addEventListener("click", evt => {
+            // load saved view
+            // const strJson = localStorage.getItem("netwg-savedView");
+            const jsonSaved = JSON.parse(strJson);
+            const gDataUsed = jsonSaved.gDataUsed;
+            loadGraphFromJson(gDataUsed);
+        });
+        divLoadView = mkElt("div", undefined, [
+            btnLoadSaved,
+        ]);
+    }
+
     const body = mkElt("div", undefined, [
         mkElt("h2", undefined, ["Network graph", fabHelp]),
-        divAlts,
+        // divAlts,
+        divLoadView,
         mkElt("h3", undefined, "Source"),
         divSource,
         // mkElt("hr"),
         // mkElt("label", undefined, ["Num nodes to show: ", inpNumNodes]),
         mkElt("h3", undefined, "Output"),
-        tfNumNodes,
+        divNumNodes,
     ]);
     const answer = await modMdc.mkMDCdialogConfirm(body, "Show Graph");
     // console.log({ answer });
@@ -856,8 +945,6 @@ async function chooseView() {
 let hilightOnNodeClick = false;
 let theCube;
 let theCubeSize = 1000;
-let showCube = false;
-let imagesMode = false;
 
 function setImagesMode(newImagesMode) {
     if (imagesMode == newImagesMode) return;
@@ -1228,50 +1315,8 @@ async function addDialogGraphButtons() {
             const jsonSaved = JSON.parse(strJson);
             console.log({ strJson, jsonSaved });
             const gDataUsed = jsonSaved.gDataUsed;
-            const links4json = gDataUsed.links4json;
-            const nodes4json = gDataUsed.nodes4json;
-            /*
-            // Note: This changes usedLinks!
-            const links4json = usedLinks.map(l => {
-                const t = l.tags;
-                const tArr = [...t];
-                l.arrTags = tArr;
-                delete l.tags;
-                delete l.text;
-                return l;
-            });
-            const nodes4json = nodes.map(n => {
-                const newN = { id: n.fc4i.id, fc4ikey: n.fc4i.r.key };
-                console.log({ n, newN });
-                return newN;
-            });
-            */
-            const arrProm = [];
-            const nodesProm = nodes4json.map(async n => {
-                const key = n.fc4ikey;
-                const rProm = dbFc4i.getDbKey(key);
-                arrProm.push(rProm);
-                const r = await rProm;
-                n.fc4i = {};
-                n.fc4i.r = r;
-                return n;
-            });
-            // await Promise.all(arrProm);
-            const nodes = await Promise.all(nodesProm);
-            const links = links4json.map(l => {
-                l.tags = new Set(l.arrTags)
-                l.text = l.arrTags.join("\n");
-                return l;
-            });
-
-            const gData = { nodes, links };
-
-            modMdc.mkMDCsnackbar("Not ready");
-            pendingRedrawGraph = false;
-            graph._destructor();
+            await loadGraphFromJson(gDataUsed);
             const eltGraph = document.getElementById("the3d-graph-container");
-            eltGraph.textContent = "";
-            await testMyOwn(gData);
             await wait4mutations(eltGraph, 200);
             setImagesMode(jsonSaved.imagesMode);
             setCubeMode(jsonSaved.showCube);
@@ -1470,7 +1515,6 @@ async function setupGraphDisplayer(opt) {
 
 /////////////////
 let lastClickedNodeId;
-let graph;
 function getLink2KeyInFc4i(keyFc4i) {
     const objUrl = new URL("/", location);
     objUrl.searchParams.set("showkey", keyFc4i)
@@ -1815,11 +1859,6 @@ function showNode() {
     });
 }
 
-const setInvisibleTags = new Set();
-
-const setHighlightNodes = new Set();
-const setHighlightLinks = new Set();
-let theHiliteNode = null;
 function hiliteNode(node) {
     // no state change
     if ((!node && !setHighlightNodes.size) || (node && theHiliteNode === node)) return;
