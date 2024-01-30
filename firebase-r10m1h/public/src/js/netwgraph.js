@@ -256,6 +256,9 @@ const setInvisibleTags = new Set();
 const setHighlightNodes = new Set();
 const setHighlightLinks = new Set();
 let theHiliteNode = null;
+let hilightOnNodeClick = false;
+let theCube;
+let theCubeSize = 1000;
 
 
 async function loadGraphFromJson(gDataUsed) {
@@ -303,6 +306,20 @@ async function loadGraphFromJson(gDataUsed) {
     const eltGraph = document.getElementById("the3d-graph-container");
     eltGraph.textContent = "";
     await testMyOwn(gData);
+}
+async function loadSavedView(strJsonSaved) {
+    const jsonSaved = JSON.parse(strJsonSaved);
+    console.log({ strJson: strJsonSaved, jsonSaved });
+    const gDataUsed = jsonSaved.gDataUsed;
+    await loadGraphFromJson(gDataUsed);
+    const eltGraph = document.getElementById("the3d-graph-container");
+    await wait4mutations(eltGraph, 200);
+    setImagesMode(jsonSaved.imagesMode);
+    setCubeMode(jsonSaved.showCube);
+    // btnHome
+    const obj = graph.camera();
+    obj.matrix.copy(jsonSaved.oldMatrix);
+    obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
 }
 
 let arrMatchAll;
@@ -891,17 +908,17 @@ async function chooseView() {
     fabHelp.style.backgroundColor = "aliceblue";
 
     let divLoadView = "";
-    const strJson = localStorage.getItem("netwg-savedView");
-    if (strJson) {
+    const strJsonSavedView = localStorage.getItem("netwg-savedView");
+    if (strJsonSavedView) {
         // const btnLoadSaved = modMdc.mkMDCbutton("Load saved view", "raised");
         // const btnLoadSaved = modMdc.mkMDCbutton("Load saved view");
         const btnLoadSaved = modMdc.mkMDCbutton("Load saved view", "outlined");
         btnLoadSaved.addEventListener("click", evt => {
             // load saved view
-            // const strJson = localStorage.getItem("netwg-savedView");
-            const jsonSaved = JSON.parse(strJson);
-            const gDataUsed = jsonSaved.gDataUsed;
-            loadGraphFromJson(gDataUsed);
+            // const jsonSaved = JSON.parse(strJson);
+            // const gDataUsed = jsonSaved.gDataUsed;
+            // loadGraphFromJson(gDataUsed);
+            loadSavedView(strJsonSavedView);
         });
         divLoadView = mkElt("div", undefined, [
             btnLoadSaved,
@@ -942,9 +959,6 @@ async function chooseView() {
 
 /////////////////
 
-let hilightOnNodeClick = false;
-let theCube;
-let theCubeSize = 1000;
 
 function setImagesMode(newImagesMode) {
     if (imagesMode == newImagesMode) return;
@@ -1311,19 +1325,8 @@ async function addDialogGraphButtons() {
         }));
         const liLoadView = modMdc.mkMDCmenuItem("Load saved view");
         liLoadView.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            const strJson = localStorage.getItem("netwg-savedView");
-            const jsonSaved = JSON.parse(strJson);
-            console.log({ strJson, jsonSaved });
-            const gDataUsed = jsonSaved.gDataUsed;
-            await loadGraphFromJson(gDataUsed);
-            const eltGraph = document.getElementById("the3d-graph-container");
-            await wait4mutations(eltGraph, 200);
-            setImagesMode(jsonSaved.imagesMode);
-            setCubeMode(jsonSaved.showCube);
-            // btnHome
-            const obj = graph.camera();
-            obj.matrix.copy(jsonSaved.oldMatrix);
-            obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
+            const strJsonSaved = localStorage.getItem("netwg-savedView");
+            await loadSavedView(strJsonSaved);
         }));
 
         let arrEntries = [
