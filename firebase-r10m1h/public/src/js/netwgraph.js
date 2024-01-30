@@ -1224,7 +1224,6 @@ async function addDialogGraphButtons() {
         }));
         const liLoadView = modMdc.mkMDCmenuItem("Load saved view");
         liLoadView.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            debugger;
             const strJson = localStorage.getItem("netwg-savedView");
             const jsonSaved = JSON.parse(strJson);
             console.log({ strJson, jsonSaved });
@@ -1267,18 +1266,19 @@ async function addDialogGraphButtons() {
 
             const gData = { nodes, links };
 
-            // redrawGraph();
+            modMdc.mkMDCsnackbar("Not ready");
             pendingRedrawGraph = false;
             graph._destructor();
             const eltGraph = document.getElementById("the3d-graph-container");
             eltGraph.textContent = "";
-            // computeNodesAndLinks();
-            modMdc.mkMDCsnackbar("Not ready");
             await testMyOwn(gData);
             await wait4mutations(eltGraph, 200);
-            // modMdc.mkMDCdialogAlert("Not ready");
             setImagesMode(jsonSaved.imagesMode);
             setCubeMode(jsonSaved.showCube);
+            // btnHome
+            const obj = graph.camera();
+            obj.matrix.copy(jsonSaved.oldMatrix);
+            obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
         }));
 
         let arrEntries = [
