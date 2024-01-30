@@ -546,9 +546,10 @@ async function getNodesAndLinks(
         const lenMatch = arrMatch.length;
         const setI = new Set();
         let s = 0;
-        const n = 1;
-        // while (s++ < 2 * n * numNodes && setI.size < n * numNodes)
-        while (s++ < 4 * lenMatch && setI.size < n * numNodes) {
+        const n = 2;
+        while (s++ < 2 * n * numNodes && setI.size < n * numNodes)
+        // while (s++ < 4 * lenMatch && setI.size < n * numNodes)
+        {
             const i = Math.floor(Math.random() * lenMatch);
             setI.add(i);
         }
@@ -704,14 +705,20 @@ function computeNodesAndLinks() {
     });
 
     // Note: This changes usedLinks!
-    const linksArr = usedLinks.map(l => {
+    const links4json = usedLinks.map(l => {
         const t = l.tags;
         const tArr = [...t];
-        delete l.tags;
         l.arrTags = tArr;
+        delete l.tags;
+        delete l.text;
         return l;
     });
-    const gData4json = { nodes, linksArr };
+    const nodes4json = nodes.map(n => {
+        const newN = { id: n.fc4i.id, fc4ikey: n.fc4i.r.key };
+        console.log({ n, newN });
+        return newN;
+    });
+    const gData4json = { nodes4json, links4json };
     const gDataJson = JSON.parse(JSON.stringify(gData4json));
     gDataUsed = gDataJson;
 
@@ -852,117 +859,138 @@ let theCubeSize = 1000;
 let showCube = false;
 let imagesMode = false;
 
+function setImagesMode(newImagesMode) {
+    if (imagesMode == newImagesMode) return;
+    imagesMode = newImagesMode;
+    const btnImages = document.getElementById("btn-images");
+    if (newImagesMode) {
+        btnImages.style.backgroundColor = "yellowgreen";
+        graph.nodeThreeObject(node => showNodeAsImg(node));
+    } else {
+        btnImages.style.backgroundColor = "unset";
+        graph.nodeThreeObject(node => showNodeAsText(node));
+    }
+}
+
+function setCubeMode(newShowCube) {
+    if (newShowCube == showCube) return;
+    showCube = newShowCube;
+    const btnCube = document.getElementById("btn-cube");
+    if (newShowCube) {
+        if (!theCube) {
+            // getDeb();
+            // btnCube.style.color = "darkgoldenrod";
+            btnCube.style.color = "#b8440b";
+            const elt3dCont = document.getElementById("the3d-graph-container");
+            const bcr = elt3dCont.getBoundingClientRect();
+            theCubeSize = Math.min(bcr.width, bcr.height);
+            // const planeGeometry = new THREE.PlaneGeometry(1000, 1000, 1, 1);
+            // mesh.position.set(-100, -200, -100);
+
+            let newCS = 0;
+            graph.graphData().nodes.forEach(n => {
+                const mx = Math.max(Math.abs(n.x), Math.abs(n.y), Math.abs(n.z));
+                newCS = Math.max(newCS, mx);
+            });
+            // FIX-ME:
+            theCubeSize = newCS * 3;
+
+            const halfSize = theCubeSize / 2;
+            let x = -halfSize;
+            let y = -halfSize;
+            let z = -halfSize;
+
+            function makeSide(color) {
+                const planeGeometry = new THREE.PlaneGeometry(theCubeSize, theCubeSize, 1, 1);
+                const planeMaterial = new THREE.MeshLambertMaterial({
+                    color: color,
+                    // side: THREE.DoubleSide
+                    // side: THREE.FrontSide
+                    side: THREE.BackSide
+                });
+                const mesh = new THREE.Mesh(planeGeometry, planeMaterial);
+                return mesh;
+            }
+            function mkBackSide(color) {
+                const planeGeometry = new THREE.PlaneGeometry(theCubeSize, theCubeSize, 1, 1);
+                const planeMaterial = new THREE.MeshLambertMaterial({
+                    color: color,
+                    // side: THREE.DoubleSide
+                    side: THREE.FrontSide
+                    // side: THREE.BackSide
+                });
+                const mesh = new THREE.Mesh(planeGeometry, planeMaterial);
+                return mesh;
+            }
+            // const meshBottom = makeSide(0x003F00);
+            // meshBottom.position.set(0, y, z);
+            // meshBottom.rotation.set(0.5 * Math.PI, 0, 0);
+            const meshBottom = mkBackSide(0x003F00);
+            meshBottom.position.set(0, -halfSize, 0);
+            meshBottom.rotation.set(1.5 * Math.PI, 0, 0);
+
+            // const meshTop = makeSide(0x9090FF);
+            // meshTop.position.set(0, -y, z);
+            // meshTop.rotation.set(1.5 * Math.PI, 0, 0);
+            const meshTop = mkBackSide(0x9090FF);
+            meshTop.position.set(0, halfSize, 0);
+            meshTop.rotation.set(0.5 * Math.PI, 0, 0);
+
+            // const meshRight = makeSide(0x00009F);
+            // meshRight.position.set(-x, 0, z);
+            // meshRight.rotation.set(0, 0.5 * Math.PI, 0);
+            // const meshRight = mkBackSide(0x00006F);
+            const meshRight = mkBackSide(0x0F0FBD);
+            meshRight.position.set(halfSize, 0, 0);
+            meshRight.rotation.set(0, 1.5 * Math.PI, 0);
+
+            // const meshLeft = makeSide(0x9F0000);
+            // meshLeft.position.set(x, 0, z);
+            // meshLeft.rotation.set(0, 1.5 * Math.PI, 0);
+            const meshLeft = mkBackSide(0x3F0000);
+            // meshLeft.rotation.set(0, 0.5 * Math.PI, 0);
+            meshLeft.position.set(-halfSize, 0, 0);
+            meshLeft.rotation.set(0, 0.5 * Math.PI, 0);
+
+            // const xAxis = new THREE.Vector3(1, 0, 0);
+            // const yAxis = new THREE.Vector3(0, 1, 0);
+            // const zAxis = new THREE.Vector3(0, 0, 1);
+            // meshLeft.rotateOnWorldAxis(xAxis, 0.5 * Math.PI);
+
+            // const meshBack = mkBackSide(0xFFFF00);
+            const meshBack = mkBackSide(0xAAAA00);
+            meshBack.position.set(0, 0, -halfSize);
+
+            const meshFront = mkBackSide(0x444444);
+            meshFront.rotation.set(0, 1 * Math.PI, 0);
+            meshFront.position.set(0, 0, halfSize);
+
+            theCube = [
+                meshLeft,
+                meshRight,
+                meshTop,
+                meshBottom,
+                meshBack,
+                meshFront,
+            ];
+        }
+        theCube.forEach(cubeSide => graph.scene().add(cubeSide));
+    } else {
+        btnCube.style.color = "unset";
+        theCube.forEach(cubeSide => graph.scene().remove(cubeSide));
+        theCube = undefined;
+    }
+
+}
 async function addDialogGraphButtons() {
 
     // https://github.com/vasturiano/3d-force-graph/blob/master/example/scene/index.html
     // https://vasturiano.github.io/3d-force-graph/example/scene/
     const btnCube = modMdc.mkMDCiconButton("view_in_ar", "Show/hide cube");
+    btnCube.id = "btn-cube";
     btnCube.addEventListener("click", evt => {
-        showCube = !showCube;
-        if (showCube) {
-            if (!theCube) {
-                // getDeb();
-                // btnCube.style.color = "darkgoldenrod";
-                btnCube.style.color = "#b8440b";
-                const elt3dCont = document.getElementById("the3d-graph-container");
-                const bcr = elt3dCont.getBoundingClientRect();
-                theCubeSize = Math.min(bcr.width, bcr.height);
-                // const planeGeometry = new THREE.PlaneGeometry(1000, 1000, 1, 1);
-                // mesh.position.set(-100, -200, -100);
-
-                let newCS = 0;
-                graph.graphData().nodes.forEach(n => {
-                    const mx = Math.max(Math.abs(n.x), Math.abs(n.y), Math.abs(n.z));
-                    newCS = Math.max(newCS, mx);
-                });
-                // FIX-ME:
-                theCubeSize = newCS * 3;
-
-                const halfSize = theCubeSize / 2;
-                let x = -halfSize;
-                let y = -halfSize;
-                let z = -halfSize;
-
-                function makeSide(color) {
-                    const planeGeometry = new THREE.PlaneGeometry(theCubeSize, theCubeSize, 1, 1);
-                    const planeMaterial = new THREE.MeshLambertMaterial({
-                        color: color,
-                        // side: THREE.DoubleSide
-                        // side: THREE.FrontSide
-                        side: THREE.BackSide
-                    });
-                    const mesh = new THREE.Mesh(planeGeometry, planeMaterial);
-                    return mesh;
-                }
-                function mkBackSide(color) {
-                    const planeGeometry = new THREE.PlaneGeometry(theCubeSize, theCubeSize, 1, 1);
-                    const planeMaterial = new THREE.MeshLambertMaterial({
-                        color: color,
-                        // side: THREE.DoubleSide
-                        side: THREE.FrontSide
-                        // side: THREE.BackSide
-                    });
-                    const mesh = new THREE.Mesh(planeGeometry, planeMaterial);
-                    return mesh;
-                }
-                // const meshBottom = makeSide(0x003F00);
-                // meshBottom.position.set(0, y, z);
-                // meshBottom.rotation.set(0.5 * Math.PI, 0, 0);
-                const meshBottom = mkBackSide(0x003F00);
-                meshBottom.position.set(0, -halfSize, 0);
-                meshBottom.rotation.set(1.5 * Math.PI, 0, 0);
-
-                // const meshTop = makeSide(0x9090FF);
-                // meshTop.position.set(0, -y, z);
-                // meshTop.rotation.set(1.5 * Math.PI, 0, 0);
-                const meshTop = mkBackSide(0x9090FF);
-                meshTop.position.set(0, halfSize, 0);
-                meshTop.rotation.set(0.5 * Math.PI, 0, 0);
-
-                // const meshRight = makeSide(0x00009F);
-                // meshRight.position.set(-x, 0, z);
-                // meshRight.rotation.set(0, 0.5 * Math.PI, 0);
-                // const meshRight = mkBackSide(0x00006F);
-                const meshRight = mkBackSide(0x0F0FBD);
-                meshRight.position.set(halfSize, 0, 0);
-                meshRight.rotation.set(0, 1.5 * Math.PI, 0);
-
-                // const meshLeft = makeSide(0x9F0000);
-                // meshLeft.position.set(x, 0, z);
-                // meshLeft.rotation.set(0, 1.5 * Math.PI, 0);
-                const meshLeft = mkBackSide(0x3F0000);
-                // meshLeft.rotation.set(0, 0.5 * Math.PI, 0);
-                meshLeft.position.set(-halfSize, 0, 0);
-                meshLeft.rotation.set(0, 0.5 * Math.PI, 0);
-
-                // const xAxis = new THREE.Vector3(1, 0, 0);
-                // const yAxis = new THREE.Vector3(0, 1, 0);
-                // const zAxis = new THREE.Vector3(0, 0, 1);
-                // meshLeft.rotateOnWorldAxis(xAxis, 0.5 * Math.PI);
-
-                // const meshBack = mkBackSide(0xFFFF00);
-                const meshBack = mkBackSide(0xAAAA00);
-                meshBack.position.set(0, 0, -halfSize);
-
-                const meshFront = mkBackSide(0x444444);
-                meshFront.rotation.set(0, 1 * Math.PI, 0);
-                meshFront.position.set(0, 0, halfSize);
-
-                theCube = [
-                    meshLeft,
-                    meshRight,
-                    meshTop,
-                    meshBottom,
-                    meshBack,
-                    meshFront,
-                ];
-            }
-            theCube.forEach(cubeSide => graph.scene().add(cubeSide));
-        } else {
-            btnCube.style.color = "unset";
-            theCube.forEach(cubeSide => graph.scene().remove(cubeSide));
-            theCube = undefined;
-        }
+        const newShowCube = !showCube;
+        setCubeMode(newShowCube);
     });
 
     const btnFocusNode = modMdc.mkMDCiconButton("center_focus_strong", "Focus node (on click)");
@@ -987,16 +1015,11 @@ async function addDialogGraphButtons() {
     });
 
     const btnImages = modMdc.mkMDCiconButton("imagesmode", "Show images");
+    btnImages.id = "btn-images";
     btnImages.addEventListener("click", evt => {
         // https://github.com/vasturiano/3d-force-graph/issues/61
-        imagesMode = !imagesMode;
-        if (imagesMode) {
-            btnImages.style.backgroundColor = "yellowgreen";
-            graph.nodeThreeObject(node => showNodeAsImg(node));
-        } else {
-            btnImages.style.backgroundColor = "unset";
-            graph.nodeThreeObject(node => showNodeAsText(node));
-        }
+        const newImagesMode = !imagesMode;
+        setImagesMode(newImagesMode);
         // FIX-ME: lines above works but not the line below??? 
         //   Is is something with async...
         // graph.nodeThreeObject(node => showNode(node));
@@ -1191,45 +1214,58 @@ async function addDialogGraphButtons() {
             // console.log({ gData, setInvisibleTags, nodes, oldMatrix, graph });
             // console.log({ buildFrom });
             console.log({ gData, gDataUsed, oldMatrix });
-            const savedView = { gDataUsed, oldMatrix }
+            const savedView = { gDataUsed, oldMatrix, imagesMode, showCube };
             // const strSaved = JSON.stringify(savedView);
-            const strSaved = await jsonStringifyWithSets(savedView);
-            async function jsonStringifyWithSets(obj) {
-                // https://www.npmjs.com/package/tree-walk
-                // https://unpkg.com/browse/tree-walk@0.4.0/
-                debugger;
-                return JSON.stringify(obj);
-            }
+            const strSaved = JSON.stringify(savedView);
             localStorage.setItem("netwg-savedView", strSaved);
-            modMdc.mkMDCdialogAlert("Not ready");
+            // modMdc.mkMDCdialogAlert("Not ready");
+            const sn = modMdc.mkMDCsnackbar("Not ready");
+            sn.style.backgroundColor = "red";
         }));
-        const liLoadView = modMdc.mkMDCmenuItem("Load view");
-        liLoadView.addEventListener("click", evt => {
+        const liLoadView = modMdc.mkMDCmenuItem("Load saved view");
+        liLoadView.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             debugger;
-            const strSaved = localStorage.getItem("netwg-savedView");
-            const jsonSaved = JSON.parse(strSaved);
-            console.log({ strSaved, jsonSaved });
+            const strJson = localStorage.getItem("netwg-savedView");
+            const jsonSaved = JSON.parse(strJson);
+            console.log({ strJson, jsonSaved });
             const gDataUsed = jsonSaved.gDataUsed;
-            const linksArr = gDataUsed.linksArr;
+            const links4json = gDataUsed.links4json;
+            const nodes4json = gDataUsed.nodes4json;
             /*
-            const linksArr = usedLinks.map(l => {
+            // Note: This changes usedLinks!
+            const links4json = usedLinks.map(l => {
                 const t = l.tags;
                 const tArr = [...t];
-                delete l.tags;
                 l.arrTags = tArr;
-                return l;
-            })
-            */
-           /*
-            const linksSet = linksArr.map(l => {
-                const t = l.arrTags;
-                const tSet = new Set(t);
-                delete l.arrTags;
-                l.tags = tSet;
+                delete l.tags;
+                delete l.text;
                 return l;
             });
-           */
-            const gData = { nodes: gDataUsed.nodes, links: linksArr }
+            const nodes4json = nodes.map(n => {
+                const newN = { id: n.fc4i.id, fc4ikey: n.fc4i.r.key };
+                console.log({ n, newN });
+                return newN;
+            });
+            */
+            const arrProm = [];
+            const nodesProm = nodes4json.map(async n => {
+                const key = n.fc4ikey;
+                const rProm = dbFc4i.getDbKey(key);
+                arrProm.push(rProm);
+                const r = await rProm;
+                n.fc4i = {};
+                n.fc4i.r = r;
+                return n;
+            });
+            // await Promise.all(arrProm);
+            const nodes = await Promise.all(nodesProm);
+            const links = links4json.map(l => {
+                l.tags = new Set(l.arrTags)
+                l.text = l.arrTags.join("\n");
+                return l;
+            });
+
+            const gData = { nodes, links };
 
             // redrawGraph();
             pendingRedrawGraph = false;
@@ -1237,9 +1273,13 @@ async function addDialogGraphButtons() {
             const eltGraph = document.getElementById("the3d-graph-container");
             eltGraph.textContent = "";
             // computeNodesAndLinks();
-            testMyOwn(gData);
-            modMdc.mkMDCdialogAlert("Not ready");
-        });
+            modMdc.mkMDCsnackbar("Not ready");
+            await testMyOwn(gData);
+            await wait4mutations(eltGraph, 200);
+            // modMdc.mkMDCdialogAlert("Not ready");
+            setImagesMode(jsonSaved.imagesMode);
+            setCubeMode(jsonSaved.showCube);
+        }));
 
         let arrEntries = [
             liSaveThisView,
