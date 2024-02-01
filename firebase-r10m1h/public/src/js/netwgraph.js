@@ -307,18 +307,19 @@ async function loadGraphFromJson(gDataUsed) {
     eltGraph.textContent = "";
     await testMyOwn(gData);
 }
-async function loadSavedView(strJsonSaved) {
-    const jsonSaved = JSON.parse(strJsonSaved);
-    console.log({ strJson: strJsonSaved, jsonSaved });
-    const gDataUsed = jsonSaved.gDataUsed;
+async function loadSavedView(strEntry) {
+    const jsonEntry = JSON.parse(strEntry);
+    console.log({ strJson: strEntry, jsonSaved: jsonEntry });
+    const view = jsonEntry.view;
+    const gDataUsed = view.gDataUsed;
     await loadGraphFromJson(gDataUsed);
     const eltGraph = document.getElementById("the3d-graph-container");
     await wait4mutations(eltGraph, 200);
-    setImagesMode(jsonSaved.imagesMode);
-    setCubeMode(jsonSaved.showCube);
+    setImagesMode(view.imagesMode);
+    setCubeMode(view.showCube);
     // btnHome
     const obj = graph.camera();
-    obj.matrix.copy(jsonSaved.oldMatrix);
+    obj.matrix.copy(view.oldMatrix);
     obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
 }
 
@@ -755,7 +756,47 @@ function computeNodesAndLinks() {
         return true;
     });
     console.log({ links, setLinked, usedLinks });
-    if (usedLinks.length == 0) debugger;
+    if (usedLinks.length == 0) {
+        debugger;
+        const allUsed = numNodes >= numFc4i;
+        const divNotice = allUsed ?
+            mkElt("p", undefined, `No tag links found between the ${numFc4i} available nodes.`)
+            :
+            mkElt("p", undefined, `No tag links found between the ${numNodes} selected nodes.`);
+        const tagsUsed = true; // FIX-ME:
+        const divExplainTags = tagsUsed ?
+            mkElt("p", undefined, `
+                The tags used to select nodes are not used for links
+                since they would just show links between all the shown nodes.
+            `)
+            :
+            "";
+        const divExplain = allUsed ?
+            divExplainTags
+            :
+            mkElt("div", undefined, [
+                mkElt("p", undefined, "There will be an anser...."),
+                mkElt("p", undefined, "... some day."),
+            ]);
+
+        const iconInfo = modMdc.mkMDCicon("info");
+        const detExplain = mkElt("details", undefined, [
+            mkElt("summary", undefined, ["Please explain! ", iconInfo]),
+            divExplain,
+        ]);
+        const divDetExplain = mkElt("div", { class: "mdc-card" }, detExplain);
+        divDetExplain.style = `
+            padding: 10px;
+            background-color: lightblue;
+        `;
+        const body = mkElt("div", undefined, [
+            mkElt("h2", undefined, "No links"),
+            divNotice,
+            divDetExplain,
+        ]);
+        modMdc.mkMDCdialogAlert(body);
+        return;
+    }
 
     const nodes = prelNodes.nodes.filter(n => setLinked.has(n.id));
 
@@ -872,13 +913,30 @@ async function chooseView() {
     settingNumNodes.bindToInput(inpNumNodes);
     settingNumNodes.onInputFun = (val) => linkW = val;
     const tfNumNodes = modMdc.mkMDCtextFieldOutlined(
-        `Number of nodes (available ${numFc4i})`, inpNumNodes, numNodes);
-    const divNumNodes = mkElt("div", undefined, [
-        tfNumNodes,
-        mkElt("div", undefined, `
+        // `Number of nodes (available ${numFc4i})`,
+        `Number of nodes`,
+        inpNumNodes, numNodes);
+    const btnShow = modMdc.mkMDCbutton("Show", "raised");
+    btnShow.addEventListener("click", evt => {
+        showGraph();
+    });
+    const divInfoNum = mkElt("div", undefined, `
             If more nodes are available
             then only this many will be shown.
-        `)
+        `);
+    const divShow = mkElt("div", undefined, [
+        tfNumNodes,
+        btnShow
+    ]);
+    divShow.style = `
+        display: grid;
+        gap: 10px;
+        grid-template-columns: 1fr min-content;
+    `;
+    const divNumNodes = mkElt("div", undefined, [
+        // tfNumNodes,
+        divShow,
+        divInfoNum,
     ]);
     divNumNodes.style = `
         display: flex;
@@ -919,6 +977,7 @@ async function chooseView() {
             // const gDataUsed = jsonSaved.gDataUsed;
             // loadGraphFromJson(gDataUsed);
             loadSavedView(strJsonSavedView);
+            closeDialog();
         });
         divLoadView = mkElt("div", undefined, [
             btnLoadSaved,
@@ -936,23 +995,26 @@ async function chooseView() {
         mkElt("h3", undefined, "Output"),
         divNumNodes,
     ]);
-    const answer = await modMdc.mkMDCdialogConfirm(body, "Show Graph");
-    // console.log({ answer });
-    if (!answer) return;
-    // await modMdc.mkMDCdialogAlertWait(body, "Close");
+    const dlg = await modMdc.mkMDCdialogAlert(body, "Cancel");
+    // if (!answer) return;
+    function closeDialog() { dlg.mdc.close(); }
     // debugger;
-    const radChecked = divAlts.querySelector("input:checked");
-    if (!radChecked) return;
-    // testText();
-    const fun = radChecked.altFun;
-    const eltShowViewAlt = document.getElementById("show-view-alt");
-    eltShowViewAlt.textContent = fun.name;
-    numNodes = Math.floor(Number(inpNumNodes.value));
-    // sourceName = divSource.querySelector("input[name=source]:checked").value;
-    sourceName = "fc4i";
-    // await getNodesAndLinks(numNodes, sourceName);
-    await getNodesAndLinks(sourceName);
-    fun(gData);
+    // const radChecked = divAlts.querySelector("input:checked");
+    // if (!radChecked) return;
+    // const fun = radChecked.altFun;
+    // const eltShowViewAlt = document.getElementById("show-view-alt");
+    // eltShowViewAlt.textContent = fun.name;
+    // showGraph();
+    async function showGraph() {
+        numNodes = Math.floor(Number(inpNumNodes.value));
+        sourceName = "fc4i";
+        await getNodesAndLinks(sourceName);
+        // fun(gData);
+        if (gData) {
+            testMyOwn(gData);
+            closeDialog();
+        }
+    }
 }
 
 
@@ -1307,31 +1369,63 @@ async function addDialogGraphButtons() {
 
         const liSaveThisView = modMdc.mkMDCmenuItem("Save this view");
         liSaveThisView.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            const title = "hej";
+            const inpTitle = modMdc.mkMDCtextFieldInput(undefined, "text")
+            const tfTitle = modMdc.mkMDCtextField("Name", inpTitle, title);
+
+            const taDesc = modMdc.mkMDCtextFieldTextarea(undefined, 10, 10);
+            const tafDesc = modMdc.mkMDCtextareaField("View description", taDesc);
+            const divDesc = mkElt("div", undefined, tafDesc);
+            const divInputs = mkElt("div", undefined, [
+                tfTitle,
+                // divDesc,
+                tafDesc,
+            ]);
+            divInputs.style = `
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+            `;
+            const body = mkElt("div", undefined, [
+                mkElt("p", { style: "background:red;" }, "Not ready, but can be used"),
+                mkElt("h2", undefined, "Save this view"),
+                divInputs,
+            ]);
+            const answer = await modMdc.mkMDCdialogConfirm(body);
+            if (!answer) { modMdc.mkMDCsnackbar("Not saved"); return; }
             // btnHome, userData
-            // obj.userData.oldMatrix = obj.matrix.clone();
             const obj = graph.camera();
             const oldMatrix = obj.matrix.clone();
-            // const nodes = gData.nodes.map(n => { const fc4i = n.fc4i.r.key; const id = n.id; return { fc4i, id } })
-            // console.log({ gData, setInvisibleTags, nodes, oldMatrix, graph });
-            // console.log({ buildFrom });
             console.log({ gData, gDataUsed, oldMatrix });
-            const savedView = { gDataUsed, oldMatrix, imagesMode, showCube };
+            const view = { gDataUsed, oldMatrix, imagesMode, showCube };
             // const strSaved = JSON.stringify(savedView);
-            const strSaved = JSON.stringify(savedView);
+            const entry = {
+                title: inpTitle.value,
+                desc: taDesc.value,
+                view
+            }
+            const strSaved = JSON.stringify(entry);
             localStorage.setItem("netwg-savedView", strSaved);
-            // modMdc.mkMDCdialogAlert("Not ready");
-            const sn = modMdc.mkMDCsnackbar("Not ready");
-            sn.style.backgroundColor = "red";
+            const lenSaved = strSaved.length;
+            console.log({ strSaved, lenSaved });
+            modMdc.mkMDCsnackbar(`Saved (${lenSaved} bytes)`);
+            // const sn = modMdc.mkMDCsnackbar("Not ready");
+            // sn.style.backgroundColor = "red";
         }));
         const liLoadView = modMdc.mkMDCmenuItem("Load saved view");
         liLoadView.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             const strJsonSaved = localStorage.getItem("netwg-savedView");
             await loadSavedView(strJsonSaved);
         }));
+        const liEditView = modMdc.mkMDCmenuItem("Edit current view");
+        liEditView.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            alert("not implemented yet");
+        }));
 
         let arrEntries = [
             liSaveThisView,
             liLoadView,
+            liEditView,
         ];
         const ulMenu = modMdc.mkMDCmenuUl(arrEntries);
         const divMenuSurface = modMdc.mkMDCmenuDiv(ulMenu);
@@ -1720,11 +1814,11 @@ function nodeClickAction(node) {
     distance = 100; // Should make text 14px easily readable
     distance = cameraDistance;
     const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
-
+ 
     const newPos = node.x || node.y || node.z
         ? { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }
         : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
-
+ 
     graph.cameraPosition(
         newPos, // new position
         node, // lookAt ({ x, y, z })
@@ -1980,13 +2074,13 @@ async function testTC() {
     if (useHtml) { ourDisplayer = await getHtmlGraphDisplayer(); }
     graph = ourDisplayer.graphData(gData);
     graph = graph.nodeOpacity(1.0);
-
+ 
     // await addHtml();
     addText();
     await waitSeconds(1);
     addOnClick();
     // graph.onEngineStop(() => graph.zoomToFit(100));
-
+ 
 }
 */
 /*
@@ -2005,7 +2099,7 @@ async function testFH() {
     }
     graph = ourDisplayer.graphData(gData);
     graph = graph.nodeOpacity(1.0);
-
+ 
     // await addHtml();
     addText();
     await waitSeconds(1);
@@ -2144,21 +2238,21 @@ async function testHtml() {
         .nodeThreeObject(node => {
             const nodeEl = document.createElement('div');
             nodeEl.textContent = `Html ${node.id}`;
-
+ 
             const btn = mkElt("button", undefined, `Html ${node.id}`);
             btn.addEventListener("click", evt => {
                 console.log(`clicked ${node.id}`);
                 alert(node.id);
             });
             nodeEl.appendChild(btn);
-
+ 
             nodeEl.classList.add("node-label");
-
+ 
             if (!logged1) {
                 console.log(nodeEl);
                 logged1 = true;
             }
-
+ 
             return new m.CSS2DObject(nodeEl);
         })
         ;
