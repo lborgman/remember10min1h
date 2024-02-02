@@ -311,6 +311,7 @@ async function loadGraphFromJson(gDataUsed) {
 let currentSavedView;
 async function loadSavedView(strEntry) {
     const jsonEntry = JSON.parse(strEntry);
+    currentSavedView = jsonEntry;
     console.log({ strEntry, jsonEntry });
     const body = mkElt("div", undefined, [
         mkElt("h2", undefined, "Loading saved entry"),
@@ -319,8 +320,8 @@ async function loadSavedView(strEntry) {
     ]);
     modMdc.mkMDCdialogAlert(body);
     const view = jsonEntry.view;
-    currentSavedView = view;
-    const gDataUsed = view.gDataUsed;
+    // currentSavedView = view;
+    gDataUsed = view.gDataUsed;
     await loadGraphFromJson(gDataUsed);
     const eltGraph = document.getElementById("the3d-graph-container");
     await wait4mutations(eltGraph, 200);
@@ -1374,26 +1375,39 @@ async function addDialogGraphButtons() {
     const guessMenuRight = 300;
     addMenuRight();
     async function addMenuRight() {
-        // const divMenuInner = mkElt("div", undefined, "Menu inner");
 
-        const liSaveThisView = modMdc.mkMDCmenuItem("Save this view");
-        liSaveThisView.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            const creationTime = getLocalISOtime();
-            const title = getLocalISOtime().slice(2, -3);
+        // currentSavedView
+        async function mkViewDialog(editedView) {
+            let title;
+            let desc = "";
+            let creationTime;
+            let dialogTitle;
+            if (editedView) {
+                creationTime = editedView.creationTime;
+                title = editedView.title;
+                desc = editedView.desc;
+                dialogTitle = "Edit saved view";
+            } else {
+                creationTime = (new Date()).toISOString();
+                title = getLocalISOtime(creationTime).slice(2, -3);
+                dialogTitle = "Save this view";
+            }
             const inpTitle = modMdc.mkMDCtextFieldInput(undefined, "text")
             const tfTitle = modMdc.mkMDCtextField("Name", inpTitle, title);
 
             const taDesc = modMdc.mkMDCtextFieldTextarea(undefined, 10, 10);
-            const tafDesc = modMdc.mkMDCtextareaField("View description", taDesc);
+            const tafDesc = modMdc.mkMDCtextareaField("Your notes", taDesc);
+            taDesc.value = desc;
+
             const divInputs = mkElt("div", undefined, [tfTitle, tafDesc]);
             divInputs.style = `
-                display: flex;
-                flex-direction: column;
-                gap: 20px;
-            `;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 20px;
+                `;
             const body = mkElt("div", undefined, [
                 mkElt("p", { style: "background:red;" }, "Not ready, but can be used"),
-                mkElt("h2", undefined, "Save this view"),
+                mkElt("h2", undefined, dialogTitle),
                 divInputs,
             ]);
             const answer = await modMdc.mkMDCdialogConfirm(body);
@@ -1401,6 +1415,7 @@ async function addDialogGraphButtons() {
             const obj = graph.camera();
             const oldMatrix = obj.matrix.clone();
             console.log({ gData, gDataUsed, oldMatrix, creationTime });
+            if (!gDataUsed) debugger;
             const view = { gDataUsed, oldMatrix, imagesMode, showCube };
             const objToSave = {
                 title: inpTitle.value,
@@ -1409,11 +1424,17 @@ async function addDialogGraphButtons() {
                 view
             }
             currentSavedView = objToSave;
+            console.log({ currentSavedView });
             const strToSaved = JSON.stringify(objToSave);
             localStorage.setItem("netwg-savedView", strToSaved);
             const lenSaved = strToSaved.length;
             console.log({ strToSaved, lenSaved });
             modMdc.mkMDCsnackbar(`Saved (${lenSaved} bytes)`);
+        }
+
+        const liSaveThisView = modMdc.mkMDCmenuItem("Save this view");
+        liSaveThisView.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            mkViewDialog(undefined);
         }));
         const liLoadView = modMdc.mkMDCmenuItem("Load saved view");
         liLoadView.addEventListener("click", errorHandlerAsyncEvent(async evt => {
@@ -1423,7 +1444,8 @@ async function addDialogGraphButtons() {
         const liEditView = modMdc.mkMDCmenuItem("Edit current view");
         liEditView.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             if (currentSavedView) {
-                alert("not implemented yet");
+                // alert("not implemented yet");
+                mkViewDialog(currentSavedView);
             } else {
                 alert("The current view has not been saved.");
 
