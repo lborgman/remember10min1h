@@ -1607,6 +1607,12 @@ function mkDivLinksSettings() {
         divLinksSettings,
         divLinkHiSettings,
     ]);
+    const debounceSettingsInput = debounce(triggerUpdateLinksView, 700);
+    divLinksAndHiSettings.addEventListener("input", evt => {
+        console.log("links&hi input", evt.target);
+        debounceSettingsInput();
+    });
+
     return divLinksAndHiSettings;
 }
 async function dialogLinks() {
