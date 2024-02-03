@@ -253,6 +253,7 @@ let strGDataUsed;
 let showCube = false;
 let imagesMode = false;
 const setInvisibleTags = new Set();
+const setHighlightTags = new Set();
 const setHighlightNodes = new Set();
 const setHighlightLinks = new Set();
 let theHiliteNode = null;
@@ -484,6 +485,7 @@ function mkEltTagSelector(tag) {
         const btn = modMdc.mkMDCiconButton(iconName, ariaLabel);
         btn.classList.add("icon-button-30");
         btn.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            evt.stopPropagation();
             const target = evt.target;
             console.log({ target, iconName });
             // if (await selectChipAction(iconName))
@@ -595,6 +597,17 @@ function mkEltTagSelector(tag) {
     ])
     */
     eltTagSelector.appendChild(eltChips);
+    eltTagSelector.addEventListener("click", evt => {
+        // console.log("clicked", { targetIsSelector, evt, eltTagSelector });
+        const cls = "highlight";
+        eltTagSelector.classList.toggle(cls);
+        const tag = eltTagSelector.firstChild.textContent.slice(1)
+        if (eltTagSelector.classList.contains(cls)) {
+            setHighlightTags.add(tag);
+        } else {
+            setHighlightTags.remove(tag);
+        }
+    });
     return eltTagSelector;
 }
 
@@ -1232,7 +1245,6 @@ async function addDialogGraphButtons() {
     btnLinks.addEventListener("click", evt => {
         closeOtherExpanded("links");
         const divLinks = document.getElementById("netwg-links");
-        // divLinks.classList.toggle("is-open");
         toggleExpandibleDiv(divLinks);
         if (isExpanded(divLinks)) {
             btnLinks.classList.add("is-open");
@@ -1241,20 +1253,6 @@ async function addDialogGraphButtons() {
         }
     });
 
-
-    /*
-    const btnHideGraph = modMdc.mkMDCiconButton("visibility", "Hide/show network graph");
-    btnHideGraph.style.color = "yellowgreen";
-    btnHideGraph.addEventListener("click", async evt => {
-        const elt = document.getElementById("the3d-graph-container");
-        const st = elt.style;
-        if (st.display == "none") {
-            st.display = "block";
-        } else {
-            st.display = "none";
-        }
-    });
-    */
 
     const btnDialogGraph = modMdc.mkMDCiconButton("settings", "Old settings variant");
     btnDialogGraph.addEventListener("click", async evt => {
@@ -1941,7 +1939,6 @@ function showNodeAsText(node) {
         return retTxt;
     }
     const sprite = new SpriteText(txtShort);
-    // const sprite = new SpriteText("hi\nthere");
     sprite.material.transparent = false;
     const numTags = node.fc4i.r.tags.length;
     const idxClr = Math.min(numTags, colorsRainbow.length - 1);
@@ -2008,7 +2005,25 @@ function hiliteNode(node) {
 
 async function addNodeLinkHighlighter() {
     graph = graph
-        .nodeColor(node => setHighlightNodes.has(node) ? node === theHiliteNode ? 'rgb(255,0,0,1)' : 'rgba(255,160,0,0.8)' : 'rgba(0,255,255,0.6)')
+        .nodeColor(node => {
+            // setHighlightNodes.has(node) ? node === theHiliteNode ? 'rgb(255,0,0,1)' : 'rgba(255,160,0,0.8)' : 'rgba(0,255,255,0.6)'
+            /*
+            setHighlightNodes.has(node) ?
+                node === theHiliteNode ?
+                    'rgb(255,0,0,1)'
+                    : 'rgba(255,160,0,0.8)'
+                : 'rgba(0,255,255,0.6)'
+            */
+            if (setHighlightNodes.has(node)) {
+                if (node === theHiliteNode) {
+                    return 'rgb(255,0,0,1)'
+                } else {
+                    return 'rgba(255,160,0,0.8)'
+                }
+            } else {
+                return 'rgba(0,255,255,0.6)'
+            }
+        })
         .linkColor(link => {
             if (setInvisibleTags.has(link.text)) {
                 return "#0000";
@@ -2020,7 +2035,11 @@ async function addNodeLinkHighlighter() {
             link.arrTags.forEach(t => { if (setInvisibleTags.has(t)) numTags--; });
             if (numTags == 0) return "#0000";
 
-            if (setHighlightLinks.has(link)) {
+            let hi = setHighlightLinks.has(link);
+            link.arrTags.forEach(t => {
+                hi = hi || setHighlightTags.has(t);
+            });
+            if (hi) {
                 const hexOpacityHi = Math.round(linkOpHi * 255).toString(16);
                 return linkColorHi + hexOpacityHi;
             } else {
@@ -2052,16 +2071,17 @@ async function addNodeLinkHighlighter() {
         })
         .linkThreeObject(link => {
             if (setHighlightLinks.has(link)) {
-                // if (link.text)
-                if (link.tags) {
+                // if (link.tags)
+                if (link.arrTags) {
                     // extend link with text sprite
-                    const txt = [...link.tags].filter(t => !setInvisibleTags.has(t)).join("\n");
+                    // const txt = [...link.tags].filter(t => !setInvisibleTags.has(t)).join("\n");
+                    const txt = link.arrTags.filter(t => !setInvisibleTags.has(t)).join("\n");
                     const sprite = new SpriteText(txt);
                     sprite.color = 'rgba(255, 255, 0, 1)';
                     sprite.textHeight = 4;
                     return sprite;
                 }
-                return link;
+                return false;
             } else return false;
         })
         .onNodeHover(node => {
@@ -2245,81 +2265,6 @@ function OLDfocusNode(node) {
         3000  // ms transition duration
     );
 }
-/*
-async function testFocus() {
-    // https://github.com/vasturiano/3d-force-graph/blob/master/example/click-to-focus/index.html
-    const Graph = graphDisplayer.graphData(gData)
-        .nodeLabel("id")
-        .onNodeClick(node => {
-        });
-}
-*/
-/*
-async function testHtml() {
-    console.log("TEST HTLM");
-    // https://github.com/vasturiano/3d-force-graph/blob/master/example/html-nodes/index.html
-    console.warn("testFH, import CSS2DRenderer");
-    const m = await import('//unpkg.com/three/examples/jsm/renderers/CSS2DRenderer.js');
-    const graphDisplayer = setupGraphDisplayer({
-        extraRenderers: [new m.CSS2DRenderer()]
-    });
-    let logged1 = false;
-    const Graph = graphDisplayer.graphData(gData)
-        .onNodeClick(node => {
-            console.log("onNodeClick", node);
-        })
-        .nodeThreeObject(node => {
-            const nodeEl = document.createElement('div');
-            nodeEl.textContent = `Html ${node.id}`;
- 
-            const btn = mkElt("button", undefined, `Html ${node.id}`);
-            btn.addEventListener("click", evt => {
-                console.log(`clicked ${node.id}`);
-                alert(node.id);
-            });
-            nodeEl.appendChild(btn);
- 
-            nodeEl.classList.add("node-label");
- 
-            if (!logged1) {
-                console.log(nodeEl);
-                logged1 = true;
-            }
- 
-            return new m.CSS2DObject(nodeEl);
-        })
-        ;
-}
-*/
-
-/*
-async function testText() {
-    // https://github.com/vasturiano/3d-force-graph/blob/master/example/text-nodes/index.html
-    const Graph = graphDisplayer.graphData(gData)
-        // .nodeAutoColorBy("group")
-        .nodeThreeObject(node => {
-            const sprite = new SpriteText(`Text ${node.id}`);
-            // sprite.material.depthWrite = false; // make sprite background transparent
-            sprite.material.transparent = false;
-            sprite.backgroundColor = "yellow";
-            // sprite.backgroundColor = node.color;
-            sprite.padding = [2, 6];
-            sprite.borderRadius = 4;
-            sprite.borderWidth = 1;
-            sprite.borderColor = "red";
-            // sprite.color = node.color;
-            sprite.color = "red";
-            sprite.textHeight = textH;
-            return sprite;
-        });
-}
-*/
-/*
-function testBasic() {
-    // https://github.com/vasturiano/3d-force-graph/blob/master/example/basic/index.html
-    const Graph = graphDisplayer.graphData(gData);
-}
-*/
 
 function makeExpandible(divWrapper, dir) {
     if (!["h", "w"].includes(dir)) throw Error(`Parameter dir must be "h" or "w", but is "${dir}"`)
