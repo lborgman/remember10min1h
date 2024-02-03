@@ -605,8 +605,9 @@ function mkEltTagSelector(tag) {
         if (eltTagSelector.classList.contains(cls)) {
             setHighlightTags.add(tag);
         } else {
-            setHighlightTags.remove(tag);
+            setHighlightTags.delete(tag);
         }
+        triggerUpdateLinksView();
     });
     return eltTagSelector;
 }
@@ -1615,6 +1616,7 @@ function mkDivLinksSettings() {
 
     return divLinksAndHiSettings;
 }
+/*
 async function dialogLinks() {
     const divLinksAndHiSettings = mkDivLinksSettings();
     const body = mkElt("div", undefined, [
@@ -1627,6 +1629,7 @@ async function dialogLinks() {
     // FIX-ME:
     const answer = await modMdc.mkMDCdialogAlertWait(body, "Close");
 }
+*/
 async function setupGraphDisplayer(opt) {
     const funGraph = ForceGraph3D(opt);
     // debugger;
@@ -2038,8 +2041,13 @@ async function addNodeLinkHighlighter() {
             // let numTags = link.tags.size;
             let numTags = link.arrTags.length;
             // [...link.tags].forEach(t => { if (setInvisibleTags.has(t)) numTags--; });
-            link.arrTags.forEach(t => { if (setInvisibleTags.has(t)) numTags--; });
+            let hiTag = false;
+            link.arrTags.forEach(t => {
+                if (setInvisibleTags.has(t)) numTags--;
+                if (setHighlightTags.has(t)) hiTag = true;
+            });
             if (numTags == 0) return "#0000";
+            if (hiTag ) return "#fff"; // FIX-ME
 
             let hi = setHighlightLinks.has(link);
             link.arrTags.forEach(t => {
