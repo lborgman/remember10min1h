@@ -267,18 +267,24 @@ const eltHighlightTag = modMdc.mkMDCfab(iconClose, "Remove highlight tag", true,
 eltHighlightTag.style = `
     position: fixed;
     right: 2px;
+    right: -120px;
     top: 50px;
     background-color: ${highlightTagColor};
-    display: none;
+    transition: right 0.7s;
 `;
 thePromiseDOMready.then(() => { document.body.appendChild(eltHighlightTag); });
 eltHighlightTag.addEventListener("click", evt => setHighlightTag());
 function setHighlightTag(tag) {
     theHighlightTag = tag;
     if (!tag) {
-        eltHighlightTag.style.display = "none";
+        // eltHighlightTag.style.display = "none";
+        const bcr = eltHighlightTag.getBoundingClientRect();
+        const w = bcr.width;
+        const r = w + 10;
+        eltHighlightTag.style.right = `-${r}px`;
     } else {
-        eltHighlightTag.style.display = null;
+        // eltHighlightTag.style.display = null;
+        eltHighlightTag.style.right = "2px";
         const eltTag = eltHighlightTag.querySelector(".mdc-fab__label");
         eltTag.textContent = `#${tag}`;
     }
@@ -450,11 +456,6 @@ function buildDivTags() {
     });
     // [...setUsedLinkTags]
     // [...setLinkTags]
-    [...setActuallyUsedLinkTags]
-        .sort().forEach(tag => {
-            const elt = mkEltTagSelector(tag);
-            divSelectTags.appendChild(elt);
-        });
 
     /*
     divSelection.addEventListener("NOclick", evt => {
@@ -865,6 +866,13 @@ function computeNodesAndLinks() {
     usedLinks.forEach(l => {
         l.tags.forEach(t => setActuallyUsedLinkTags.add(t));
     });
+    const divSelectTags = document.getElementById("select-tags");
+    if (!divSelectTags) throw Error("Did not find id select-tags");
+    [...setActuallyUsedLinkTags]
+        .sort().forEach(tag => {
+            const elt = mkEltTagSelector(tag);
+            divSelectTags.appendChild(elt);
+        });
 
     // Note: This changes usedLinks!
     const links4json = usedLinks.map(l => {
