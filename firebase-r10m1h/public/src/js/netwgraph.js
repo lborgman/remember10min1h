@@ -253,7 +253,38 @@ let strGDataUsed;
 let showCube = false;
 let imagesMode = false;
 const setInvisibleTags = new Set();
-const setHighlightTags = new Set();
+
+// const setHighlightTags = new Set();
+let theHighlightTag;
+// orange rgb(255 165 0)
+// firebrick
+// blueviolet #8a2be2
+let highlightTagColor = "#8a2be2";
+// const eltHighlightTag = mkElt("span", undefined, "TEST");
+// export function mkMDCfab(eltIcon, title, mini, extendTitle)
+const iconClose = modMdc.mkMDCicon("close");
+const eltHighlightTag = modMdc.mkMDCfab(iconClose, "Remove highlight tag", true, "#TEST");
+eltHighlightTag.style = `
+    position: fixed;
+    right: 2px;
+    top: 50px;
+    background-color: ${highlightTagColor};
+    display: none;
+`;
+thePromiseDOMready.then(() => { document.body.appendChild(eltHighlightTag); });
+eltHighlightTag.addEventListener("click", evt => setHighlightTag());
+function setHighlightTag(tag) {
+    theHighlightTag = tag;
+    if (!tag) {
+        eltHighlightTag.style.display = "none";
+    } else {
+        eltHighlightTag.style.display = null;
+        const eltTag = eltHighlightTag.querySelector(".mdc-fab__label");
+        eltTag.textContent = `#${tag}`;
+    }
+    triggerUpdateLinksView();
+}
+
 const setHighlightNodes = new Set();
 const setHighlightLinks = new Set();
 let theHiliteNode = null;
@@ -603,9 +634,15 @@ function mkEltTagSelector(tag) {
         eltTagSelector.classList.toggle(cls);
         const tag = eltTagSelector.firstChild.textContent.slice(1)
         if (eltTagSelector.classList.contains(cls)) {
-            setHighlightTags.add(tag);
+            // setHighlightTags.add(tag);
+            // theHighlightTag = tag;
+            setHighlightTag(tag);
+            eltTagSelector.style.backgroundColor = highlightTagColor;
         } else {
-            setHighlightTags.delete(tag);
+            // setHighlightTags.delete(tag);
+            // theHighlightTag = undefined;
+            setHighlightTag();
+            eltTagSelector.style.backgroundColor = null;
         }
         triggerUpdateLinksView();
     });
@@ -2044,15 +2081,14 @@ async function addNodeLinkHighlighter() {
             let hiTag = false;
             link.arrTags.forEach(t => {
                 if (setInvisibleTags.has(t)) numTags--;
-                if (setHighlightTags.has(t)) hiTag = true;
+                // if (setHighlightTags.has(t)) hiTag = true;
+                if (theHighlightTag == t) hiTag = true;
             });
             if (numTags == 0) return "#0000";
-            if (hiTag ) return "#fff"; // FIX-ME
+            if (hiTag) return highlightTagColor;
 
             let hi = setHighlightLinks.has(link);
-            link.arrTags.forEach(t => {
-                hi = hi || setHighlightTags.has(t);
-            });
+            // link.arrTags.forEach(t => { hi = hi || setHighlightTags.has(t); });
             if (hi) {
                 const hexOpacityHi = Math.round(linkOpHi * 255).toString(16);
                 return linkColorHi + hexOpacityHi;
@@ -2068,6 +2104,14 @@ async function addNodeLinkHighlighter() {
         })
         */
         .linkWidth(link => {
+            // theHighlightTag
+            let hiTag = false;
+            link.arrTags.forEach(t => {
+                if (theHighlightTag == t) hiTag = true;
+            });
+            if (hiTag) {
+                return linkW * 4;
+            }
             // let arrText = link.text.split("\n");
             // const emphase = 1.3 ** arrText.length;
             // invisible
