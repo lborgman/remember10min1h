@@ -256,10 +256,15 @@ const setInvisibleTags = new Set();
 
 // const setHighlightTags = new Set();
 let theHighlightTag;
-// orange rgb(255 165 0)
-// firebrick
+const cssClsTagHighlight = "highlight";
 // blueviolet #8a2be2
 let highlightTagColor = "#8a2be2";
+setCssVar("--highlight-tag-color", highlightTagColor);
+function setCssVar(cssVar, val) {
+    const r = document.querySelector(':root');
+    r.style.setProperty(cssVar, val);
+}
+
 // const eltHighlightTag = mkElt("span", undefined, "TEST");
 // export function mkMDCfab(eltIcon, title, mini, extendTitle)
 const iconClose = modMdc.mkMDCicon("close");
@@ -289,6 +294,7 @@ function setHighlightTag(tag) {
         eltTag.textContent = `#${tag}`;
     }
     triggerUpdateLinksView();
+    fixTagSelectorsCssHighlight();
 }
 
 const setHighlightNodes = new Set();
@@ -480,24 +486,6 @@ function buildDivTags() {
     */
 }
 
-function OLDgetManuallyExcludedTags() {
-    debugger;
-    const divCont = document.getElementById("select-tags");
-    const chips = divCont
-        .querySelectorAll(".tag-selector .chip-tags .chip-tag-selected");
-    const arrManExcl = [...chips].filter(c => c.textContent == "delete")
-    const tags = arrManExcl.map(btn => {
-        const ts = btn.closest(".tag-selector");
-        const lbl = ts.firstElementChild;
-        const tn = lbl.tagName;
-        if (tn != "LABEL") throw Error(`Expected LABEL, got ${tn}`);
-        return lbl.textContent.slice(1);
-    });
-    setManExclTags.clear();
-    tags.forEach(t => setManExclTags.add(t));
-    // debugger;
-}
-
 function redrawGraph() {
     pendingRedrawGraph = false;
     graph._destructor();
@@ -507,6 +495,17 @@ function redrawGraph() {
     testMyOwn(gData);
 }
 
+function fixTagSelectorsCssHighlight() {
+    const arrTS = [...document.body.querySelectorAll("span.tag-selector")];
+    arrTS.forEach(elt => {
+        const tag = elt.firstChild.textContent.slice(1);
+        if (tag == theHighlightTag) {
+            elt.classList.add(cssClsTagHighlight);
+        } else {
+            elt.classList.remove(cssClsTagHighlight);
+        }
+    });
+}
 function mkEltTagSelector(tag) {
     const eltLabel = mkElt("label", { class: "tag-chk" }, [`#${tag}`,]);
     const eltTagSelector = mkElt("span", { class: "tag-selector" }, [eltLabel]);
@@ -630,22 +629,14 @@ function mkEltTagSelector(tag) {
     */
     eltTagSelector.appendChild(eltChips);
     eltTagSelector.addEventListener("click", evt => {
-        // console.log("clicked", { targetIsSelector, evt, eltTagSelector });
-        const cls = "highlight";
-        eltTagSelector.classList.toggle(cls);
+        if (eltTagSelector.lastElementChild.childElementCount == 0) return;
+        eltTagSelector.classList.toggle(cssClsTagHighlight);
         const tag = eltTagSelector.firstChild.textContent.slice(1)
-        if (eltTagSelector.classList.contains(cls)) {
-            // setHighlightTags.add(tag);
-            // theHighlightTag = tag;
+        if (eltTagSelector.classList.contains(cssClsTagHighlight)) {
             setHighlightTag(tag);
-            eltTagSelector.style.backgroundColor = highlightTagColor;
         } else {
-            // setHighlightTags.delete(tag);
-            // theHighlightTag = undefined;
             setHighlightTag();
-            eltTagSelector.style.backgroundColor = null;
         }
-        triggerUpdateLinksView();
     });
     return eltTagSelector;
 }
