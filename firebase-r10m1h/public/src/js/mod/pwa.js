@@ -346,6 +346,7 @@ async function promptForUpdate() {
         });
         btnUpdate.addEventListener("click", evt => {
             console.log("promptForUpdate 9");
+            document.body.textContent = "Updating...";
             hidePrompt();
             window.onbeforeunload = null;
             resolve(true);

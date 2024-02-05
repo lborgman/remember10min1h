@@ -1536,7 +1536,7 @@ async function addDialogGraphButtons() {
     }
     function closeRightMenu() {
         const menu = document.getElementById(menuId);
-        // if (!menu.classList.contains("is-open")) debugger;
+        if (!menu) return; // Happens during update!
         menu.classList.remove("is-open");
         let r = menu.dataset.bcrwidth || guessMenuRight;
         if (r < 100) r = guessMenuRight;
