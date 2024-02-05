@@ -265,8 +265,6 @@ function setCssVar(cssVar, val) {
     r.style.setProperty(cssVar, val);
 }
 
-// const eltHighlightTag = mkElt("span", undefined, "TEST");
-// export function mkMDCfab(eltIcon, title, mini, extendTitle)
 const iconClose = modMdc.mkMDCicon("close");
 const eltHighlightTag = modMdc.mkMDCfab(iconClose, "Remove highlight tag", true, "#TEST");
 eltHighlightTag.style = `
@@ -279,22 +277,35 @@ eltHighlightTag.style = `
 `;
 thePromiseDOMready.then(() => { document.body.appendChild(eltHighlightTag); });
 eltHighlightTag.addEventListener("click", evt => setHighlightTag());
+function hideHighlightTag() {
+    const bcr = eltHighlightTag.getBoundingClientRect();
+    const w = bcr.width;
+    const r = w + 10;
+    eltHighlightTag.style.right = `-${r}px`;
+    setTimeout(() => eltHighlightTag.style.display = "none", 1000);
+}
+function showHighlightTag() {
+    if (!theHighlightTag) return;
+    eltHighlightTag.style.display = null;
+    setTimeout(() => eltHighlightTag.style.right = "2px", 1200);
+}
 function setHighlightTag(tag) {
     theHighlightTag = tag;
-    if (!tag) {
-        // eltHighlightTag.style.display = "none";
-        const bcr = eltHighlightTag.getBoundingClientRect();
-        const w = bcr.width;
-        const r = w + 10;
-        eltHighlightTag.style.right = `-${r}px`;
-    } else {
-        // eltHighlightTag.style.display = null;
-        eltHighlightTag.style.right = "2px";
-        const eltTag = eltHighlightTag.querySelector(".mdc-fab__label");
-        eltTag.textContent = `#${tag}`;
-    }
+    const eltTag = eltHighlightTag.querySelector(".mdc-fab__label");
+    eltTag.textContent = `#${tag}`;
+    if (!tag) { hideHighlightTag(); }
     triggerUpdateLinksView();
     fixTagSelectorsCssHighlight();
+}
+function showIfNeededHighLightTag() {
+    if (!theHighlightTag) return;
+    // if (document.body.querySelector("span.tag-selector")) return;
+    const eltTags = document.getElementById("netwg-tags");
+    let showsEltTags = true;
+    if (!eltTags) showsEltTags = false;
+    if (!eltTags.classList.contains("is-open")) showsEltTags = false;
+    if (showsEltTags) return;
+    showHighlightTag();
 }
 
 const setHighlightNodes = new Set();
@@ -1251,8 +1262,10 @@ async function addDialogGraphButtons() {
         toggleExpandibleDiv(divTags);
         if (isExpanded(divTags)) {
             btnTags.classList.add("is-open");
+            hideHighlightTag();
         } else {
             btnTags.classList.remove("is-open");
+            showIfNeededHighLightTag();
         }
 
         if (pendingRedrawGraph) {
@@ -1811,6 +1824,8 @@ function showNodeInfo(node) {
         const bcr = bodyInner.getBoundingClientRect();
         bodyOuter.style.height = `${bcr.height + 2 * 10}px`;
         btnMore.remove();
+        fixTagSelectorsCssHighlight();
+        setTimeout(() => hideHighlightTag(), 2000);
     });
     btnMore.style = `
         position: absolute;
@@ -1838,6 +1853,7 @@ function showNodeInfo(node) {
             bodyOuter.style.paddingBottom = "0";
             eltScrim.style.backgroundColor = "#00008b00";
             btnMore.remove();
+            showIfNeededHighLightTag();
             setTimeout(() => eltScrim.remove(), secondsBottom * 1000 + 10);
         }
     });
