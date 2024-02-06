@@ -346,10 +346,10 @@ async function promptForUpdate() {
         });
         btnUpdate.addEventListener("click", evt => {
             console.log("promptForUpdate 9");
+            // hidePrompt();
             document.body.textContent = "Updating...";
-            hidePrompt();
             window.onbeforeunload = null;
-            resolve(true);
+            setTimeout(() => resolve(true), 1200);
         });
     });
 }

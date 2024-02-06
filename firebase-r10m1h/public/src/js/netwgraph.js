@@ -719,6 +719,7 @@ async function getNodesAndLinks(
         gData = { nodes, links }
     }
 }
+const objTagNodes = {};
 function computeNodesAndLinks() {
     const links = [];
     const linksByKey = {};
@@ -732,26 +733,41 @@ function computeNodesAndLinks() {
             console.log("no link for ", t);
             return;
         }
-        const arrT = [];
+        const arrTagNodes = [];
         prelNodes.nodesR.forEach(n => {
-            if (n.r.tags.includes(t)) { arrT.push(n) }
+            if (n.r.tags.includes(t)) { arrTagNodes.push(n) }
         });
-        while (arrT.length > 0) {
-            const a0 = arrT.pop();
-            arrT.forEach(r => {
-                const linkKey = `${a0.id - r.id}`;
+        if (arrTagNodes.length < 2) return;
+        while (arrTagNodes.length > 0) {
+            const a0 = arrTagNodes.pop();
+            if (a0.id == undefined) {
+                console.error("a0.id == undefined", a0);
+            }
+            arrTagNodes.forEach(r => {
+                if (r.id == undefined) {
+                    console.error("r.id == undefined", r, a0);
+                }
+                const idMin = Math.min(a0.id, r.id);
+                const idMax = Math.max(a0.id, r.id);
+                // const linkKey = `${a0.id - r.id}`;
+                const linkKey = `${idMin} - ${idMax}`;
                 const oldLink = linksByKey[linkKey];
                 if (!oldLink) {
                     setUsedLinkTags.add(t);
                     const tagSet = new Set();
                     tagSet.add(t);
                     const link = {
-                        source: a0.id,
-                        target: r.id,
+                        // source: a0.id,
+                        source: idMin,
+                        // target: r.id,
+                        target: idMax,
                         // text: t,
-                        tags: tagSet
+                        tags: tagSet,
+                        linkKey
                     }
+                    console.log("no oldLink", link, a0, r);
                     linksByKey[linkKey] = link;
+                    objTagNodes[linkKey] = JSON.parse(JSON.stringify(arrTagNodes));
                     // links.push(link);
                 } else {
                     oldLink.tags.add(t);
@@ -760,6 +776,23 @@ function computeNodesAndLinks() {
         }
     });
     links.push(...Object.values(linksByKey));
+
+
+    // Check tags in links and nodes correspond
+    console.log("%cCheck tags conform", "font-size:20px; background:red;", links.length, objTagNodes);
+    let nLn = 0;
+    links.forEach(link => {
+        if (nLn++ > 100) return;
+        const ids = [link.source, link.target];
+        const linkKey = link.linkKey;
+        const lns = ids.map(id => {
+            const arrTagNodes = objTagNodes[linkKey];
+            return arrTagNodes[id];
+        });
+        console.log({ nLn, linkKey, link, ids, lns });
+    });
+
+
     links.forEach(link => { link.text = [...link.tags].join("\n"); });
     // const setLinked = new Set();
     let setLinked;
@@ -2192,46 +2225,6 @@ async function getHtmlGraphDisplayer() {
     });
     return htmlDisplayer;
 }
-/*
-async function testTC() {
-    const graphDisplayer = await setupGraphDisplayer();
-    let ourDisplayer = graphDisplayer;
-    const useHtml = false;
-    if (useHtml) { ourDisplayer = await getHtmlGraphDisplayer(); }
-    graph = ourDisplayer.graphData(gData);
-    graph = graph.nodeOpacity(1.0);
- 
-    // await addHtml();
-    addText();
-    await waitSeconds(1);
-    addOnClick();
-    // graph.onEngineStop(() => graph.zoomToFit(100));
- 
-}
-*/
-/*
-async function testFH() {
-    console.warn("testFH, setupGraphDisplayer");
-    const graphDisplayer = await setupGraphDisplayer();
-    let ourDisplayer = graphDisplayer;
-    const useHtml = false;
-    let m;
-    if (useHtml) {
-        console.warn("testFH, import CSS2DRenderer");
-        m = await import('//unpkg.com/three/examples/jsm/renderers/CSS2DRenderer.js');
-        ourDisplayer = setupGraphDisplayer({
-            extraRenderers: [new m.CSS2DRenderer()]
-        });
-    }
-    graph = ourDisplayer.graphData(gData);
-    graph = graph.nodeOpacity(1.0);
- 
-    // await addHtml();
-    addText();
-    await waitSeconds(1);
-    addOnClick();
-}
-*/
 function triggerUpdateLinksView() {
     // trigger update of highlighted objects in scene
     graph
@@ -2245,13 +2238,13 @@ function triggerUpdateLinksView() {
 
 async function testMyOwn(gData) {
     // cross-link node objects
-    if (!gData.nodesById) {
-        gData.nodesById = {};
-    }
+    // if (!gData.nodesById) { gData.nodesById = {}; }
+    gData.nodesById = {};
     for (let i = 0, len = gData.nodes.length; i < len; i++) {
-        const n = gData.nodes[i];
-        const id = n.id;
-        gData.nodesById[id] = n;
+        const node = gData.nodes[i];
+        const id = node.id;
+        if (i != id) console.log("id, i", id, i, node);
+        gData.nodesById[id] = node;
     }
 
     gData.links.forEach(link => {
