@@ -332,8 +332,8 @@ async function loadGraphFromJson(gDataParam) {
     // await Promise.all(arrProm);
     const nodes = await Promise.all(nodesProm);
     const links = links4json.map(l => {
-        l.tags = new Set(l.arrTags)
-        l.text = l.arrTags.join("\n");
+        l.setTags = new Set(l.arrTags)
+        l.txtTags = l.arrTags.sort().join("\n");
         return l;
     });
 
@@ -371,7 +371,6 @@ async function loadSavedView(strSaved) {
     await wait4mutations(eltGraph, 200);
     setImagesMode(view.imagesMode);
     setCubeMode(view.showCube);
-    // btnHome
     const obj = graph.camera();
     obj.matrix.copy(view.oldMatrix);
     obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
@@ -684,8 +683,6 @@ async function getNodesAndLinks(
         buildFrom.arrUse = arrUse;
         buildFrom.requiredTags = requiredTags;
         buildFrom.arrUse.forEach(r => {
-            // console.log(r);
-            // if (!r.tags) return;
             if (!r.tags) {
                 console.error("No tags", r);
                 throw Error(`No tags`);
@@ -762,15 +759,16 @@ function computeNodesAndLinks() {
                         // target: r.id,
                         target: idMax,
                         // text: t,
-                        tags: tagSet,
+                        setTags: tagSet,
                         linkKey
                     }
                     console.log("no oldLink", link, a0, r);
                     linksByKey[linkKey] = link;
                     objTagNodes[linkKey] = JSON.parse(JSON.stringify(arrTagNodes));
+                    objTagNodes[linkKey].push(a0);
                     // links.push(link);
                 } else {
-                    oldLink.tags.add(t);
+                    oldLink.setTags.add(t);
                 }
             });
         }
@@ -787,22 +785,39 @@ function computeNodesAndLinks() {
         const linkKey = link.linkKey;
         const lns = ids.map(id => {
             const arrTagNodes = objTagNodes[linkKey];
-            return arrTagNodes[id];
+            for (let i = 0, len = arrTagNodes.length; i < len; i++) {
+                const n = arrTagNodes[i];
+                if (id == n.id) return n;
+            }
+            debugger;
+            console.log({ lns, id, ids });
+            throw Error(`Did not find node for id=${id}`);
         });
         console.log({ nLn, linkKey, link, ids, lns });
+        [...link.setTags].forEach(t => {
+            // const lns0 = lns[0];
+            // if (lns0.r.tags.indexOf(t) == -1) debugger;
+            // const lns1 = lns[1];
+            // if (lns1.r.tags.indexOf(t) == -1) debugger;
+            lns.forEach(n => {
+                if (n.r.tags.indexOf(t) == -1) {
+                    debugger;
+                    console.log({ n, t, link });
+                    throw Error(`Node did not contain tag ${t}`);
+                }
+
+            })
+        })
     });
 
 
-    links.forEach(link => { link.text = [...link.tags].join("\n"); });
-    // const setLinked = new Set();
+    // links.forEach(link => { link.txtTags = [...link.setTags].join("\n"); });
     let setLinked;
     const subsetsLinked = [];
     links.forEach(l => {
         if (setLinked) return;
         const src = l.source;
         const trg = l.target;
-        // setLinked.add(l.source);
-        // setLinked.add(l.target);
         if (subsetsLinked.length == 0) {
             const ns = new Set();
             subsetsLinked[0] = ns;
@@ -899,7 +914,7 @@ function computeNodesAndLinks() {
     }
     setActuallyUsedLinkTags.clear();
     usedLinks.forEach(l => {
-        l.tags.forEach(t => setActuallyUsedLinkTags.add(t));
+        l.setTags.forEach(t => setActuallyUsedLinkTags.add(t));
     });
     const divSelectTags = document.getElementById("select-tags");
     if (!divSelectTags) throw Error("Did not find id select-tags");
@@ -911,10 +926,10 @@ function computeNodesAndLinks() {
 
     // Note: This changes usedLinks!
     const links4json = usedLinks.map(l => {
-        const t = l.tags;
+        const t = l.setTags;
         const tArr = [...t];
         l.arrTags = tArr;
-        delete l.tags;
+        delete l.setTags;
         delete l.text;
         return l;
     });
@@ -2123,13 +2138,10 @@ async function addNodeLinkHighlighter() {
                 return "#0000";
                 return;
             }
-            // let numTags = link.tags.size;
             let numTags = link.arrTags.length;
-            // [...link.tags].forEach(t => { if (setInvisibleTags.has(t)) numTags--; });
             let hiTag = false;
             link.arrTags.forEach(t => {
                 if (setInvisibleTags.has(t)) numTags--;
-                // if (setHighlightTags.has(t)) hiTag = true;
                 if (theHighlightTag == t) hiTag = true;
             });
             if (numTags == 0) return "#0000";
@@ -2152,7 +2164,6 @@ async function addNodeLinkHighlighter() {
         })
         */
         .linkWidth(link => {
-            // theHighlightTag
             let hiTag = false;
             link.arrTags.forEach(t => {
                 if (theHighlightTag == t) hiTag = true;
@@ -2160,12 +2171,7 @@ async function addNodeLinkHighlighter() {
             if (hiTag) {
                 return linkW * 4;
             }
-            // let arrText = link.text.split("\n");
-            // const emphase = 1.3 ** arrText.length;
-            // invisible
-            // let numTags = link.tags.size;
             let numTags = link.arrTags.length;
-            // [...link.tags].forEach(t => { if (setInvisibleTags.has(t)) numTags--; });
             link.arrTags.forEach(t => { if (setInvisibleTags.has(t)) numTags--; });
             if (numTags == 0) return 0;
             let emp = 1;
@@ -2177,10 +2183,8 @@ async function addNodeLinkHighlighter() {
         })
         .linkThreeObject(link => {
             if (setHighlightLinks.has(link)) {
-                // if (link.tags)
                 if (link.arrTags) {
                     // extend link with text sprite
-                    // const txt = [...link.tags].filter(t => !setInvisibleTags.has(t)).join("\n");
                     const txt = link.arrTags.filter(t => !setInvisibleTags.has(t)).join("\n");
                     const sprite = new SpriteText(txt);
                     sprite.color = 'rgba(255, 255, 0, 1)';
