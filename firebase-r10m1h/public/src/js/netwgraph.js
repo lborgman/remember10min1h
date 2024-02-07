@@ -92,16 +92,6 @@ console.warn("import d3");
 const modD3 = await import("d3");
 const dbFc4i = await import("db-fc4i");
 
-// FIX-ME: Note the order of import. Something is wrong.
-/*
-await import("three");
-console.log({ __THREE__ });
-await import("three-spritetext");
-console.log({ __THREE__ });
-const mod3d = await import("mod3d-force-graph");
-console.log({ __THREE__ });
-// debugger;
-*/
 
 
 // FIX-ME: move
@@ -252,6 +242,7 @@ let gData;
 let strGDataUsed;
 let showCube = false;
 let imagesMode = false;
+let nodeDoc;
 const setInvisibleTags = new Set();
 
 // const setHighlightTags = new Set();
@@ -1130,11 +1121,12 @@ function setImagesMode(newImagesMode) {
     const btnImages = document.getElementById("btn-images");
     if (newImagesMode) {
         btnImages.style.backgroundColor = "yellowgreen";
-        graph.nodeThreeObject(node => showNodeAsImg(node));
+        // graph.nodeThreeObject(node => showNodeAsImg(node));
     } else {
         btnImages.style.backgroundColor = "unset";
-        graph.nodeThreeObject(node => showNodeAsText(node));
+        // graph.nodeThreeObject(node => showNodeAsText(node));
     }
+    graph.nodeThreeObject(node => showNode(node));
 }
 
 function setCubeMode(newShowCube) {
@@ -1285,9 +1277,6 @@ async function addDialogGraphButtons() {
         // https://github.com/vasturiano/3d-force-graph/issues/61
         const newImagesMode = !imagesMode;
         setImagesMode(newImagesMode);
-        // FIX-ME: lines above works but not the line below??? 
-        //   Is is something with async...
-        // graph.nodeThreeObject(node => showNode(node));
     });
 
     const btnHome = modMdc.mkMDCiconButton("home", "Show initial view");
@@ -1896,6 +1885,8 @@ function showNodeInfo(node) {
     `;
     eltScrim.addEventListener("click", evt => {
         if (evt.target == eltScrim) {
+            nodeDoc = undefined;
+            triggerShowNode();
             bodyOuter.style.height = "0";
             bodyOuter.style.paddingTop = "0";
             bodyOuter.style.paddingBottom = "0";
@@ -1915,6 +1906,10 @@ function showNodeInfo(node) {
 
 function nodeClickAction(node) {
     if (showInfoOnNodeClick) {
+        nodeDoc = node;
+        // triggerUpdateLinksView();
+        // graph.showNode(graph.showNode());
+        triggerShowNode();
         showNodeInfo(node);
     }
     if (focusOnNodeClick) {
@@ -2011,6 +2006,8 @@ async function addLinkText() {
     });
 }
 function showNodeAsText(node) {
+    const isNodeDoc = nodeDoc == node;
+    // if (isNodeDoc) { console.log("nodeDoc", { node }); }
     const isFc4i = node.fc4i != undefined;
     const fc4iTitle = node.fc4i?.r.title;
     const txtLong = isFc4i ? fc4iTitle : `Dummy long ${node.id}`;
@@ -2054,7 +2051,10 @@ function showNodeAsText(node) {
     sprite.backgroundColor = isFc4i ? colorsRainbow[idxClr] : "yellow";
     sprite.borderWidth = 1;
     sprite.borderColor = "yellowgreen";
-    sprite.borderColor = "yellowgreen";
+    if (isNodeDoc) {
+        sprite.borderWidth = 4;
+        sprite.borderColor = "red";
+    }
     // sprite.color = node.color;
     sprite.color = "black";
     sprite.textHeight = textH;
@@ -2065,6 +2065,7 @@ function showNodeAsText(node) {
 function showNodeAsImg(node) {
     // const imgTexture = new THREE.TextureLoader().load(`./imgs/${img}`);
     if (node.fc4i.r.images.length == 0) return showNodeAsText(node);
+    if (node == nodeDoc) return showNodeAsText(node);
     const blobImg = node.fc4i.r.images[0];
     // st.backgroundImage = `url(${URL.createObjectURL(imgBlob)})`;
     const urlImg = URL.createObjectURL(blobImg);
@@ -2086,12 +2087,15 @@ function showNodeAsImg(node) {
     img.src = urlImg;
     return sprite;
 }
-// let textOrImg = 0;
-// async function showNode() 
-function showNode() {
+function showNode(node) {
+    if (imagesMode) return showNodeAsImg(node);
+    return showNodeAsText(node);
+}
+function triggerShowNode() {
     graph = graph.nodeThreeObject(node => {
-        if (imagesMode) return showNodeAsImg(node);
-        return showNodeAsText(node);
+        // if (imagesMode) return showNodeAsImg(node);
+        // return showNodeAsText(node);
+        return showNode(node);
     });
 }
 
@@ -2281,7 +2285,7 @@ async function testMyOwn(gData) {
     graph = graph.nodeOpacity(1.0);
 
     addLinkText();
-    showNode();
+    triggerShowNode();
     await waitSeconds(1);
     addOnClick();
     addNodeLinkHighlighter();
