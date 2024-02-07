@@ -2114,6 +2114,11 @@ function hiliteNode(node) {
     theHiliteNode = node || null;
 
     triggerUpdateLinksView();
+    setTimeout(() => {
+        setHighlightNodes.clear();
+        setHighlightLinks.clear();
+        triggerUpdateLinksView();
+    }, 5 * 1000);
 }
 
 async function addNodeLinkHighlighter() {
