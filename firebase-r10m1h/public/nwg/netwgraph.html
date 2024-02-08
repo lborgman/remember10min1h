@@ -146,6 +146,7 @@
 
         #the3d-graph-container {
             width: calc(100vw - 2 * 8px);
+            height: calc(var(--vh) * 100 - 100px);
         }
 
         body {
@@ -208,9 +209,18 @@
     <script>
         // https://css-tricks.com/the-trick-to-viewport-units-on-mobile/
         // First we get the viewport height and we multiple it by 1% to get a value for a vh unit
-        const vh = window.innerHeight * 0.01;
-        // Then we set the value in the --vh custom property to the root of the document
-        document.documentElement.style.setProperty('--vh', `${vh}px`);
+        function setVh() {
+            // Try to handle Chrome Dev Tools:
+            const vhWI = window.innerHeight * 0.01;
+            const vhDCW = document.documentElement.clientHeight * 0.01;
+            const vh = Math.min(vhWI, vhDCW);
+            console.log("%csetVh", "background:orange;", vh, vhWI, vhDCW);
+            // Then we set the value in the --vh custom property to the root of the document
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+        setVh();
+        // const debSetVh = debounce(setVh, 500);
+        // window.addEventListener("resize", () => debSetVh());
     </script>
     <div style="display: none; height:40px">
         <span id="show-view-alt" style="color:red; opacity: 0.3;"></span>

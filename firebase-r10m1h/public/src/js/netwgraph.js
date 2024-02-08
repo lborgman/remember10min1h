@@ -82,6 +82,7 @@ window.rotateMe = () => {
 /// <<<< debug
 
 const menuId = "menu-right";
+const btnRightId = "btn-right-graph";
 const buildFrom = {};
 
 const modMdc = await import("util-mdc");
@@ -464,27 +465,6 @@ function buildDivTags() {
     // [...setUsedLinkTags]
     // [...setLinkTags]
 
-    /*
-    divSelection.addEventListener("NOclick", evt => {
-        const target = evt.target;
-        console.log({ evt, target });
-        if ("INPUT" != target.tagName) return;
-        if ("checkbox" != target.type) return;
-        console.log("CHECKBOX!!!");
-        const eltCont = target.closest("#netwg-tags");
-        const arrChk = [...eltCont.querySelectorAll("input[type=checkbox]")];
-        const arrTagsNoLink = arrChk
-            .filter(chk => !chk.checked)
-            .map(elt => elt.parentElement.textContent.slice(1));
-        setNoLinkTags.clear();
-        arrTagsNoLink.forEach(t => setNoLinkTags.add(t));
-        console.log({ setNoLinkTags });
-
-        // FIX-ME: delay redraw until the select tags div is closed
-        // redrawGraph();
-        pendingRedrawGraph = true;
-    });
-    */
 }
 
 function redrawGraph() {
@@ -606,9 +586,6 @@ function mkEltTagSelector(tag) {
                 setManExclTags.delete(tag);
                 eltTagSelector.classList.remove("manually-excluded");
             }
-            // getManuallyExcludedTags();
-            // debugger;
-            // redrawGraph();
             pendingRedrawGraph = true;
         }
         return true;
@@ -1239,6 +1216,24 @@ function setCubeMode(newShowCube) {
     }
 
 }
+function getBtnContLeft() {
+    // eltBtnContainer.id = "graph-buttons";
+    const eltBtnContainer = document.getElementById("graph-buttons");
+    const needW = eltBtnContainer.childElementCount * 48;
+    const availW = document.documentElement.clientWidth - 48;
+    const left = availW - needW;
+    return left;
+}
+function hideOrShowBtnRight() {
+    const left = getBtnContLeft();
+    const btnRight = document.getElementById(btnRightId);
+    if (left < 0) {
+        btnRight.style.display = "block";
+    } else {
+        btnRight.style.display = "none";
+    }
+}
+
 async function addDialogGraphButtons() {
 
     // https://github.com/vasturiano/3d-force-graph/blob/master/example/scene/index.html
@@ -1411,13 +1406,8 @@ async function addDialogGraphButtons() {
         display: none;
     `;
 
-    function getBtnContLeft() {
-        const needW = eltBtnContainer.childElementCount * 48;
-        const availW = document.documentElement.clientWidth - 48;
-        const left = availW - needW;
-        return left;
-    }
     const btnRight = modMdc.mkMDCiconButton("last_page", "Show right part of button bar");
+    btnRight.id = btnRightId;
     btnRight.addEventListener("click", evt => {
         btnRight.style.display = "none";
         btnLeft.style.display = "block";
@@ -1433,8 +1423,7 @@ async function addDialogGraphButtons() {
     `;
     (async () => {
         await promiseDOMready();
-        const left = getBtnContLeft();
-        if (left < 0) btnRight.style.display = "block";
+        hideOrShowBtnRight();
     })();
 
     document.body.appendChild(btnLeft);
@@ -1721,13 +1710,31 @@ async function setupGraphDisplayer(opt) {
     // debugger;
     await promiseDOMready();
     const elt3dGraph = document.getElementById('the3d-graph-container');
-    const bcr = elt3dGraph.getBoundingClientRect();
-    const grWidthPx = bcr.width;
-    const grHeightPx = bcr.height;
-    funGraph.width(grWidthPx);
-    funGraph.height(grHeightPx);
-    // funGraph.linkColor("green");
-    // funGraph.linkColor("#ff0000");
+    setGraphSize();
+    function adjustAfterResize() {
+        hideOrShowBtnRight();
+        adjustGraphSize();
+    }
+    const debounceAfterSize = debounce(adjustAfterResize, 1000);
+    window.addEventListener("resize", () => debounceAfterSize());
+    function setGraphSize() {
+        const bcr = elt3dGraph.getBoundingClientRect();
+        console.log("%csetGraphSize", "font-size:18px; background:skyblue;", bcr, (new Date()).toISOString());
+        const grWidthPx = bcr.width;
+        const grHeightPx = bcr.height;
+        funGraph.width(grWidthPx);
+        funGraph.height(grHeightPx);
+    }
+    function adjustGraphSize() {
+        setVh();
+        const bcr = elt3dGraph.getBoundingClientRect();
+        console.log("%cadjustGraphSize", "font-size:18px; background:yellowgreen;", bcr, (new Date()).toISOString());
+        const newWidth = bcr.width;
+        const newHeight = bcr.height;
+        graph.renderer().setSize(newWidth, newHeight)
+        graph.camera().aspect = newWidth / newHeight;
+        graph.camera().updateProjectionMatrix();
+    }
     funGraph.linkColor(linkColor);
     funGraph.linkWidth(linkW);
     funGraph.linkOpacity(linkOp);
