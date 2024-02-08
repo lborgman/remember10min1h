@@ -83,6 +83,7 @@ window.rotateMe = () => {
 
 const menuId = "menu-right";
 const btnRightId = "btn-right-graph";
+const btnLeftId = "btn-left-graph";
 const buildFrom = {};
 
 const modMdc = await import("util-mdc");
@@ -1194,12 +1195,13 @@ function setCubeMode(newShowCube) {
 function getBtnContLeft() {
     // eltBtnContainer.id = "graph-buttons";
     const eltBtnContainer = document.getElementById("graph-buttons");
-    const needW = eltBtnContainer.childElementCount * 48 + 2 * 20;
+    const needW = (eltBtnContainer.childElementCount + 2) * 48 + 2 * 20;
     const availW = document.documentElement.clientWidth - 48;
     const left = availW - needW;
     return left;
 }
 function hideOrShowBtnRight() {
+    console.warn("hideOrShowBtnRigh");
     const left = getBtnContLeft();
     const btnRight = document.getElementById(btnRightId);
     if (left < 0) {
@@ -1207,6 +1209,10 @@ function hideOrShowBtnRight() {
     } else {
         btnRight.style.display = "none";
     }
+    const eltBtnContainer = document.getElementById("graph-buttons");
+    eltBtnContainer.style.left = `0px`;
+    const btnLeft = document.getElementById(btnLeftId);
+    btnLeft.style.display = "none";
 }
 
 async function addDialogGraphButtons() {
@@ -1389,6 +1395,7 @@ async function addDialogGraphButtons() {
     document.body.appendChild(eltBtnContainer);
 
     const btnLeft = modMdc.mkMDCiconButton("first_page", "Show left part of button bar");
+    btnLeft.id = btnLeftId;
     btnLeft.addEventListener("click", evt => {
         btnLeft.style.display = "none";
         btnRight.style.display = "block";
