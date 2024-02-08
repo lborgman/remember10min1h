@@ -1098,10 +1098,8 @@ function setImagesMode(newImagesMode) {
     const btnImages = document.getElementById("btn-images");
     if (newImagesMode) {
         btnImages.style.backgroundColor = "yellowgreen";
-        // graph.nodeThreeObject(node => showNodeAsImg(node));
     } else {
         btnImages.style.backgroundColor = "unset";
-        // graph.nodeThreeObject(node => showNodeAsText(node));
     }
     graph.nodeThreeObject(node => showNode(node));
 }
@@ -1111,15 +1109,15 @@ function setCubeMode(newShowCube) {
     showCube = newShowCube;
     const btnCube = document.getElementById("btn-cube");
     if (newShowCube) {
+        btnCube.style.backgroundColor = "yellowgreen";
+    } else {
+        btnCube.style.backgroundColor = "unset";
+    }
+    if (newShowCube) {
         if (!theCube) {
-            // getDeb();
-            // btnCube.style.color = "darkgoldenrod";
-            btnCube.style.color = "#b8440b";
             const elt3dCont = document.getElementById("the3d-graph-container");
             const bcr = elt3dCont.getBoundingClientRect();
             theCubeSize = Math.min(bcr.width, bcr.height);
-            // const planeGeometry = new THREE.PlaneGeometry(1000, 1000, 1, 1);
-            // mesh.position.set(-100, -200, -100);
 
             let newCS = 0;
             graph.graphData().nodes.forEach(n => {
@@ -1138,8 +1136,6 @@ function setCubeMode(newShowCube) {
                 const planeGeometry = new THREE.PlaneGeometry(theCubeSize, theCubeSize, 1, 1);
                 const planeMaterial = new THREE.MeshLambertMaterial({
                     color: color,
-                    // side: THREE.DoubleSide
-                    // side: THREE.FrontSide
                     side: THREE.BackSide
                 });
                 const mesh = new THREE.Mesh(planeGeometry, planeMaterial);
@@ -1156,42 +1152,22 @@ function setCubeMode(newShowCube) {
                 const mesh = new THREE.Mesh(planeGeometry, planeMaterial);
                 return mesh;
             }
-            // const meshBottom = makeSide(0x003F00);
-            // meshBottom.position.set(0, y, z);
-            // meshBottom.rotation.set(0.5 * Math.PI, 0, 0);
             const meshBottom = mkBackSide(0x003F00);
             meshBottom.position.set(0, -halfSize, 0);
             meshBottom.rotation.set(1.5 * Math.PI, 0, 0);
 
-            // const meshTop = makeSide(0x9090FF);
-            // meshTop.position.set(0, -y, z);
-            // meshTop.rotation.set(1.5 * Math.PI, 0, 0);
             const meshTop = mkBackSide(0x9090FF);
             meshTop.position.set(0, halfSize, 0);
             meshTop.rotation.set(0.5 * Math.PI, 0, 0);
 
-            // const meshRight = makeSide(0x00009F);
-            // meshRight.position.set(-x, 0, z);
-            // meshRight.rotation.set(0, 0.5 * Math.PI, 0);
-            // const meshRight = mkBackSide(0x00006F);
             const meshRight = mkBackSide(0x0F0FBD);
             meshRight.position.set(halfSize, 0, 0);
             meshRight.rotation.set(0, 1.5 * Math.PI, 0);
 
-            // const meshLeft = makeSide(0x9F0000);
-            // meshLeft.position.set(x, 0, z);
-            // meshLeft.rotation.set(0, 1.5 * Math.PI, 0);
             const meshLeft = mkBackSide(0x3F0000);
-            // meshLeft.rotation.set(0, 0.5 * Math.PI, 0);
             meshLeft.position.set(-halfSize, 0, 0);
             meshLeft.rotation.set(0, 0.5 * Math.PI, 0);
 
-            // const xAxis = new THREE.Vector3(1, 0, 0);
-            // const yAxis = new THREE.Vector3(0, 1, 0);
-            // const zAxis = new THREE.Vector3(0, 0, 1);
-            // meshLeft.rotateOnWorldAxis(xAxis, 0.5 * Math.PI);
-
-            // const meshBack = mkBackSide(0xFFFF00);
             const meshBack = mkBackSide(0xAAAA00);
             meshBack.position.set(0, 0, -halfSize);
 
@@ -1210,7 +1186,6 @@ function setCubeMode(newShowCube) {
         }
         theCube.forEach(cubeSide => graph.scene().add(cubeSide));
     } else {
-        btnCube.style.color = "unset";
         theCube.forEach(cubeSide => graph.scene().remove(cubeSide));
         theCube = undefined;
     }
@@ -1219,7 +1194,7 @@ function setCubeMode(newShowCube) {
 function getBtnContLeft() {
     // eltBtnContainer.id = "graph-buttons";
     const eltBtnContainer = document.getElementById("graph-buttons");
-    const needW = eltBtnContainer.childElementCount * 48;
+    const needW = eltBtnContainer.childElementCount * 48 + 2 * 20;
     const availW = document.documentElement.clientWidth - 48;
     const left = availW - needW;
     return left;
@@ -1251,6 +1226,8 @@ async function addDialogGraphButtons() {
         focusOnNodeClick = !focusOnNodeClick;
         if (focusOnNodeClick) {
             btnFocusNode.style.color = "red";
+            btnDoc.style.color = "unset";
+            showInfoOnNodeClick = false;
         } else {
             btnFocusNode.style.color = "unset";
         }
@@ -1261,6 +1238,8 @@ async function addDialogGraphButtons() {
         showInfoOnNodeClick = !showInfoOnNodeClick;
         if (showInfoOnNodeClick) {
             btnDoc.style.color = "red";
+            btnFocusNode.style.color = "unset";
+            focusOnNodeClick = false;
         } else {
             btnDoc.style.color = "unset";
         }
@@ -1367,12 +1346,29 @@ async function addDialogGraphButtons() {
         console.log("zoomToFit", { px, objFilterFun });
         graph.zoomToFit(90, px, objFilterFun);
     });
-    const eltBtnContainer = mkElt("span", undefined, [
+    const eltNodeButtons = mkElt("span", undefined, [
         // btnHilightNode,
-        btnFocusNode,
         btnDoc,
+        btnFocusNode,
+    ]);
+    eltNodeButtons.style = `
+        background-color: rgba(255, 0, 0, 0.05);
+        display: inline-grid;
+        grid-template-columns: 1fr 1fr;
+        margin-right: 20px;
+    `;
+    const eltZooming = mkElt("span", undefined, [
         btnHome,
         btnFitAll,
+    ]);
+    eltZooming.style = `
+        display: inline-grid;
+        grid-template-columns: 1fr 1fr;
+        margin-right: 20px;
+    `;
+    const eltBtnContainer = mkElt("span", undefined, [
+        eltNodeButtons,
+        eltZooming,
         btnCube,
         btnImages,
         btnTags,
@@ -1922,7 +1918,9 @@ function nodeClickAction(node) {
     if (focusOnNodeClick) {
         focusOnNodeClick = false;
         theBtnFocusNode.style.color = "unset";
-        if (confirm("use new focusNode")) {
+        let useNew = false;
+        useNew = confirm("use new focusNode");
+        if (useNew) {
             focusNode(node);
         } else {
             OLDfocusNode(node);
