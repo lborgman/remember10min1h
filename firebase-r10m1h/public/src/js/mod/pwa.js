@@ -205,7 +205,7 @@ async function setupServiceWorker() {
             swVersion = ver;
             // console.log('Service Worker version:', swVersion);
             addDebugRow(`Service Worker version: ${swVersion}`);
-            console.warn(`Service Worker version: ${swVersion}`);
+            console.warn(`%cService Worker version: ${swVersion}`, "font-size:18px;");
             theSWcacheVersion = swVersion;
         }
         return swRegistration;
@@ -347,9 +347,13 @@ async function promptForUpdate() {
         btnUpdate.addEventListener("click", evt => {
             console.log("promptForUpdate 9");
             // hidePrompt();
-            document.body.textContent = "Updating...";
+            // document.body.textContent = "Updating...";
+            dlgPrompt.textContent = "Updating, please wait ...";
             window.onbeforeunload = null;
-            setTimeout(() => resolve(true), 1200);
+            setTimeout(() => {
+                console.log("promptForUpdate 10, resolve");
+                resolve(true);
+            }, 1200);
         });
     });
 }

@@ -84,6 +84,8 @@ window.rotateMe = () => {
 const menuId = "menu-right";
 const btnRightId = "btn-right-graph";
 const btnLeftId = "btn-left-graph";
+const keySavedViews = "netwgviews-saved";
+
 const buildFrom = {};
 
 const modMdc = await import("util-mdc");
@@ -106,16 +108,22 @@ const divLinkSettingsstyle = `
 
 
 class LocalSetting {
-    #key; #defaultValue; #onInputFun;
+    #key; #defaultValue; #onInputFun; #cachedValue;
+    static ourSettings = undefined;
     constructor(prefix, key, defaultValue) {
         this.#key = prefix + key;
         this.#defaultValue = defaultValue;
+        LocalSetting.ourSettings = LocalSetting.ourSettings || {};
+        LocalSetting.ourSettings[this.#key] = this;
     }
-    set value(val) {
-        // localStorage.setItem(this.#key, val);
+    get cachedValue() {
+        this.#cachedValue = this.#cachedValue || this.itemValue;
+    }
+    set itemValue(val) {
+        this.#cachedValue = val;
         localStorage.setItem(this.#key, val.toString());
     }
-    get value() {
+    get itemValue() {
         const stored = localStorage.getItem(this.#key);
         if (stored == null) { return this.#defaultValue; }
         const defValType = typeof this.#defaultValue;
@@ -141,7 +149,7 @@ class LocalSetting {
                 inp.checked = this.value;
             default:
                 // console.log(inp.type);
-                inp.value = this.value;
+                inp.value = this.itemValue;
         }
         const handleInput = (evt) => {
             let val;
@@ -154,7 +162,7 @@ class LocalSetting {
                     val = inp.value;
             }
             console.log({ inp, evt, val });
-            this.value = val;
+            this.itemValue = val;
             if (this.#onInputFun) {
                 this.#onInputFun(val);
             } else {
@@ -165,7 +173,11 @@ class LocalSetting {
             handleInput(evt);
         });
     }
+    /**
+     * @param {{ (val: any): any; (val: any): any; (val: any): void; (val: any): void; (val: any): any; (val: any): any; (val: any): any; (val: any): any; (val: any): any; }} fun
+     */
     set onInputFun(fun) {
+        console.warn("%conInputFun", "background:red;", this.#key, fun);
         if ("function" != typeof fun) throw Error(`fun is not function: ${typeof fun}`);
         if (1 != fun.length) throw Error(`fun should take one parameter: ${fun.length}`);
         this.#onInputFun = debounce(fun, 1000);
@@ -180,22 +192,22 @@ class settingNetwG extends LocalSetting {
 
 
 const settingLinkW = new settingNetwG("linkW", 1);
-let linkW = settingLinkW.value;
+let linkW = settingLinkW.itemValue;
 settingLinkW.onInputFun = (val) => linkW = val;
 
 const settingLinkWHi = new settingNetwG("linkWHi", 1);
-let linkWHi = settingLinkWHi.value;
+let linkWHi = settingLinkWHi.itemValue;
 settingLinkWHi.onInputFun = (val) => linkWHi = val;
 
 const settingLinkOp = new settingNetwG("linkOp", 0.2);
-let linkOp = settingLinkOp.value;
+let linkOp = settingLinkOp.itemValue;
 settingLinkOp.onInputFun = (val) => {
     console.log("linkOp = val", val);
     linkOp = val;
 };
 
 const settingLinkOpHi = new settingNetwG("linkOpHi", 0.2);
-let linkOpHi = settingLinkOp.value;
+let linkOpHi = settingLinkOp.itemValue;
 settingLinkOpHi.onInputFun = (val) => {
     // mkMDCsnackbar(msg, msTimeout, buttons)
     modMdc.mkMDCsnackbar(`linkOpHi=${val}`);
@@ -205,21 +217,21 @@ settingLinkOpHi.onInputFun = (val) => {
 
 
 const settingLinkColor = new settingNetwG("linkColor", "#ffff00");
-let linkColor = settingLinkColor.value;
+let linkColor = settingLinkColor.itemValue;
 settingLinkColor.onInputFun = (val) => linkColor = val;
 
 const settingLinkColorHi = new settingNetwG("linkColorHi", "#ff0000");
-let linkColorHi = settingLinkColorHi.value;
+let linkColorHi = settingLinkColorHi.itemValue;
 settingLinkColorHi.onInputFun = (val) => linkColorHi = val;
 
 
 
 const settingHiHover = new settingNetwG("hi-hover", true);
-let boolHiHover = settingHiHover.value;
+let boolHiHover = settingHiHover.itemValue;
 settingHiHover.onInputFun = (val) => boolHiHover = val;
 
 const settingHiDrag = new settingNetwG("hi-drag", true);
-let boolHiDrag = settingHiDrag.value;
+let boolHiDrag = settingHiDrag.itemValue;
 settingHiDrag.onInputFun = (val) => boolHiDrag = val;
 
 
@@ -252,6 +264,7 @@ let theHighlightTag;
 const cssClsTagHighlight = "highlight";
 // blueviolet #8a2be2
 let highlightTagColor = "#8a2be2";
+highlightTagColor = "#a769df";
 setCssVar("--highlight-tag-color", highlightTagColor);
 function setCssVar(cssVar, val) {
     const r = document.querySelector(':root');
@@ -731,7 +744,7 @@ function computeNodesAndLinks() {
                         setTags: tagSet,
                         linkKey
                     }
-                    console.log("no oldLink", link, a0, r);
+                    // console.log("no oldLink", link, a0, r);
                     linksByKey[linkKey] = link;
                     objTagNodes[linkKey] = JSON.parse(JSON.stringify(arrTagNodes));
                     objTagNodes[linkKey].push(a0);
@@ -762,7 +775,7 @@ function computeNodesAndLinks() {
             console.log({ lns, id, ids });
             throw Error(`Did not find node for id=${id}`);
         });
-        console.log({ nLn, linkKey, link, ids, lns });
+        // console.log({ nLn, linkKey, link, ids, lns });
         [...link.setTags].forEach(t => {
             // const lns0 = lns[0];
             // if (lns0.r.tags.indexOf(t) == -1) debugger;
@@ -817,7 +830,7 @@ function computeNodesAndLinks() {
         }
     });
     // FIX-ME: Merge subsets
-    console.log({ setLinked });
+    // console.log({ setLinked });
     setLinked = setLinked || subsetsLinked[0];
     // Remove links not used
     const usedLinks = links.filter(link => {
@@ -825,7 +838,7 @@ function computeNodesAndLinks() {
         if (!setLinked.has(link.target)) return false;
         return true;
     });
-    console.log({ links, setLinked, usedLinks });
+    // console.log({ links, setLinked, usedLinks });
     if (usedLinks.length == 0) {
         debugger;
         const allUsed = numNodes >= numFc4i;
@@ -904,7 +917,7 @@ function computeNodesAndLinks() {
     });
     const nodes4json = nodes.map(n => {
         const newN = { id: n.fc4i.id, fc4ikey: n.fc4i.r.key };
-        console.log({ n, newN });
+        // console.log({ n, newN });
         return newN;
     });
     const gData4json = { nodes4json, links4json };
@@ -980,13 +993,14 @@ async function chooseView() {
     // settingLinkW.onInputFun = (val) => linkW = val;
 
     const settingNumNodes = new settingNetwG("numNodes", 7);
-    numNodes = settingNumNodes.value;
+    numNodes = settingNumNodes.itemValue;
     // const inpNumNodes = mkElt("input", { type: "number", value: numNodes, min: 2 });
     const inpNumNodes = modMdc.mkMDCtextFieldInput(undefined, "number");
     // inpNumNodes.value = numNodes;
     inpNumNodes.min = 2;
     settingNumNodes.bindToInput(inpNumNodes);
-    settingNumNodes.onInputFun = (val) => linkW = val;
+    // settingNumNodes.onInputFun = (val) => linkW = val;
+    // settingNumNodes.onInputFun = (val) => { debugger; numNodes = val; };
     const tfNumNodes = modMdc.mkMDCtextFieldOutlined(
         // `Number of nodes (available ${numFc4i})`,
         `Number of nodes`,
@@ -1041,7 +1055,7 @@ async function chooseView() {
     fabHelp.style.backgroundColor = "aliceblue";
 
     let divLoadView = "";
-    const strJsonSavedView = localStorage.getItem("netwg-savedView");
+    const strJsonSavedView = localStorage.getItem(keySavedViews);
     if (strJsonSavedView) {
         // const btnLoadSaved = modMdc.mkMDCbutton("Load saved view", "raised");
         // const btnLoadSaved = modMdc.mkMDCbutton("Load saved view");
@@ -1077,7 +1091,8 @@ async function chooseView() {
     // eltShowViewAlt.textContent = fun.name;
     // showGraph();
     async function showGraph() {
-        numNodes = Math.floor(Number(inpNumNodes.value));
+        // numNodes = Math.floor(Number(inpNumNodes.value));
+        numNodes = Math.floor(Number(settingNumNodes.itemValue));
         sourceName = "fc4i";
         await getNodesAndLinks(sourceName);
         // fun(gData);
@@ -1508,7 +1523,7 @@ async function addDialogGraphButtons() {
             const strToSave = JSON.stringify(objToSave);
             strCurrentSavedView = strToSave;
             console.log({ strCurrentSavedView });
-            localStorage.setItem("netwg-savedView", strToSave);
+            localStorage.setItem(keySavedViews, strToSave);
             const lenSaved = strToSave.length;
             console.log({ strToSaved: strToSave });
             modMdc.mkMDCsnackbar(`Saved (${lenSaved} bytes)`);
@@ -1520,7 +1535,7 @@ async function addDialogGraphButtons() {
         }));
         const liLoadView = modMdc.mkMDCmenuItem("Load saved view");
         liLoadView.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            const strJsonSaved = localStorage.getItem("netwg-savedView");
+            const strJsonSaved = localStorage.getItem(keySavedViews);
             await loadSavedView(strJsonSaved);
         }));
         const liEditView = modMdc.mkMDCmenuItem("Edit current view");
@@ -1672,7 +1687,26 @@ function mkDivLinksSettings() {
     divLinkHiSettings.style.backgroundColor = "yellow";
     divLinkHiSettings.style.padding = "10px";
 
+    const btnReset = modMdc.mkMDCbutton("Reset", "raised");
+    btnReset.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+        const ans = await modMdc.mkMDCdialogConfirm("Reset these settings to default values?", "Reset");
+        console.log({ ans });
+        if (ans) {
+            const our = LocalSetting.ourSettings;
+            console.log({ our });
+            const arrSaved = Object.keys(localStorage).filter(k => k.startsWith("netwg-"));
+            console.log({ arrSaved });
+            arrSaved.forEach(key => localStorage.removeItem(key));
+            debugger;
+            alert("Cleared, but not quite ready yet")
+        }
+    }));
+    const divReset = mkElt("div", undefined, [
+        btnReset,
+    ]);
+    divReset.style.marginBottom = "20px";
     const divLinksSettings = mkElt("div", undefined, [
+        // btnReset, "",
         mkElt("label", { for: "linkColor" }, "Link color:"), inpLinkColor,
         mkElt("label", { for: "linkW" }, "Link width:"), inpLinkW,
         mkElt("label", { for: "linkOp" }, "Link opacity:"), inpLinkOp,
@@ -1683,6 +1717,7 @@ function mkDivLinksSettings() {
     divHiSettings.style = divLinkSettingsstyle;
 
     const divLinksAndHiSettings = mkElt("div", undefined, [
+        divReset,
         divLinksSettings,
         divLinkHiSettings,
     ]);
@@ -2190,7 +2225,7 @@ async function addNodeLinkHighlighter() {
                 if (theHighlightTag == t) hiTag = true;
             });
             if (hiTag) {
-                return linkW * 4;
+                return linkW * 2;
             }
             let numTags = link.arrTags.length;
             link.arrTags.forEach(t => { if (setInvisibleTags.has(t)) numTags--; });
@@ -2268,7 +2303,7 @@ async function testMyOwn(gData) {
     for (let i = 0, len = gData.nodes.length; i < len; i++) {
         const node = gData.nodes[i];
         const id = node.id;
-        if (i != id) console.log("id, i", id, i, node);
+        // if (i != id) console.log("id, i", id, i, node);
         gData.nodesById[id] = node;
     }
 
