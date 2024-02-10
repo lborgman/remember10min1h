@@ -113,43 +113,12 @@ class LocalSetting {
     constructor(prefix, key, defaultValue) {
         this.#key = prefix + key;
         this.#defaultValue = defaultValue;
+        this.#cachedValue = defaultValue;
         LocalSetting.ourSettings = LocalSetting.ourSettings || {};
         LocalSetting.ourSettings[this.#key] = this;
+        this.#get_itemValue();
     }
     getCachedValue() {
-        console.log("getCachedValue", this.#key, this.#defaultValue,
-            "#cached:", this.#cachedValue,
-            "#itemValue:", this.#itemValue);
-        if (this.#cachedValue == undefined) {
-            // FIX-ME:
-            const valType = typeof this.#defaultValue;
-            switch (valType) {
-                case "string":
-                    this.#cachedValue = this.#itemValue;
-                    break;
-                case "color":
-                    this.#cachedValue = this.#itemValue;
-                    break;
-                case "boolean":
-                    this.#cachedValue = JSON.parse(this.#itemValue);
-                    break;
-                case "number":
-                    if (Number.isInteger(this.#defaultValue)) {
-                        this.#cachedValue = parseInt(this.#itemValue);
-                    } else {
-                        this.#cachedValue = parseFloat(this.#itemValue);
-                    }
-                    break;
-                default:
-                    throw Error(`cachedValue, can't handle type "${valType}"`);
-            }
-            const tofCV = typeof this.#cachedValue;
-            if (valType != tofCV) {
-                throw Error(`typeof #cachedValue=${tofCV}, expected ${valType}`);
-            }
-            this.#cachedValue = this.#itemValue;
-        }
-        console.log("#cachedValue:", this.#cachedValue, "#itemValue:", this.#itemValue);
         return this.#cachedValue;
     }
     reset() {
@@ -161,30 +130,57 @@ class LocalSetting {
         this.#cachedValue = this.#defaultValue;
     }
     get value() {
+        console.warn("%cget value", "background:red;");
         return this.getCachedValue();
-        // FIX-ME:
-        // return this.#itemValue;
     }
-    set #itemValue(val) {
+    #set_itemValue(val) {
+        const tofVal = typeof val;
+        const tofDef = typeof this.#defaultValue;
+        if (tofVal !== tofDef) {
+            throw Error(`#set_itemValue, ${this.#key}: typeof val==${tofVal}, expected ${tofDef}`);
+        }
+        if (tofDef == "number") {
+            const defIsInt = Number.isInteger(this.#defaultValue);
+            const valIsInt = Number.isInteger(val);
+            if (defIsInt != valIsInt) {
+                if (defIsInt) {
+                    throw Error(`#set_itemValue, ${this.#key}: expected integer, got ${val}`);
+                } else {
+                    throw Error(`#set_itemValue, ${this.#key}: expected float, got ${val}`);
+                }
+            }
+        }
         this.#cachedValue = val;
         localStorage.setItem(this.#key, val.toString());
     }
-    get #itemValue() {
+    #get_itemValue() {
         const stored = localStorage.getItem(this.#key);
-        if (stored == null) { return this.#defaultValue; }
-        const defValType = typeof this.#defaultValue;
-        if ("string" === defValType) { return stored; }
-        if ("number" === defValType) { return +stored; }
-        if ("boolean" === defValType) {
-            switch (stored) {
-                case "true": return true;
-                case "false": return false;
-                default:
-                    throw Error(`String does not match boolean: ${stored}`);
-            }
+        if (stored == null) {
+            this.#cachedValue = this.#defaultValue;
+            return;
         }
-        throw Error(`Can't handle default value type: ${defValType}`);
-        return stored;
+        const defValType = typeof this.#defaultValue;
+        switch (defValType) {
+            case "string":
+                this.#cachedValue = stored;
+                break;
+            case "number":
+                this.#cachedValue = +stored;
+                break;
+            case "boolean":
+                switch (stored) {
+                    case "true":
+                        this.#cachedValue = true;
+                        break;
+                    case "false":
+                        this.#cachedValue = false;
+                        break;
+                    default:
+                        throw Error(`String does not match boolean: ${stored}`);
+                }
+            default:
+                throw Error(`Can't handle default value type: ${defValType}`);
+        }
     }
     get defaultValue() {
         return this.#defaultValue;
@@ -192,10 +188,10 @@ class LocalSetting {
     #setInputValue() {
         switch (this.#input.type) {
             case "checkbox":
-                this.#input.checked = this.#itemValue;
+                this.#input.checked = this.#cachedValue;
             default:
                 // console.log(inp.type);
-                this.#input.value = this.#itemValue;
+                this.#input.value = this.#cachedValue;
         }
     }
     bindToInput(inp) {
@@ -216,7 +212,7 @@ class LocalSetting {
                     val = inp.value;
             }
             console.log({ inp, evt, val });
-            this.#itemValue = val;
+            this.#set_itemValue(val);
             if (this.#onInputFun) {
                 this.#onInputFun(val);
             } else {
