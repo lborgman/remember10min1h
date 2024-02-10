@@ -1,5 +1,5 @@
 //========== Specific ====================================================
-const SW_VERSION = "0.4.424";
+const SW_VERSION = "0.4.427";
 // throw Error("Test worker error");
 const logColors = "color: green; background: yellow;";
 console.log(`%csw-worker-input.js ${SW_VERSION} is here`, logColors + " font-size: 20px;");
@@ -264,11 +264,7 @@ self.addEventListener("message", errorHandlerAsyncEvent(async evt => {
                 const wasRunning = !tmrKeepalive;
                 clearInterval(tmrKeepalive);
                 tmrKeepalive = undefined;
-                if (stop) {
-                    sendKeepalive("STOP");
-                    return;
-                }
-                function sendKeepalive(val) {
+                const sendKeepalive = (val) => {
                     const msElapsed = Date.now() - msNowStart;
                     const sElapsed = Math.floor(msElapsed / 1000);
                     const data = {
@@ -282,6 +278,10 @@ self.addEventListener("message", errorHandlerAsyncEvent(async evt => {
                     } catch (err) {
                         console.log(err);
                     }
+                }
+                if (stop) {
+                    sendKeepalive("STOP");
+                    return;
                 }
                 let keepaliveValue = 0;
                 sendKeepalive("START");
@@ -302,7 +302,8 @@ self.addEventListener("message", errorHandlerAsyncEvent(async evt => {
                         sendKeepalive(err4send);
                     }
                 }, msKeepalive);
-                function testTimerShow() {
+                /*
+                const testTimerShow = () => {
                     clearInterval(tmrKeepalive);
                     const title = `TEST_TIMER seconds=${seconds}`;
                     console.log("%cdisplayNotification", logColors, { title });
@@ -319,6 +320,7 @@ self.addEventListener("message", errorHandlerAsyncEvent(async evt => {
                     }
                 }
                 // if (seconds > 0) setTimeout(testTimerShow, seconds * 1000);
+                */
                 break;
             case "RESTART_AUTO_REMINDERS":
                 // throw Error("error test -1");

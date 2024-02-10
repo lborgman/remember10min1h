@@ -825,7 +825,6 @@ function computeNodesAndLinks() {
                 const n = arrTagNodes[i];
                 if (id == n.id) return n;
             }
-            debugger;
             console.log({ lns, id, ids });
             throw Error(`Did not find node for id=${id}`);
         });
@@ -837,7 +836,6 @@ function computeNodesAndLinks() {
             // if (lns1.r.tags.indexOf(t) == -1) debugger;
             lns.forEach(n => {
                 if (n.r.tags.indexOf(t) == -1) {
-                    debugger;
                     console.log({ n, t, link });
                     throw Error(`Node did not contain tag ${t}`);
                 }
@@ -945,7 +943,6 @@ function computeNodesAndLinks() {
     gData = { nodes, links: usedLinks };
     // https://www.javascripttutorial.net/object/3-ways-to-copy-objects-in-javascript/
     if (gData.nodes[0].__threeObj) {
-        debugger;
         throw Error("gData nodes have __threeObj");
     }
     setActuallyUsedLinkTags.clear();
@@ -1190,6 +1187,7 @@ function setCubeMode(newShowCube) {
             let y = -halfSize;
             let z = -halfSize;
 
+            /*
             function makeSide(color) {
                 const planeGeometry = new THREE.PlaneGeometry(theCubeSize, theCubeSize, 1, 1);
                 const planeMaterial = new THREE.MeshLambertMaterial({
@@ -1199,7 +1197,8 @@ function setCubeMode(newShowCube) {
                 const mesh = new THREE.Mesh(planeGeometry, planeMaterial);
                 return mesh;
             }
-            function mkBackSide(color) {
+            */
+            const mkBackSide = (color) => {
                 const planeGeometry = new THREE.PlaneGeometry(theCubeSize, theCubeSize, 1, 1);
                 const planeMaterial = new THREE.MeshLambertMaterial({
                     color: color,
@@ -1615,7 +1614,6 @@ async function addDialogGraphButtons() {
             if (!divMenuContainer.classList.contains("is-open")) {
                 debugger;
             }
-            // divMenuContainer.classList.remove("is-open");
             closeRightMenu();
         });
         document.documentElement.addEventListener("click", evt => closeRightMenu());
@@ -1741,10 +1739,6 @@ function mkDivLinksSettings() {
                 console.log(k, v);
                 if (k.startsWith("netwg-")) v.reset();
             });
-            debugger;
-            // const arrSaved = Object.keys(localStorage).filter(k => k.startsWith("netwg-"));
-            // console.log({ arrSaved });
-            // arrSaved.forEach(key => localStorage.removeItem(key));
             alert("Cleared, but not quite ready yet")
         }
     }));
