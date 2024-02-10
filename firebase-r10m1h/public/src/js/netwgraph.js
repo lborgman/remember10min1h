@@ -108,7 +108,7 @@ const divLinkSettingsstyle = `
 
 
 class LocalSetting {
-    #key; #defaultValue; #onInputFun; #cachedValue;
+    #key; #defaultValue; #onInputFun; #cachedValue; #input;
     static ourSettings = undefined;
     constructor(prefix, key, defaultValue) {
         this.#key = prefix + key;
@@ -117,13 +117,58 @@ class LocalSetting {
         LocalSetting.ourSettings[this.#key] = this;
     }
     get cachedValue() {
-        this.#cachedValue = this.#cachedValue || this.itemValue;
+        console.log("getter cachedValue", this.#key, this.#defaultValue, this.#cachedValue);
+        if (this.#cachedValue == undefined) {
+            console.log("getter cachedValue", typeof this.#itemValue, this.#itemValue);
+            // FIX-ME:
+            const valType = typeof this.#defaultValue;
+            switch (valType) {
+                case "string":
+                    this.#cachedValue = this.#itemValue;
+                    break;
+                case "color":
+                    this.#cachedValue = this.#itemValue;
+                    break;
+                case "boolean":
+                    this.#cachedValue = JSON.parse(this.#itemValue);
+                    break;
+                case "number":
+                    if (Number.isInteger(this.#defaultValue)) {
+                        this.#cachedValue = parseInt(this.#itemValue);
+                    } else {
+                        this.#cachedValue = parseFloat(this.#itemValue);
+                    }
+                    break;
+                default:
+                    throw Error(`cachedValue, can't handle type "${valType}"`);
+            }
+            const tofCV = typeof this.#cachedValue;
+            if (valType != tofCV) {
+                throw Error(`typeof #cachedValue=${tofCV}, expected ${valType}`);
+            }
+            this.#cachedValue = this.#itemValue;
+        }
+        console.log("getter cachedValue", this.#cachedValue, this.#itemValue);
+        return this.#cachedValue;
     }
-    set itemValue(val) {
+    reset() {
+        this.#removeItemValue();
+        if (this.#input) { this.#setInputValue(); }
+    }
+    #removeItemValue() {
+        localStorage.removeItem(this.#key);
+        this.#cachedValue = this.#defaultValue;
+    }
+    get value() {
+        return this.cachedValue;
+        // FIX-ME:
+        // return this.#itemValue;
+    }
+    set #itemValue(val) {
         this.#cachedValue = val;
         localStorage.setItem(this.#key, val.toString());
     }
-    get itemValue() {
+    get #itemValue() {
         const stored = localStorage.getItem(this.#key);
         if (stored == null) { return this.#defaultValue; }
         const defValType = typeof this.#defaultValue;
@@ -143,14 +188,22 @@ class LocalSetting {
     get defaultValue() {
         return this.#defaultValue;
     }
-    bindToInput(inp) {
-        switch (inp.type) {
+    #setInputValue() {
+        switch (this.#input.type) {
             case "checkbox":
-                inp.checked = this.value;
+                this.#input.checked = this.#itemValue;
             default:
                 // console.log(inp.type);
-                inp.value = this.itemValue;
+                this.#input.value = this.#itemValue;
         }
+    }
+    bindToInput(inp) {
+        if (this.#input) {
+            console.error("bindToInput, already has .#input", this.#input);
+            throw Error("bindToInput, already has .#input");
+        }
+        this.#input = inp;
+        this.#setInputValue();
         const handleInput = (evt) => {
             let val;
             switch (inp.type) {
@@ -162,7 +215,7 @@ class LocalSetting {
                     val = inp.value;
             }
             console.log({ inp, evt, val });
-            this.itemValue = val;
+            this.#itemValue = val;
             if (this.#onInputFun) {
                 this.#onInputFun(val);
             } else {
@@ -191,23 +244,23 @@ class settingNetwG extends LocalSetting {
 }
 
 
-const settingLinkW = new settingNetwG("linkW", 1);
-let linkW = settingLinkW.itemValue;
+const settingLinkW = new settingNetwG("linkW", 0.5);
+let linkW = settingLinkW.value;
 settingLinkW.onInputFun = (val) => linkW = val;
 
-const settingLinkWHi = new settingNetwG("linkWHi", 1);
-let linkWHi = settingLinkWHi.itemValue;
+const settingLinkWHi = new settingNetwG("linkWHi", 0.5);
+let linkWHi = settingLinkWHi.value;
 settingLinkWHi.onInputFun = (val) => linkWHi = val;
 
-const settingLinkOp = new settingNetwG("linkOp", 0.2);
-let linkOp = settingLinkOp.itemValue;
+const settingLinkOp = new settingNetwG("linkOp", 1);
+let linkOp = settingLinkOp.value;
 settingLinkOp.onInputFun = (val) => {
     console.log("linkOp = val", val);
     linkOp = val;
 };
 
-const settingLinkOpHi = new settingNetwG("linkOpHi", 0.2);
-let linkOpHi = settingLinkOp.itemValue;
+const settingLinkOpHi = new settingNetwG("linkOpHi", 1);
+let linkOpHi = settingLinkOp.value;
 settingLinkOpHi.onInputFun = (val) => {
     // mkMDCsnackbar(msg, msTimeout, buttons)
     modMdc.mkMDCsnackbar(`linkOpHi=${val}`);
@@ -217,23 +270,24 @@ settingLinkOpHi.onInputFun = (val) => {
 
 
 const settingLinkColor = new settingNetwG("linkColor", "#ffff00");
-let linkColor = settingLinkColor.itemValue;
+let linkColor = settingLinkColor.value;
 settingLinkColor.onInputFun = (val) => linkColor = val;
 
 const settingLinkColorHi = new settingNetwG("linkColorHi", "#ff0000");
-let linkColorHi = settingLinkColorHi.itemValue;
+let linkColorHi = settingLinkColorHi.value;
 settingLinkColorHi.onInputFun = (val) => linkColorHi = val;
 
 
 
-const settingHiHover = new settingNetwG("hi-hover", true);
-let boolHiHover = settingHiHover.itemValue;
+const settingHiHover = new settingNetwG("hi-hover", false);
+let boolHiHover = settingHiHover.value;
 settingHiHover.onInputFun = (val) => boolHiHover = val;
 
 const settingHiDrag = new settingNetwG("hi-drag", true);
-let boolHiDrag = settingHiDrag.itemValue;
+let boolHiDrag = settingHiDrag.value;
 settingHiDrag.onInputFun = (val) => boolHiDrag = val;
 
+const settingNumNodes = new settingNetwG("numNodes", 5);
 
 const secondsBottom = 0.5;
 // let secondsBottom = 3;
@@ -394,7 +448,7 @@ const setNoLinkTags = new Set();
 const setUsedLinkTags = new Set();
 const setActuallyUsedLinkTags = new Set();
 let prelNodes;
-let numNodes;
+// let numNodes;
 let sourceName;
 
 const setManExclTags = new Set();
@@ -655,8 +709,8 @@ async function getNodesAndLinks(
         const setI = new Set();
         let s = 0;
         const n = 2;
-        while (s++ < 2 * n * numNodes && setI.size < n * numNodes)
-        // while (s++ < 4 * lenMatch && setI.size < n * numNodes)
+        while (s++ < 2 * n * settingNumNodes.cachedValue && setI.size < n * settingNumNodes.cachedValue)
+        // while (s++ < 4 * lenMatch && setI.size < n * settingNumNodes.cachedValue)
         {
             const i = Math.floor(Math.random() * lenMatch);
             setI.add(i);
@@ -687,8 +741,8 @@ async function getNodesAndLinks(
     }
     function randomGraph() {
         // Random tree
-        const nodes = [...Array(numNodes).keys()].map(i => ({ id: i }));
-        const links = [...Array(numNodes).keys()]
+        const nodes = [...Array(settingNumNodes.cachedValue).keys()].map(i => ({ id: i }));
+        const links = [...Array(settingNumNodes.cachedValue).keys()]
             .filter(id => id)
             .map(id => ({
                 source: id,
@@ -805,7 +859,7 @@ function computeNodesAndLinks() {
             subsetsLinked[0] = ns;
             ns.add(src);
             ns.add(trg);
-            if (numNodes == 2) {
+            if (settingNumNodes.cachedValue == 2) {
                 setLinked = ns;
                 return;
             }
@@ -816,7 +870,7 @@ function computeNodesAndLinks() {
                 if (s.has(src) || s.has(trg)) {
                     s.add(src); s.add(trg);
                     foundSet = true;
-                    if (s.size >= numNodes) {
+                    if (s.size >= settingNumNodes.cachedValue) {
                         setLinked = s;
                         break;
                     }
@@ -841,11 +895,11 @@ function computeNodesAndLinks() {
     // console.log({ links, setLinked, usedLinks });
     if (usedLinks.length == 0) {
         debugger;
-        const allUsed = numNodes >= numFc4i;
+        const allUsed = settingNumNodes.cachedValue >= numFc4i;
         const divNotice = allUsed ?
             mkElt("p", undefined, `No tag links found between the ${numFc4i} available nodes.`)
             :
-            mkElt("p", undefined, `No tag links found between the ${numNodes} selected nodes.`);
+            mkElt("p", undefined, `No tag links found between the ${settingNumNodes.cachedValue} selected nodes.`);
         const tagsUsed = true; // FIX-ME:
         const divExplainTags = tagsUsed ?
             mkElt("p", undefined, `
@@ -985,26 +1039,15 @@ async function chooseView() {
         mkElt("p", undefined, `${numFc4i} records found`),
     ]);
 
-    // divAltFc4i.appendChild(divSearched);
 
-    // localStorage
-    // const settingLinkW = new settingNetwG("linkW", 1);
-    // let linkW = settingLinkW.value;
-    // settingLinkW.onInputFun = (val) => linkW = val;
-
-    const settingNumNodes = new settingNetwG("numNodes", 7);
-    numNodes = settingNumNodes.itemValue;
-    // const inpNumNodes = mkElt("input", { type: "number", value: numNodes, min: 2 });
     const inpNumNodes = modMdc.mkMDCtextFieldInput(undefined, "number");
-    // inpNumNodes.value = numNodes;
     inpNumNodes.min = 2;
     settingNumNodes.bindToInput(inpNumNodes);
-    // settingNumNodes.onInputFun = (val) => linkW = val;
-    // settingNumNodes.onInputFun = (val) => { debugger; numNodes = val; };
+
     const tfNumNodes = modMdc.mkMDCtextFieldOutlined(
         // `Number of nodes (available ${numFc4i})`,
         `Number of nodes`,
-        inpNumNodes, numNodes);
+        inpNumNodes, settingNumNodes.cachedValue);
     const btnShow = modMdc.mkMDCbutton("Show", "raised");
     btnShow.addEventListener("click", evt => {
         showGraph();
@@ -1091,8 +1134,7 @@ async function chooseView() {
     // eltShowViewAlt.textContent = fun.name;
     // showGraph();
     async function showGraph() {
-        // numNodes = Math.floor(Number(inpNumNodes.value));
-        numNodes = Math.floor(Number(settingNumNodes.itemValue));
+        // numNodes = Math.floor(Number(settingNumNodes.value));
         sourceName = "fc4i";
         await getNodesAndLinks(sourceName);
         // fun(gData);
@@ -1694,10 +1736,15 @@ function mkDivLinksSettings() {
         if (ans) {
             const our = LocalSetting.ourSettings;
             console.log({ our });
-            const arrSaved = Object.keys(localStorage).filter(k => k.startsWith("netwg-"));
-            console.log({ arrSaved });
-            arrSaved.forEach(key => localStorage.removeItem(key));
+            Object.entries(our).forEach(e => {
+                const [k, v] = e;
+                console.log(k, v);
+                if (k.startsWith("netwg-")) v.reset();
+            });
             debugger;
+            // const arrSaved = Object.keys(localStorage).filter(k => k.startsWith("netwg-"));
+            // console.log({ arrSaved });
+            // arrSaved.forEach(key => localStorage.removeItem(key));
             alert("Cleared, but not quite ready yet")
         }
     }));

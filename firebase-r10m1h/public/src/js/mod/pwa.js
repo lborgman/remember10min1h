@@ -1,4 +1,6 @@
+/* eslint no-debugger: 0 */
 console.log("here is module pwa.js");
+
 if (document.currentScript) throw Error("import .currentScript"); // is module
 if (!import.meta.url) throw Error("!import.meta.url"); // is module
 
@@ -201,18 +203,19 @@ async function setupServiceWorker() {
             addDebugRow(`Service Worker version: controller is null`);
         }
 
-        function saveVersion(ver) {
-            swVersion = ver;
-            // console.log('Service Worker version:', swVersion);
-            addDebugRow(`Service Worker version: ${swVersion}`);
-            console.warn(`%cService Worker version: ${swVersion}`, "font-size:18px;");
-            theSWcacheVersion = swVersion;
-        }
         return swRegistration;
     } catch (err) {
         console.warn("Service worker registration failed", { err });
         throw err;
     }
+}
+
+function saveVersion(ver) {
+    swVersion = ver;
+    // console.log('Service Worker version:', swVersion);
+    addDebugRow(`Service Worker version: ${swVersion}`);
+    console.warn(`%cService Worker version: ${swVersion}`, "font-size:18px;");
+    theSWcacheVersion = swVersion;
 }
 
 export function getDisplayMode() {
@@ -388,7 +391,6 @@ export function hasUpdate() {
     // This does not work in error.js
     // No idea why. Changing to isShowingUpdatePrompt in error.js
     console.error("hasUpdate is obsolete");
-    debugger;
     return canUpdateNow;
 }
 export function isShowingUpdatePrompt() {
