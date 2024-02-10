@@ -5,6 +5,12 @@ import("pwa");
 // https://stackoverflow.com/questions/75798624/d3-force-graph-zoom-to-node
 // https://github.com/jackyzha0/quartz
 
+const debounceTriggerLinks = debounce(async () => {
+    const modMdc = await import("util-mdc");
+    modMdc.mkMDCsnackbar("Updating links...");
+    triggerUpdateLinksView();
+}, 1.5 * 1000);
+
 /// >>>> debug
 // running async here...
 window.getDeb = () => {
@@ -108,7 +114,7 @@ const divLinkSettingsstyle = `
 
 
 class LocalSetting {
-    #key; #defaultValue; #onInputFun; #cachedValue; #input;
+    #key; #defaultValue; #cachedValue; #input;
     static ourSettings = undefined;
     constructor(prefix, key, defaultValue) {
         this.#key = prefix + key;
@@ -139,17 +145,18 @@ class LocalSetting {
         if (tofVal !== tofDef) {
             throw Error(`#set_itemValue, ${this.#key}: typeof val==${tofVal}, expected ${tofDef}`);
         }
+        /*
+        // FIX-ME:
         if (tofDef == "number") {
             const defIsInt = Number.isInteger(this.#defaultValue);
             const valIsInt = Number.isInteger(val);
-            if (defIsInt != valIsInt) {
-                if (defIsInt) {
+            if (defIsInt) {
+                if (!valIsInt) {
                     throw Error(`#set_itemValue, ${this.#key}: expected integer, got ${val}`);
-                } else {
-                    throw Error(`#set_itemValue, ${this.#key}: expected float, got ${val}`);
                 }
             }
         }
+        */
         this.#cachedValue = val;
         localStorage.setItem(this.#key, val.toString());
     }
@@ -199,10 +206,12 @@ class LocalSetting {
             console.error("bindToInput, already has .#input", this.#key, this.#input);
             throw Error("bindToInput, already has .#input");
         }
+        /*
         if (this.#onInputFun) {
             console.error("bindToInput has .#onInputFun", this.#key, this.#onInputFun);
             throw Error("bindToInput, has .#onInputFun");
         }
+        */
         this.#input = inp;
         this.#setInputValue();
         const handleInput = (evt) => {
@@ -211,17 +220,20 @@ class LocalSetting {
                 case "checkbox":
                     val = inp.checked;
                     break;
+                case "number":
+                    val = inp.value.trim();
+                    val = +val;
+                    break;
+                case "range":
+                    val = +inp.value;
+                    break;
                 default:
                     console.log(inp.type);
                     val = inp.value;
             }
             console.log({ inp, evt, val });
             this.#set_itemValue(val);
-            if (this.#onInputFun) {
-                this.#onInputFun(val);
-            } else {
-                console.warn("No #onInputFun");
-            }
+            // if (this.#onInputFun) { this.#onInputFun(val); } else { console.warn("No #onInputFun"); }
         }
         inp.addEventListener("input", evt => {
             handleInput(evt);
@@ -230,6 +242,7 @@ class LocalSetting {
     /**
      * @param {{ (val: any): any; (val: any): any; (val: any): void; (val: any): void; (val: any): any; (val: any): any; (val: any): any; (val: any): any; (val: any): any; }} fun
      */
+    /*
     set onInputFun(fun) {
         console.error("%conInputFun", "background:red;", this.#key, fun);
         throw Error("conInputFun");
@@ -237,6 +250,7 @@ class LocalSetting {
         if (1 != fun.length) throw Error(`fun should take one parameter: ${fun.length}`);
         this.#onInputFun = debounce(fun, 1000);
     }
+    */
 }
 
 class settingNetwG extends LocalSetting {
@@ -247,45 +261,16 @@ class settingNetwG extends LocalSetting {
 
 
 const settingLinkW = new settingNetwG("linkW", 0.5);
-// let linkW = settingLinkW.value;
-// settingLinkW.onInputFun = (val) => linkW = val;
-
-const settingLinkWHi = new settingNetwG("linkWHi", 0.5);
-// let linkWHi = settingLinkWHi.value;
-// settingLinkWHi.onInputFun = (val) => linkWHi = val;
-
+const settingLinkHiW = new settingNetwG("linkWHi", 0.5);
 const settingLinkOp = new settingNetwG("linkOp", 1);
-// let linkOp = settingLinkOp.value;
-// settingLinkOp.onInputFun = (val) => { linkOp = val; };
-
-const settingLinkOpHi = new settingNetwG("linkOpHi", 1);
-// let linkOpHi = settingLinkOp.value;
-// settingLinkOpHi.onInputFun = (val) => { linkOpHi = val; }
-
-
-
+const settingLinkHiOp = new settingNetwG("linkOpHi", 1);
 const settingLinkColor = new settingNetwG("linkColor", "#ffff00");
-// let linkColor = settingLinkColor.value;
-// settingLinkColor.onInputFun = (val) => linkColor = val;
-
 const settingLinkColorHi = new settingNetwG("linkColorHi", "#ff0000");
-// let linkColorHi = settingLinkColorHi.value;
-// settingLinkColorHi.onInputFun = (val) => linkColorHi = val;
-
-
-
 const settingHiHover = new settingNetwG("hi-hover", false);
-// let boolHiHover = settingHiHover.value;
-// settingHiHover.onInputFun = (val) => boolHiHover = val;
-
 const settingHiDrag = new settingNetwG("hi-drag", true);
-// let boolHiDrag = settingHiDrag.value;
-// settingHiDrag.onInputFun = (val) => boolHiDrag = val;
-
 const settingNumNodes = new settingNetwG("numNodes", 5);
 
 const secondsBottom = 0.5;
-// let secondsBottom = 3;
 
 
 const maxNodeTextLines = 4;
@@ -1359,6 +1344,10 @@ async function addDialogGraphButtons() {
         ]);
         divLinks.appendChild(divLinksInner);
         makeExpandible(divLinks, "h");
+        divLinks.addEventListener("input", evt => {
+            console.log("%cdivLinks input", "background:orange", evt);
+            debounceTriggerLinks();
+        });
     }
     buildDivLinks();
     // const btnLinks = modMdc.mkMDCiconButton("line_start"); // FIX-ME: does not show???
@@ -1668,12 +1657,12 @@ function mkDivLinksSettings() {
     const inpLinkW = mkElt("input", { id: "linkW", type: "number", min: "1", max: "5" });
     settingLinkW.bindToInput(inpLinkW);
     const inpLinkWHi = mkElt("input", { id: "linkWHi", type: "number", min: "1", max: "5" });
-    settingLinkWHi.bindToInput(inpLinkWHi);
+    settingLinkHiW.bindToInput(inpLinkWHi);
 
     const inpLinkOp = mkElt("input", { id: "linkOp", type: "range", step: "0.1", min: "0", max: "1" });
     settingLinkOp.bindToInput(inpLinkOp);
-    const inpLinkOpHi = mkElt("input", { id: "linkOpHi", type: "range", step: "0.1", min: "0", max: "1" });
-    settingLinkOpHi.bindToInput(inpLinkOpHi);
+    const inpLinkHiOp = mkElt("input", { id: "linkOpHi", type: "range", step: "0.1", min: "0", max: "1" });
+    settingLinkHiOp.bindToInput(inpLinkHiOp);
 
     const inpLinkColor = mkElt("input", { id: "linkColor", type: "color" });
     settingLinkColor.bindToInput(inpLinkColor);
@@ -1711,7 +1700,7 @@ function mkDivLinksSettings() {
         lbl4Drag, chkHiDrag,
         mkElt("label", { for: "linkColorHi" }, "Link color (hilite):"), inpLinkColorHi,
         mkElt("label", { for: "linkWHi" }, "Link width (hilite):"), inpLinkWHi,
-        mkElt("label", { for: "linkOpHi" }, "Link opacity (hilite):"), inpLinkOpHi,
+        mkElt("label", { for: "linkOpHi" }, "Link opacity (hilite):"), inpLinkHiOp,
     ]);
     const divHiSettingsBody = mkElt("div", undefined, [
         mkElt("p", undefined, "This settings are applied during node hover or drag."),
@@ -1735,10 +1724,13 @@ function mkDivLinksSettings() {
             console.log({ our });
             Object.entries(our).forEach(e => {
                 const [k, v] = e;
-                console.log(k, v);
+                // console.log(k, v);
                 if (k.startsWith("netwg-")) v.reset();
             });
-            alert("Cleared, but not quite ready yet")
+            // setTimeout(() => triggerUpdateLinksView(), 500);
+            debounceTriggerLinks();
+            // alert("Cleared, but maybe not quite ready yet...?")
+            // modMdc.mkMDCdialogAlert("Cleared, but maybe not quite ready yet...?")
         }
     }));
     const divReset = mkElt("div", undefined, [
@@ -1761,11 +1753,13 @@ function mkDivLinksSettings() {
         divLinksSettings,
         divLinkHiSettings,
     ]);
+    /*
     const debounceSettingsInput = debounce(triggerUpdateLinksView, 700);
     divLinksAndHiSettings.addEventListener("input", evt => {
         console.log("links&hi input", evt.target);
         debounceSettingsInput();
     });
+    */
 
     return divLinksAndHiSettings;
 }
@@ -2214,14 +2208,6 @@ function hiliteNode(node) {
 async function addNodeLinkHighlighter() {
     graph = graph
         .nodeColor(node => {
-            // setHighlightNodes.has(node) ? node === theHiliteNode ? 'rgb(255,0,0,1)' : 'rgba(255,160,0,0.8)' : 'rgba(0,255,255,0.6)'
-            /*
-            setHighlightNodes.has(node) ?
-                node === theHiliteNode ?
-                    'rgb(255,0,0,1)'
-                    : 'rgba(255,160,0,0.8)'
-                : 'rgba(0,255,255,0.6)'
-            */
             if (setHighlightNodes.has(node)) {
                 if (node === theHiliteNode) {
                     return 'rgb(255,0,0,1)'
@@ -2248,7 +2234,7 @@ async function addNodeLinkHighlighter() {
 
             let hi = setHighlightLinks.has(link);
             if (hi) {
-                const linkOpHi = settingLinkOpHi.getCachedValue();
+                const linkOpHi = settingLinkHiOp.getCachedValue();
                 const linkColorHi = settingLinkColorHi.getCachedValue();
                 const hexOpacityHi = Math.round(linkOpHi * 255).toString(16);
                 return linkColorHi + hexOpacityHi;
@@ -2259,17 +2245,12 @@ async function addNodeLinkHighlighter() {
                 return linkColor + hexOpacity;
             }
         })
-        /*
-        .linkOpacity(link => {
-            // FIX-ME: linkOpacity is never called. add opacity to linkColor instead
-            if (highlightLinks.has(link)) { return linkOpHi; } else { return linkOp; }
-        })
-        */
         .linkWidth(link => {
             let hiTag = false;
             link.arrTags.forEach(t => {
                 if (theHighlightTag == t) hiTag = true;
             });
+            const linkW = settingLinkW.getCachedValue();
             if (hiTag) {
                 return linkW * 2;
             }
@@ -2281,7 +2262,11 @@ async function addNodeLinkHighlighter() {
                 const emphase = 1.14 ** (numTags - 1);
                 emp = Math.min(emphase, 2);
             }
-            if (setHighlightLinks.has(link)) { return linkWHi * emp; } else { return linkW * emp; }
+            if (setHighlightLinks.has(link)) {
+                const linkWHi = settingLinkHiW.getCachedValue();
+                return linkWHi * emp;
+            }
+            return linkW * emp;
         })
         .linkThreeObject(link => {
             if (setHighlightLinks.has(link)) {
