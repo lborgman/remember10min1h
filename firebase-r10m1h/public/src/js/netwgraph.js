@@ -116,10 +116,11 @@ class LocalSetting {
         LocalSetting.ourSettings = LocalSetting.ourSettings || {};
         LocalSetting.ourSettings[this.#key] = this;
     }
-    get cachedValue() {
-        console.log("getter cachedValue", this.#key, this.#defaultValue, this.#cachedValue);
+    getCachedValue() {
+        console.log("getCachedValue", this.#key, this.#defaultValue,
+            "#cached:", this.#cachedValue,
+            "#itemValue:", this.#itemValue);
         if (this.#cachedValue == undefined) {
-            console.log("getter cachedValue", typeof this.#itemValue, this.#itemValue);
             // FIX-ME:
             const valType = typeof this.#defaultValue;
             switch (valType) {
@@ -148,7 +149,7 @@ class LocalSetting {
             }
             this.#cachedValue = this.#itemValue;
         }
-        console.log("getter cachedValue", this.#cachedValue, this.#itemValue);
+        console.log("#cachedValue:", this.#cachedValue, "#itemValue:", this.#itemValue);
         return this.#cachedValue;
     }
     reset() {
@@ -160,7 +161,7 @@ class LocalSetting {
         this.#cachedValue = this.#defaultValue;
     }
     get value() {
-        return this.cachedValue;
+        return this.getCachedValue();
         // FIX-ME:
         // return this.#itemValue;
     }
@@ -709,8 +710,9 @@ async function getNodesAndLinks(
         const setI = new Set();
         let s = 0;
         const n = 2;
-        while (s++ < 2 * n * settingNumNodes.cachedValue && setI.size < n * settingNumNodes.cachedValue)
-        // while (s++ < 4 * lenMatch && setI.size < n * settingNumNodes.cachedValue)
+        const numNodes = settingNumNodes.getCachedValue();
+        while (s++ < 2 * n * numNodes && setI.size < n * numNodes)
+        // while (s++ < 4 * lenMatch && setI.size < n * numNodes)
         {
             const i = Math.floor(Math.random() * lenMatch);
             setI.add(i);
@@ -739,10 +741,12 @@ async function getNodesAndLinks(
 
         computeNodesAndLinks();
     }
+    /*
     function randomGraph() {
         // Random tree
-        const nodes = [...Array(settingNumNodes.cachedValue).keys()].map(i => ({ id: i }));
-        const links = [...Array(settingNumNodes.cachedValue).keys()]
+        const numNodes = settingNumNodes.getCachedValue());
+        const nodes = [...Array(numNodes).keys()].map(i => ({ id: i }));
+        const links = [...Array(numNodes).keys()]
             .filter(id => id)
             .map(id => ({
                 source: id,
@@ -751,6 +755,7 @@ async function getNodesAndLinks(
         console.log("got nodes and links");
         gData = { nodes, links }
     }
+    */
 }
 const objTagNodes = {};
 function computeNodesAndLinks() {
@@ -857,7 +862,7 @@ function computeNodesAndLinks() {
             subsetsLinked[0] = ns;
             ns.add(src);
             ns.add(trg);
-            if (settingNumNodes.cachedValue == 2) {
+            if (settingNumNodes.getCachedValue() == 2) {
                 setLinked = ns;
                 return;
             }
@@ -868,7 +873,7 @@ function computeNodesAndLinks() {
                 if (s.has(src) || s.has(trg)) {
                     s.add(src); s.add(trg);
                     foundSet = true;
-                    if (s.size >= settingNumNodes.cachedValue) {
+                    if (s.size >= settingNumNodes.getCachedValue()) {
                         setLinked = s;
                         break;
                     }
@@ -893,11 +898,11 @@ function computeNodesAndLinks() {
     // console.log({ links, setLinked, usedLinks });
     if (usedLinks.length == 0) {
         debugger;
-        const allUsed = settingNumNodes.cachedValue >= numFc4i;
+        const allUsed = settingNumNodes.getCachedValue() >= numFc4i;
         const divNotice = allUsed ?
             mkElt("p", undefined, `No tag links found between the ${numFc4i} available nodes.`)
             :
-            mkElt("p", undefined, `No tag links found between the ${settingNumNodes.cachedValue} selected nodes.`);
+            mkElt("p", undefined, `No tag links found between the ${settingNumNodes.getCachedValue()} selected nodes.`);
         const tagsUsed = true; // FIX-ME:
         const divExplainTags = tagsUsed ?
             mkElt("p", undefined, `
@@ -1044,7 +1049,7 @@ async function chooseView() {
     const tfNumNodes = modMdc.mkMDCtextFieldOutlined(
         // `Number of nodes (available ${numFc4i})`,
         `Number of nodes`,
-        inpNumNodes, settingNumNodes.cachedValue);
+        inpNumNodes, settingNumNodes.getCachedValue());
     const btnShow = modMdc.mkMDCbutton("Show", "raised");
     btnShow.addEventListener("click", evt => {
         showGraph();
