@@ -196,8 +196,12 @@ class LocalSetting {
     }
     bindToInput(inp) {
         if (this.#input) {
-            console.error("bindToInput, already has .#input", this.#input);
+            console.error("bindToInput, already has .#input", this.#key, this.#input);
             throw Error("bindToInput, already has .#input");
+        }
+        if (this.#onInputFun) {
+            console.error("bindToInput has .#onInputFun", this.#key, this.#onInputFun);
+            throw Error("bindToInput, has .#onInputFun");
         }
         this.#input = inp;
         this.#setInputValue();
@@ -227,7 +231,8 @@ class LocalSetting {
      * @param {{ (val: any): any; (val: any): any; (val: any): void; (val: any): void; (val: any): any; (val: any): any; (val: any): any; (val: any): any; (val: any): any; }} fun
      */
     set onInputFun(fun) {
-        console.warn("%conInputFun", "background:red;", this.#key, fun);
+        console.error("%conInputFun", "background:red;", this.#key, fun);
+        throw Error("conInputFun");
         if ("function" != typeof fun) throw Error(`fun is not function: ${typeof fun}`);
         if (1 != fun.length) throw Error(`fun should take one parameter: ${fun.length}`);
         this.#onInputFun = debounce(fun, 1000);
@@ -242,47 +247,40 @@ class settingNetwG extends LocalSetting {
 
 
 const settingLinkW = new settingNetwG("linkW", 0.5);
-let linkW = settingLinkW.value;
-settingLinkW.onInputFun = (val) => linkW = val;
+// let linkW = settingLinkW.value;
+// settingLinkW.onInputFun = (val) => linkW = val;
 
 const settingLinkWHi = new settingNetwG("linkWHi", 0.5);
-let linkWHi = settingLinkWHi.value;
-settingLinkWHi.onInputFun = (val) => linkWHi = val;
+// let linkWHi = settingLinkWHi.value;
+// settingLinkWHi.onInputFun = (val) => linkWHi = val;
 
 const settingLinkOp = new settingNetwG("linkOp", 1);
-let linkOp = settingLinkOp.value;
-settingLinkOp.onInputFun = (val) => {
-    console.log("linkOp = val", val);
-    linkOp = val;
-};
+// let linkOp = settingLinkOp.value;
+// settingLinkOp.onInputFun = (val) => { linkOp = val; };
 
 const settingLinkOpHi = new settingNetwG("linkOpHi", 1);
-let linkOpHi = settingLinkOp.value;
-settingLinkOpHi.onInputFun = (val) => {
-    // mkMDCsnackbar(msg, msTimeout, buttons)
-    modMdc.mkMDCsnackbar(`linkOpHi=${val}`);
-    linkOpHi = val;
-}
+// let linkOpHi = settingLinkOp.value;
+// settingLinkOpHi.onInputFun = (val) => { linkOpHi = val; }
 
 
 
 const settingLinkColor = new settingNetwG("linkColor", "#ffff00");
-let linkColor = settingLinkColor.value;
-settingLinkColor.onInputFun = (val) => linkColor = val;
+// let linkColor = settingLinkColor.value;
+// settingLinkColor.onInputFun = (val) => linkColor = val;
 
 const settingLinkColorHi = new settingNetwG("linkColorHi", "#ff0000");
-let linkColorHi = settingLinkColorHi.value;
-settingLinkColorHi.onInputFun = (val) => linkColorHi = val;
+// let linkColorHi = settingLinkColorHi.value;
+// settingLinkColorHi.onInputFun = (val) => linkColorHi = val;
 
 
 
 const settingHiHover = new settingNetwG("hi-hover", false);
-let boolHiHover = settingHiHover.value;
-settingHiHover.onInputFun = (val) => boolHiHover = val;
+// let boolHiHover = settingHiHover.value;
+// settingHiHover.onInputFun = (val) => boolHiHover = val;
 
 const settingHiDrag = new settingNetwG("hi-drag", true);
-let boolHiDrag = settingHiDrag.value;
-settingHiDrag.onInputFun = (val) => boolHiDrag = val;
+// let boolHiDrag = settingHiDrag.value;
+// settingHiDrag.onInputFun = (val) => boolHiDrag = val;
 
 const settingNumNodes = new settingNetwG("numNodes", 5);
 
@@ -1667,19 +1665,19 @@ async function addDialogGraphButtons() {
 
 
 function mkDivLinksSettings() {
-    const inpLinkW = mkElt("input", { id: "linkW", type: "number", min: "1", max: "5", value: linkW });
+    const inpLinkW = mkElt("input", { id: "linkW", type: "number", min: "1", max: "5" });
     settingLinkW.bindToInput(inpLinkW);
-    const inpLinkWHi = mkElt("input", { id: "linkWHi", type: "number", min: "1", max: "5", value: linkWHi });
+    const inpLinkWHi = mkElt("input", { id: "linkWHi", type: "number", min: "1", max: "5" });
     settingLinkWHi.bindToInput(inpLinkWHi);
 
-    const inpLinkOp = mkElt("input", { id: "linkOp", type: "range", value: linkOp, step: "0.1", min: "0", max: "1" });
+    const inpLinkOp = mkElt("input", { id: "linkOp", type: "range", step: "0.1", min: "0", max: "1" });
     settingLinkOp.bindToInput(inpLinkOp);
-    const inpLinkOpHi = mkElt("input", { id: "linkOpHi", type: "range", value: linkOpHi, step: "0.1", min: "0", max: "1" });
+    const inpLinkOpHi = mkElt("input", { id: "linkOpHi", type: "range", step: "0.1", min: "0", max: "1" });
     settingLinkOpHi.bindToInput(inpLinkOpHi);
 
-    const inpLinkColor = mkElt("input", { id: "linkColor", type: "color", value: linkColor });
+    const inpLinkColor = mkElt("input", { id: "linkColor", type: "color" });
     settingLinkColor.bindToInput(inpLinkColor);
-    const inpLinkColorHi = mkElt("input", { id: "linkColorHi", type: "color", value: linkColorHi });
+    const inpLinkColorHi = mkElt("input", { id: "linkColorHi", type: "color" });
     settingLinkColorHi.bindToInput(inpLinkColorHi);
 
     const inpTextH = mkElt("input", { id: "textH", type: "number", min: "3", max: "20", value: textH });
@@ -1815,9 +1813,12 @@ async function setupGraphDisplayer(opt) {
         graph.camera().aspect = newWidth / newHeight;
         graph.camera().updateProjectionMatrix();
     }
-    funGraph.linkColor(linkColor);
-    funGraph.linkWidth(linkW);
-    funGraph.linkOpacity(linkOp);
+    // funGraph.linkColor(linkColor);
+    funGraph.linkColor(settingLinkColor.getCachedValue());
+    // funGraph.linkWidth(linkW);
+    funGraph.linkWidth(settingLinkW.getCachedValue());
+    // funGraph.linkOpacity(linkOp);
+    funGraph.linkOpacity(settingLinkOp.getCachedValue());
     return funGraph(elt3dGraph);
 }
 
@@ -2246,11 +2247,14 @@ async function addNodeLinkHighlighter() {
             if (hiTag) return highlightTagColor;
 
             let hi = setHighlightLinks.has(link);
-            // link.arrTags.forEach(t => { hi = hi || setHighlightTags.has(t); });
             if (hi) {
+                const linkOpHi = settingLinkOpHi.getCachedValue();
+                const linkColorHi = settingLinkColorHi.getCachedValue();
                 const hexOpacityHi = Math.round(linkOpHi * 255).toString(16);
                 return linkColorHi + hexOpacityHi;
             } else {
+                const linkOp = settingLinkOp.getCachedValue();
+                const linkColor = settingLinkColor.getCachedValue();
                 const hexOpacity = Math.round(linkOp * 255).toString(16);
                 return linkColor + hexOpacity;
             }
@@ -2293,11 +2297,13 @@ async function addNodeLinkHighlighter() {
             } else return false;
         })
         .onNodeHover(node => {
-            if (!boolHiHover) return;
+            // if (!boolHiHover) return;
+            if (!settingHiHover.getCachedValue()) return;
             hiliteNode(node);
         })
         .onNodeDrag(node => {
-            if (!boolHiDrag) return;
+            // if (!boolHiDrag) return;
+            if (!settingHiDrag.getCachedValue()) return;
             hiliteNode(node);
         })
 }
