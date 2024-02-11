@@ -400,22 +400,47 @@ async function showSavedViews(strSaved) {
     }
     strCurrentSavedView = strSaved;
     const arrSaved = JSON.parse(strSaved);
+    const divSaved = mkElt("div");
+    divSaved.style = `
+        display: flex;
+        gap: 10px;
+        flex-direction: column;
+    `;
     const body = mkElt("div", undefined, [
         mkElt("h2", undefined, "Saved views"),
+        divSaved,
     ]);
     arrSaved.forEach(entrySaved => {
         const localCreationTime = getLocalISOtime(entrySaved.creationTime);
         console.log({ entrySaved, localCreationTime });
         const btnLoad = modMdc.mkMDCbutton("Load", "raised");
+        const btnEdit = modMdc.mkMDCiconButton("edit", "Edit");
+        const btnDelete = modMdc.mkMDCiconButton("delete_forever", "Delete");
         const title = entrySaved.title;
         const desc = entrySaved.desc;
+        const divDesc = desc.length == 0 ? ""
+            :
+            mkElt("div", undefined, [
+                mkElt("p", undefined, mkElt("b", undefined, "Desc: ")),
+                mkElt("pre", undefined, desc),
+            ]);
+        const divBtns = mkElt("div", undefined, [btnLoad, btnEdit, btnDelete]);
+        divBtns.style = `
+            display: flex;
+            gap: 10px;
+        `;
         const eltSaved = mkElt("div", undefined, [
             mkElt("div", undefined, [mkElt("b", undefined, "Title: "), title]),
             mkElt("div", undefined, ["(Created: ", localCreationTime, ")"]),
-            mkElt("p", undefined, mkElt("b", undefined, "Desc: ")),
-            mkElt("pre", undefined, desc),
-            mkElt("div", undefined, [btnLoad]),
+            divDesc,
+            divBtns,
         ]);
+        eltSaved.classList.add("mdc-card");
+        eltSaved.style = `
+            padding: 10px;
+            background-color: rgba(0, 191, 255, 0.2);
+        `;
+
         btnLoad.addEventListener("click", evt => {
             eltSaved.style.backgroundColor = "yellow";
             eltSaved.style.backgroundColor = "yellow";
@@ -431,7 +456,13 @@ async function showSavedViews(strSaved) {
                 loadView(entrySaved);
             }, 1000);
         });
-        body.appendChild(eltSaved);
+        btnEdit.addEventListener("click", evt => {
+            alert("not ready");
+        });
+        btnDelete.addEventListener("click", evt => {
+            alert("not ready");
+        });
+        divSaved.appendChild(eltSaved);
     });
     const dlg = await modMdc.mkMDCdialogAlert(body, "Cancel");
     function closeDialog() { dlg.mdc.close(); }
@@ -1122,7 +1153,7 @@ async function chooseView() {
     if (strJsonSavedView) {
         // const btnLoadSaved = modMdc.mkMDCbutton("Load saved view", "raised");
         // const btnLoadSaved = modMdc.mkMDCbutton("Load saved view");
-        const btnLoadSaved = modMdc.mkMDCbutton("Load saved view", "outlined");
+        const btnLoadSaved = modMdc.mkMDCbutton("Saved views", "outlined");
         btnLoadSaved.addEventListener("click", evt => {
             showSavedViews(strJsonSavedView);
             closeDialog();
@@ -1589,7 +1620,12 @@ async function addDialogGraphButtons() {
                 creationTime,
                 view
             }
-            const objToSave = [objItem];
+
+            let objToSave = [];
+            const strJsonSaved = localStorage.getItem(keySavedViews);
+            if (strJsonSaved) { objToSave = JSON.parse(strJsonSaved) }
+            objToSave.unshift(objItem);
+
             const strToSave = JSON.stringify(objToSave);
             strCurrentSavedView = strToSave;
             console.log({ strCurrentSavedView });
@@ -1603,11 +1639,12 @@ async function addDialogGraphButtons() {
         liSaveThisView.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             mkViewDialog(undefined);
         }));
-        const liLoadView = modMdc.mkMDCmenuItem("Load saved view");
-        liLoadView.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+        const liSavedViews = modMdc.mkMDCmenuItem("Saved views");
+        liSavedViews.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             const strJsonSaved = localStorage.getItem(keySavedViews);
             await showSavedViews(strJsonSaved);
         }));
+        /*
         const liEditView = modMdc.mkMDCmenuItem("Edit current view");
         liEditView.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             if (strCurrentSavedView) {
@@ -1616,11 +1653,12 @@ async function addDialogGraphButtons() {
                 modMdc.mkMDCdialogAlert("The current view has not been saved.");
             }
         }));
+        */
 
         let arrEntries = [
             liSaveThisView,
-            liLoadView,
-            liEditView,
+            liSavedViews,
+            // liEditView,
         ];
         const ulMenu = modMdc.mkMDCmenuUl(arrEntries);
         const divMenuSurface = modMdc.mkMDCmenuDiv(ulMenu);
