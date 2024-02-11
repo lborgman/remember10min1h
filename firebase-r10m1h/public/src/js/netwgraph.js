@@ -438,15 +438,16 @@ async function showSavedViews(strSaved) {
     async function loadView(entrySaved) {
         clearEltGraph();
         const view = entrySaved.view;
-        setImagesMode(view.imagesMode);
-        setCubeMode(view.showCube);
-        // avoid .tags in gDataUsed:
+        // setImagesMode(view.imagesMode);
+        // setCubeMode(view.showCube);
         strGDataUsed = JSON.stringify(view.gDataUsed);
         const gDataUsed = JSON.parse(strGDataUsed);
         console.log("loadSavedView", { gDataUsed, strCurrentSavedView });
         await loadGraphFromJson(gDataUsed);
         const eltGraph = document.getElementById("the3d-graph-container");
         await wait4mutations(eltGraph, 200);
+        setImagesMode(view.imagesMode);
+        setCubeMode(view.showCube);
         const obj = graph.camera();
         obj.matrix.copy(view.oldMatrix);
         obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
