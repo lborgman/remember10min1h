@@ -382,10 +382,13 @@ async function loadGraphFromJson(gDataParam) {
     modMdc.mkMDCsnackbar("Not ready");
     pendingRedrawGraph = false;
     graph?._destructor();
+    clearEltGraph();
+    await testMyOwn(gData);
+}
+function clearEltGraph() {
     const eltGraph = document.getElementById("the3d-graph-container");
     eltGraph.style.background = "black";
     eltGraph.textContent = "";
-    await testMyOwn(gData);
 }
 
 let strCurrentSavedView;
@@ -414,15 +417,29 @@ async function showSavedViews(strSaved) {
             mkElt("div", undefined, [btnLoad]),
         ]);
         btnLoad.addEventListener("click", evt => {
-            loadView(entrySaved);
-            setTimeout(closeDialog, 100);
+            eltSaved.style.backgroundColor = "yellow";
+            eltSaved.style.backgroundColor = "yellow";
+            eltSaved.style.outline = "8px solid yellow";
+
+            const eltDialog = eltSaved.closest(".mdc-dialog");
+            eltDialog.style.transition = "opacity 1s";
+            eltDialog.style.opacity = 0;
+
+            clearEltGraph();
+            setTimeout(() => {
+                closeDialog();
+                loadView(entrySaved);
+            }, 1000);
         });
         body.appendChild(eltSaved);
     });
     const dlg = await modMdc.mkMDCdialogAlert(body, "Cancel");
     function closeDialog() { dlg.mdc.close(); }
     async function loadView(entrySaved) {
+        clearEltGraph();
         const view = entrySaved.view;
+        setImagesMode(view.imagesMode);
+        setCubeMode(view.showCube);
         // avoid .tags in gDataUsed:
         strGDataUsed = JSON.stringify(view.gDataUsed);
         const gDataUsed = JSON.parse(strGDataUsed);
@@ -430,8 +447,6 @@ async function showSavedViews(strSaved) {
         await loadGraphFromJson(gDataUsed);
         const eltGraph = document.getElementById("the3d-graph-container");
         await wait4mutations(eltGraph, 200);
-        setImagesMode(view.imagesMode);
-        setCubeMode(view.showCube);
         const obj = graph.camera();
         obj.matrix.copy(view.oldMatrix);
         obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
@@ -540,8 +555,9 @@ function buildDivTags() {
 function redrawGraph() {
     pendingRedrawGraph = false;
     graph._destructor();
-    const eltGraph = document.getElementById("the3d-graph-container");
-    eltGraph.textContent = "";
+    // const eltGraph = document.getElementById("the3d-graph-container");
+    // eltGraph.textContent = "";
+    clearEltGraph();
     computeNodesAndLinks();
     testMyOwn(gData);
 }
@@ -1142,6 +1158,7 @@ async function chooseView() {
         await getNodesAndLinks(sourceName);
         // fun(gData);
         if (gData) {
+            clearEltGraph();
             testMyOwn(gData);
             closeDialog();
         }
