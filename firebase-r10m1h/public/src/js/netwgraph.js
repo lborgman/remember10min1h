@@ -383,37 +383,59 @@ async function loadGraphFromJson(gDataParam) {
     pendingRedrawGraph = false;
     graph?._destructor();
     const eltGraph = document.getElementById("the3d-graph-container");
+    eltGraph.style.background = "black";
     eltGraph.textContent = "";
     await testMyOwn(gData);
 }
 
 let strCurrentSavedView;
-async function loadSavedView(strSaved) {
+async function showSavedViews(strSaved) {
+    if (strSaved == null) {
+        const body = mkElt("There are no saved views");
+        modMdc.mkMDCdialogAlert(body);
+        return;
+    }
     strCurrentSavedView = strSaved;
-    const jsonSaved = JSON.parse(strSaved);
-    const localCreationTime = getLocalISOtime(jsonSaved.creationTime);
-    console.log({ strSaved, jsonSaved, localCreationTime });
+    const arrSaved = JSON.parse(strSaved);
     const body = mkElt("div", undefined, [
-        mkElt("h2", undefined, "Loading saved entry"),
-        mkElt("div", undefined, [mkElt("b", undefined, "Title: "), jsonSaved.title]),
-        mkElt("div", undefined, ["(Created: ", localCreationTime, ")"]),
-        mkElt("p", undefined, mkElt("b", undefined, "Desc: ")),
-        mkElt("pre", undefined, jsonSaved.desc)
+        mkElt("h2", undefined, "Saved views"),
     ]);
-    modMdc.mkMDCdialogAlert(body);
-    const view = jsonSaved.view;
-    // avoid .tags in gDataUsed:
-    strGDataUsed = JSON.stringify(view.gDataUsed);
-    const gDataUsed = JSON.parse(strGDataUsed);
-    console.log("loadSavedView", { gDataUsed, strCurrentSavedView });
-    await loadGraphFromJson(gDataUsed);
-    const eltGraph = document.getElementById("the3d-graph-container");
-    await wait4mutations(eltGraph, 200);
-    setImagesMode(view.imagesMode);
-    setCubeMode(view.showCube);
-    const obj = graph.camera();
-    obj.matrix.copy(view.oldMatrix);
-    obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
+    arrSaved.forEach(entrySaved => {
+        const localCreationTime = getLocalISOtime(entrySaved.creationTime);
+        console.log({ entrySaved, localCreationTime });
+        const btnLoad = modMdc.mkMDCbutton("Load", "raised");
+        const title = entrySaved.title;
+        const desc = entrySaved.desc;
+        const eltSaved = mkElt("div", undefined, [
+            mkElt("div", undefined, [mkElt("b", undefined, "Title: "), title]),
+            mkElt("div", undefined, ["(Created: ", localCreationTime, ")"]),
+            mkElt("p", undefined, mkElt("b", undefined, "Desc: ")),
+            mkElt("pre", undefined, desc),
+            mkElt("div", undefined, [btnLoad]),
+        ]);
+        btnLoad.addEventListener("click", evt => {
+            loadView(entrySaved);
+            setTimeout(closeDialog, 100);
+        });
+        body.appendChild(eltSaved);
+    });
+    const dlg = await modMdc.mkMDCdialogAlert(body, "Cancel");
+    function closeDialog() { dlg.mdc.close(); }
+    async function loadView(entrySaved) {
+        const view = entrySaved.view;
+        // avoid .tags in gDataUsed:
+        strGDataUsed = JSON.stringify(view.gDataUsed);
+        const gDataUsed = JSON.parse(strGDataUsed);
+        console.log("loadSavedView", { gDataUsed, strCurrentSavedView });
+        await loadGraphFromJson(gDataUsed);
+        const eltGraph = document.getElementById("the3d-graph-container");
+        await wait4mutations(eltGraph, 200);
+        setImagesMode(view.imagesMode);
+        setCubeMode(view.showCube);
+        const obj = graph.camera();
+        obj.matrix.copy(view.oldMatrix);
+        obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
+    }
 }
 
 let arrMatchAll;
@@ -1085,7 +1107,7 @@ async function chooseView() {
         // const btnLoadSaved = modMdc.mkMDCbutton("Load saved view");
         const btnLoadSaved = modMdc.mkMDCbutton("Load saved view", "outlined");
         btnLoadSaved.addEventListener("click", evt => {
-            loadSavedView(strJsonSavedView);
+            showSavedViews(strJsonSavedView);
             closeDialog();
         });
         divLoadView = mkElt("div", undefined, [
@@ -1543,12 +1565,13 @@ async function addDialogGraphButtons() {
             const newImagesMode = eltImages == "" ? imagesMode : chkImages.checked;
             const gDataUsed = JSON.parse(strGDataUsed)
             const view = { gDataUsed, oldMatrix, imagesMode: newImagesMode, showCube };
-            const objToSave = {
+            const objItem = {
                 title: inpTitle.value,
                 desc: taDesc.value,
                 creationTime,
                 view
             }
+            const objToSave = [objItem];
             const strToSave = JSON.stringify(objToSave);
             strCurrentSavedView = strToSave;
             console.log({ strCurrentSavedView });
@@ -1565,7 +1588,7 @@ async function addDialogGraphButtons() {
         const liLoadView = modMdc.mkMDCmenuItem("Load saved view");
         liLoadView.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             const strJsonSaved = localStorage.getItem(keySavedViews);
-            await loadSavedView(strJsonSaved);
+            await showSavedViews(strJsonSaved);
         }));
         const liEditView = modMdc.mkMDCmenuItem("Edit current view");
         liEditView.addEventListener("click", errorHandlerAsyncEvent(async evt => {
@@ -1718,19 +1741,14 @@ function mkDivLinksSettings() {
     const btnReset = modMdc.mkMDCbutton("Reset", "raised");
     btnReset.addEventListener("click", errorHandlerAsyncEvent(async evt => {
         const ans = await modMdc.mkMDCdialogConfirm("Reset these settings to default values?", "Reset");
-        console.log({ ans });
         if (ans) {
             const our = LocalSetting.ourSettings;
-            console.log({ our });
+            // console.log({ our });
             Object.entries(our).forEach(e => {
                 const [k, v] = e;
-                // console.log(k, v);
                 if (k.startsWith("netwg-")) v.reset();
             });
-            // setTimeout(() => triggerUpdateLinksView(), 500);
             debounceTriggerLinks();
-            // alert("Cleared, but maybe not quite ready yet...?")
-            // modMdc.mkMDCdialogAlert("Cleared, but maybe not quite ready yet...?")
         }
     }));
     const divReset = mkElt("div", undefined, [
