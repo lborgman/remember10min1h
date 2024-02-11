@@ -394,7 +394,7 @@ function clearEltGraph() {
 let strCurrentSavedView;
 async function showSavedViews(strSaved) {
     if (strSaved == null) {
-        const body = mkElt("There are no saved views");
+        const body = mkElt("span", undefined, "There are no saved views");
         modMdc.mkMDCdialogAlert(body);
         return;
     }
@@ -411,7 +411,8 @@ async function showSavedViews(strSaved) {
         divSaved,
     ]);
     arrSaved.forEach(entrySaved => {
-        const localCreationTime = getLocalISOtime(entrySaved.creationTime);
+        const creationTime = entrySaved.creationTime;
+        const localCreationTime = getLocalISOtime(creationTime);
         console.log({ entrySaved, localCreationTime });
         const btnLoad = modMdc.mkMDCbutton("Load", "raised");
         const btnEdit = modMdc.mkMDCiconButton("edit", "Edit");
@@ -459,9 +460,49 @@ async function showSavedViews(strSaved) {
         btnEdit.addEventListener("click", evt => {
             alert("not ready");
         });
-        btnDelete.addEventListener("click", evt => {
-            alert("not ready");
-        });
+        btnDelete.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            const spanQ = mkElt("span", undefined, [
+                "Delete saved view ",
+                mkElt("b", undefined, title),
+                "?"
+            ]);
+            const ans = await modMdc.mkMDCdialogConfirm(spanQ, "yes", "no");
+            if (ans !== true) return;
+            const strJsonSavedViews = localStorage.getItem(keySavedViews);
+            const arrSaved = JSON.parse(strJsonSavedViews);
+            let posSaved;
+            for (let i = 0, len = arrSaved.length; i < len; i++) {
+                const svd = arrSaved[i];
+                if (svd.creationTime == creationTime) {
+                    posSaved = i;
+                    break;
+                }
+            }
+            console.log({ posSaved });
+            if (posSaved == undefined) throw Error("Could not find saved item");
+
+            arrSaved.splice(posSaved, 1);
+            if (arrSaved.length == 0) {
+                localStorage.removeItem(keySavedViews);
+            } else {
+                const strToSave = JSON.stringify(arrSaved);
+                localStorage.setItem(keySavedViews, strToSave);
+            }
+
+            eltSaved.style.backgroundColor = "yellow";
+            const bcr = eltSaved.getBoundingClientRect();
+            eltSaved.style.height = `${bcr.height}px`;
+            eltSaved.style.marginTop = "0px";
+            eltSaved.style.marginBottom = "0px";
+            eltSaved.style.transition = "transform 1s, height 1s, margin-top 1s, margin-bottom 1s";
+            eltSaved.style.transform = "scale(0.1)";
+            eltSaved.style.height = "0px";
+            eltSaved.style.marginTop = "-10px";
+            eltSaved.style.marginBottom = "-10px";
+            setTimeout(() => eltSaved.remove(), 1000);
+
+            // alert(`not ready, pos: ${posSaved}`);
+        }));
         divSaved.appendChild(eltSaved);
     });
     const dlg = await modMdc.mkMDCdialogAlert(body, "Cancel");
