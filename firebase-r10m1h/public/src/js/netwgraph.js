@@ -529,15 +529,26 @@ async function showSavedViews(strSaved, fingerPrint) {
         const btnLoad = modMdc.mkMDCbutton("Load", "raised");
         const btnEdit = modMdc.mkMDCiconButton("edit", "Edit");
         const btnDelete = modMdc.mkMDCiconButton("delete_forever", "Delete");
+        // const btnBottom = modMdc.mkMDCiconButton("bottom_panel_open", "More");
+        const btnMore = modMdc.mkMDCiconButton("expand_circle_down", "More");
+        const btnLess = modMdc.mkMDCiconButton("expand_circle_up", "Less");
         const title = entrySaved.title;
         const desc = entrySaved.desc;
+        const divYourNotes = mkElt("pre", undefined, desc);
+        divYourNotes.style = `
+            white-space: pre-wrap;
+            font-family: Roboto, sans-serif;
+            margin: 0;
+        `;
         const divDesc = desc.length == 0 ? ""
             :
             mkElt("div", undefined, [
-                mkElt("p", undefined, mkElt("b", undefined, "Desc: ")),
-                mkElt("pre", undefined, desc),
+                mkElt("div", undefined, mkElt("b", undefined, "Your notes: ")),
+        divYourNotes,
             ]);
-        const divBtns = mkElt("div", undefined, [btnLoad, btnEdit, btnDelete]);
+        const spanBtnsWhenMore = mkElt("span", undefined, [btnLess, btnEdit, btnDelete]);
+        spanBtnsWhenMore.classList.add("when-more");
+        const divBtns = mkElt("div", undefined, [btnLoad, btnMore, spanBtnsWhenMore,]);
         divBtns.style = `
             display: flex;
             gap: 10px;
@@ -546,16 +557,25 @@ async function showSavedViews(strSaved, fingerPrint) {
         if (!fingerPrint) {
             divFingerPrint = mkElt("div", undefined, entrySaved.fingerPrint);
         }
-        const spanTitle = mkElt("span", undefined, title);
+        const divTitle = mkElt("div", undefined, title);
+        divTitle.style = `
+            font-weight: bold;
+            margin-bottom: 10px;
+        `;
+        const divWhenMore = mkElt("div", undefined, [
+            mkElt("div", undefined, ["Created: ", localCreationTime]),
+            divDesc,
+        ]);
+        divWhenMore.classList.add("when-more");
         const eltSaved = mkElt("div", undefined, [
             divFingerPrint,
-            mkElt("div", undefined, [mkElt("b", undefined, "Title: "), spanTitle]),
-            mkElt("div", undefined, ["(Created: ", localCreationTime, ")"]),
-            divDesc,
+            divTitle,
             divBtns,
+            divWhenMore,
         ]);
         eltSaved.classList.add("mdc-card");
         eltSaved.style = `
+            min-width: 300px;
             padding: 10px;
             background-color: rgba(0, 191, 255, 0.2);
         `;
@@ -575,12 +595,12 @@ async function showSavedViews(strSaved, fingerPrint) {
                 loadView(entrySaved);
             }, 1000);
         });
-        btnEdit.addEventListener("click",errorHandlerAsyncEvent( async evt => {
-            alert("not ready");
+        btnEdit.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             const obj = await mkViewDialog(JSON.stringify(entrySaved));
             if (!obj) return;
-            spanTitle.textContent = obj.title;
-            eltSaved.style.outline = "4px dotted yellow";
+            divTitle.textContent = obj.title;
+            divYourNotes.textContent = obj.desc;
+            eltSaved.style.outline = "8px dotted yellow";
             setTimeout(() => eltSaved.style.outline = null, 2 * 1000);
         }));
         btnDelete.addEventListener("click", errorHandlerAsyncEvent(async evt => {
@@ -623,8 +643,14 @@ async function showSavedViews(strSaved, fingerPrint) {
             eltSaved.style.marginTop = "-10px";
             eltSaved.style.marginBottom = "-10px";
             setTimeout(() => eltSaved.remove(), 1000);
-
-            // alert(`not ready, pos: ${posSaved}`);
+        }));
+        btnMore.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            btnMore.style.display = "none";
+            eltSaved.classList.add("show-more");
+        }));
+        btnLess.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            btnMore.style.display = null;
+            eltSaved.classList.remove("show-more");
         }));
         divSaved.appendChild(eltSaved);
     });
