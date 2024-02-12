@@ -391,6 +391,112 @@ function clearEltGraph() {
     eltGraph.textContent = "";
 }
 
+async function mkViewDialog(strEditedView) {
+    // FIX-ME: par type??
+    const editedView = strEditedView ? JSON.parse(strEditedView) : undefined;
+    let title;
+    let desc = "";
+    let creationTime;
+    let dialogTitle;
+    let chkImages; let eltImages = "";
+    let chkShowCube; let eltShowCube = "";
+    if (editedView) {
+        creationTime = editedView.creationTime;
+        title = editedView.title;
+        desc = editedView.desc;
+        dialogTitle = "Edit saved view (sample)";
+        if (imagesMode != editedView.view.imagesMode) {
+            chkImages = modMdc.mkMDCcheckboxInput();
+            chkImages.checked = imagesMode;
+            const lblImages = "Images mode";
+            eltImages = await modMdc.mkMDCcheckboxElt(chkImages, lblImages);
+        }
+        if (showCube != editedView.view.showCube) {
+            chkShowCube = modMdc.mkMDCcheckboxInput();
+            chkShowCube.checked = showCube;
+            const lblShowCube = "ShowCube";
+            eltShowCube = await modMdc.mkMDCcheckboxElt(chkShowCube, lblShowCube);
+        }
+
+    } else {
+        creationTime = (new Date()).toISOString();
+        title = getLocalISOtime(creationTime).slice(2, -3);
+        dialogTitle = "Save this view";
+    }
+    const inpTitle = modMdc.mkMDCtextFieldInput(undefined, "text")
+    const tfTitle = modMdc.mkMDCtextField("Name", inpTitle, title);
+
+    const taDesc = modMdc.mkMDCtextFieldTextarea(undefined, 6, 6);
+    const tafDesc = modMdc.mkMDCtextareaField("Your notes", taDesc);
+    taDesc.value = desc;
+
+
+
+    const divInputs = mkElt("div", undefined, [
+        tfTitle, tafDesc,
+        eltImages, eltShowCube,
+    ]);
+    divInputs.style = `
+                    display: flex;
+                    flex-direction: column;
+                    gap: 20px;
+                `;
+    const body = mkElt("div", undefined, [
+        mkElt("p", { style: "background:red;" }, "Not ready, but can be used"),
+        mkElt("h2", undefined, dialogTitle),
+        divInputs,
+    ]);
+    const answer = await modMdc.mkMDCdialogConfirm(body);
+    if (!answer) { modMdc.mkMDCsnackbar("Not saved"); return; }
+    const objCamera = graph?.camera();
+    const oldMatrix = objCamera?.matrix.clone();
+    console.log({ gData, strGDataUsed, oldMatrix, creationTime });
+    if (!strGDataUsed) debugger;
+    const newImagesMode = eltImages == "" ? imagesMode : chkImages.checked;
+    title = inpTitle.value;
+    desc = taDesc.value;
+
+    let objToSave = [];
+    const strJsonSaved = localStorage.getItem(keySavedViews);
+    if (strJsonSaved) { objToSave = JSON.parse(strJsonSaved) }
+
+    // delete, btnDelete, fingerPrint
+    let retObjEdited;
+    if (!editedView) {
+        const gDataUsed = JSON.parse(strGDataUsed);
+        const view = { gDataUsed, oldMatrix, imagesMode: newImagesMode, showCube };
+        const fingerPrint = gData.fingerPrint ? gData.fingerPrint : "";
+        const objItem = { title, desc, fingerPrint, creationTime, view }
+        objToSave.unshift(objItem);
+    } else {
+        // const strJsonSavedViews = localStorage.getItem(keySavedViews);
+        // const arrSaved = JSON.parse(strJsonSavedViews);
+        const arrSaved = objToSave;
+        let objEdited;
+        for (let i = 0, len = arrSaved.length; i < len; i++) {
+            const svd = arrSaved[i];
+            if (svd.creationTime == creationTime) {
+                objEdited = svd;
+                break;
+            }
+        }
+        objEdited.title = title;
+        objEdited.desc = desc;
+        retObjEdited = objEdited;
+        // FIX-ME: view etc
+    }
+
+    const strToSave = JSON.stringify(objToSave);
+    strCurrentSavedView = strToSave; // FIX-ME:
+    console.log({ strCurrentSavedView });
+    localStorage.setItem(keySavedViews, strToSave);
+    const lenSaved = strToSave.length;
+    console.log({ strToSaved: strToSave });
+    modMdc.mkMDCsnackbar(`Saved (${lenSaved} bytes)`);
+
+    return retObjEdited;
+}
+
 let strCurrentSavedView;
 async function showSavedViews(strSaved, fingerPrint) {
     if (strSaved == null) {
@@ -440,9 +546,10 @@ async function showSavedViews(strSaved, fingerPrint) {
         if (!fingerPrint) {
             divFingerPrint = mkElt("div", undefined, entrySaved.fingerPrint);
         }
+        const spanTitle = mkElt("span", undefined, title);
         const eltSaved = mkElt("div", undefined, [
             divFingerPrint,
-            mkElt("div", undefined, [mkElt("b", undefined, "Title: "), title]),
+            mkElt("div", undefined, [mkElt("b", undefined, "Title: "), spanTitle]),
             mkElt("div", undefined, ["(Created: ", localCreationTime, ")"]),
             divDesc,
             divBtns,
@@ -468,9 +575,14 @@ async function showSavedViews(strSaved, fingerPrint) {
                 loadView(entrySaved);
             }, 1000);
         });
-        btnEdit.addEventListener("click", evt => {
+        btnEdit.addEventListener("click",errorHandlerAsyncEvent( async evt => {
             alert("not ready");
-        });
+            const obj = await mkViewDialog(JSON.stringify(entrySaved));
+            if (!obj) return;
+            spanTitle.textContent = obj.title;
+            eltSaved.style.outline = "4px dotted yellow";
+            setTimeout(() => eltSaved.style.outline = null, 2 * 1000);
+        }));
         btnDelete.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             const spanQ = mkElt("span", undefined, [
                 "Delete saved view ",
@@ -1604,91 +1716,6 @@ async function addDialogGraphButtons() {
     addMenuRight();
     async function addMenuRight() {
 
-        async function mkViewDialog(strEditedView) {
-            const editedView = strEditedView ? JSON.parse(strEditedView) : undefined;
-            let title;
-            let desc = "";
-            let creationTime;
-            let dialogTitle;
-            let chkImages; let eltImages = "";
-            let chkShowCube; let eltShowCube = "";
-            if (editedView) {
-                creationTime = editedView.creationTime;
-                title = editedView.title;
-                desc = editedView.desc;
-                dialogTitle = "Edit saved view";
-                if (imagesMode != editedView.view.imagesMode) {
-                    chkImages = modMdc.mkMDCcheckboxInput();
-                    chkImages.checked = imagesMode;
-                    const lblImages = "Images mode";
-                    eltImages = await modMdc.mkMDCcheckboxElt(chkImages, lblImages);
-                }
-                if (showCube != editedView.view.showCube) {
-                    chkShowCube = modMdc.mkMDCcheckboxInput();
-                    chkShowCube.checked = showCube;
-                    const lblShowCube = "ShowCube";
-                    eltShowCube = await modMdc.mkMDCcheckboxElt(chkShowCube, lblShowCube);
-                }
-
-            } else {
-                creationTime = (new Date()).toISOString();
-                title = getLocalISOtime(creationTime).slice(2, -3);
-                dialogTitle = "Save this view";
-            }
-            const inpTitle = modMdc.mkMDCtextFieldInput(undefined, "text")
-            const tfTitle = modMdc.mkMDCtextField("Name", inpTitle, title);
-
-            const taDesc = modMdc.mkMDCtextFieldTextarea(undefined, 6, 6);
-            const tafDesc = modMdc.mkMDCtextareaField("Your notes", taDesc);
-            taDesc.value = desc;
-
-
-
-            const divInputs = mkElt("div", undefined, [
-                tfTitle, tafDesc,
-                eltImages, eltShowCube,
-            ]);
-            divInputs.style = `
-                    display: flex;
-                    flex-direction: column;
-                    gap: 20px;
-                `;
-            const body = mkElt("div", undefined, [
-                mkElt("p", { style: "background:red;" }, "Not ready, but can be used"),
-                mkElt("h2", undefined, dialogTitle),
-                divInputs,
-            ]);
-            const answer = await modMdc.mkMDCdialogConfirm(body);
-            if (!answer) { modMdc.mkMDCsnackbar("Not saved"); return; }
-            const obj = graph.camera();
-            const oldMatrix = obj.matrix.clone();
-            console.log({ gData, strGDataUsed, oldMatrix, creationTime });
-            if (!strGDataUsed) debugger;
-            const newImagesMode = eltImages == "" ? imagesMode : chkImages.checked;
-            const gDataUsed = JSON.parse(strGDataUsed)
-            const view = { gDataUsed, oldMatrix, imagesMode: newImagesMode, showCube };
-            const fingerPrint = gData.fingerPrint ? gData.fingerPrint : "";
-            const objItem = {
-                title: inpTitle.value,
-                desc: taDesc.value,
-                fingerPrint,
-                creationTime,
-                view
-            }
-
-            let objToSave = [];
-            const strJsonSaved = localStorage.getItem(keySavedViews);
-            if (strJsonSaved) { objToSave = JSON.parse(strJsonSaved) }
-            objToSave.unshift(objItem);
-
-            const strToSave = JSON.stringify(objToSave);
-            strCurrentSavedView = strToSave;
-            console.log({ strCurrentSavedView });
-            localStorage.setItem(keySavedViews, strToSave);
-            const lenSaved = strToSave.length;
-            console.log({ strToSaved: strToSave });
-            modMdc.mkMDCsnackbar(`Saved (${lenSaved} bytes)`);
-        }
 
         const liSaveThisView = modMdc.mkMDCmenuItem("Save this view");
         liSaveThisView.addEventListener("click", errorHandlerAsyncEvent(async evt => {
