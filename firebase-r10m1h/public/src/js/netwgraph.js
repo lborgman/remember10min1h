@@ -392,7 +392,7 @@ function clearEltGraph() {
 }
 
 let strCurrentSavedView;
-async function showSavedViews(strSaved) {
+async function showSavedViews(strSaved, fingerPrint) {
     if (strSaved == null) {
         const body = mkElt("span", undefined, "There are no saved views");
         modMdc.mkMDCdialogAlert(body);
@@ -406,11 +406,17 @@ async function showSavedViews(strSaved) {
         gap: 10px;
         flex-direction: column;
     `;
+    let divFingerPrint = "";
+    if (fingerPrint) {
+        divFingerPrint = mkElt("div", undefined, fingerPrint);
+    }
     const body = mkElt("div", undefined, [
         mkElt("h2", undefined, "Saved views"),
+        divFingerPrint,
         divSaved,
     ]);
     arrSaved.forEach(entrySaved => {
+        if (fingerPrint && entrySaved.fingerPrint != fingerPrint) { return; }
         const creationTime = entrySaved.creationTime;
         const localCreationTime = getLocalISOtime(creationTime);
         console.log({ entrySaved, localCreationTime });
@@ -430,7 +436,12 @@ async function showSavedViews(strSaved) {
             display: flex;
             gap: 10px;
         `;
+        let divFingerPrint = "";
+        if (!fingerPrint) {
+            divFingerPrint = mkElt("div", undefined, entrySaved.fingerPrint);
+        }
         const eltSaved = mkElt("div", undefined, [
+            divFingerPrint,
             mkElt("div", undefined, [mkElt("b", undefined, "Title: "), title]),
             mkElt("div", undefined, ["(Created: ", localCreationTime, ")"]),
             divDesc,
@@ -1075,6 +1086,11 @@ function computeNodesAndLinks() {
 
 async function chooseView() {
 
+    const strSearch = searchFor.replaceAll("  ", " ").trim();
+    const strTags = requiredTags.sort().map(t => `#t`).join(",");
+    const fingerPrint = strSearch + ";" + strTags;
+    console.log({ fingerPrint });
+
     function mkViewAlt(txt, fun) {
         const eltRad = mkElt("input", { type: "radio", name: "view-alt" });
         eltRad.altFun = fun;
@@ -1085,12 +1101,6 @@ async function chooseView() {
 
     const divAlts = mkElt("div", undefined, [
         mkViewAlt("My own", testMyOwn),
-        // mkViewAlt("TC", testTC),
-        // mkViewAlt("FH", testFH),
-        // mkViewAlt("Basic", testBasic),
-        // mkViewAlt("Text", testText),
-        // mkViewAlt("Html class", testHtml),
-        // mkViewAlt("Focus", testFocus),
     ]);
     divAlts.querySelector("input").checked = true;
     divAlts.style.display = "none";
@@ -1100,9 +1110,6 @@ async function chooseView() {
         const eltLbl = mkElt("label", undefined, [eltRad, txt]);
         return mkElt("div", undefined, eltLbl);
     }
-    // getFc4iRecs();
-    // const divFc4iNum = mkElt("div", undefined, `${numFc4i} records choosen from fc4i.`);
-    // divAltFc4i.appendChild(divFc4iNum);
 
     const divReqTags = mkElt("div");
     if (requiredTags.length == 0) {
@@ -1113,7 +1120,6 @@ async function chooseView() {
             divReqTags.appendChild(s);
         });
     }
-    // divAltFc4i.appendChild(divReqTags);
 
     const eltSearchFor = searchFor.length == 0 ?
         mkElt("i", undefined, "(no search string)")
@@ -1123,12 +1129,14 @@ async function chooseView() {
         "Searched: ",
         eltSearchFor
     ]);
+
     const divAltFc4i = mkElt("div", { class: "xmdc-card" }, [
-        // mkSourceAlt("fc4i", "fc4i")
-        mkElt("b", undefined, "Flashcard 4 Internet"),
+        mkElt("div", undefined, [
+            `${numFc4i} records found in `,
+            mkElt("b", undefined, "Flashcard 4 Internet"),
+        ]),
         divSearched,
         divReqTags,
-        mkElt("p", undefined, `${numFc4i} records found`),
     ]);
 
 
@@ -1137,37 +1145,56 @@ async function chooseView() {
     settingNumNodes.bindToInput(inpNumNodes);
 
     const tfNumNodes = modMdc.mkMDCtextFieldOutlined(
-        // `Number of nodes (available ${numFc4i})`,
-        `Number of nodes`,
+        `N of nodes`,
         inpNumNodes, settingNumNodes.getCachedValue());
-    const btnShow = modMdc.mkMDCbutton("Show", "raised");
-    btnShow.addEventListener("click", evt => {
-        showGraph();
+    const btnNewSample = modMdc.mkMDCbutton("Make new sample", "raised");
+    btnNewSample.addEventListener("click", evt => {
+        showGraph(fingerPrint);
     });
-    const divInfoNum = mkElt("div", undefined, `
-            If more nodes are available
-            then only this many will be shown.
+    const divInfoNewSample = mkElt("div", undefined, `
+            Select randomly this number of nodes.
         `);
-    const divShow = mkElt("div", undefined, [
+    const divNewSampleInputs = mkElt("div", undefined, [
         tfNumNodes,
-        btnShow
+        btnNewSample
     ]);
-    divShow.style = `
+    divNewSampleInputs.style = `
         display: grid;
         gap: 10px;
-        grid-template-columns: 1fr min-content;
+        grid-template-columns: 1fr max-content;
     `;
-    const divNumNodes = mkElt("div", undefined, [
-        // tfNumNodes,
-        divShow,
-        divInfoNum,
+
+
+    const divNewSample = mkElt("div", undefined, [
+        divNewSampleInputs,
+        divInfoNewSample,
     ]);
-    divNumNodes.style = `
+    divNewSample.style = `
         display: flex;
         flex-direction: column;
         gap: 10px;
         line-height: 1rem;
+        padding: 10px;
     `;
+    divNewSample.classList.add("mdc-card");
+
+    const btnOldSamples = modMdc.mkMDCbutton("Show old", "raised");
+    btnOldSamples.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+        const strJsonSaved = localStorage.getItem(keySavedViews);
+        await showSavedViews(strJsonSaved, fingerPrint);
+    }));
+    const divOldSamples = mkElt("div", undefined, [
+        "Old samples from the same source",
+        btnOldSamples,
+    ]);
+    divOldSamples.style = `
+        display: grid;
+        grid-template-columns: 1fr max-content;
+        gap: 10px;
+        padding: 10px;
+        margin-top: 20px;
+    `;
+    divOldSamples.classList.add("mdc-card");
 
     const divSource = mkElt("div", { class: "xmdc-card" }, [
         mkElt("div", { style: "display:flex; flex-direction:column; gap:15px" }, [
@@ -1175,10 +1202,7 @@ async function chooseView() {
             // mkSourceAlt("random", "Random links, number nodes"),
         ]),
     ]);
-    // divSource.querySelector("input[type=radio]").checked = true;
 
-    // const btnHelp = modMdc.mkMDCiconButton("home", "Help");
-    // mkMDCfab "hub"
     const iconHelp = modMdc.mkMDCicon("help");
     const aIconHelp = mkElt("a", { href: "/about.html#nwg", target: "_blank" }, iconHelp);
     aIconHelp.style.lineHeight = "1rem";
@@ -1189,50 +1213,38 @@ async function chooseView() {
     // fabHelp.style.backgroundColor = "goldenrod";
     fabHelp.style.backgroundColor = "aliceblue";
 
+    /*
     let divLoadView = "";
     const strJsonSavedView = localStorage.getItem(keySavedViews);
     if (strJsonSavedView) {
-        // const btnLoadSaved = modMdc.mkMDCbutton("Load saved view", "raised");
-        // const btnLoadSaved = modMdc.mkMDCbutton("Load saved view");
         const btnLoadSaved = modMdc.mkMDCbutton("Saved views", "outlined");
         btnLoadSaved.addEventListener("click", evt => {
-            showSavedViews(strJsonSavedView);
+            // showSavedViews(strJsonSavedView);
             closeDialog();
         });
         divLoadView = mkElt("div", undefined, [
             btnLoadSaved,
         ]);
     }
+    */
 
     const body = mkElt("div", undefined, [
         mkElt("h2", undefined, ["Network graph", fabHelp]),
-        // divAlts,
-        divLoadView,
+        // divLoadView,
         mkElt("h3", undefined, "Source"),
         divSource,
-        // mkElt("hr"),
-        // mkElt("label", undefined, ["Num nodes to show: ", inpNumNodes]),
         mkElt("h3", undefined, "Output"),
-        divNumNodes,
+        divNewSample,
+        divOldSamples,
     ]);
     const dlg = await modMdc.mkMDCdialogAlert(body, "Cancel");
-    // if (!answer) return;
     function closeDialog() { dlg.mdc.close(); }
-    // debugger;
-    // const radChecked = divAlts.querySelector("input:checked");
-    // if (!radChecked) return;
-    // const fun = radChecked.altFun;
-    // const eltShowViewAlt = document.getElementById("show-view-alt");
-    // eltShowViewAlt.textContent = fun.name;
-    // showGraph();
-    async function showGraph() {
-        // numNodes = Math.floor(Number(settingNumNodes.value));
+    async function showGraph(sampleFingerPrint) {
         sourceName = "fc4i";
         await getNodesAndLinks(sourceName);
-        // fun(gData);
         if (gData) {
             clearEltGraph();
-            testMyOwn(gData);
+            testMyOwn(gData, sampleFingerPrint);
             closeDialog();
         }
     }
@@ -1463,7 +1475,7 @@ async function addDialogGraphButtons() {
     }
     buildDivLinks();
     // const btnLinks = modMdc.mkMDCiconButton("line_start"); // FIX-ME: does not show???
-    const btnLinks = modMdc.mkMDCiconButton("linked_services", "Links appearance");
+    const btnLinks = modMdc.mkMDCiconButton("settings", "Links appearance");
     btnLinks.id = "netwg-btn-links";
     btnLinks.addEventListener("click", evt => {
         closeOtherExpanded("links");
@@ -1655,9 +1667,11 @@ async function addDialogGraphButtons() {
             const newImagesMode = eltImages == "" ? imagesMode : chkImages.checked;
             const gDataUsed = JSON.parse(strGDataUsed)
             const view = { gDataUsed, oldMatrix, imagesMode: newImagesMode, showCube };
+            const fingerPrint = gData.fingerPrint ? gData.fingerPrint : "";
             const objItem = {
                 title: inpTitle.value,
                 desc: taDesc.value,
+                fingerPrint,
                 creationTime,
                 view
             }
@@ -2444,7 +2458,8 @@ function triggerUpdateLinksView() {
         ;
 }
 
-async function testMyOwn(gData) {
+async function testMyOwn(gData, sampleFingerPrint) {
+    if (sampleFingerPrint) gData.fingerPrint = sampleFingerPrint;
     // cross-link node objects
     // if (!gData.nodesById) { gData.nodesById = {}; }
     gData.nodesById = {};
