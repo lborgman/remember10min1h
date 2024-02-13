@@ -471,22 +471,16 @@ async function displayMatchingReminders(searchFor, minConf, maxConf, requiredTag
     eltSearchBanner.textContent = "- ";
     eltSearchBanner.appendChild(mkElt("i", undefined,
         `Search result (${allMatchingItems.length} of ${await dbFc4i.countAllReminders()}):`));
+    // h-your-items
+    const eltNumHits = document.getElementById("h-your-num-hits");
+    eltNumHits.textContent = `${allMatchingItems.length} hits`;
 
     // const btnNetwG = modMdc.mkMDCiconButton("hub");
     // eltSearchBanner.appendChild(btnNetwG);
 
-    const iconHub = modMdc.mkMDCicon("hub");
-    const aIconHub = mkElt("a", { href: mkTestNetwGraphURL() }, iconHub);
-    aIconHub.addEventListener("click", evt => {
-        // aIconHub.href = mkTestNetwGraphURL();
-    });
-
-    aIconHub.style.lineHeight = "1rem";
-    const titleNetwg = "Investigate as a graphical network";
-    const fabNetwG = modMdc.mkMDCfab(aIconHub, titleNetwg, true)
-    // fabNetwG.title = titleNetwg;
+    const fabNetwG = await mkFabNetwG();
     fabNetwG.style.marginLeft = "30px";
-    fabNetwG.style.backgroundColor = "goldenrod";
+
     eltSearchBanner.appendChild(fabNetwG);
 
     divSearchBanner.style.display = (searchFor == undefined) ? "none" : "block";
@@ -779,7 +773,9 @@ async function goHome() {
     const hHome = mkElt("div", { id: "h-your-items" }, [
         btnSearch,
         // newbtnSearch,
-        mkElt("div", undefined, [fieldSearch, homeTitle,])
+        mkElt("div", undefined, [fieldSearch, homeTitle,]),
+        mkElt("div", { id: "h-your-num-hits" }),
+        await mkFabNetwG(),
     ]);
     const pSearchBroken = mkElt("p", {
         style: "background:green; color:yellow; padding: 10px;",
@@ -1094,13 +1090,15 @@ async function showSharedTo() {
 function mkTestNetwGraphURL() {
     const url = new URL("/nwg/netwgraph.html", location.href);
     const divSearchBanner = document.getElementById("div-search-banner");
-    const par = divSearchBanner.lastSearch;
-    const urlPar = new URLSearchParams();
-    for (const prop in par) {
-        const val = par[prop];
-        if (val) {
-            urlPar.set(prop, val);
-            url.searchParams.set(prop, val);
+    if (divSearchBanner) {
+        const par = divSearchBanner.lastSearch;
+        const urlPar = new URLSearchParams();
+        for (const prop in par) {
+            const val = par[prop];
+            if (val) {
+                urlPar.set(prop, val);
+                url.searchParams.set(prop, val);
+            }
         }
     }
     // url.searchParams = urlPar;
@@ -2322,3 +2320,23 @@ async function getClipboardImages() {
     modMdc.mkMDCdialogAlert(body);
 }
 
+async function mkFabNetwG() {
+    const modMdc = await import("util-mdc");
+    const iconHub = modMdc.mkMDCicon("hub");
+    // const aIconHub = mkElt("a", { href: mkTestNetwGraphURL() }, iconHub);
+
+    const aIconHub = mkElt("a", { href: "/nwg/netwgraph.html" }, iconHub);
+    aIconHub.addEventListener("click", evt => {
+        aIconHub.href = mkTestNetwGraphURL();
+    });
+    aIconHub.addEventListener("contextmenu", evt => {
+        aIconHub.href = mkTestNetwGraphURL();
+    });
+
+    aIconHub.style.lineHeight = "1rem";
+    const titleNetwg = "Investigate as a graphical network";
+    const fabNetwG = modMdc.mkMDCfab(aIconHub, titleNetwg, true)
+    // fabNetwG.style.marginLeft = "30px";
+    fabNetwG.style.backgroundColor = "goldenrod";
+    return fabNetwG;
+}

@@ -736,9 +736,9 @@ div.div-confidence-status {
 
 #h-your-items {
     display: grid;
-    gap: 20px;
+    gap: 5px;
     grid-auto-flow: column;
-    grid-template-columns: 40px 1fr;
+    grid-template-columns: 40px 1fr 40px 40px;
     align-items: center;
     height: 60px;
 }
