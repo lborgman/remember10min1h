@@ -137,7 +137,7 @@ function seconds2ymdhms(sec) {
     const ss = d.getUTCSeconds();
     return { yy, mo, dd, hh, mi, ss }
 }
-async function askForReminders(onlyMatched) {
+async function OLDaskForReminders(onlyMatched) {
     const modPWA = await import("pwa");
     const wb = await modPWA.getWorkbox();
     const matchValues = onlyMatched ? getHomeSearchValues() : undefined;
@@ -184,7 +184,7 @@ function checkRecordFields(record) {
     throw Error(`Some bad key in record: ${keys}`);
 }
 
-async function dialog10min1hour(eltPrevFocused) {
+async function OLDdialog10min1hour(eltPrevFocused) {
     const modMdc = await import("util-mdc");
     let key;
     if (document.getElementById("page-home")) {
@@ -384,6 +384,8 @@ async function dialog10min1hour(eltPrevFocused) {
     ]);
     dlg = await modMdc.mkMDCdialogAlert(body, "Close");
 }
+/*
+*/
 
 export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
     const modMdc = await import("util-mdc");
