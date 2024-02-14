@@ -486,7 +486,7 @@ async function displayMatchingReminders(searchFor, minConf, maxConf, requiredTag
     const eltNumHits = document.getElementById("h-your-num-hits");
     eltNumHits.textContent = `${numHits} `;
     const spanNumTotal = mkElt("span", undefined, `${numTotal}`);
-    spanNumTotal.style.opacity = 0.5;
+    spanNumTotal.style.opacity = 0.3;
     eltNumHits.appendChild(spanNumTotal);
 
     // const btnNetwG = modMdc.mkMDCiconButton("hub");
@@ -794,10 +794,20 @@ async function goHome() {
     }));
     // is-search-field
     const divShowSearching = mkElt("div", { id: "h-your-show-searching" }, "...");
+    const divNumHits = mkElt("div", { id: "h-your-num-hits" });
+    divNumHits.style = `
+        background: yellow;
+        height: 100%;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-content: flex-end;
+    `;
     const divShowHits = mkElt("div", undefined, [
-        mkElt("div", { id: "h-your-num-hits" }),
+        divNumHits,
         divShowSearching,
     ]);
+    divShowHits.style.height = "100%";
     const hHome = mkElt("div", { id: "h-your-items" }, [
         btnSearch,
         // newbtnSearch,
@@ -2387,7 +2397,7 @@ async function mkFabNetwG() {
     const titleNetwg = "Investigate as a graphical network";
     const fabNetwG = modMdc.mkMDCfab(aIconHub, titleNetwg, true)
     // fabNetwG.style.marginLeft = "30px";
-    fabNetwG.style= `
+    fabNetwG.style = `
         background-color: goldenrod;
         position: absolute;
         top: 2px;
