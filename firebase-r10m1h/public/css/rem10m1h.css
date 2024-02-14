@@ -690,11 +690,11 @@ details.older-rem-list>div>div>div {
     display: none;
 }
 
-.is-searching #field-search {
+.is-search-field #field-search {
     display: inline-block;
 }
 
-.is-searching #home-title {
+.is-search-field #home-title {
     display: none;
 }
 
@@ -703,7 +703,7 @@ details.older-rem-list>div>div>div {
     display: none;
 }
 
-.is-searching #div-search-slider {
+.is-search-field #div-search-slider {
     display: block;
 }
 
@@ -717,9 +717,25 @@ details.older-rem-list>div>div>div {
     margin-bottom: 10px;
 }
 
-.is-searching #div-required-tags {
+.is-search-field #div-required-tags {
     display: block;
 }
+
+
+
+.is-searching #h-your-num-hits {
+    display: none;
+}
+
+#h-your-show-searching {
+    display: none;
+}
+
+.is-searching #h-your-show-searching {
+    display: block;
+}
+
+
 
 #div-h-your-items {
     padding: 4px;
@@ -738,7 +754,7 @@ div.div-confidence-status {
     display: grid;
     gap: 5px;
     grid-auto-flow: column;
-    grid-template-columns: 40px 1fr 40px 40px;
+    grid-template-columns: 40px 1fr 35px 25px;
     align-items: center;
     height: 60px;
 }
@@ -1930,4 +1946,25 @@ button.btn-edit-item-confidence {
 
 html.hide-error-popups .error-popup {
     display: none !important;
+}
+
+
+
+/* Google Material Symbols */
+.pulse {
+    animation: pulse 3s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        font-variation-settings: 'wght' 100;
+    }
+
+    50% {
+        font-variation-settings: 'wght' 700;
+    }
+
+    100% {
+        font-variation-settings: 'wght' 100;
+    }
 }

@@ -337,7 +337,7 @@ async function dialog10min1hour(eltPrevFocused) {
     const isSearching =
         isHomePage
         &&
-        true === document.getElementById("div-h-your-items").classList.contains("is-searching");
+        true === document.getElementById("div-h-your-items").classList.contains("is-search-field");
     const chkOnlyMatched = modMdc.mkMDCcheckboxInput("chk-only-matched");
     const eltOnlyMatched = await modMdc.mkMDCcheckboxElt(chkOnlyMatched, "Check only matched items");
     /*
@@ -1245,8 +1245,8 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
 
     async function saveNow() {
         // restartRefreshSearchTimer();
-        const eltSearchBanner = document.getElementById("h3-search-banner")
-        eltSearchBanner?.checkSearchNeedsRefresh();
+        // const eltSearchBanner = document.getElementById("h3-search-banner")
+        // eltSearchBanner?.checkSearchNeedsRefresh();
 
         const keySaved = getCreatedEltTime();
         const key = keySaved || new Date().toISOString();

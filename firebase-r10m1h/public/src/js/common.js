@@ -415,10 +415,19 @@ async function displayMatchingReminders(searchFor, minConf, maxConf, requiredTag
     if (r.join(";") != strAllMatchingKeys) throw Error("allMatchingkeys was not sorted");
 
     const divSearchBanner = document.getElementById("div-search-banner");
-    divSearchBanner.lastSearch = { searchFor, minConf, maxConf, requiredTags }
-    if (divSearchBanner.oldKeys == strAllMatchingKeys) return;
 
-    if (cantRefresh && (divSearchBanner.oldKeys)) {
+    setTimeout(() => {
+        const eltHome = document.getElementById("h-your-items");
+        eltHome.classList.remove("is-searching")
+    }, 100);
+
+    setLastSearch({ searchFor, minConf, maxConf, requiredTags });
+    // if (divSearchBanner.oldKeys == strAllMatchingKeys) return;
+    if (window.oldKeys == strAllMatchingKeys) return;
+
+
+    // if (cantRefresh && (divSearchBanner.oldKeys))
+    if (cantRefresh && (window.oldKeys)) {
         // FIX-ME: Can't happen now
         throw Error("bad path");
         const btnRefresh = document.getElementById("cant-refresh");
@@ -434,14 +443,16 @@ async function displayMatchingReminders(searchFor, minConf, maxConf, requiredTag
 
     async function checkSearchNeedsRefresh() {
         // doSearch(true);
-        const last = divSearchBanner.lastSearch;
+        // const last = divSearchBanner.lastSearch;
+        const last = getLastSearch();
         // const dbFc4i = await getDbFc4i();
         const dbFc4i = await import("db-fc4i");
         const allMatchingItems = await dbFc4i.getDbMatching(last.searchFor, last.minConf, last.maxConf, last.requiredTags);
         const allMatchingKeys = allMatchingItems.map(rec => rec.key);
         const strKeys = allMatchingKeys.join(";");
         console.log({ allMatchingKeys });
-        if (divSearchBanner.oldKeys != strKeys) {
+        // if (divSearchBanner.oldKeys != strKeys)
+        if (window.oldKeys != strKeys) {
             // refresh"
             const modMdc = await import("util-mdc");
             const btnRefresh = document.getElementById("cant-refresh");
@@ -466,14 +477,17 @@ async function displayMatchingReminders(searchFor, minConf, maxConf, requiredTag
         }
     })();
 
-    const eltSearchBanner = document.getElementById("h3-search-banner")
-    eltSearchBanner.checkSearchNeedsRefresh = restartRefreshSearchTimer;
-    eltSearchBanner.textContent = "- ";
-    eltSearchBanner.appendChild(mkElt("i", undefined,
-        `Search result (${allMatchingItems.length} of ${await dbFc4i.countAllReminders()}):`));
-    // h-your-items
+    // const eltSearchBanner = document.getElementById("h3-search-banner")
+    // eltSearchBanner.checkSearchNeedsRefresh = restartRefreshSearchTimer;
+    // eltSearchBanner.textContent = "- ";
+    const numHits = allMatchingItems.length;
+    const numTotal = await dbFc4i.countAllReminders();
+    // eltSearchBanner.appendChild(mkElt("i", undefined, `Search result (${numHits} of ${numTotal}):`));
     const eltNumHits = document.getElementById("h-your-num-hits");
-    eltNumHits.textContent = `${allMatchingItems.length} hits`;
+    eltNumHits.textContent = `${numHits} `;
+    const spanNumTotal = mkElt("span", undefined, `${numTotal}`);
+    spanNumTotal.style.opacity = 0.5;
+    eltNumHits.appendChild(spanNumTotal);
 
     // const btnNetwG = modMdc.mkMDCiconButton("hub");
     // eltSearchBanner.appendChild(btnNetwG);
@@ -481,11 +495,12 @@ async function displayMatchingReminders(searchFor, minConf, maxConf, requiredTag
     const fabNetwG = await mkFabNetwG();
     fabNetwG.style.marginLeft = "30px";
 
-    eltSearchBanner.appendChild(fabNetwG);
+    // eltSearchBanner.appendChild(fabNetwG);
 
-    divSearchBanner.style.display = (searchFor == undefined) ? "none" : "block";
+    // divSearchBanner.style.display = (searchFor == undefined) ? "none" : "block";
 
-    divSearchBanner.oldKeys = strAllMatchingKeys;
+    // divSearchBanner.oldKeys = strAllMatchingKeys;
+    window.oldKeys = strAllMatchingKeys;
 
 
     const msNow = new Date().getTime();
@@ -650,8 +665,8 @@ async function goHome() {
 
     // const detsOutput = {};
 
-    const eltSearchBanner = mkElt("h3", { id: "h3-search-banner" });
-    const divSearchBanner = mkElt("div", { id: "div-search-banner", class: "text-on-page-home" }, eltSearchBanner);
+    // const eltSearchBanner = mkElt("h3", { id: "h3-search-banner" });
+    // const divSearchBanner = mkElt("div", { id: "div-search-banner", class: "text-on-page-home" }, eltSearchBanner);
 
     // await displayMatchingReminders();
 
@@ -668,10 +683,10 @@ async function goHome() {
     const fieldSearch = modMdc.mkMDCtextFieldOutlined("Search", inpSearch);
     fieldSearch.id = "field-search";
     inpSearch.addEventListener("input", evt => {
-        restartSearchTimer();
+        restartSearch();
     });
     function onChangeSearchSlider() {
-        restartSearchTimer();
+        restartSearch();
     }
     let sliSearchConfidence;
     const divSearchSlider = mkElt("div", { id: "div-search-slider", class: "mdc-theme--secondary-bg" }, [
@@ -681,7 +696,7 @@ async function goHome() {
     divSelectTags = mkElt("div", { id: "div-search-the-tags" });
     divSelectTags.addEventListener("change", evt => {
         // console.log({ evt });
-        restartSearchTimer();
+        restartSearch();
         updateRequiredTags();
     });
 
@@ -737,6 +752,12 @@ async function goHome() {
         // console.log(`doSearch: ${val}, ${minRange}, ${maxRange}, ${reqTags}`);
         displayMatchingReminders(strSearch, minRange, maxRange, reqTags, cantRefresh);
     }
+    function restartSearch() {
+        const eltHome = document.getElementById("h-your-items");
+        eltHome.classList.add("is-searching")
+        // eltHits.textContent = "...";
+        restartSearchTimer();
+    }
     const restartSearchTimer = (() => {
         let tmr;
         return () => {
@@ -749,10 +770,11 @@ async function goHome() {
 
 
 
-    const homeTitle = mkElt("span", { id: "home-title" }, `Your items (${numItems})`);
+    // const homeTitle = mkElt("span", { id: "home-title" }, `Your items (${numItems})`);
+    const homeTitle = mkElt("span", { id: "home-title" }, `All items`);
     btnSearch.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-        divhHome.classList.toggle("is-searching");
-        if (!divhHome.classList.contains("is-searching")) {
+        divhHome.classList.toggle("is-search-field");
+        if (!divhHome.classList.contains("is-search-field")) {
             displayMatchingReminders();
         } else {
             // div-search-slider
@@ -770,11 +792,17 @@ async function goHome() {
             doSearch(false);
         }
     }));
+    // is-search-field
+    const divShowSearching = mkElt("div", { id: "h-your-show-searching" }, "...");
+    const divShowHits = mkElt("div", undefined, [
+        mkElt("div", { id: "h-your-num-hits" }),
+        divShowSearching,
+    ]);
     const hHome = mkElt("div", { id: "h-your-items" }, [
         btnSearch,
         // newbtnSearch,
         mkElt("div", undefined, [fieldSearch, homeTitle,]),
-        mkElt("div", { id: "h-your-num-hits" }),
+        divShowHits,
         await mkFabNetwG(),
     ]);
     const pSearchBroken = mkElt("p", {
@@ -789,7 +817,7 @@ async function goHome() {
     ]);
     const divHome = mkElt("div", { id: "div-home" }, [
         divhHome,
-        divSearchBanner,
+        // divSearchBanner,
         // FIX-ME
         // divActive,
         // divOld
@@ -1087,11 +1115,32 @@ async function showTestTarget() {
 async function showSharedTo() {
     const secMain = clearMainSection("page-shared-to");
 }
+// const idLastSearch = "div-search-banner";
+const idLastSearch = "h-your-items";
+function getLastSearch() {
+    const eltLastSearch = document.getElementById(idLastSearch);
+    if (!eltLastSearch) return;
+    return eltLastSearch.lastSearch;
+}
+function setLastSearch(objLastSearch) {
+    const str = JSON.stringify(Object.keys(objLastSearch).sort());
+    if (str != '["maxConf","minConf","requiredTags","searchFor"]') {
+        console.error("bad param", objLastSearch);
+        debugger;
+    }
+    // console.log({ str });
+    // divSearchBanner.lastSearch = { searchFor, minConf, maxConf, requiredTags }
+    // setLastSearch( { searchFor, minConf, maxConf, requiredTags });
+    const eltLastSearch = document.getElementById(idLastSearch);
+    eltLastSearch.lastSearch = objLastSearch;
+}
 function mkTestNetwGraphURL() {
     const url = new URL("/nwg/netwgraph.html", location.href);
-    const divSearchBanner = document.getElementById("div-search-banner");
-    if (divSearchBanner) {
-        const par = divSearchBanner.lastSearch;
+    // const divSearchBanner = document.getElementById("div-search-banner");
+    // if (divSearchBanner) {
+    // const par = divSearchBanner.lastSearch;
+    const par = getLastSearch();
+    if (par) {
         const urlPar = new URLSearchParams();
         for (const prop in par) {
             const val = par[prop];
@@ -1101,6 +1150,7 @@ function mkTestNetwGraphURL() {
             }
         }
     }
+    // }
     // url.searchParams = urlPar;
     return url.href;
 }
@@ -2337,6 +2387,11 @@ async function mkFabNetwG() {
     const titleNetwg = "Investigate as a graphical network";
     const fabNetwG = modMdc.mkMDCfab(aIconHub, titleNetwg, true)
     // fabNetwG.style.marginLeft = "30px";
-    fabNetwG.style.backgroundColor = "goldenrod";
+    fabNetwG.style= `
+        background-color: goldenrod;
+        position: absolute;
+        top: 2px;
+        right: -7px;
+    `;
     return fabNetwG;
 }
