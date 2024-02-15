@@ -1285,7 +1285,7 @@ async function chooseView() {
     const tfNumNodes = modMdc.mkMDCtextFieldOutlined(
         `N of nodes`,
         inpNumNodes, settingNumNodes.getCachedValue());
-    const btnNewSample = modMdc.mkMDCbutton("Make new sample", "raised");
+    const btnNewSample = modMdc.mkMDCbutton("Make sample", "raised");
     btnNewSample.addEventListener("click", evt => {
         showGraph(fingerPrint);
     });

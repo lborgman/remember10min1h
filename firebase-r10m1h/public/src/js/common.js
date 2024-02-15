@@ -2580,7 +2580,142 @@ async function dialog10min1hour(eltPrevFocused) {
         modMdc.mkMDCsnackbar("Looking for expired reminders...");
         dlg.mdc.close();
     }));
+
+    const divOutputNew = mkElt("div");
+    divOutputNew.style = `
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    `;
+    const btnNew = modMdc.mkMDCbutton("New way", "raised");
+    btnNew.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+        const modDbFc4i = await import("db-fc4i");
+        debugger;
+        const arrNot = await modDbFc4i.getToNotifyNow(getLastSearch());
+        console.log({ arrNot });
+        const arrSrt = arrNot.toSorted(compare);
+        // FIX-ME: random
+        arrSrt.length = Math.min(arrSrt.length, 5);
+        debugger;
+        divOutputNew.textContent = "First 5 expired:";
+        arrSrt.forEach(r => {
+            const rec = r.expiredRecord;
+            const tim = r.expiredTimers[0];
+            const conf = rec.confRem;
+            const msD = tim.msDelay;
+            const msW = tim.msWhen;
+            const title = rec.title;
+            const url = rec.url;
+            const key = rec.key;
+            console.log({ conf, msD, msW, title, url, key });
+            const linkRec = getLink2KeyInFc4i(rec.key);
+            const aSource = mkElt("a", { href: linkRec }, title);
+            aSource.style.textDecorationLine = "none";
+            // done?
+            function setReminderDone() {
+                // set msDelay to negative;
+                console.log({ rec, tim });
+                rec.timers.forEach(t => {
+                    const w = t.msWhen;
+                    if (w == tim.msWhen) {
+                        t.msDelay = -t.msDelay;
+                        console.log(t);
+                    }
+                });
+                debugger;
+                // modDbFc4i.setDbKey(key, rec);
+            }
+            aSource.addEventListener("click", evt => {
+                setReminderDone();
+                console.log("clicked", aSource);
+            });
+            aSource.addEventListener("contextmenu", evt => {
+                setReminderDone();
+                console.log("contextmenu", aSource);
+            });
+            // const displayDelay
+            const msSince = Date.now() - msW;
+            const objSince = getDayHourMinSec(msSince / 1000);
+            const txtSince = `Expired ${dhmsToString(objSince)} ago`;
+            const divBottom = mkElt("div");
+            divBottom.style = `
+                display: flex;
+                gap: 10px;
+            `;
+            const blob = rec.images[0];
+            if (blob) { divBottom.appendChild(mkImageThumb(blob)); }
+            divBottom.appendChild(mkElt("span", undefined, `Confidence: ${conf}, ${txtSince}`));
+            const eltRem = mkElt("div", undefined, [
+                mkElt("div", undefined, aSource),
+                divBottom
+            ]);
+            eltRem.classList.add("mdc-card");
+            eltRem.style = `
+                padding: 10px;
+                line-height: normal;
+                display: flex;
+                gap: 10px;
+            `;
+            divOutputNew.appendChild(eltRem);
+        });
+
+        function dhmsToString(objDhms) {
+            const days = objDhms.days;
+            const hours = objDhms.hours;
+            const minutes = objDhms.minutes;
+            const hasDays = days > 0;
+            const hasHours = hasDays || hours > 0;
+            let str = "";
+            if (hasDays) str = `${days} days `;
+            if (days < 3) {
+                if (hasHours) str += `${hours} hours `;
+                if (!hasDays) str = `${minutes} minutes `;
+            }
+            return str;
+        }
+        function getDayHourMinSec(totalSeconds) {
+            const SEC_IN_HR = 3600;
+            const days = `${Math.floor(totalSeconds / (SEC_IN_HR * 24))}`;
+            const hours = `${Math.floor(totalSeconds % (SEC_IN_HR * 24) / SEC_IN_HR)}`;
+            const minutes = `${Math.floor(totalSeconds % SEC_IN_HR / 60)}`;
+            const seconds = `${Math.floor(totalSeconds % 60)}`;
+
+            // return `${days.padStart(2,'0')}:${hours.padStart(2,'0')}:${minutes.padStart(2,'0')}:${seconds.padStart(2,'0')}`;
+            return { days, hours, minutes, seconds };
+        }
+
+        function compare(r1, r2) {
+            const rec1 = r1.expiredRecord;
+            const rec2 = r2.expiredRecord;
+            const tim1 = r1.expiredTimers;
+            const tim2 = r2.expiredTimers;
+            if (!(rec1 && rec2 && tim1 && tim2)) {
+                debugger;
+            }
+            const conf1 = rec1.confRem;
+            const conf2 = rec2.confRem;
+            if (conf1 < conf2) return -1;
+            if (conf1 > conf2) return 1;
+            const t1 = tim1[0];
+            const t2 = tim2[0];
+            const msD1 = t1.msDelay;
+            const msD2 = t2.msDelay;
+            if (msD1 < msD2) return -1;
+            if (msD1 > msD2) return 1;
+            const msW1 = t1.msWhen;
+            const msW2 = t2.msWhen;
+            if (msW1 < msW2) return -1;
+            if (msW1 > msW2) return 1;
+            return 0;
+        }
+    }));
+
     const body = mkElt("div", { class: "body-reminder-dialog" }, [
+        mkElt("p", { style: "background:red;" }, "Not working right now!!!"),
+        mkElt("h2", undefined, "New way..."),
+        mkElt("p", undefined, btnNew),
+        divOutputNew,
+        mkElt("hr"),
         mkElt("h2", undefined, "Long time reminders"),
         pOnlyMatched,
         mkElt("p", undefined, btnCheckNow),
@@ -2611,4 +2746,10 @@ async function askForReminders(onlyMatched) {
     const wb = await modPWA.getWorkbox();
     const matchValues = onlyMatched ? getHomeSearchValues() : undefined;
     wb.messageSW({ type: "CHECK_NOTIFY", msDelay: 2000, matchValues });
+}
+
+function getLink2KeyInFc4i(keyFc4i) {
+    const objUrl = new URL("/", location);
+    objUrl.searchParams.set("showkey", keyFc4i)
+    return objUrl.href;
 }

@@ -136,7 +136,7 @@ async function getAllReminders() {
     });
     return allReminders;
 }
-async function getToNotifyNow(matchValues) {
+export async function getToNotifyNow(matchValues) {
     const hasMatchValues = matchValues !== undefined;
     console.log("getToNotifyNow", { matchValues, hasMatchValues });
     // const db = await getDb();
@@ -145,10 +145,10 @@ async function getToNotifyNow(matchValues) {
     if (!hasMatchValues) {
         allRecs = await getAllReminders();
     } else {
-        // const { searchFor, minConf, maxConf, requiredTags } = matchValues;
         // allRecs = await getDbMatching(searchFor, minConf, maxConf, requiredTags);
-        const { strSearch, minRange, maxRange, reqTags } = matchValues;
-        allRecs = await getDbMatching(strSearch, minRange, maxRange, reqTags);
+        // const { strSearch, minRange, maxRange, reqTags } = matchValues;
+        const { searchFor, minConf, maxConf, requiredTags } = matchValues;
+        allRecs = await getDbMatching(searchFor, minConf, maxConf, requiredTags);
         const allLen = allRecs.length;
         console.log({ allLen });
     }
