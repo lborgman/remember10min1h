@@ -1926,7 +1926,7 @@ window.onbeforeunload = () => {
 */
 window.addEventListener("beforeunload", evt => {
     const notSaved = !pageIsSaved();
-    console.log("%listener conbeforeunload", "color:red; font-size: 20px;", { notSaved });
+    console.log("%clistener on beforeunload", "color:red; font-size: 20px;", { notSaved });
     if (notSaved) evt.preventDefault();
 });
 
@@ -2590,13 +2590,13 @@ async function dialog10min1hour(eltPrevFocused) {
     const btnNew = modMdc.mkMDCbutton("New way", "raised");
     btnNew.addEventListener("click", errorHandlerAsyncEvent(async evt => {
         const modDbFc4i = await import("db-fc4i");
-        debugger;
+        // debugger;
         const arrNot = await modDbFc4i.getToNotifyNow(getLastSearch());
         console.log({ arrNot });
         const arrSrt = arrNot.toSorted(compare);
         // FIX-ME: random
         arrSrt.length = Math.min(arrSrt.length, 5);
-        debugger;
+        // debugger;
         divOutputNew.textContent = "First 5 expired:";
         arrSrt.forEach(r => {
             const rec = r.expiredRecord;
@@ -2615,19 +2615,27 @@ async function dialog10min1hour(eltPrevFocused) {
             function setReminderDone() {
                 // set msDelay to negative;
                 console.log({ rec, tim });
+                let doneIt = false;
                 rec.timers.forEach(t => {
                     const w = t.msWhen;
                     if (w == tim.msWhen) {
                         t.msDelay = -t.msDelay;
                         console.log(t);
+                        modDbFc4i.setDbKey(key, rec);
+                        doneIt = true;
                     }
                 });
-                debugger;
+                console.log({ doneIt });
+                if (!doneIt) {
+                    debugger;
+                    throw Error(`Did not find timer to mark done??`)
+                }
                 // modDbFc4i.setDbKey(key, rec);
             }
             aSource.addEventListener("click", evt => {
                 setReminderDone();
                 console.log("clicked", aSource);
+                debugger;
             });
             aSource.addEventListener("contextmenu", evt => {
                 setReminderDone();
@@ -2715,27 +2723,30 @@ async function dialog10min1hour(eltPrevFocused) {
         mkElt("h2", undefined, "New way..."),
         mkElt("p", undefined, btnNew),
         divOutputNew,
-        mkElt("hr"),
-        mkElt("h2", undefined, "Long time reminders"),
-        pOnlyMatched,
-        mkElt("p", undefined, btnCheckNow),
-        mkElt("hr"),
-        mkElt("h2", undefined, "Short time reminder for item"),
-        // divManual,
-        divManualContainer,
-        // divMaybeSpecific,
-        mkElt("hr"),
-        mkElt("p", undefined, "Reminders within a day or later works differently:"),
-        mkElt("ul", undefined, [
-            mkElt("li", undefined,
-                `You get a short time reminder for a selected item (within a day)
+        mkElt("div", { style: "opacity:0.5; background:violet;" }, [
+            mkElt("div", { style: "background:red" }, "Obsolote, keeping it now just for checking"),
+            mkElt("hr"),
+            mkElt("h2", undefined, "Long time reminders"),
+            pOnlyMatched,
+            mkElt("p", undefined, btnCheckNow),
+            mkElt("hr"),
+            mkElt("h2", undefined, "Short time reminder for item"),
+            // divManual,
+            divManualContainer,
+            // divMaybeSpecific,
+            mkElt("hr"),
+            mkElt("p", undefined, "Reminders within a day or later works differently:"),
+            mkElt("ul", undefined, [
+                mkElt("li", undefined,
+                    `You get a short time reminder for a selected item (within a day)
                 by clicking on a button above.`
-            ),
-            mkElt("li", undefined,
-                `Long time reminders (after a day or more)
+                ),
+                mkElt("li", undefined,
+                    `Long time reminders (after a day or more)
                 are setup automatically for all items.
                 (But you have to ask for them!)`
-            )
+                )
+            ]),
         ]),
 
     ]);
