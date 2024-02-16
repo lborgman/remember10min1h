@@ -2587,13 +2587,20 @@ async function dialog10min1hour(eltPrevFocused) {
         flex-direction: column;
         gap: 10px;
     `;
-    const btnNew = modMdc.mkMDCbutton("New way", "raised");
+    const btnNew = modMdc.mkMDCbutton("Get reminder now", "raised");
     btnNew.addEventListener("click", errorHandlerAsyncEvent(async evt => {
         const modDbFc4i = await import("db-fc4i");
         // debugger;
         const arrNot = await modDbFc4i.getToNotifyNow(getLastSearch());
         console.log({ arrNot });
-        const arrSrt = arrNot.toSorted(compare);
+
+        const orderCompareReminders = [
+            "conf",
+            "delay",
+            "age",
+        ];
+
+        const arrSrt = arrNot.toSorted(compareReminders);
         // FIX-ME: random
         arrSrt.length = Math.min(arrSrt.length, 5);
         // debugger;
@@ -2642,9 +2649,21 @@ async function dialog10min1hour(eltPrevFocused) {
                 console.log("contextmenu", aSource);
             });
             // const displayDelay
-            const msSince = Date.now() - msW;
-            const objSince = getDayHourMinSec(msSince / 1000);
-            const txtSince = `Expired ${dhmsToString(objSince)} ago`;
+            const msAge = Date.now() - msW;
+            const objAge = getDayHourMinSec(msAge / 1000);
+            const txtAge = `Age: ${dhmsToString(objAge)}`;
+            const objDelay = getDayHourMinSec(msD / 1000);
+            const txtDelay = `Delay: ${dhmsToString(objDelay)}`;
+            const txtConf = `Conf: ${conf}`;
+
+            const objCompared = {
+                "conf": txtConf,
+                "delay": txtDelay,
+                "age": txtAge,
+            }
+            // const txtCompared = [txtConf, txtAge, txtDelay].join(", ");
+            const txtCompared = orderCompareReminders.map(k => objCompared[k]).join(", ");
+
             const divBottom = mkElt("div");
             divBottom.style = `
                 display: flex;
@@ -2652,7 +2671,7 @@ async function dialog10min1hour(eltPrevFocused) {
             `;
             const blob = rec.images[0];
             if (blob) { divBottom.appendChild(mkImageThumb(blob)); }
-            divBottom.appendChild(mkElt("span", undefined, `Confidence: ${conf}, ${txtSince}`));
+            divBottom.appendChild(mkElt("span", undefined, [txtCompared,]));
             const eltRem = mkElt("div", undefined, [
                 mkElt("div", undefined, aSource),
                 divBottom
@@ -2692,7 +2711,7 @@ async function dialog10min1hour(eltPrevFocused) {
             return { days, hours, minutes, seconds };
         }
 
-        function compare(r1, r2) {
+        function compareReminders(r1, r2) {
             const rec1 = r1.expiredRecord;
             const rec2 = r2.expiredRecord;
             const tim1 = r1.expiredTimers;
@@ -2700,55 +2719,102 @@ async function dialog10min1hour(eltPrevFocused) {
             if (!(rec1 && rec2 && tim1 && tim2)) {
                 debugger;
             }
-            const conf1 = rec1.confRem;
-            const conf2 = rec2.confRem;
-            if (conf1 < conf2) return -1;
-            if (conf1 > conf2) return 1;
-            const t1 = tim1[0];
-            const t2 = tim2[0];
-            const msD1 = t1.msDelay;
-            const msD2 = t2.msDelay;
-            if (msD1 < msD2) return -1;
-            if (msD1 > msD2) return 1;
-            const msW1 = t1.msWhen;
-            const msW2 = t2.msWhen;
-            if (msW1 < msW2) return -1;
-            if (msW1 > msW2) return 1;
+
+            const funs = {
+                "conf": compareConf,
+                "delay": compareDelay,
+                "age": compareAge,
+            }
+            if (JSON.stringify(Object.keys(funs).sort()) != JSON.stringify(orderCompareReminders.sort())) {
+                debugger;
+            }
+            for (let i = 0, len = orderCompareReminders.length; i < len; i++) {
+                const funName = orderCompareReminders[i];
+                const res = orderCompareReminders[funName];
+                if (res != 0) return res;
+            }
             return 0;
+
+            function compareConf() {
+                const conf1 = rec1.confRem;
+                const conf2 = rec2.confRem;
+                if (conf1 < conf2) return -1;
+                if (conf1 > conf2) return 1;
+                return 0;
+            }
+            function compareDelay() {
+                const t1 = tim1[0];
+                const t2 = tim2[0];
+                const msD1 = t1.msDelay;
+                const msD2 = t2.msDelay;
+                if (msD1 < msD2) return -1;
+                if (msD1 > msD2) return 1;
+                return 0;
+            }
+            function compareAge() {
+                const msW1 = t1.msWhen;
+                const msW2 = t2.msWhen;
+                if (msW1 < msW2) return -1;
+                if (msW1 > msW2) return 1;
+                return 0;
+            }
         }
     }));
 
+    const eltExplainReminders = mkElt("details", undefined, [
+        mkElt("summary", undefined, "Note: Ask for reminders!"),
+        mkElt("p", undefined, "Ehm. You have to ask for reminders."),
+        mkElt("p", undefined, `
+            Does it sound like a strange idea?
+            Ask for reminders...
+        `),
+        mkElt("p", undefined, `
+        `),
+    ]);
+    const divExplain = mkElt("div", undefined, [eltExplainReminders]);
+    divExplain.classList.add("mdc-card");
+    divExplain.style = `
+        background: yellow;
+        padding: 10px;
+    `;
+
     const body = mkElt("div", { class: "body-reminder-dialog" }, [
-        mkElt("p", { style: "background:red;" }, "Not working right now!!!"),
-        mkElt("h2", undefined, "New way..."),
+        // mkElt("p", { style: "background:red;" }, "Not working right now!!!"),
+        mkElt("h2", undefined, "Reminders"),
         mkElt("p", undefined, btnNew),
         divOutputNew,
-        mkElt("div", { style: "opacity:0.5; background:violet;" }, [
-            mkElt("div", { style: "background:red" }, "Obsolote, keeping it now just for checking"),
-            mkElt("hr"),
-            mkElt("h2", undefined, "Long time reminders"),
-            pOnlyMatched,
-            mkElt("p", undefined, btnCheckNow),
-            mkElt("hr"),
-            mkElt("h2", undefined, "Short time reminder for item"),
-            // divManual,
-            divManualContainer,
-            // divMaybeSpecific,
-            mkElt("hr"),
-            mkElt("p", undefined, "Reminders within a day or later works differently:"),
-            mkElt("ul", undefined, [
-                mkElt("li", undefined,
-                    `You get a short time reminder for a selected item (within a day)
+        divExplain,
+        mkElt("div", { style: "display:none" }, [
+            mkElt("div", { style: "background:red; padding:20px;" }, "Below is obsolote, keeping it just for checking"),
+            mkElt("details", undefined, [
+                mkElt("summayr", undefined, "old, obsolete things"),
+
+                mkElt("div", { style: "opacity:0.5; background:violet; padding:10px;" }, [
+                    mkElt("hr"),
+                    mkElt("h2", undefined, "Long time reminders"),
+                    pOnlyMatched,
+                    mkElt("p", undefined, btnCheckNow),
+                    mkElt("hr"),
+                    mkElt("h2", undefined, "Short time reminder for item"),
+                    // divManual,
+                    divManualContainer,
+                    // divMaybeSpecific,
+                    mkElt("hr"),
+                    mkElt("p", undefined, "Reminders within a day or later works differently:"),
+                    mkElt("ul", undefined, [
+                        mkElt("li", undefined,
+                            `You get a short time reminder for a selected item (within a day)
                 by clicking on a button above.`
-                ),
-                mkElt("li", undefined,
-                    `Long time reminders (after a day or more)
+                        ),
+                        mkElt("li", undefined,
+                            `Long time reminders (after a day or more)
                 are setup automatically for all items.
                 (But you have to ask for them!)`
-                )
+                        )
+                    ]),
+                ]),
             ]),
         ]),
-
     ]);
     dlg = await modMdc.mkMDCdialogAlert(body, "Close");
 }
