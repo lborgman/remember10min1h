@@ -2385,7 +2385,7 @@ async function dialog10min1hour(eltPrevFocused) {
     `;
 
     const detOrderReminders = mkElt("details", undefined, [
-        mkElt("summary", undefined, "Sort reminders"),
+        mkElt("summary", undefined, "Prioritize reminders"),
         mkElt("div", undefined, "Click sort label to put it first"),
         divDoOrderReminders
     ]);
@@ -2512,30 +2512,6 @@ async function dialog10min1hour(eltPrevFocused) {
             divOutputNew.appendChild(eltRem);
         });
 
-        function dhmsToString(objDhms) {
-            const days = objDhms.days;
-            const hours = objDhms.hours;
-            const minutes = objDhms.minutes;
-            const hasDays = days > 0;
-            const hasHours = hasDays || hours > 0;
-            let str = "";
-            if (hasDays) str = `${days} days `;
-            if (days < 3) {
-                if (hasHours) str += `${hours} hours `;
-                if (!hasDays) str = `${minutes} minutes `;
-            }
-            return str;
-        }
-        function getDayHourMinSec(totalSeconds) {
-            const SEC_IN_HR = 3600;
-            const days = `${Math.floor(totalSeconds / (SEC_IN_HR * 24))}`;
-            const hours = `${Math.floor(totalSeconds % (SEC_IN_HR * 24) / SEC_IN_HR)}`;
-            const minutes = `${Math.floor(totalSeconds % SEC_IN_HR / 60)}`;
-            const seconds = `${Math.floor(totalSeconds % 60)}`;
-
-            // return `${days.padStart(2,'0')}:${hours.padStart(2,'0')}:${minutes.padStart(2,'0')}:${seconds.padStart(2,'0')}`;
-            return { days, hours, minutes, seconds };
-        }
 
         function compareReminders(r1, r2) {
             const rec1 = r1.expiredRecord;
@@ -2625,4 +2601,54 @@ function getLink2KeyInFc4i(keyFc4i) {
     const objUrl = new URL("/", location);
     objUrl.searchParams.set("showkey", keyFc4i)
     return objUrl.href;
+}
+
+
+
+function dhmsToString(objDhms) {
+    let days = objDhms.days;
+    let hours = objDhms.hours;
+    let minutes = objDhms.minutes;
+    let seconds = objDhms.seconds;
+
+    let str = "";
+
+    if (hours > 18) { days++; hours = 0; }
+    if (days > 0) {
+        const lblDays = days == 1 ? "day" : "days";
+        str = `${days} ${lblDays} `;
+    }
+    if (days > 2) return str.trim();
+
+    if (minutes > 30) { hours++; minutes = 0; }
+    if (days > 0 || hours > 0) {
+        if (!(days > 0 && hours == 0)) {
+            const lblHours = hours == 1 ? "hour" : "hours";
+            str += `${hours} ${lblHours} `;
+        }
+    }
+    if (days > 0 || hours > 3) return str.trim();
+
+    if (seconds > 30) { minutes++; seconds = 0; }
+    if (hours > 0 || minutes > 0) {
+        if (!(hours > 0 && minutes == 0)) {
+            const lblMinutes = minutes == 1 ? "minute" : "minutes";
+            str += `${minutes} ${lblMinutes} `;
+        }
+    }
+    if (hours > 0 || minutes > 3) return str.trim()
+
+    const lblSeconds = seconds == 1 ? "second " : "seconds ";
+    str += `${seconds} ${lblSeconds}`;
+    return str.trim();
+}
+function getDayHourMinSec(totalSeconds) {
+    const SEC_IN_HR = 3600;
+    const days = `${Math.floor(totalSeconds / (SEC_IN_HR * 24))}`;
+    const hours = `${Math.floor(totalSeconds % (SEC_IN_HR * 24) / SEC_IN_HR)}`;
+    const minutes = `${Math.floor(totalSeconds % SEC_IN_HR / 60)}`;
+    const seconds = `${Math.floor(totalSeconds % 60)}`;
+
+    // return `${days.padStart(2,'0')}:${hours.padStart(2,'0')}:${minutes.padStart(2,'0')}:${seconds.padStart(2,'0')}`;
+    return { days, hours, minutes, seconds };
 }
