@@ -168,7 +168,9 @@ export async function getToNotifyNow(matchValues) {
             const msWhen = timer.msWhen;
             const msDelay = timer.msDelay;
             // expired = expired || msWhen < msNow;
-            if (msDelay > 0) {
+            // if (msDelay > 0)
+            const FIVE_MINUTES = 5 * 60 * 1000; 
+            if (msDelay > FIVE_MINUTES) {
                 if (msWhen < msNow) {
                     expired = true;
                     expiredTimers.push(timer);

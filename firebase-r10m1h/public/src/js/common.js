@@ -200,19 +200,20 @@ async function getMenu() {
 
         const iconChecklist = modMdc.mkMDCicon("today");
         iconChecklist.classList.add("icon-check-beside-search");
-        const iconSearch = modMdc.mkMDCicon("search");
-        iconSearch.classList.add("icon-search-beside-check");
-        const spanIcons = mkElt("span", undefined, [iconChecklist, iconSearch,]);
+        // const iconSearch = modMdc.mkMDCicon("search");
+        // iconSearch.classList.add("icon-search-beside-check");
+        // const spanIcons = mkElt("span", undefined, [iconChecklist, iconSearch,]);
 
         let eltFocusedBefore;
-        const btnReminders = modMdc.mkMDCbutton(spanIcons);
+        // const btnReminders = modMdc.mkMDCbutton(spanIcons);
+        const btnReminders = modMdc.mkMDCiconButton(iconChecklist);
         btnReminders.title = "Reminders";
 
         const eltSearchCheck = document.getElementById("header-search-check");
         eltSearchCheck.appendChild(btnReminders);
         btnReminders.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             // console.warn("clicked search check");
-            dialog10min1hour(eltFocusedBefore);
+            await dialog10min1hour(eltFocusedBefore);
         }));
         btnReminders.addEventListener("focus", errorHandlerAsyncEvent(async evt => {
             // console.log("btnSearchCheck focus", evt, evt.relatedTarget);
@@ -1390,7 +1391,6 @@ async function mkMenu() {
 
         const body = mkElt("div");
 
-        // navigator.storage.persist is implemented in all relevant browsers
         // Check if site's storage has been marked as persistent
         const isPersisted = await navigator.storage.persisted();
         console.log(`Persisted storage is granted: ${isPersisted}`);
@@ -1912,14 +1912,6 @@ async function deleteEntry(key, card) {
 function pageIsSaved() {
     return document.documentElement.querySelector(".not-saved") == null;
 }
-/*
-window.onbeforeunload = () => {
-    // return !pageIsSaved();
-    const notSaved = !pageIsSaved();
-    console.log("%conbeforeunload", "color:red; font-size: 20px;", {notSaved});
-    return notSaved;
-}
-*/
 window.addEventListener("beforeunload", evt => {
     const notSaved = !pageIsSaved();
     console.log("%clistener on beforeunload", "color:red; font-size: 20px;", { notSaved });
@@ -2051,14 +2043,6 @@ const mainCommon = async () => {
 
 }
 
-// : hsl(0deg 100% 50%); /* red */
-// : hsl(84deg 100% 59%); /* greenyellow */
-// : hsl(120deg 100% 25%); /* green */
-// : hsl(120deg 73% 75%); /* lightgreen */
-// : hsl(100deg 100% 40%); /* greenyellow */
-
-// let tp; setTimeout(() =>{ tp = mkStatusIndicator(7, "height", true); tp.mySet(0); document.body.appendChild(tp); }, 1000);
-
 function mkStatusIndicator(steps, direction, test) {
     if (!["height", "width"].includes(direction)) throw Error(`Bad direction: ${direction}`);
     const eltAntiIndicator = mkElt("div", { class: "status-progress-anti" });
@@ -2087,13 +2071,6 @@ function mkStatusIndicator(steps, direction, test) {
         eltCont.dataset.val = val;
     };
     eltCont.myGet = () => eltCont.dataset.val;
-    /*
-    for (let i = 0; i < steps; i++) {
-        const eltStep = mkElt("div");
-        eltStep.dataset.stepVal = 0;
-        eltCont.appendChild(eltStep);
-    }
-    */
     return eltCont;
 }
 
@@ -2160,45 +2137,6 @@ document.addEventListener("click", errorHandlerAsyncEvent(async evt => {
                 default:
                     throw Error(`Bad expander way: ${theExpanderWay}`);
             }
-            /*
-            let justAdd = true;
-            if (!justAdd) {
-                // setTimeout(() => e.classList.add("expanded"), 100);
-                try {
-                    // const stepMs = 50;
-                    // const stepMs = 20;
-                    const stepMs = 500;
-                    const maxWaitMs = 2000;
-                    const now = Date.now();
-                    console.log("no before wait4mutations");
-                    // const res = await wait4mutations(d, stepMs, { childList: true, subtree: true }, maxWaitMs);
-                    // console.log({ res });
-                    let res;
-                    if (res) {
-                        // modMdc.mkMDCsnackbar(`Waited to max ${maxWaitMs} ms)`, 10 * 1000);
-                    } else {
-                        const elapsed = Date.now() - now;
-                        console.log({ elapsed });
-                        // modMdc.mkMDCsnackbar(`Waited for mutations ${elapsed} ms (step ${stepMs} ms)`, 10 * 1000);
-                    }
-                    e.classList.add("expanded");
-                } catch (err) {
-                    console.log({ err });
-                    // modMdc.mkMDCsnackbar(`Error ${err}`, 10 * 1000);
-                    modMdc.mkMDCsnackbar(`Error`, 10 * 1000);
-                }
-            }
-            // await and setTimeout both works.
-            const useAwait = false;
-            if (useAwait) {
-                console.log("use await");
-                await new Promise(resolve => { setTimeout(() => { resolve(); }, 1); });
-                e.classList.add("expanded");
-            } else {
-                console.log("use setTimeout");
-                setTimeout(() => { e.classList.add("expanded"); }, 1);
-            }
-            */
         }
     }
 }));
@@ -2404,164 +2342,7 @@ async function mkFabNetwG() {
 
 async function dialog10min1hour(eltPrevFocused) {
     const modMdc = await import("util-mdc");
-    // let key;
-    /*
-    if (document.getElementById("page-home")) {
-        if (eltPrevFocused) {
-            const eltUnsavedMarker = eltPrevFocused.classList.contains("unsaved-marker-container")
-                ?
-                eltPrevFocused
-                :
-                eltPrevFocused.closest(".unsaved-marker-container");
-            const eltRem = eltUnsavedMarker?.querySelector(".container-remember");
-            key = eltRem?.dataset.key;
-        }
-    } else {
-        const arrEltRem = [...document.querySelectorAll(".container-remember")];
-        switch (arrEltRem.length) {
-            case 0:
-                break;
-            case 1:
-                const eltRem = arrEltRem[0];
-                key = eltRem.dataset.key;
-                break;
-            default:
-                throw Error(`${arrEltRem.length} items, expeced 0 or 1`);
-        }
-    }
-    */
-    // console.log({ key });
-    // const modDbFc4i = await import("db-fc4i");
-    // const rec = key ? await modDbFc4i.getDbKey(key) : undefined;
-    // const title = rec?.title;
     let dlg;
-
-    /*
-    // btn10s
-    let divManual;
-    if (key) {
-        divManual = await mkDivManualReminders(() => key);
-    } else {
-        // divManual = mkElt("div", undefined, "NONE SEL");
-    }
-    const divManualContainer = mkElt("div");
-
-    const btnAsk10min = modMdc.mkMDCbutton("10 min", "outlined");
-    btnAsk10min.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-        // const msDelay = 1000;
-        const msDelay = 1 * minMs;
-        // const msDelay = 10 * minMs;
-        // sendSpecificReminderRequest(msDelay);
-        askForNotifySpecific(key, msDelay);
-        const modMdc = await import("util-mdc");
-        modMdc.mkMDCsnackbar("Will send reminder in 10 minutes", 6000);
-        dlg.mdc.close();
-    }));
-    const btnAsk1hour = modMdc.mkMDCbutton("1 hour", "outlined");
-    btnAsk1hour.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-        const msDelay = 6 * minMs;
-        askForNotifySpecific(key, msDelay);
-        const modMdc = await import("util-mdc");
-        modMdc.mkMDCsnackbar("Will send reminder in 1 hour", 6000);
-        dlg.mdc.close();
-    }));
-
-    const inpMinutes = modMdc.mkMDCtextFieldInput("minutes-input", "text");
-    inpMinutes.required = true;
-    const fieldMinutes = modMdc.mkMDCtextFieldOutlined("After minutes", inpMinutes);
-    const btnMinutes = modMdc.mkMDCbutton("Remind", "raised");
-    btnMinutes.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-        const modMdc = await import("util-mdc");
-        const raw = inpMinutes.value;
-        // FIX-ME: Any possible security flaws??
-        if (!raw.match(/^[0-9 +/*.()]+$/)) {
-            modMdc.mkMDCdialogAlert("Can't compute value.");
-            return;
-        }
-        let minutes;
-        try {
-            const f = new Function(`"use strict;"; return ${raw}`);
-            minutes = f();
-        } catch (err) {
-            console.error(err);
-            modMdc.mkMDCdialogAlert("Sorry, could not compute that.")
-            return;
-        }
-        /*
-        if (!inpSeconds.validity.valid) {
-            modMdc.mkMDCdialogAlert("Please specify number of seconds to delay reminder.");
-            return;
-        }
-        const seconds = inpSeconds.value;
-        const msDelay = 1000 * 60 * minutes;
-        // sendSpecificReminderRequest(msDelay);
-        askForNotifySpecific(key, msDelay);
-        const m = Math.floor(minutes);
-        const s = Math.floor((minutes - m) * 60);
-        console.log({ m, s });
-        modMdc.mkMDCsnackbar(`Will send reminder in ${m}m ${s}s`, 6000);
-        dlg.mdc.close();
-    }));
-
-    const s = [
-        "display: flex",
-        "flex-direction: row",
-        "gap: 5px"
-    ].join(";");
-    const divSpecific = mkElt("div", undefined, [
-        mkElt("p", undefined, mkElt("b", undefined, title)),
-        mkElt("p", { style: s }, [btnAsk10min, btnAsk1hour]),
-        mkElt("p", { style: s }, [fieldMinutes, btnMinutes]),
-        mkElt("p", { style: "font-style:italic" },
-            `NOTICE: If you close this app before you get this
-                reminder you will not get it. (See menu "About" for explanation.)`
-        ),
-    ]);
-    // const divMaybeSpecific = mkElt("div");
-    if (key) {
-        // divMaybeSpecific.appendChild(divSpecific);
-        const imgBlob = rec.images[0];
-        // function mkImageThumb(blob)
-        const eltImg = imgBlob ? mkImageThumb(imgBlob) : "";
-        if (eltImg.tagName) eltImg.style.marginRight = "10px";
-        divManualContainer.appendChild(mkElt("p", undefined, [
-            mkElt("div", undefined, "Item: "),
-            eltImg,
-            mkElt("b", undefined, title)
-        ]));
-        divManualContainer.appendChild(divManual);
-    } else {
-        if (document.querySelector(".container-remember")) {
-            divManualContainer.appendChild(mkElt("p", undefined, `No item selected.`));
-        } else {
-            if (document.getElementById("page-home")) {
-                divManualContainer.appendChild(mkElt("p", undefined, `No item selected.`));
-            } else {
-                divManualContainer.appendChild(mkElt("p", undefined, `No items here.`));
-            }
-        }
-    }
-    const isHomePage = !!document.getElementById("page-home");
-    const isSearching =
-        isHomePage
-        &&
-        true === document.getElementById("div-h-your-items").classList.contains("is-search-field");
-    const chkOnlyMatched = modMdc.mkMDCcheckboxInput("chk-only-matched");
-    const eltOnlyMatched = await modMdc.mkMDCcheckboxElt(chkOnlyMatched, "Check only matched items");
-    const pOnlyMatched = mkElt("p", undefined, [
-        eltOnlyMatched,
-    ]);
-    if (!isSearching) pOnlyMatched.style.display = "none";
-    const btnCheckNow = modMdc.mkMDCbutton("Check now", "raised");
-    btnCheckNow.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-        const onlyMatched = chkOnlyMatched.checked;
-        console.log({ chkOnlyMatched, onlyMatched });
-        askForReminders(onlyMatched);
-        const modMdc = await import("util-mdc");
-        modMdc.mkMDCsnackbar("Looking for expired reminders...");
-        dlg.mdc.close();
-    }));
-    */
 
     const divOutputNew = mkElt("div");
     divOutputNew.style = `
@@ -2587,23 +2368,69 @@ async function dialog10min1hour(eltPrevFocused) {
         padding: 10px;
     `;
 
-    const btnNew = modMdc.mkMDCbutton("Get reminder now", "raised");
-    btnNew.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+    const orderCompareReminders = [
+        "conf",
+        "delay",
+        "age",
+    ];
+
+    const divDoOrderReminders = mkElt("div");
+    divDoOrderReminders.style = `
+        display: flex;
+        gap: 10px;
+        padding: 4px;
+        NOborder: 1px solid gray;
+        background: gray;
+        margin-bottom: 10px;
+    `;
+
+    const detOrderReminders = mkElt("details", undefined, [
+        mkElt("summary", undefined, "Sort reminders"),
+        mkElt("div", undefined, "Click sort label to put it first"),
+        divDoOrderReminders
+    ]);
+    detOrderReminders.addEventListener("toggle", evt => {
+        if (detOrderReminders.open) {
+            detOrderReminders.classList.add("mdc-card");
+            detOrderReminders.style.padding = "10px";
+            detOrderReminders.style.marginBottom = "10px";
+        } else {
+            detOrderReminders.classList.remove("mdc-card");
+            detOrderReminders.style.padding = "0px";
+            detOrderReminders.style.marginBottom = "0px";
+        }
+    })
+    const divOrderReminders = mkElt("div", undefined, detOrderReminders);
+
+    orderSortButtons();
+    function orderSortButtons() {
+        divDoOrderReminders.textContent = "";
+        orderCompareReminders.forEach(srt => {
+            const btnSrt = mkElt("span", undefined, srt);
+            btnSrt.style = `
+                padding: 5px;
+                background: yellow;
+                display: inline-block;
+            `;
+            btnSrt.addEventListener("click", evt => {
+                const idx = orderCompareReminders.indexOf(srt);
+                orderCompareReminders.splice(idx, 1);
+                orderCompareReminders.unshift(srt);
+                orderSortButtons();
+            });
+            divDoOrderReminders.appendChild(btnSrt);
+            if (divOutputNew.querySelector(".pending-reminder")) { getAndShowReminders(); }
+        });
+    }
+
+    async function getAndShowReminders() {
         const modDbFc4i = await import("db-fc4i");
-        divExplain.style.display = "none";
-
-        const orderCompareReminders = [
-            "conf",
-            "delay",
-            "age",
-        ];
-
         const arrNot = await modDbFc4i.getToNotifyNow(getLastSearch());
         console.log({ arrNot });
         const arrSrt = arrNot.toSorted(compareReminders);
         // FIX-ME: random
         arrSrt.length = Math.min(arrSrt.length, 5);
-        divOutputNew.textContent = "First 5 expired:";
+        divOutputNew.textContent = "First 5 pending reminders:";
         arrSrt.forEach(r => {
             const rec = r.expiredRecord;
             const tim = r.expiredTimers[0];
@@ -2611,9 +2438,9 @@ async function dialog10min1hour(eltPrevFocused) {
             const msD = tim.msDelay;
             const msW = tim.msWhen;
             const title = rec.title;
-            const url = rec.url;
+            // const url = rec.url;
             const key = rec.key;
-            console.log({ conf, msD, msW, title, url, key });
+            // console.log({ conf, msD, msW, title, url, key });
             const linkRec = getLink2KeyInFc4i(rec.key);
             const aSource = mkElt("a", { href: linkRec }, title);
             aSource.style.textDecorationLine = "none";
@@ -2660,7 +2487,6 @@ async function dialog10min1hour(eltPrevFocused) {
                 "delay": txtDelay,
                 "age": txtAge,
             }
-            // const txtCompared = [txtConf, txtAge, txtDelay].join(", ");
             const txtCompared = orderCompareReminders.map(k => objCompared[k]).join(", ");
 
             const divBottom = mkElt("div");
@@ -2675,6 +2501,7 @@ async function dialog10min1hour(eltPrevFocused) {
                 mkElt("div", undefined, aSource),
                 divBottom
             ]);
+            eltRem.classList.add("pending-reminder");
             eltRem.classList.add("mdc-card");
             eltRem.style = `
                 padding: 10px;
@@ -2724,12 +2551,13 @@ async function dialog10min1hour(eltPrevFocused) {
                 "delay": compareDelay,
                 "age": compareAge,
             }
-            if (JSON.stringify(Object.keys(funs).sort()) != JSON.stringify(orderCompareReminders.sort())) {
+            if (JSON.stringify(Object.keys(funs).sort()) != JSON.stringify(orderCompareReminders.toSorted())) {
                 debugger;
             }
+            // console.log("5", {orderCompareReminders});
             for (let i = 0, len = orderCompareReminders.length; i < len; i++) {
                 const funName = orderCompareReminders[i];
-                const res = orderCompareReminders[funName];
+                const res = funs[funName];
                 if (res != 0) return res;
             }
             return 0;
@@ -2758,6 +2586,12 @@ async function dialog10min1hour(eltPrevFocused) {
                 return 0;
             }
         }
+    }
+
+    const btnNew = modMdc.mkMDCbutton("Get reminders now", "raised");
+    btnNew.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+        divExplain.style.display = "none";
+        getAndShowReminders();
     }));
 
     const iconChecklist = modMdc.mkMDCicon("today");
@@ -2774,6 +2608,7 @@ async function dialog10min1hour(eltPrevFocused) {
             spanIcons,
         ]),
         mkElt("p", undefined, btnNew),
+        divOrderReminders,
         divOutputNew,
         divExplain,
     ]);

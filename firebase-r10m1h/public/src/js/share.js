@@ -901,7 +901,7 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                         // console.log({ span, chk, checked, tag });
                         if (checked) { ourNewTags.push(tag); }
                     };
-                    const tagsChanged = JSON.stringify(ourOldTags.sort()) != JSON.stringify(ourNewTags.sort());
+                    const tagsChanged = JSON.stringify(ourOldTags.toSorted()) != JSON.stringify(ourNewTags.toSorted());
                     updateOurOldTags();
                     console.log("saveAnyTagChanges", tagsChanged);
                     if (tagsChanged || true) {
