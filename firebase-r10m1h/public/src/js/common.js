@@ -198,21 +198,17 @@ async function getMenu() {
             toggleMenu();
         });
 
-        const eltSearchCheck = document.getElementById("header-search-check");
         const iconChecklist = modMdc.mkMDCicon("today");
-        iconChecklist.id = "icon-check-beside-search";
+        iconChecklist.classList.add("icon-check-beside-search");
         const iconSearch = modMdc.mkMDCicon("search");
-        iconSearch.id = "icon-search-beside-check";
+        iconSearch.classList.add("icon-search-beside-check");
+        const spanIcons = mkElt("span", undefined, [iconChecklist, iconSearch,]);
 
-        // imgTestSearch = mkElt("img", { class: "icon-sized", src: "/ext/mdc/icon/search.svg" });
-        const spanIcons = mkElt("span", { id: "span-checklist-search" }, [
-            iconChecklist,
-            iconSearch,
-            // imgTestSearch,
-        ]);
         let eltFocusedBefore;
         const btnReminders = modMdc.mkMDCbutton(spanIcons);
         btnReminders.title = "Reminders";
+
+        const eltSearchCheck = document.getElementById("header-search-check");
         eltSearchCheck.appendChild(btnReminders);
         btnReminders.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             // console.warn("clicked search check");
@@ -2408,7 +2404,8 @@ async function mkFabNetwG() {
 
 async function dialog10min1hour(eltPrevFocused) {
     const modMdc = await import("util-mdc");
-    let key;
+    // let key;
+    /*
     if (document.getElementById("page-home")) {
         if (eltPrevFocused) {
             const eltUnsavedMarker = eltPrevFocused.classList.contains("unsaved-marker-container")
@@ -2418,15 +2415,6 @@ async function dialog10min1hour(eltPrevFocused) {
                 eltPrevFocused.closest(".unsaved-marker-container");
             const eltRem = eltUnsavedMarker?.querySelector(".container-remember");
             key = eltRem?.dataset.key;
-        } else {
-            /*
-            const subjCards = [...document.querySelectorAll(".subject-card:focus-within")];
-            if (subjCards.length == 0) throw Error("no items focused");
-            if (subjCards.length > 1) throw Error("More than 1 items focused");
-            const eltSc = subjCards[0];
-            const eltRem = eltSc.querySelector(".container-remember");
-            key = eltRem.dataset.key;
-            */
         }
     } else {
         const arrEltRem = [...document.querySelectorAll(".container-remember")];
@@ -2441,12 +2429,14 @@ async function dialog10min1hour(eltPrevFocused) {
                 throw Error(`${arrEltRem.length} items, expeced 0 or 1`);
         }
     }
+    */
     // console.log({ key });
-    const modDbFc4i = await import("db-fc4i");
-    const rec = key ? await modDbFc4i.getDbKey(key) : undefined;
-    const title = rec?.title;
+    // const modDbFc4i = await import("db-fc4i");
+    // const rec = key ? await modDbFc4i.getDbKey(key) : undefined;
+    // const title = rec?.title;
     let dlg;
 
+    /*
     // btn10s
     let divManual;
     if (key) {
@@ -2469,10 +2459,7 @@ async function dialog10min1hour(eltPrevFocused) {
     }));
     const btnAsk1hour = modMdc.mkMDCbutton("1 hour", "outlined");
     btnAsk1hour.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-        // const msDelay = 1000;
         const msDelay = 6 * minMs;
-        // const msDelay = 60 * minMs;
-        // sendSpecificReminderRequest(msDelay);
         askForNotifySpecific(key, msDelay);
         const modMdc = await import("util-mdc");
         modMdc.mkMDCsnackbar("Will send reminder in 1 hour", 6000);
@@ -2506,7 +2493,6 @@ async function dialog10min1hour(eltPrevFocused) {
             return;
         }
         const seconds = inpSeconds.value;
-        */
         const msDelay = 1000 * 60 * minutes;
         // sendSpecificReminderRequest(msDelay);
         askForNotifySpecific(key, msDelay);
@@ -2562,11 +2548,6 @@ async function dialog10min1hour(eltPrevFocused) {
         true === document.getElementById("div-h-your-items").classList.contains("is-search-field");
     const chkOnlyMatched = modMdc.mkMDCcheckboxInput("chk-only-matched");
     const eltOnlyMatched = await modMdc.mkMDCcheckboxElt(chkOnlyMatched, "Check only matched items");
-    /*
-    const chkLabel = chkOnlyMatched.closest("label");
-    console.log({ chkLabel });
-    chkLabel.classList.add("mdc-chkbox-label-helper");
-    */
     const pOnlyMatched = mkElt("p", undefined, [
         eltOnlyMatched,
     ]);
@@ -2580,6 +2561,7 @@ async function dialog10min1hour(eltPrevFocused) {
         modMdc.mkMDCsnackbar("Looking for expired reminders...");
         dlg.mdc.close();
     }));
+    */
 
     const divOutputNew = mkElt("div");
     divOutputNew.style = `
@@ -2587,12 +2569,28 @@ async function dialog10min1hour(eltPrevFocused) {
         flex-direction: column;
         gap: 10px;
     `;
+
+    const eltExplainReminders = mkElt("details", undefined, [
+        mkElt("summary", undefined, "Note: Ask for reminders!"),
+        mkElt("p", undefined, "Ehm. You have to ask for reminders."),
+        mkElt("p", undefined, `
+            Does it sound like a strange idea?
+            Ask for reminders...
+        `),
+        mkElt("p", undefined, `
+        `),
+    ]);
+    const divExplain = mkElt("div", undefined, [eltExplainReminders]);
+    divExplain.classList.add("mdc-card");
+    divExplain.style = `
+        background: orange;
+        padding: 10px;
+    `;
+
     const btnNew = modMdc.mkMDCbutton("Get reminder now", "raised");
     btnNew.addEventListener("click", errorHandlerAsyncEvent(async evt => {
         const modDbFc4i = await import("db-fc4i");
-        // debugger;
-        const arrNot = await modDbFc4i.getToNotifyNow(getLastSearch());
-        console.log({ arrNot });
+        divExplain.style.display = "none";
 
         const orderCompareReminders = [
             "conf",
@@ -2600,10 +2598,11 @@ async function dialog10min1hour(eltPrevFocused) {
             "age",
         ];
 
+        const arrNot = await modDbFc4i.getToNotifyNow(getLastSearch());
+        console.log({ arrNot });
         const arrSrt = arrNot.toSorted(compareReminders);
         // FIX-ME: random
         arrSrt.length = Math.min(arrSrt.length, 5);
-        // debugger;
         divOutputNew.textContent = "First 5 expired:";
         arrSrt.forEach(r => {
             const rec = r.expiredRecord;
@@ -2761,60 +2760,22 @@ async function dialog10min1hour(eltPrevFocused) {
         }
     }));
 
-    const eltExplainReminders = mkElt("details", undefined, [
-        mkElt("summary", undefined, "Note: Ask for reminders!"),
-        mkElt("p", undefined, "Ehm. You have to ask for reminders."),
-        mkElt("p", undefined, `
-            Does it sound like a strange idea?
-            Ask for reminders...
-        `),
-        mkElt("p", undefined, `
-        `),
-    ]);
-    const divExplain = mkElt("div", undefined, [eltExplainReminders]);
-    divExplain.classList.add("mdc-card");
-    divExplain.style = `
-        background: yellow;
-        padding: 10px;
-    `;
+    const iconChecklist = modMdc.mkMDCicon("today");
+    iconChecklist.classList.add("icon-check-beside-search");
+    iconChecklist.style.color = "orange";
+    const iconSearch = modMdc.mkMDCicon("search");
+    iconSearch.classList.add("icon-search-beside-check");
+    const spanIcons = mkElt("span", undefined, [iconChecklist, iconSearch,]);
+    spanIcons.style.position = "relative";
 
     const body = mkElt("div", { class: "body-reminder-dialog" }, [
-        // mkElt("p", { style: "background:red;" }, "Not working right now!!!"),
-        mkElt("h2", undefined, "Reminders"),
+        mkElt("h2", undefined, [
+            "Reminders ",
+            spanIcons,
+        ]),
         mkElt("p", undefined, btnNew),
         divOutputNew,
         divExplain,
-        mkElt("div", { style: "display:none" }, [
-            mkElt("div", { style: "background:red; padding:20px;" }, "Below is obsolote, keeping it just for checking"),
-            mkElt("details", undefined, [
-                mkElt("summayr", undefined, "old, obsolete things"),
-
-                mkElt("div", { style: "opacity:0.5; background:violet; padding:10px;" }, [
-                    mkElt("hr"),
-                    mkElt("h2", undefined, "Long time reminders"),
-                    pOnlyMatched,
-                    mkElt("p", undefined, btnCheckNow),
-                    mkElt("hr"),
-                    mkElt("h2", undefined, "Short time reminder for item"),
-                    // divManual,
-                    divManualContainer,
-                    // divMaybeSpecific,
-                    mkElt("hr"),
-                    mkElt("p", undefined, "Reminders within a day or later works differently:"),
-                    mkElt("ul", undefined, [
-                        mkElt("li", undefined,
-                            `You get a short time reminder for a selected item (within a day)
-                by clicking on a button above.`
-                        ),
-                        mkElt("li", undefined,
-                            `Long time reminders (after a day or more)
-                are setup automatically for all items.
-                (But you have to ask for them!)`
-                        )
-                    ]),
-                ]),
-            ]),
-        ]),
     ]);
     dlg = await modMdc.mkMDCdialogAlert(body, "Close");
 }

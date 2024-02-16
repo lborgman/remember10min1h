@@ -225,12 +225,12 @@ div.mdc-dialog__content ul.mdc-list[role=menu] li.mdc-list-item {
     position: relative;
 }
 
-#header-search-check #icon-check-beside-search {
+.icon-check-beside-search {
     color: var(--mdc-theme-secondary);
     fill: var(--mdc-theme-secondary);
 }
 
-#header-search-check #icon-search-beside-check {
+.icon-search-beside-check {
     position: absolute;
     left: 15px;
     color: black;
