@@ -37,9 +37,9 @@ export const deleteDbKey = async (key) => {
 
 
 const KEY_SHORT_TIMERS = "KEY_SHORT_TIMERS";
-async function setShortTimers(objVal) { return setDbKey(KEY_SHORT_TIMERS, objVal); }
-async function getShortTimers() { return getDbKey(KEY_SHORT_TIMERS); }
-async function countShortTimers() { return countDbKey(KEY_SHORT_TIMERS); }
+async function OLDsetShortTimers(objVal) { return setDbKey(KEY_SHORT_TIMERS, objVal); }
+async function OLDgetShortTimers() { return getDbKey(KEY_SHORT_TIMERS); }
+async function OLDcountShortTimers() { return countDbKey(KEY_SHORT_TIMERS); }
 
 const KEY_SW_STATUS = "SW_STATUS";
 async function setLastSWstatus(objVal) { return setDbKey(KEY_SW_STATUS, objVal); }
@@ -286,7 +286,7 @@ export async function getUnusedTags() {
 
 // async function setShortTimers(objVal) { return setDbKey(KEY_SHORT_TIMERS, objVal); }
 // async function getShortTimers() { return getDbKey(KEY_SHORT_TIMERS); }
-// async function countShortTimers() { return countDbKey(KEY_SHORT_TIMERS); }
+/*
 async function anyShortTimers() {
     // debugger;
     const count = await countShortTimers();
@@ -366,6 +366,7 @@ export async function getNextShortTimer() {
         earliestDateIso,
     }
 }
+*/
 
 // https://stackoverflow.com/questions/979256/sorting-an-array-of-objects-by-property-values
 function sortObjectBy(field, reverse, primer) {

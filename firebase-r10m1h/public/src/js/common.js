@@ -380,6 +380,8 @@ let divActive;
 async function displayMatchingReminders(searchFor, minConf, maxConf, requiredTags, cantRefresh) {
     // const dbFc4i = await getDbFc4i();
     const dbFc4i = await import("db-fc4i");
+    // debugger;
+    // const x = await dbFc4i.getNextShortTimer();
     const modMdc = await import("util-mdc");
     if (![false, true, undefined].includes(cantRefresh)) {
         console.error(`cantRefresh: ${cantRefresh}`);
@@ -2141,112 +2143,6 @@ document.addEventListener("click", errorHandlerAsyncEvent(async evt => {
     }
 }));
 
-const checkNotifyShortDelayTest = 5;
-const checkNotifyShortDelayProd = 30;
-const checkNotifyShortDelay = checkNotifyShortDelayTest;
-// const checkNotifyShortDelay = checkNotifyShortDelayProd;
-const restartCheckNotifyShort = (() => {
-    let tmr;
-    // const delayMs = 30 * 1000;
-    const delayMs = checkNotifyShortDelay * 1000;
-    return (way) => {
-        clearTimeout(tmr);
-        if (!testShortSwitch) return;
-        tmr = setTimeout(checkNotifyShort, delayMs);
-    }
-})();
-async function checkNotifyShort() {
-    console.log("%ccheckNotifyShort", "color:red");
-
-    // FIX-ME: move to db-fc4i.js
-    // const dbFc4i = await getDbFc4i();
-    const dbFc4i = await import("db-fc4i");
-    const objNextShort = await dbFc4i.getNextShortTimer();
-
-    if (!objNextShort) return;
-    const {
-        earliestKey,
-        earliestAfterMinutes,
-        earliestLbl,
-        earliestDateIso,
-    } = objNextShort;
-    const nowIso = new Date().toISOString();
-    console.log({ earliestKey, earliestAfterMinutes, earliestLbl, earliestDateIso, nowIso });
-    if (nowIso < earliestDateIso) return;
-    askForNotifySpecific(earliestKey, 1000, earliestAfterMinutes, earliestLbl, true);
-    // deleteShortTimer(earliestKey);
-    const modMdc = await import("util-mdc");
-    modMdc.mkMDCsnackbar("checkNotifyShort", 4000);
-}
-
-// document.addEventListener("click", evt => restartCheckNotifyShort());
-window.addEventListener("load", evt => restartCheckNotifyShort("keydown"));
-// window.addEventListener("unload", evt => restartCheckNotifyShort("keydown"));
-window.addEventListener("beforeunload", evt => checkNotifyShort("keydown"));
-document.addEventListener("keyup", evt => restartCheckNotifyShort("keydown"));
-document.addEventListener("mouseup", evt => restartCheckNotifyShort("mousedown"));
-document.addEventListener("scroll", evt => restartCheckNotifyShort("scroll"));
-document.addEventListener("resize", evt => restartCheckNotifyShort("resize"));
-document.addEventListener("touchend", evt => restartCheckNotifyShort("resize"));
-
-async function mkDivManualReminders(getCreatedEltTime) {
-    const modMdc = await import("util-mdc");
-    function afterMinutes(minutes, lbl) {
-        const key = getCreatedEltTime();
-        const atDate = new Date(Date.now() + minutes * minMs);
-        addShortTimer(key, atDate, minutes, lbl);
-        async function checkForShort() {
-            console.log("%c new checkForShort", "color:red; background:yellow");
-            const shortVal = await getShortTimer(key);
-            if (!shortVal) return;
-            const myLbl = `${lbl} t`;
-            await askForNotifySpecific(key, 0, minutes, myLbl, true);
-            // await deleteShortTimer(key);
-        }
-        // setTimeout(checkForShort, minutes * minMs);
-        setTimeout(restartCheckNotifyShort, minutes * minMs);
-    }
-
-    function mkShortBtn(lbl, minutes) {
-        const btn = modMdc.mkMDCbutton(lbl, "raised");
-        // btn.style.textTransform = "none";
-        btn.classList.add("btn-short-timer");
-        btn.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            // modMdc.mkMDCsnackbar(`Added ${lbl} reminder`, 4000);
-            modMdc.mkMDCsnackbar(`Added ${lbl} reminder (NOT READY)`, 4000);
-            afterMinutes(minutes, lbl);
-        }));
-        return btn;
-    }
-    const btn10Sec = mkShortBtn("10 s", 10 / 60);
-    const btn1minutes = mkShortBtn("1 min", 1);
-    const btn10minutes = mkShortBtn("10 min", 10);
-    const btn1hour = mkShortBtn("1 h", 60);
-    const btn4hour = mkShortBtn("4 h", 4 * 60);
-    const btnInfo = modMdc.mkMDCiconButton("info", "Info", 30);
-    btnInfo.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-        const body = mkElt("div", undefined, [
-            mkElt("p", undefined, "info"),
-        ]);
-        const dlg = modMdc.mkMDCdialogAlert(body, "Close");
-    }));
-    // export function mkMDCiconButton(icon, ariaLabel, sizePx);
-
-    const divManualReminders = (mkElt("div", undefined, [
-        // mkElt("p", undefined, ` Remind me about this item after: `),
-        mkElt("div", undefined, "Remind me after:"),
-        mkElt("div", { class: "div-short-buttons" }, [
-            btn10Sec,
-            btn1minutes,
-            btn10minutes,
-            btn1hour,
-            btn4hour,
-            btnInfo
-            // btnManualReminder,
-        ])
-    ]));
-    return divManualReminders;
-}
 
 
 // Clipboard images
@@ -2381,13 +2277,26 @@ async function dialog10min1hour(eltPrevFocused) {
         padding: 4px;
         NOborder: 1px solid gray;
         background: gray;
+    `;
+    const iconResetOrder = modMdc.mkMDCicon("restart_alt");
+    const btnResetOrder = modMdc.mkMDCiconButton(iconResetOrder, "Reset order");
+    btnResetOrder.addEventListener("click", evt => {
+        alert("resetting order is not implemented yet");
+    });
+    const divDoOrderRemindersOuter = mkElt("div", undefined, [
+        divDoOrderReminders,
+        btnResetOrder
+    ]);
+    divDoOrderRemindersOuter.style = `
+        display: flex;
+        gap: 10px;
         margin-bottom: 10px;
     `;
 
     const detOrderReminders = mkElt("details", undefined, [
         mkElt("summary", undefined, "Prioritize reminders"),
         mkElt("div", undefined, "Click sort label to put it first"),
-        divDoOrderReminders
+        divDoOrderRemindersOuter
     ]);
     detOrderReminders.addEventListener("toggle", evt => {
         if (detOrderReminders.open) {

@@ -339,24 +339,6 @@ self.addEventListener("message", errorHandlerAsyncEvent(async evt => {
             case "NOTIFY_SPECIFIC":
                 {
                     return;
-                    // const msDelay = evt.data.msDelay;
-                    // const lbl = evt.data.lbl;
-                    // const key = evt.data.key;
-                    // const afterMinutes = evt.data.afterMinutes;
-                    // const isShort = evt.data.isShort;
-                    const { msDelay, lbl, key, afterMinutes, isShort } = evt.data;
-                    console.log("%cservice-worker NOTIFY_SPECIFIC", logColors, { msDelay, key, afterMinutes });
-                    const db = await getDb();
-                    const keyRec = await db.get(idbStoreName, key);
-                    const notifySpecific = () => {
-                        // displayNotificationFromRecord(keyRec, `After ${afterMinutes} minutes`);
-                        displayNotificationFromRecord(keyRec, `After ${lbl}`);
-                        // FIX-ME: consistency, mark long time reminders done here:
-                        if (isShort) {
-                            deleteShortTimer(key);
-                        }
-                    }
-                    setTimeout(notifySpecific, msDelay);
                 }
                 break;
             case 'GET_VERSION':
