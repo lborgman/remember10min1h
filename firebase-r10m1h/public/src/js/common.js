@@ -2264,11 +2264,17 @@ async function dialog10min1hour(eltPrevFocused) {
         padding: 10px;
     `;
 
-    const orderCompareReminders = [
+    const orderCompareReminders = [];
+    const defaultOrderCompareReminders = [
         "conf",
         "delay",
         "age",
     ];
+    resetOrderCompareReminders();
+    function resetOrderCompareReminders() {
+        orderCompareReminders.length = 0;
+        orderCompareReminders.push(...defaultOrderCompareReminders);
+    }
 
     const divDoOrderReminders = mkElt("div");
     divDoOrderReminders.style = `
@@ -2281,7 +2287,9 @@ async function dialog10min1hour(eltPrevFocused) {
     const iconResetOrder = modMdc.mkMDCicon("restart_alt");
     const btnResetOrder = modMdc.mkMDCiconButton(iconResetOrder, "Reset order");
     btnResetOrder.addEventListener("click", evt => {
-        alert("resetting order is not implemented yet");
+        // alert("resetting order is not implemented yet");
+        resetOrderCompareReminders();
+        orderSortButtons();
     });
     const divDoOrderRemindersOuter = mkElt("div", undefined, [
         divDoOrderReminders,

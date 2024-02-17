@@ -223,6 +223,10 @@ div.mdc-dialog__content ul.mdc-list[role=menu] li.mdc-list-item {
 
 #header-search-check {
     position: relative;
+    display: none;
+}
+#page-home #header-search-check {
+    display: unset;
 }
 
 .icon-check-beside-search {
