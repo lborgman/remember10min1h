@@ -1507,57 +1507,70 @@ async function mkMenu() {
         const objJson = JSON.parse(contents);
         // const objJson = await file.json();
         console.log({ objJson });
-        // We have an array
-        const importedKeys = [];
-        const notImportedKeys = [];
-        const arrJson = [...objJson];
-        callBackProgress(arrJson.length);
-        // const ret = objJson.forEach
-        // const ret = arrJson.map
-        const ret = [];
-        const setTagsImported = new Set();
-        for (let j = 0, len = arrJson.length; j < len; j++) {
-            const obj = arrJson[j];
-            const key = obj.key;
-            const oldObj = await modDbFc4i.getDbKey(key);
-            callBackProgress();
-            // FIX-ME: merge?
-            if (oldObj) {
-                // FIX-ME: which is newest?
-                notImportedKeys.push(key);
-                // return;
-                continue;
-            }
-            // convert base64webpToBlob;
-            const images = obj.images;
-            if (images) {
-                for (let i = 0, len = images.length; i < len; i++) {
-                    const b64 = images[i];
-                    const blob = await modClipboardImages.base64webpToBlob(b64);
-                    images[i] = blob;
-                }
-            }
-            // Import tags?
-            const tags = obj.tags;
-            if (tags) { tags.forEach(t => setTagsImported.add(t)); }
-
-            // console.log(`Adding ${key}, ${obj.title}`);
-            importedKeys.push(key);
-            ret.push(modDbFc4i.setDbKey(key, obj));
+        if (Array.isArray(objJson)) {
+            const arrRecords = [...objJson];
+            await importRecords(arrRecords);
+        } else {
+            const arrMindmaps = [...objJson.mindmaps];
+            await importMindmaps(arrMindmaps);
+            const arrRecords = [...objJson.records];
+            await importRecords(arrRecords);
         }
-        console.log({ ret }, ret);
+        async function importMindmaps(arrMindmaps) {
+            console.log({arrMindmaps});
+        }
+        async function importRecords(arrRecords) {
+            // We have an array
+            const importedKeys = [];
+            const notImportedKeys = [];
+            callBackProgress(arrRecords.length);
+            // const ret = objJson.forEach
+            // const ret = arrJson.map
+            const ret = [];
+            const setTagsImported = new Set();
+            for (let j = 0, len = arrRecords.length; j < len; j++) {
+                const obj = arrRecords[j];
+                const key = obj.key;
+                const oldObj = await modDbFc4i.getDbKey(key);
+                callBackProgress();
+                // FIX-ME: merge?
+                if (oldObj) {
+                    // FIX-ME: which is newest?
+                    notImportedKeys.push(key);
+                    // return;
+                    continue;
+                }
+                // convert base64webpToBlob;
+                const images = obj.images;
+                if (images) {
+                    for (let i = 0, len = images.length; i < len; i++) {
+                        const b64 = images[i];
+                        const blob = await modClipboardImages.base64webpToBlob(b64);
+                        images[i] = blob;
+                    }
+                }
+                // Import tags?
+                const tags = obj.tags;
+                if (tags) { tags.forEach(t => setTagsImported.add(t)); }
 
-        // debugger; // FIX-ME require tags
-        const arrOldTags = await modDbFc4i.getDbTagsArr();
-        arrOldTags.forEach(t => setTagsImported.add(t));
-        const arrNewTags = [...setTagsImported];
-        arrNewTags.sort();
-        // const dbFc4i = await getDbFc4i();
-        modDbFc4i.setDbTagsArr(arrNewTags);
+                // console.log(`Adding ${key}, ${obj.title}`);
+                importedKeys.push(key);
+                ret.push(modDbFc4i.setDbKey(key, obj));
+            }
+            console.log({ ret }, ret);
 
-        const promRes = await Promise.allSettled(ret);
-        console.log({ promRes });
-        console.log({ importedKeys });
+            // debugger; // FIX-ME require tags
+            const arrOldTags = await modDbFc4i.getDbTagsArr();
+            arrOldTags.forEach(t => setTagsImported.add(t));
+            const arrNewTags = [...setTagsImported];
+            arrNewTags.sort();
+            // const dbFc4i = await getDbFc4i();
+            modDbFc4i.setDbTagsArr(arrNewTags);
+
+            const promRes = await Promise.allSettled(ret);
+            console.log({ promRes });
+            console.log({ importedKeys });
+        }
         await showImportResult();
         return importedKeys;
 
@@ -1602,7 +1615,11 @@ async function mkMenu() {
     }
 
     async function dialogExportImport() {
-        const toExport = [];
+        const dbMindmaps = await import("db-mindmaps");
+        const arrAllMindmaps = await dbMindmaps.DBgetAllMindmaps();
+        const toExportMindmaps = [...arrAllMindmaps];
+
+        const toExportRecords = [];
         const eltsKey = document.querySelectorAll("[data-key-record]");
         // Doubles in elements in listing
         const arrKeys2 = [...eltsKey].map(elt => elt.dataset.keyRecord);
@@ -1776,12 +1793,15 @@ async function mkMenu() {
                         images[j] = base64;
                     }
                 }
-                toExport.push(obj);
+                toExportRecords.push(obj);
                 funBackKey();
             }
             // console.log({ toExport });
             // console.log(toExport);
-            const json = JSON.stringify(toExport);
+            const json = JSON.stringify({
+                "mindmaps": toExportMindmaps,
+                "records": toExportRecords
+            });
             // console.log({ json });
             // const fromJson = JSON.parse(json);
             // console.log({ fromJson });
@@ -2238,6 +2258,7 @@ async function mkFabNetwG() {
 
 async function dialog10min1hour(eltPrevFocused) {
     const modMdc = await import("util-mdc");
+    const modLocalSettings = await import("local-settings");
     let dlg;
 
     const divOutputNew = mkElt("div");
@@ -2247,22 +2268,34 @@ async function dialog10min1hour(eltPrevFocused) {
         gap: 10px;
     `;
 
+    const iconInfo = modMdc.mkMDCicon("info");
+    iconInfo.style.color = "blue";
     const eltExplainReminders = mkElt("details", undefined, [
-        mkElt("summary", undefined, "Note: Ask for reminders!"),
+        mkElt("summary", undefined, ["Ask for reminders? ", iconInfo]),
         mkElt("p", undefined, "Ehm. You have to ask for reminders."),
         mkElt("p", undefined, `
             Does it sound like a strange idea?
             Ask for reminders...
         `),
-        mkElt("p", undefined, `
-        `),
+        mkElt("p", undefined, [
+            `There is an explanation `,
+            mkElt("a", { href: "about.html#ask-for-reminders" }, "here"),
+            "."
+        ]),
     ]);
     const divExplain = mkElt("div", undefined, [eltExplainReminders]);
     divExplain.classList.add("mdc-card");
     divExplain.style = `
-        background: orange;
+        background: lightblue;
         padding: 10px;
+        line-height: normal;
     `;
+
+    const clrOrderCompareReminders = {
+        "conf": "greenyellow",
+        "delay": "yellow",
+        "age": "orange",
+    }
 
     const orderCompareReminders = [];
     const defaultOrderCompareReminders = [
@@ -2270,10 +2303,17 @@ async function dialog10min1hour(eltPrevFocused) {
         "delay",
         "age",
     ];
-    resetOrderCompareReminders();
+    const settingOrderCompareReminders = new modLocalSettings.LocalSetting(
+        "fc4i-", "compare-reminders", JSON.stringify(defaultOrderCompareReminders));
+
+    orderCompareReminders.push(...JSON.parse(settingOrderCompareReminders.value));
+
+    // resetOrderCompareReminders();
     function resetOrderCompareReminders() {
+        settingOrderCompareReminders.reset();
         orderCompareReminders.length = 0;
-        orderCompareReminders.push(...defaultOrderCompareReminders);
+        // orderCompareReminders.push(...defaultOrderCompareReminders);
+        orderCompareReminders.push(...JSON.parse(settingOrderCompareReminders.value));
     }
 
     const divDoOrderReminders = mkElt("div");
@@ -2326,13 +2366,14 @@ async function dialog10min1hour(eltPrevFocused) {
             const btnSrt = mkElt("span", undefined, srt);
             btnSrt.style = `
                 padding: 5px;
-                background: yellow;
+                background: ${clrOrderCompareReminders[srt]};
                 display: inline-block;
             `;
             btnSrt.addEventListener("click", evt => {
                 const idx = orderCompareReminders.indexOf(srt);
                 orderCompareReminders.splice(idx, 1);
                 orderCompareReminders.unshift(srt);
+                settingOrderCompareReminders.value = JSON.stringify(orderCompareReminders);
                 orderSortButtons();
             });
             divDoOrderReminders.appendChild(btnSrt);
@@ -2481,7 +2522,7 @@ async function dialog10min1hour(eltPrevFocused) {
         }
     }
 
-    const btnNew = modMdc.mkMDCbutton("Get reminders now", "raised");
+    const btnNew = modMdc.mkMDCbutton("Please, reminde me", "raised");
     btnNew.addEventListener("click", errorHandlerAsyncEvent(async evt => {
         divExplain.style.display = "none";
         getAndShowReminders();

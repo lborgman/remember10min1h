@@ -26,6 +26,12 @@ export class LocalSetting {
         console.warn("%cget value", "background:red;");
         return this.getCachedValue();
     }
+    set value(val) {
+        if (this.#input) {
+            throw Error(`set value(val) can not be used when #input is set (${this.#key})`);
+        }
+        this.#set_itemValue(val);
+    }
     #set_itemValue(val) {
         const tofVal = typeof val;
         const tofDef = typeof this.#defaultValue;

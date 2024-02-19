@@ -232,6 +232,7 @@
                         But you can still use this app now on for example both on iPhone and Windows.
                         It is just the possibility to 'share' that does not work there.
                     </p>
+                    <!-- 
                     <h3 style="color:red">Reminders - do they work?</h3>
                     <div>
                         <p>Unfortunately <a href="https://github.com/beverloo/notification-triggers/issues/7"
@@ -242,6 +243,7 @@
                             Just click that to check for reminders.</p>
                         <p><img src="/img/btn-check-reminders.png" width="50%"></p>
                     </div>
+                    -->
                 </details>
 
 
@@ -269,37 +271,51 @@
             <p>
                 <b>Tools for learning:</b>
                 My reason for writing
-                Fc4i was to add integrated tools for learning, like flashcards, repeating reminders and 
-                <a href="#mm4i">mindmaps</a>.
+                Fc4i was to add integrated tools for learning, like flashcards, repeating reminders, etc.
+                I also included some tools to stimulate thinking:
+                <a href="#mm4i">mindmaps</a>, <a href="#nwg">network view</a>.
             </p>
+            <div id="ask-for-reminders">
+                <p>
+                    <b>Reminders</b> in this app are not alarms.
+                    They are more like <i>"can you please tell me now if there is something I ought to repeat now?"</i>
+                    There is a good description here:
+                    <a href="https://www.lifehack.org/articles/featured/back-to-basics-reminders.html">The
+                        Importance of Reminders</a>
+                </p>
+            </div>
 
             <div id="div-diff" class="mdc-card">
-                <div> There are some more differences to notice: </div>
                 <details>
-                    <summary>Storing</summary>
-                    Apps like Google Keep has advanced storing where your data is
-                    backed up to your Google account.
-                    Fc4i just stores your data in your web browser.
-                </details>
-                <details>
-                    <summary>Native app vs web app</summary>
-                    The fc4i app and its companions are a
-                    <a href="https://en.wikipedia.org/wiki/Progressive_web_app">progressive web apps (PWA)</a>.
-                    Google Keep is a native app.
-                    <p>
-                        While I install a native app from Google without hesitating
-                        I rather avoid installing a native app from
-                        some unknown developer (like me).
-                        The reason is security concerns.
-                        A PWA is essentially just a web page.
-                        So it is normally not more dangerous to use than a web page.
-                    </p>
-                    <p>
-                        Another advantage of web apps is that they should work
-                        everywhere where there is an uptodate web browser.
-                        (But sadly, sharing to a web app is yet not standardised enough.
-                        It probably only works on Android mobiles and tablets.)
-                    </p>
+                    <summary> Some things to notice </summary>
+                    <div style="margin-left:10px;">
+                        <details>
+                            <summary>Storing</summary>
+                            Apps like Google Keep has advanced storing where your data is
+                            backed up to your Google account.
+                            Fc4i just stores your data in your web browser.
+                        </details>
+                        <details>
+                            <summary>Native app vs web app</summary>
+                            The fc4i app and its companions are a
+                            <a href="https://en.wikipedia.org/wiki/Progressive_web_app">progressive web apps (PWA)</a>.
+                            Google Keep is a native app.
+                            <p>
+                                While I install a native app from Google without hesitating
+                                I rather avoid installing a native app from
+                                some unknown developer (like me).
+                                The reason is security concerns.
+                                A PWA is essentially just a web page.
+                                So it is normally not more dangerous to use than a web page.
+                            </p>
+                            <p>
+                                Another advantage of web apps is that they should work
+                                everywhere where there is an uptodate web browser.
+                                (But sadly, sharing to a web app is yet not standardised enough.
+                                It probably only works on Android mobiles and tablets.)
+                            </p>
+                        </details>
+                    </div>
                 </details>
             </div>
         </section>
@@ -312,22 +328,22 @@
                 <a href="/mm4i/mm4i.html">Open</a>
             </div>
             <p>
-                When I first heard about mindmaps I thought it looked like 
+                When I first heard about mindmaps I thought it looked like
                 a very good idea.
                 But I never tried to use it.
                 Until one day I talked with a woman studying the same subject as I at the university.
-                She said that she could read a book in one hour and remember it 
+                She said that she could read a book in one hour and remember it
                 with the help of mindmaps.
             </p>
             <p>
-                I still did not try mindmaps since I never had enough big papers and colored 
+                I still did not try mindmaps since I never had enough big papers and colored
                 pencils with me.
                 But I was determined to try.
             </p>
             <p>
-                Then one day I saw that there was a Javascript library for 
-                creating mindmaps, 
-                <a href="https://github.com/hizzgdev/jsmind">jsMind</a>. 
+                Then one day I saw that there was a Javascript library for
+                creating mindmaps,
+                <a href="https://github.com/hizzgdev/jsmind">jsMind</a>.
                 Fantastic! It can be used in any modern web browser.
                 I decided to make something that you could use on a mobile phone
                 built on that Javascript library.
