@@ -1448,6 +1448,9 @@ async function mkMenu() {
     async function importItems(callBackProgress) {
         const modDbFc4i = await import("db-fc4i");
         const modClipboardImages = await import("images");
+        const importedKeys = [];
+        const notImportedKeys = [];
+
         let theFile;
         if ("NOshowOpenFilePicker" in window) {
             let fileHandle;
@@ -1517,12 +1520,17 @@ async function mkMenu() {
             await importRecords(arrRecords);
         }
         async function importMindmaps(arrMindmaps) {
-            console.log({arrMindmaps});
+            const dbMindmaps = await import("db-mindmaps");
+            console.log({ arrMindmaps });
+            const arrProm = [];
+            arrMindmaps.forEach(mm => {
+                console.log({ mm });
+                arrProm.push(dbMindmaps.DBsetMindmap(mm.key, mm.jsmindmap));
+            });
+            await Promise.all(arrProm);
         }
         async function importRecords(arrRecords) {
             // We have an array
-            const importedKeys = [];
-            const notImportedKeys = [];
             callBackProgress(arrRecords.length);
             // const ret = objJson.forEach
             // const ret = arrJson.map
@@ -1577,27 +1585,40 @@ async function mkMenu() {
         async function showImportResult() {
             // goHome
             // FIX-ME det-sum
-            const divImported = mkElt("div", { class: "div-all-imported" });
-            const detImported = mkElt("details", undefined, [
-                mkElt("summary", undefined, `Imported (${importedKeys.length})`),
-                divImported
+            const divImportedItems = mkElt("div", { class: "div-all-imported" });
+            const detImportedItems = mkElt("details", undefined, [
+                mkElt("summary", undefined, `Imported items (${importedKeys.length})`),
+                divImportedItems
             ]);
-            const divNotImported = mkElt("div", { class: "div-all-imported" });
+            const detImported = mkElt("details", undefined, [
+                mkElt("summary", undefined, `Imported`),
+                mkElt("div", { style: "margin-left:10px;" }, [
+                    detImportedItems,
+                ])
+            ]);
+            const divNotImportedItems = mkElt("div", { class: "div-all-imported" });
+            const detNotImportedItems = mkElt("details", undefined, [
+                mkElt("summary", undefined, `Not Imported items (${notImportedKeys.length})`),
+                divNotImportedItems
+            ]);
             const detNotImported = mkElt("details", undefined, [
-                mkElt("summary", undefined, `Not Imported (${notImportedKeys.length})`),
-                divNotImported
+                mkElt("summary", undefined, `Not Imported`),
+                mkElt("div", { style: "margin-left:10px;" }, [
+                    detNotImportedItems
+                ])
+
             ]);
             const sortedImports = importedKeys.sort().reverse();
             for (let j = 0, len = sortedImports.length; j < len; j++) {
                 const key = sortedImports[j];
                 const rem = await modDbFc4i.getDbKey(key);
-                appendRem(rem, divImported);
+                appendRem(rem, divImportedItems);
             }
             const sortedNotImports = notImportedKeys.sort().reverse();
             for (let j = 0, len = sortedNotImports.length; j < len; j++) {
                 const key = sortedNotImports[j];
                 const rem = await modDbFc4i.getDbKey(key);
-                appendRem(rem, divNotImported);
+                appendRem(rem, divNotImportedItems);
             }
 
 
