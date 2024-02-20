@@ -1448,8 +1448,10 @@ async function mkMenu() {
     async function importItems(callBackProgress) {
         const modDbFc4i = await import("db-fc4i");
         const modClipboardImages = await import("images");
-        const importedKeys = [];
-        const notImportedKeys = [];
+        const importedItemsKeys = [];
+        const notImportedItemsKeys = [];
+        const importedMindmapsKeys = [];
+        const notImportedMindmapsKeys = [];
 
         let theFile;
         if ("NOshowOpenFilePicker" in window) {
@@ -1512,39 +1514,52 @@ async function mkMenu() {
         console.log({ objJson });
         if (Array.isArray(objJson)) {
             const arrRecords = [...objJson];
+            callBackProgress(arrRecords.length);
             await importRecords(arrRecords);
         } else {
             const arrMindmaps = [...objJson.mindmaps];
-            await importMindmaps(arrMindmaps);
             const arrRecords = [...objJson.records];
+            callBackProgress(arrRecords.length + arrMindmaps.length);
+            await importMindmaps(arrMindmaps);
             await importRecords(arrRecords);
         }
         async function importMindmaps(arrMindmaps) {
             const dbMindmaps = await import("db-mindmaps");
             console.log({ arrMindmaps });
             const arrProm = [];
-            arrMindmaps.forEach(mm => {
-                console.log({ mm });
+            // arrMindmaps.forEach(async mm =>
+            for (let j = 0, len = arrMindmaps.length; j < len; j++) {
+                callBackProgress();
+                const mm = arrMindmaps[j];
+                const key = mm.key;
+                console.log({ key, mm });
+                const oldMM = await dbMindmaps.DBgetMindmap(key);
+                if (oldMM) {
+                    notImportedMindmapsKeys.push(key);
+                    continue;
+                } else {
+                    importedMindmapsKeys.push(key);
+                }
                 arrProm.push(dbMindmaps.DBsetMindmap(mm.key, mm.jsmindmap));
-            });
+            }
             await Promise.all(arrProm);
         }
         async function importRecords(arrRecords) {
             // We have an array
-            callBackProgress(arrRecords.length);
+            // callBackProgress(arrRecords.length);
             // const ret = objJson.forEach
             // const ret = arrJson.map
             const ret = [];
             const setTagsImported = new Set();
             for (let j = 0, len = arrRecords.length; j < len; j++) {
+                callBackProgress();
                 const obj = arrRecords[j];
                 const key = obj.key;
                 const oldObj = await modDbFc4i.getDbKey(key);
-                callBackProgress();
                 // FIX-ME: merge?
                 if (oldObj) {
                     // FIX-ME: which is newest?
-                    notImportedKeys.push(key);
+                    notImportedItemsKeys.push(key);
                     // return;
                     continue;
                 }
@@ -1561,8 +1576,7 @@ async function mkMenu() {
                 const tags = obj.tags;
                 if (tags) { tags.forEach(t => setTagsImported.add(t)); }
 
-                // console.log(`Adding ${key}, ${obj.title}`);
-                importedKeys.push(key);
+                importedItemsKeys.push(key);
                 ret.push(modDbFc4i.setDbKey(key, obj));
             }
             console.log({ ret }, ret);
@@ -1577,48 +1591,95 @@ async function mkMenu() {
 
             const promRes = await Promise.allSettled(ret);
             console.log({ promRes });
-            console.log({ importedKeys });
+            console.log({ importedItemsKeys });
         }
         await showImportResult();
-        return importedKeys;
+        return importedItemsKeys;
 
         async function showImportResult() {
             // goHome
+            const dbMindmaps = await import("db-mindmaps");
             // FIX-ME det-sum
             const divImportedItems = mkElt("div", { class: "div-all-imported" });
             const detImportedItems = mkElt("details", undefined, [
-                mkElt("summary", undefined, `Imported items (${importedKeys.length})`),
+                mkElt("summary", undefined, `Imported items (${importedItemsKeys.length})`),
                 divImportedItems
+            ]);
+            const divImportedMindmaps = mkElt("div", { class: "div-imported-mindmaps" });
+            const detImportedMindmaps = mkElt("details", undefined, [
+                mkElt("summary", undefined, `Imported mindmaps (${importedItemsKeys.length})`),
+                divImportedMindmaps
             ]);
             const detImported = mkElt("details", undefined, [
                 mkElt("summary", undefined, `Imported`),
                 mkElt("div", { style: "margin-left:10px;" }, [
                     detImportedItems,
+                    detImportedMindmaps,
                 ])
             ]);
-            const divNotImportedItems = mkElt("div", { class: "div-all-imported" });
+
+
+
+            const divNotImportedItems = mkElt("div", { class: "div-not-imported-items" });
             const detNotImportedItems = mkElt("details", undefined, [
-                mkElt("summary", undefined, `Not Imported items (${notImportedKeys.length})`),
+                mkElt("summary", undefined, `Not Imported items (${notImportedItemsKeys.length})`),
                 divNotImportedItems
+            ]);
+            const divNotImportedMindmaps = mkElt("div", { class: "div-not-imported-mindmaps" });
+            const detNotImportedMindmaps = mkElt("details", undefined, [
+                mkElt("summary", undefined, `Not Imported Mindmaps (${notImportedMindmapsKeys.length})`),
+                divNotImportedMindmaps
             ]);
             const detNotImported = mkElt("details", undefined, [
                 mkElt("summary", undefined, `Not Imported`),
                 mkElt("div", { style: "margin-left:10px;" }, [
-                    detNotImportedItems
+                    detNotImportedItems,
+                    detNotImportedMindmaps
                 ])
-
             ]);
-            const sortedImports = importedKeys.sort().reverse();
-            for (let j = 0, len = sortedImports.length; j < len; j++) {
-                const key = sortedImports[j];
+
+
+            const sortedImportedItems = importedItemsKeys.sort().reverse();
+            for (let j = 0, len = sortedImportedItems.length; j < len; j++) {
+                const key = sortedImportedItems[j];
                 const rem = await modDbFc4i.getDbKey(key);
                 appendRem(rem, divImportedItems);
             }
-            const sortedNotImports = notImportedKeys.sort().reverse();
-            for (let j = 0, len = sortedNotImports.length; j < len; j++) {
-                const key = sortedNotImports[j];
+            const sortedNotImportedItems = notImportedItemsKeys.sort().reverse();
+            for (let j = 0, len = sortedNotImportedItems.length; j < len; j++) {
+                const key = sortedNotImportedItems[j];
                 const rem = await modDbFc4i.getDbKey(key);
                 appendRem(rem, divNotImportedItems);
+            }
+
+            const sortedImportedMindmaps = importedMindmapsKeys.sort().reverse();
+            for (let j = 0, len = sortedImportedMindmaps.length; j < len; j++) {
+                const key = sortedImportedMindmaps[j];
+                const mm = await dbMindmaps.DBgetMindmap(key);
+                console.log("imp", { mm });
+                divImportedMindmaps.appendChild(mkEltMindmap(mm));
+            }
+            const sortedNotImportedMindmaps = notImportedMindmapsKeys.sort().reverse();
+            for (let j = 0, len = sortedNotImportedMindmaps.length; j < len; j++) {
+                const key = sortedNotImportedMindmaps[j];
+                const mm = await dbMindmaps.DBgetMindmap(key);
+                console.log("not imp", { mm });
+                divNotImportedMindmaps.appendChild(mkEltMindmap(mm));
+            }
+            function mkEltMindmap(mm) {
+                const mkey = mm.key;
+                const url = mkLinkMindmap(mkey);
+                const format = mm.format;
+                if (format != "node_array") throw Error(`Expected "node_array" but format is "${format}"`);
+                const topic = mm.data[0].topic;
+                console.log({ topic, url });
+                return mkElt("a", { href: url }, topic);
+            }
+            function mkLinkMindmap(mkey) {
+                const urlPath = "/mm4i/mm4i.html";
+                const url = new URL(urlPath, location);
+                url.searchParams.set("mindmap", mkey);
+                return url.href;
             }
 
 
