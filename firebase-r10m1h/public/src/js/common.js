@@ -1703,56 +1703,56 @@ async function mkMenu() {
 
         const toExportRecords = [];
         const eltsKey = document.querySelectorAll("[data-key-record]");
-        // Doubles in elements in listing
-        const arrKeys2 = [...eltsKey].map(elt => elt.dataset.keyRecord);
-        const setKeys = new Set(arrKeys2);
-        const arrKeys = [...setKeys];
-        // const dbFc4i = await getDbFc4i();
+        // Doubles in elements in listing????
+        const arrItemKeys2 = [...eltsKey].map(elt => elt.dataset.keyRecord);
+        const setItemKeys = new Set(arrItemKeys2);
+        const arrItemKeys = [...setItemKeys];
         const dbFc4i = await import("db-fc4i");
-        const numAllItems = await dbFc4i.countAllReminders();
         let pExport;
         const fnPrefix = "fc4i";
-        let numItems;
+        const numItems = arrItemKeys.length;
+        const numAllItems = await dbFc4i.countAllReminders();
+        const numAllMindmaps = arrAllMindmaps.length;
+        const numMindmaps = toExportMindmaps.length;
+
         const h2TitleExport = mkElt("h2", undefined, "Export");
         const h2TitleImport = mkElt("h2", undefined, "Import");
         if (document.getElementById("div-home")) {
-            if (arrKeys.length == 0) {
+            if (numItems == 0) {
                 pExport =
-                    mkElt("p", undefined,
-                        `No matching items to export.
-                    (To change this use search on top of the page.)`
-                    );
+                    mkElt("p", undefined, `No matching items to export.  `);
+                // (To change this use search on top of the page.)
             } else {
                 pExport = mkElt("p", undefined, [
-                    // `Export ${arrKeys.length} of ${arrAllItems.length} item(s).`
-                    `Export ${arrKeys.length} of ${numAllItems} item(s).`
+                    `Export ${numItems} of ${numAllItems} item(s).`
                 ]);
-                // if (arrAllItems.length > 1) 
                 if (numAllItems > 1) {
                     pExport.appendChild(mkElt("span", undefined,
                         "(To change this use search on top of the page.)"
                     ));
                 }
-                // fileName = `${fnPrefix}-${arrKeys.length}-of-${arrAll.length}.json`;
-                numItems = arrKeys.length;
+                // numItems = arrItemKeys.length;
             }
+            pExport.appendChild(mkElt("div", undefined, `Export ${numMindmaps} mindmaps.`));
         } else if (
             document.getElementById("page-added-new")
             ||
             document.getElementById("page-show-key")
         ) {
-            if (arrKeys.length != 1) throw Error(`There should be exactly 1 item here`);
+            if (numItems != 1) throw Error(`There should be exactly 1 item here`);
             const itemName = document.querySelector(".has-title").textContent;
             pExport = mkElt("p", undefined, `Export item "${itemName}".`);
             numItems = 1;
         } else {
-            if (arrKeys.length != 0) throw Error(`There should be no items here`);
+            if (numItems != 0) throw Error(`There should be no items here`);
             pExport = mkElt("p", undefined, "There are no items to export on this page");
         }
         const divExport = mkElt("div", undefined, [pExport]);
-        if (arrKeys.length > 0) {
+        if (numItems + numMindmaps > 0) {
             const iso = new Date().toISOString().replaceAll(":", "-").replaceAll("-", "").slice(2, -5);
-            const fileName = `${fnPrefix}-${numItems}-of-${numAllItems}-${iso}.json`;
+            const strNums = `${numItems}of${numAllItems}-${numMindmaps}of${numAllMindmaps}`;
+            // const fileName = `${fnPrefix}-${numItems}-of-${numAllItems}-${iso}.json`;
+            const fileName = `${fnPrefix}-${strNums}-${iso}.json`;
             async function mkDownloadButton(addedKey) {
                 const fileContent = await getJson4download(addedKey);
                 const blob = new Blob([fileContent], { type: 'text/json' });
@@ -1856,10 +1856,10 @@ async function mkMenu() {
         const dlg = await modMdc.mkMDCdialogAlert(body, "Close");
         async function getJson4download(funBackKey) {
             const modDbFc4i = await import("db-fc4i");
-            for (let i = 0, len = arrKeys.length; i < len; i++) {
+            for (let i = 0, len = arrItemKeys.length; i < len; i++) {
                 // const t = arrKeys[i];
                 // const k = t.dataset.keyRecord;
-                const k = arrKeys[i];
+                const k = arrItemKeys[i];
                 // console.log(k);
                 const obj = await modDbFc4i.getDbKey(k);
                 // console.log({ obj });
