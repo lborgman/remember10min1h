@@ -735,7 +735,8 @@ export class CustomRenderer4jsMind {
         const aPlainLink = eltCopied.querySelector("a.jsmind-plain-link");
         aPlainLink?.remove();
 
-        eltCopied.style.outline = "1px dotted white";
+        // eltCopied.style.outline = "1px dotted white";
+        eltCopied.style.outline = "1px dotted rgba(255,255,255,0.2)";
         const bcrOrig = eltJmnode.getBoundingClientRect();
         eltCopied.style.top = 0;
         eltCopied.style.left = 0;
@@ -1735,7 +1736,7 @@ export class CustomRenderer4jsMind {
         // divCustomContent.appendChild(btnSelectCustomItem);
         btnSelectCustomItem.addEventListener("click", async evt => {
             const objCustom = await modMMhelpers.pasteCustomClipDialog();
-            console.log({ objCustom });
+            console.log({ objCustom, eltCopied });
             if (!objCustom) return;
             debugger;
             const strCustom = JSON.stringify(objCustom);
@@ -1833,6 +1834,7 @@ export class CustomRenderer4jsMind {
                 // const divTitle = mkElt("p", undefined, rec.title);
                 // divShow.appendChild(divTitle);
                 const divTitle = document.getElementById("ednode-cust-title");
+                divTitle.style.lineHeight = "normal";
                 divTitle.textContent = rec.title;
 
                 if (rec.images) {
@@ -1840,8 +1842,8 @@ export class CustomRenderer4jsMind {
                     const urlBlob = URL.createObjectURL(bgBlob);
                     const urlBg = `url(${urlBlob})`;
                     const divBgImage = mkElt("div");
-                    divBgImage.style.width = "160px";
-                    divBgImage.style.height = "100px";
+                    divBgImage.style.width = "80px";
+                    divBgImage.style.height = "50px";
                     divBgImage.style.backgroundSize = "cover";
                     divBgImage.style.backgroundImage = urlBg;
                     // divBgImage.style.backgroundColor = "red";
@@ -1875,13 +1877,14 @@ export class CustomRenderer4jsMind {
                 // aURL.dataset.jsmindCustom = strCustom;
 
 
-                const divLinkProvInner = mkElt("p", undefined, [
+                const divLinkProvInner = mkElt("div", undefined, [
                     // btnCustomLink,
                     aURL,
                     providerName
                 ]);
+                const imgSize = 40; // 48
                 divLinkProvInner.style.display = "grid";
-                divLinkProvInner.style.gridTemplateColumns = "48px 1fr";
+                divLinkProvInner.style.gridTemplateColumns = `${imgSize}px 1fr`;
                 divLinkProvInner.style.gap = "10px";
                 // divShow.appendChild(divLinkProvInner);
                 const divLinkProv = document.getElementById("ednode-cust-link");
@@ -1891,8 +1894,8 @@ export class CustomRenderer4jsMind {
                 const stCL = eltCustomLink.style;
                 stCL.backgroundImage = `url(${r.getLinkRendererImage(objCopiedCustom.provider)})`;
                 stCL.backgroundSize = "cover";
-                stCL.width = 48;
-                stCL.height = 48;
+                stCL.width = imgSize;
+                stCL.height = imgSize;
                 stCL.border = "1px solid black";
                 stCL.borderRadius = "4px";
             } else {

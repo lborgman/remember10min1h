@@ -738,6 +738,16 @@ https://unused-css.com/tools/clip-path-generator (adjustable nodes!)
     NOdisplay: none;
 }
 
+#jsmind-ednode-content .custom-content>div {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#jsmind-ednode-content #ednode-custom-title {
+    line-height: normal;
+}
+
 #jsmind-ednode-content.custom-node .custom-content {
     NOdisplay: block;
 }

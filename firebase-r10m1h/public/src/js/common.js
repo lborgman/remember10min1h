@@ -1902,8 +1902,6 @@ async function mkMenu() {
         // liMindmapsA,
         liAskPersistent,
         liAbout,
-        liTestNetwGraph,
-        liFixSizes,
     ];
     const showDebugEntries = true;
     if (showDebugEntries) {
@@ -1927,6 +1925,8 @@ async function mkMenu() {
             // liTestAdd2JsMind,
             // liTestJsMindarrayTree,
             liTestShareWithArgs,
+            liTestNetwGraph,
+            liFixSizes,
             // liShowDebug,
             // liTestTimer,
             // liImport,
