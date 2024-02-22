@@ -156,6 +156,9 @@ export class CustomRenderer4jsMind {
     // addJmnodeBgAndText(eltJmnode) { return addJmnodeBgAndText(eltJmnode) }
     // fixLeftRightChildren(eltJmnode) { fixLeftRightChildren(eltJmnode); }
     async updateEltNodeLink(eltJmnode) {
+        // Moved to applyShapeEtc
+        debugger;
+        return;
         const node_id = jsMind.my_get_nodeID_from_DOM_element(eltJmnode);
         const node = this.THEjmDisplayed.get_node(node_id);
         const nodeLink = node.data.shapeEtc?.nodeLink;
@@ -165,7 +168,8 @@ export class CustomRenderer4jsMind {
             oldBtn?.remove();
             const iconBtn = modMdc.mkMDCiconButton("link", "Visit web page");
             // iconBtn.title = "Visit web page";
-            iconBtn.classList.add("icon-button-40");
+            // iconBtn.classList.add("icon-button-40");
+            iconBtn.classList.add("icon-button-30");
             const eltA3 = mkElt("a", { href: nodeLink, class: "jsmind-plain-link" }, iconBtn);
             eltJmnode.appendChild(eltA3);
         }
@@ -1307,7 +1311,7 @@ export class CustomRenderer4jsMind {
                 divImgPreview.style.backgroundImage = "none";
                 return;
             }
-            const isValid = await isValidUrl(maybeUrl);
+            const isValid = isValidUrl(maybeUrl);
             if (true == isValid) {
                 radChoiceLink.checked = true;
                 radChoiceLink.disabled = false;
@@ -1608,26 +1612,32 @@ export class CustomRenderer4jsMind {
         const strLink = initialShapeEtc.nodeLink;
         const tfLink = modMdc.mkMDCtextField("Topic link", inpLink, strLink);
 
-        const onInpLink = () => {
+        const onInpLink = async () => {
             console.log("inpLink input");
             const maybeUrl = inpLink.value.trim();
             if (maybeUrl == "") {
                 modMdc.setValidityMDC(inpLink, "");
                 aLinkPreview.href = "";
                 aLinkPreview.textContent = "";
-                return;
-            }
-            if (isValidUrl(maybeUrl)) {
-                console.log("inpLink", maybeUrl);
-                currentShapeEtc.nodeLink = maybeUrl;
-                aLinkPreview.href = maybeUrl;
-                aLinkPreview.textContent = maybeUrl;
-                modMdc.setValidityMDC(inpLink, "");
+                // currentShapeEtc.nodeLink = undefined;
+                delete currentShapeEtc.nodeLink;
+                // return;
             } else {
-                aLinkPreview.href = "";
-                aLinkPreview.textContent = "";
-                modMdc.setValidityMDC(inpLink, "Not a link");
+                if (isValidUrl(maybeUrl) == true) {
+                    console.log("inpLink", maybeUrl);
+                    currentShapeEtc.nodeLink = maybeUrl;
+                    aLinkPreview.href = maybeUrl;
+                    aLinkPreview.textContent = maybeUrl;
+                    modMdc.setValidityMDC(inpLink, "");
+                } else {
+                    // currentShapeEtc.nodeLink = undefined; // FIX-ME: old url
+                    delete currentShapeEtc.nodeLink;
+                    aLinkPreview.href = "";
+                    aLinkPreview.textContent = "";
+                    modMdc.setValidityMDC(inpLink, "Not a link");
+                }
             }
+            onAnyCtrlChange();
         }
         const debounceOnInpLink = debounce(onInpLink, 1000);
         inpLink.addEventListener("input", debounceOnInpLink);
@@ -2361,8 +2371,8 @@ export class CustomRenderer4jsMind {
                 const strCustom = eltLast.dataset.jsmindCustom;
                 if (strCustom) {
                     this.updateJmnodeFromCustom(eltJmnode);
-                } else {
-                    this.updateEltNodeLink(eltJmnode);
+                    // } else {
+                    // this.updateEltNodeLink(eltJmnode);
                 }
             }, 1100);
 

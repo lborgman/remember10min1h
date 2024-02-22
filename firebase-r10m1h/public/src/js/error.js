@@ -1330,16 +1330,18 @@ function throttle(func, waitMS = 200) {
 // https://www.freecodecamp.org/news/how-to-validate-urls-in-javascript/
 // isValidURL
 function getUrllNotValidMsg(id) {
-switch(id) {
-    case "NO-HTTPS": return "Link must begin with 'https://'";
-    case "NO-DOMAIN": return "Link must have domain";
-    case "CONTAINS-SPACE": return "Link must not contain spaces";
-    case "UNKNOWN-TLD": return "Unknown top level domain";
-    default:
-        throw Error(`Unknown url not valid id: ${id}`);
+    switch (id) {
+        case "NO-HTTPS": return "Link must begin with 'https://'";
+        case "NO-DOMAIN": return "Link must have domain";
+        case "CONTAINS-SPACE": return "Link must not contain spaces";
+        case "UNKNOWN-TLD": return "Unknown top level domain";
+        default:
+            throw Error(`Unknown url not valid id: ${id}`);
+    }
 }
-}
-async function isValidUrl(strUrl, protocol) {
+
+// To check top level domains async fetchReTLD() must be called first!
+function isValidUrl(strUrl, protocol) {
     protocol = protocol || "https:";
     try {
         // new URL() only checks for well formatted so do some more checks first
@@ -1348,8 +1350,10 @@ async function isValidUrl(strUrl, protocol) {
                 if (!strUrl.match(new RegExp("^https://[^/]"))) return "NO-HTTPS";
                 if (!strUrl.match(new RegExp("^https://[^/]{0,}[^.][.][^/.]+($|/)"))) return "NO-DOMAIN";
                 if (strUrl.search(" ") != -1) return "CONTAINS-SPACE";
-                const re = await getReTLD();
-                if (!re.test(strUrl)) return "UNKNOWN-TLD";
+                const re = getReTLD();
+                if (re) {
+                    if (!re.test(strUrl)) return "UNKNOWN-TLD";
+                }
                 break;
             default:
                 throw Error("Not implemented");
@@ -1376,7 +1380,8 @@ async function isReachableUrl(url) {
 */
 
 let reTLD;
-async function getReTLD() {
+function getReTLD() { return reTLD; }
+async function fetchReTLD() {
     if (reTLD == undefined) {
         const urlTLDlist = "https://publicsuffix.org/list/public_suffix_list.dat";
         const resp = await fetch(urlTLDlist);

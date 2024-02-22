@@ -344,6 +344,20 @@ export function applyShapeEtc(shapeEtc, eltJmnode) {
     if (bgCssText) {
         modCustRend.applyJmnodeBgCssText(eltJmnode, bgCssText);
     }
+
+    const nodeLink = shapeEtc.nodeLink;
+    // console.log({ node }, node.data.shapeEtc, nodeLink);
+    const oldBtn = eltJmnode.querySelector("a.jsmind-plain-link");
+    oldBtn?.remove();
+    if (nodeLink && nodeLink.length > 0) {
+        const iconBtn = modMdc.mkMDCiconButton("link", "Visit web page");
+        // iconBtn.title = "Visit web page";
+        // iconBtn.classList.add("icon-button-40");
+        iconBtn.classList.add("icon-button-30");
+        const eltA3 = mkElt("a", { href: nodeLink, class: "jsmind-plain-link" }, iconBtn);
+        eltJmnode.appendChild(eltA3);
+    }
+
 }
 
 
@@ -1631,8 +1645,8 @@ function fixOldCustomAndUpdate(eltJmnode) {
     if (strCustom) {
         // if (!isOldCustom) { fixRenderImg(childLast); }
         getCustomRenderer().updateJmnodeFromCustom(eltJmnode);
-    } else {
-        getCustomRenderer().updateEltNodeLink(eltJmnode);
+        // } else {
+        // getCustomRenderer().updateEltNodeLink(eltJmnode);
     }
 }
 
