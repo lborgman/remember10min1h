@@ -1726,9 +1726,16 @@ export class CustomRenderer4jsMind {
             const lbl = mkElt("label", undefined, [mdcRadio, label]);
             return mkElt("div", { class: "mdc-card topic-choice" }, [lbl, divChoice]);
         }
-        const divTopicChoiceSimple = mkTopicChoice("topic-choice-simple",
+        const OLDdivTopicChoiceSimple = mkTopicChoice("topic-choice-simple",
             "Default node type",
             mkElt("div", undefined, [tafTopic, tfLink, divLinkPreview]));
+        const detBasicNodeChoices =
+            mkElt("div", undefined, [
+                mkElt("b", undefined, "Node basics"),
+                tafTopic, tfLink,
+                // divLinkPreview
+            ]);
+
         /*
         const NOdivTopicCustom = mkTopicChoice("topic-choice-custom",
             "Custom link node type",
@@ -1750,22 +1757,24 @@ export class CustomRenderer4jsMind {
             if (!objCustom) return;
             debugger;
             const strCustom = JSON.stringify(objCustom);
-            const divTopicChoice = btnSelectCustomItem.closest(".topic-choice");
-            divTopicChoice.dataset.jsmindCustom = strCustom;
+            // const divTopicChoice = btnSelectCustomItem.closest(".topic-choice");
+            // divTopicChoice.dataset.jsmindCustom = strCustom;
+            detNodeChoiceCustom.dataset.jsmindCustom = strCustom;
             showCustomTopic();
+            // setTopicChoiceEnabled(detNodeChoiceCustom, true);
         });
         const divSelectCustomItem = mkElt("p", undefined, btnSelectCustomItem);
 
+        const divCustomTitImg = mkElt("div", undefined, [
+            mkElt("div", { id: "ednode-cust-title" }, "(title)"),
+            mkElt("div", { id: "ednode-cust-image" }, "(image)"),
+        ]);
         const divCustomContent = mkElt("div", { class: "custom-content" }, [
-            // mkElt("p", undefined, "(Show customitem here)"),
-            // divShow
-            mkElt("div", undefined, [
-                mkElt("div", { id: "ednode-cust-title" }, "(title)"),
-                mkElt("div", { id: "ednode-cust-image" }, "(image)"),
-                mkElt("div", { id: "ednode-cust-link" }, "(link)"),
-            ]),
+            divCustomTitImg,
+            mkElt("div", { id: "ednode-cust-link" }, "(link)"),
             divSelectCustomItem,
         ]);
+        divCustomContent.classList.add("display-none");
 
         // const strCopiedCustom = eltCopied.firstElementChild?.dataset.jsmindCustom;
         const strCopiedCustom = eltCopied.lastElementChild?.dataset.jsmindCustom;
@@ -1807,13 +1816,55 @@ export class CustomRenderer4jsMind {
         }
         */
 
-        const divTopicChoiceCustom = mkTopicChoice("topic-choice-custom", "Custom linked node", divCustomContent);
+        async function setCustomInCurrentShapeEtc(on) {
+            // FIX-ME: use .nodeLink temporary
+            if (on) {
+                const strCustom = detNodeChoiceCustom.dataset.jsmindCustom;
+                if (strCustom) {
+                    const objCustom = JSON.parse(strCustom);
+                    console.log("setCustomInCurrent...", { objCustom });
+                    const key = objCustom.key;
+                    const prov = objCustom.provider;
+                    // const linkProvider = await r.getRecLink(key, provider);
+                    // const linkProvider = await theCustomRenderer.#providers[provider].getRecLink(key);
+                    const linkProvider = await theCustomRenderer.getRecLink(key, prov);
+                    console.log({ linkProvider });
+                    currentShapeEtc.nodeLink = linkProvider;
+                } else {
+                    console.log("strCustom is undefined");
+                }
+            } else {
+                console.log("off")
+            }
+            onAnyCtrlChange();
+        }
+        // const OLdivTopicChoiceCustom = mkTopicChoice("topic-choice-custom", "Custom linked node", divCustomContent);
+        const chkLinkCustom = mkElt("input", { type: "checkbox" });
+        chkLinkCustom.addEventListener("change", evt => {
+            console.log("chkLinkCustom", chkLinkCustom.checked);
+            if (chkLinkCustom.checked) {
+                divCustomContent.classList.remove("display-none");
+                setCustomInCurrentShapeEtc(true);
+            } else {
+                divCustomContent.classList.add("display-none");
+                setCustomInCurrentShapeEtc(false);
+            }
+        });
+        // const lblLinkCustom = mkElt("label", undefined, [chkLinkCustom, "Link Custom"]);
+        // modMdc.mkMDCcheckboxElt
+        const lbl = mkElt("span", undefined, "Link Custom");
+        const eltLinkCustom = await modMdc.mkMDCcheckboxElt(chkLinkCustom, lbl);
+        const detNodeChoiceCustom = mkElt("div", undefined, [
+            // mkElt("div", undefined, "Custom linked node"),
+            eltLinkCustom,
+            divCustomContent
+        ]);
 
         const divContent = mkElt("div", { id: "jsmind-ednode-content" }, [
-            divTopicChoiceSimple, divTopicChoiceCustom
+            detBasicNodeChoices, detNodeChoiceCustom
         ]);
         function setTopicChoiceThis(eltChoice) {
-            checkTopicChoiceThis(eltChoice);
+            // checkTopicChoiceThis(eltChoice);
             // debounceTempApplyBgToCopied();
         }
         function checkTopicChoiceThis(eltChoice) {
@@ -1829,8 +1880,8 @@ export class CustomRenderer4jsMind {
             // this node content
             // const divShow = divCustomContent.firstElementChild;
             // divShow.textContent = "";
-            if (divTopicChoiceCustom.dataset.jsmindCustom) {
-                const strCustom = divTopicChoiceCustom.dataset.jsmindCustom;
+            if (detNodeChoiceCustom.dataset.jsmindCustom) {
+                const strCustom = detNodeChoiceCustom.dataset.jsmindCustom;
                 // const objCopiedCustom = JSON.parse(strCopiedCustom);
                 const objCopiedCustom = JSON.parse(strCustom);
                 const eltCustomLink = mkElt("div", { class: "jsmind-ednode-custom-link" });
@@ -1915,20 +1966,20 @@ export class CustomRenderer4jsMind {
                     divTitle.textContent = "(No custom item selected.)";
                     const divImage = document.getElementById("ednode-cust-image");
                     divImage.textContent = "";
-                    const divLink = document.getElementById("ednode-cust-link");
-                    divLink.textContent = "";
+                    // const divLink = document.getElementById("ednode-cust-link");
+                    // divLink.textContent = "";
                 }, 1000);
             }
         }
 
         if (copiedWasCustom) {
-            checkTopicChoiceThis(divTopicChoiceCustom);
-            divTopicChoiceCustom.dataset.jsmindCustom = initCustomTopic;
-            setTopicChoiceEnabled(divTopicChoiceSimple, false);
-            setTimeout(() => { divTopicChoiceCustom.scrollIntoView(); }, 500);
-        } else {
-            setTopicChoiceEnabled(divTopicChoiceCustom, false);
-            checkTopicChoiceThis(divTopicChoiceSimple);
+            // checkTopicChoiceThis(detNodeChoiceCustom);
+            detNodeChoiceCustom.dataset.jsmindCustom = initCustomTopic;
+            // setTopicChoiceEnabled(detBasicNodeChoices, false);
+            setTimeout(() => { detNodeChoiceCustom.scrollIntoView(); }, 500);
+            // } else {
+            // setTopicChoiceEnabled(detNodeChoiceCustom, false);
+            // checkTopicChoiceThis(detBasicNodeChoices);
         }
         showCustomTopic();
 
