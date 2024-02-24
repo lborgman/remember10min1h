@@ -1750,18 +1750,14 @@ export class CustomRenderer4jsMind {
 
         let providerName = "NOT CUSTOM PROVIDED";
         const btnSelectCustomItem = modMdc.mkMDCbutton("Select custom item", "raised");
-        // divCustomContent.appendChild(btnSelectCustomItem);
         btnSelectCustomItem.addEventListener("click", async evt => {
             const objCustom = await modMMhelpers.pasteCustomClipDialog();
             console.log({ objCustom, eltCopied });
             if (!objCustom) return;
-            debugger;
             const strCustom = JSON.stringify(objCustom);
-            // const divTopicChoice = btnSelectCustomItem.closest(".topic-choice");
-            // divTopicChoice.dataset.jsmindCustom = strCustom;
             detNodeChoiceCustom.dataset.jsmindCustom = strCustom;
             showCustomTopic();
-            // setTopicChoiceEnabled(detNodeChoiceCustom, true);
+            setCustomInCurrentShapeEtc();
         });
         const divSelectCustomItem = mkElt("p", undefined, btnSelectCustomItem);
 
@@ -1817,19 +1813,18 @@ export class CustomRenderer4jsMind {
         */
 
         async function setCustomInCurrentShapeEtc(on) {
-            // FIX-ME: use .nodeLink temporary
             if (on) {
                 const strCustom = detNodeChoiceCustom.dataset.jsmindCustom;
                 if (strCustom) {
                     const objCustom = JSON.parse(strCustom);
                     console.log("setCustomInCurrent...", { objCustom });
                     const key = objCustom.key;
-                    const prov = objCustom.provider;
-                    // const linkProvider = await r.getRecLink(key, provider);
-                    // const linkProvider = await theCustomRenderer.#providers[provider].getRecLink(key);
-                    const linkProvider = await theCustomRenderer.getRecLink(key, prov);
-                    console.log({ linkProvider });
-                    currentShapeEtc.nodeLink = linkProvider;
+                    const provider = objCustom.provider;
+                    //// FIX-ME: use .nodeLink temporary
+                    // const linkProvider = await theCustomRenderer.getRecLink(key, provider);
+                    // console.log({ linkProvider });
+                    // currentShapeEtc.nodeLink = linkProvider;
+                    currentShapeEtc.nodeCustom = { key, provider };
                 } else {
                     console.log("strCustom is undefined");
                 }
@@ -1852,7 +1847,7 @@ export class CustomRenderer4jsMind {
         });
         // const lblLinkCustom = mkElt("label", undefined, [chkLinkCustom, "Link Custom"]);
         // modMdc.mkMDCcheckboxElt
-        const lbl = mkElt("span", undefined, "Link Custom");
+        const lbl = mkElt("span", undefined, "Add Link to Database Item");
         const eltLinkCustom = await modMdc.mkMDCcheckboxElt(chkLinkCustom, lbl);
         const detNodeChoiceCustom = mkElt("div", undefined, [
             // mkElt("div", undefined, "Custom linked node"),
@@ -1863,37 +1858,26 @@ export class CustomRenderer4jsMind {
         const divContent = mkElt("div", { id: "jsmind-ednode-content" }, [
             detBasicNodeChoices, detNodeChoiceCustom
         ]);
-        function setTopicChoiceThis(eltChoice) {
-            // checkTopicChoiceThis(eltChoice);
-            // debounceTempApplyBgToCopied();
-        }
-        function checkTopicChoiceThis(eltChoice) {
+        function OLDcheckTopicChoiceThis(eltChoice) {
             const inp = eltChoice.querySelector("input[name=topic-choice]");
             inp.checked = true;
         }
-        function setTopicChoiceEnabled(eltChoice, enabled) {
+        function OLDsetTopicChoiceEnabled(eltChoice, enabled) {
             const inp = eltChoice.querySelector("input[name=topic-choice]");
             inp.disabled = !enabled;
         }
 
         async function showCustomTopic() {
-            // this node content
-            // const divShow = divCustomContent.firstElementChild;
-            // divShow.textContent = "";
             if (detNodeChoiceCustom.dataset.jsmindCustom) {
                 const strCustom = detNodeChoiceCustom.dataset.jsmindCustom;
-                // const objCopiedCustom = JSON.parse(strCopiedCustom);
                 const objCopiedCustom = JSON.parse(strCustom);
                 const eltCustomLink = mkElt("div", { class: "jsmind-ednode-custom-link" });
-
                 const r = await getOurCustomRenderer();
                 const key = objCopiedCustom.key;
                 const provider = objCopiedCustom.provider;
                 const providerName = r.getProviderLongName(provider);
                 const rec = await r.getCustomRec(key, provider);
 
-                // const divTitle = mkElt("p", undefined, rec.title);
-                // divShow.appendChild(divTitle);
                 const divTitle = document.getElementById("ednode-cust-title");
                 divTitle.style.lineHeight = "normal";
                 divTitle.textContent = rec.title;
@@ -1973,13 +1957,9 @@ export class CustomRenderer4jsMind {
         }
 
         if (copiedWasCustom) {
-            // checkTopicChoiceThis(detNodeChoiceCustom);
             detNodeChoiceCustom.dataset.jsmindCustom = initCustomTopic;
-            // setTopicChoiceEnabled(detBasicNodeChoices, false);
             setTimeout(() => { detNodeChoiceCustom.scrollIntoView(); }, 500);
-            // } else {
-            // setTopicChoiceEnabled(detNodeChoiceCustom, false);
-            // checkTopicChoiceThis(detBasicNodeChoices);
+            onAnyCtrlChange();
         }
         showCustomTopic();
 

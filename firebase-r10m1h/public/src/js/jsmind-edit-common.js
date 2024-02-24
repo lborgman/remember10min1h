@@ -281,7 +281,7 @@ export function applyNodeShapeEtc(node, eltJmnode) {
     if (!shapeEtc) return;
     applyShapeEtc(shapeEtc, eltJmnode);
 }
-export function applyShapeEtc(shapeEtc, eltJmnode) {
+export async function applyShapeEtc(shapeEtc, eltJmnode) {
     const eltShape = eltJmnode.querySelector(".jmnode-bg");
     if (!eltShape) {
         if (eltJmnode.childElementCount > 1) {
@@ -345,17 +345,43 @@ export function applyShapeEtc(shapeEtc, eltJmnode) {
         modCustRend.applyJmnodeBgCssText(eltJmnode, bgCssText);
     }
 
-    const nodeLink = shapeEtc.nodeLink;
-    // console.log({ node }, node.data.shapeEtc, nodeLink);
-    const oldBtn = eltJmnode.querySelector("a.jsmind-plain-link");
+    // const clsIconButton = "icon-button-40";
+    const clsIconButton = "icon-button-30";
+    // const oldBtn = eltJmnode.querySelector("a.jsmind-plain-link");
+    const oldBtn = eltJmnode.querySelector(`.${clsIconButton}`);
     oldBtn?.remove();
-    if (nodeLink && nodeLink.length > 0) {
-        const iconBtn = modMdc.mkMDCiconButton("link", "Visit web page");
-        // iconBtn.title = "Visit web page";
-        // iconBtn.classList.add("icon-button-40");
-        iconBtn.classList.add("icon-button-30");
-        const eltA3 = mkElt("a", { href: nodeLink, class: "jsmind-plain-link" }, iconBtn);
-        eltJmnode.appendChild(eltA3);
+    const nodeLink = shapeEtc.nodeLink;
+    const nodeCustom = shapeEtc.nodeCustom;
+    let foundCustom = false;
+    if (nodeCustom) {
+        let key = nodeCustom.key;
+        const provider = nodeCustom.provider;
+        // select custom
+        // FIX-ME: is theCustomRenderer available here???
+        // const renderer = await getOurCustomRenderer();
+        const renderer = theCustomRenderer;
+        const rec = await renderer.getCustomRec(key, provider);
+        if (rec) {
+            foundCustom = true;
+            // FIX-ME: long name
+            const iconBtn = modMdc.mkMDCiconButton("", `Go to this item in ${provider}`);
+            const bgImg = renderer.getLinkRendererImage(provider);
+            iconBtn.style.backgroundImage = `url(${bgImg})`;
+            iconBtn.classList.add(clsIconButton);
+            const recLink = renderer.getRecLink(key, provider);
+            const eltA3 = mkElt("a", { href: recLink }, iconBtn);
+            eltA3.classList.add("jsmind-renderer-img");
+            eltJmnode.appendChild(eltA3);
+        }
+    }
+    if (!foundCustom) {
+        if (nodeLink && nodeLink.length > 0) {
+            const iconBtn = modMdc.mkMDCiconButton("link", "Visit web page");
+            iconBtn.classList.add(clsIconButton);
+            const eltA3 = mkElt("a", { href: nodeLink }, iconBtn);
+            eltA3.classList.add("jsmind-plain-link");
+            eltJmnode.appendChild(eltA3);
+        }
     }
 
 }
