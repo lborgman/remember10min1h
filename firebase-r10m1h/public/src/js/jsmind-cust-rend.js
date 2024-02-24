@@ -1592,9 +1592,11 @@ export class CustomRenderer4jsMind {
             currentShapeEtc.temp.topic = taTopic.value;
             eltCopiedText.textContent = taTopic.value;
         });
-        const copiedWasCustom = eltCopied.lastElementChild.dataset.jsmindCustom != undefined;
+        // const copiedWasCustom = eltCopied.lastElementChild.dataset.jsmindCustom != undefined;
+        const initialCustomTopic = currentShapeEtc.nodeCustom;
+        const copiedWasCustom = initialCustomTopic != undefined;
         const initTopic = copiedWasCustom ? "" : initialTempData.topic;
-        const initCustomTopic = eltCopied.lastElementChild.dataset.jsmindCustom;
+        // const initCustomTopic = eltCopied.lastElementChild.dataset.jsmindCustom;
 
         const tafTopic = modMdc.mkMDCtextareaField("Topic", taTopic, initTopic);
         modMdc.mkMDCtextareaGrow(tafTopic);
@@ -1719,16 +1721,13 @@ export class CustomRenderer4jsMind {
             btnChangeBg.style.display = null;
         }
 
-        // mkBgChoice = mkBgChoice(
         const mkTopicChoice = (id, label, divChoice) => {
             const inpRadio = mkElt("input", { type: "radio", id, name: "topic-choice" });
             const mdcRadio = modMdc.mkMDCradioElt(inpRadio);
             const lbl = mkElt("label", undefined, [mdcRadio, label]);
             return mkElt("div", { class: "mdc-card topic-choice" }, [lbl, divChoice]);
         }
-        const OLDdivTopicChoiceSimple = mkTopicChoice("topic-choice-simple",
-            "Default node type",
-            mkElt("div", undefined, [tafTopic, tfLink, divLinkPreview]));
+        // const OLDdivTopicChoiceSimple = mkTopicChoice("topic-choice-simple", "Default node type", mkElt("div", undefined, [tafTopic, tfLink, divLinkPreview]));
         const detBasicNodeChoices =
             mkElt("div", undefined, [
                 mkElt("b", undefined, "Node basics"),
@@ -1748,16 +1747,19 @@ export class CustomRenderer4jsMind {
         ]);
         */
 
-        let providerName = "NOT CUSTOM PROVIDED";
-        const btnSelectCustomItem = modMdc.mkMDCbutton("Select custom item", "raised");
+        // let providerName = "NOT CUSTOM PROVIDED";
+        function setDialogCustomItem(objCustom) {
+            const strCustom = JSON.stringify(objCustom);
+            detNodeChoiceCustom.dataset.jsmindCustom = strCustom;
+        }
+        const btnSelectCustomItem = modMdc.mkMDCbutton("Select database item", "raised");
         btnSelectCustomItem.addEventListener("click", async evt => {
             const objCustom = await modMMhelpers.pasteCustomClipDialog();
             console.log({ objCustom, eltCopied });
             if (!objCustom) return;
-            const strCustom = JSON.stringify(objCustom);
-            detNodeChoiceCustom.dataset.jsmindCustom = strCustom;
-            showCustomTopic();
-            setCustomInCurrentShapeEtc();
+            setDialogCustomItem(objCustom);
+            showCustomItem();
+            setCustomInCurrentShapeEtc(true);
         });
         const divSelectCustomItem = mkElt("p", undefined, btnSelectCustomItem);
 
@@ -1813,6 +1815,8 @@ export class CustomRenderer4jsMind {
         */
 
         async function setCustomInCurrentShapeEtc(on) {
+            if ("boolean" != typeof on) throw Error(`Not boolean: ${on}`);
+            delete currentShapeEtc.nodeCustom;
             if (on) {
                 const strCustom = detNodeChoiceCustom.dataset.jsmindCustom;
                 if (strCustom) {
@@ -1820,10 +1824,6 @@ export class CustomRenderer4jsMind {
                     console.log("setCustomInCurrent...", { objCustom });
                     const key = objCustom.key;
                     const provider = objCustom.provider;
-                    //// FIX-ME: use .nodeLink temporary
-                    // const linkProvider = await theCustomRenderer.getRecLink(key, provider);
-                    // console.log({ linkProvider });
-                    // currentShapeEtc.nodeLink = linkProvider;
                     currentShapeEtc.nodeCustom = { key, provider };
                 } else {
                     console.log("strCustom is undefined");
@@ -1845,15 +1845,22 @@ export class CustomRenderer4jsMind {
                 setCustomInCurrentShapeEtc(false);
             }
         });
+
         // const lblLinkCustom = mkElt("label", undefined, [chkLinkCustom, "Link Custom"]);
         // modMdc.mkMDCcheckboxElt
-        const lbl = mkElt("span", undefined, "Add Link to Database Item");
+        const lbl = mkElt("span", undefined, "Link to Database Item");
         const eltLinkCustom = await modMdc.mkMDCcheckboxElt(chkLinkCustom, lbl);
         const detNodeChoiceCustom = mkElt("div", undefined, [
             // mkElt("div", undefined, "Custom linked node"),
             eltLinkCustom,
             divCustomContent
         ]);
+        if (initialCustomTopic != undefined) {
+            chkLinkCustom.checked = true;
+            setDialogCustomItem(initialCustomTopic);
+            showCustomItem();
+            divCustomContent.classList.remove("display-none");
+        }
 
         const divContent = mkElt("div", { id: "jsmind-ednode-content" }, [
             detBasicNodeChoices, detNodeChoiceCustom
@@ -1867,7 +1874,7 @@ export class CustomRenderer4jsMind {
             inp.disabled = !enabled;
         }
 
-        async function showCustomTopic() {
+        async function showCustomItem() {
             if (detNodeChoiceCustom.dataset.jsmindCustom) {
                 const strCustom = detNodeChoiceCustom.dataset.jsmindCustom;
                 const objCopiedCustom = JSON.parse(strCustom);
@@ -1957,11 +1964,11 @@ export class CustomRenderer4jsMind {
         }
 
         if (copiedWasCustom) {
-            detNodeChoiceCustom.dataset.jsmindCustom = initCustomTopic;
+            // detNodeChoiceCustom.dataset.jsmindCustom = initCustomTopic;
             setTimeout(() => { detNodeChoiceCustom.scrollIntoView(); }, 500);
             onAnyCtrlChange();
         }
-        showCustomTopic();
+        showCustomItem();
 
         if (strCopiedCustom) {
             divContent.classList.add("custom-node");
