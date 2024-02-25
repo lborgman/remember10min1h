@@ -1743,8 +1743,8 @@ jmnode.selected {
     color: white;
     border: 1px solid white;
     NOborder-radius: 4px;
-    width: 40px;
-    height: 40px;
+    NOwidth: 40px;
+    NOheight: 40px;
 }
 
 .is-left .jsmind-renderer-img {

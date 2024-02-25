@@ -348,8 +348,14 @@ export async function applyShapeEtc(shapeEtc, eltJmnode) {
     // const clsIconButton = "icon-button-40";
     const clsIconButton = "icon-button-30";
     // const oldBtn = eltJmnode.querySelector("a.jsmind-plain-link");
+    const oldAimg = eltJmnode.querySelector(`.jsmind-renderer-img`);
+    oldAimg?.remove();
     const oldBtn = eltJmnode.querySelector(`.${clsIconButton}`);
+    if (oldBtn && oldAimg) {
+        console.warn({ oldBtn, oldAimg });
+    }
     oldBtn?.remove();
+
     const nodeLink = shapeEtc.nodeLink;
     const nodeCustom = shapeEtc.nodeCustom;
     let foundCustom = false;
@@ -364,14 +370,20 @@ export async function applyShapeEtc(shapeEtc, eltJmnode) {
         if (rec) {
             foundCustom = true;
             // FIX-ME: long name
-            const iconBtn = modMdc.mkMDCiconButton("", `Go to this item in ${provider}`);
-            const bgImg = renderer.getLinkRendererImage(provider);
-            iconBtn.style.backgroundImage = `url(${bgImg})`;
-            iconBtn.classList.add(clsIconButton);
-            const recLink = renderer.getRecLink(key, provider);
-            const eltA3 = mkElt("a", { href: recLink }, iconBtn);
-            eltA3.classList.add("jsmind-renderer-img");
-            eltJmnode.appendChild(eltA3);
+            // FIX-ME: looks like a race condition?
+            //    Try to get around it by a simple check...
+            const oldAimg = eltJmnode.querySelector(`.jsmind-renderer-img`);
+            if (!oldAimg) {
+                const iconBtn = modMdc.mkMDCiconButton("", `Go to this item in ${provider} (3)`);
+                const bgImg = renderer.getLinkRendererImage(provider);
+                iconBtn.style.backgroundImage = `url(${bgImg})`;
+                iconBtn.classList.add(clsIconButton);
+                const recLink = renderer.getRecLink(key, provider);
+                const eltA3 = mkElt("a", { href: recLink }, iconBtn);
+                eltA3.classList.add("jsmind-renderer-img");
+                // debugger;
+                eltJmnode.appendChild(eltA3);
+            }
         }
     }
     if (!foundCustom) {

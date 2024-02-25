@@ -175,14 +175,16 @@ export class CustomRenderer4jsMind {
         }
     }
     async updateJmnodeFromCustom(eltJmnode, jmOwner) {
+        debugger;
         return;
         async function fixRenderImg(eltDiv) {
+            return;
             const eltParent = eltDiv.parentElement;
             eltDiv.remove();
             // const btnURL = modMdc.mkMDCiconButton("link");
             // const btnURL = modMdc.mkMDCbutton("");
             const btnURL = modMdc.mkMDCiconButton("");
-            btnURL.title = "Go to this item in Fc4i";
+            btnURL.title = "Go to this item in Fc4i (1)";
             btnURL.classList.add("icon-button-40");
             // btnURL.classList.add(...themePrimary);
 
@@ -1883,19 +1885,11 @@ export class CustomRenderer4jsMind {
                     divImage.appendChild(divBgImage);
                 }
 
-                /*
-                const btnCustomLink = await modMdc.mkMDCiconButton(eltCustomLink, "", 48);
-                btnCustomLink.addEventListener("click", evt => {
-                    console.log("goto provider");
-                    showKeyInFc4i(objCopiedCustom.key);
-                });
-                btnCustomLink.style.padding = "0"; // FIX-ME: don't ask me about this!
-                */
 
+                /*
                 const btnURL = modMdc.mkMDCiconButton("");
-                btnURL.title = "Go to this item in Fc4i";
+                btnURL.title = "Go to this item in Fc4i (2)";
                 btnURL.classList.add("icon-button-40");
-                // const linkProvider = await theCustomRenderer.#providers[provider].getRecLink(key);
                 const bgImg = theCustomRenderer.getLinkRendererImage(provider);
                 btnURL.style.backgroundImage = `url(${bgImg})`;
 
@@ -1927,6 +1921,7 @@ export class CustomRenderer4jsMind {
                 stCL.height = imgSize;
                 stCL.border = "1px solid black";
                 stCL.borderRadius = "4px";
+                */
             } else {
                 // divShow.appendChild(mkElt("p", undefined, "No custom item selected."));
                 setTimeout(() => {
