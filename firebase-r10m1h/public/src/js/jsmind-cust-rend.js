@@ -793,7 +793,7 @@ export class CustomRenderer4jsMind {
         console.log({ copiedShapeEtc, node_copied_data, initialTempData });
 
         const currentShapeEtc = JSON.parse(JSON.stringify(initialShapeEtc));
-        const currentTempData = currentShapeEtc.temp;
+        const currentTempData = currentShapeEtc.temp; // For things outside of .shapeEtc
 
         /* 
             css resize does not work well on Android Chrome today (2023-05-01).
@@ -1588,9 +1588,12 @@ export class CustomRenderer4jsMind {
         const taTopic = modMdc.mkMDCtextFieldTextarea(undefined, 8, 50);
         taTopic.classList.add("jsmind-ednode-topic");
         taTopic.style.resize = "vertical";
-        taTopic.addEventListener("input", evt => {
+        function onTaTopicInput() {
             currentShapeEtc.temp.topic = taTopic.value;
             eltCopiedText.textContent = taTopic.value;
+        }
+        taTopic.addEventListener("input", evt => {
+            onTaTopicInput();
         });
         // const copiedWasCustom = eltCopied.lastElementChild.dataset.jsmindCustom != undefined;
         const initialCustomTopic = currentShapeEtc.nodeCustom;
@@ -1735,29 +1738,18 @@ export class CustomRenderer4jsMind {
                 // divLinkPreview
             ]);
 
-        /*
-        const NOdivTopicCustom = mkTopicChoice("topic-choice-custom",
-            "Custom link node type",
-            mkElt("div", undefined, [tafTopic, tfLink]));
-        const divNormalContent = mkElt("div", { class: "normal-content" }, [
-            "edit jmnode",
-            // tafTopic, tfLink,
-            // divTopicSimple,
-            // divBg,
-        ]);
-        */
 
-        // let providerName = "NOT CUSTOM PROVIDED";
-        function setDialogCustomItem(objCustom) {
+        async function setDialogCustomItem(objCustom) {
             const strCustom = JSON.stringify(objCustom);
             detNodeChoiceCustom.dataset.jsmindCustom = strCustom;
+            await addBackupCustom(objCustom);
         }
         const btnSelectCustomItem = modMdc.mkMDCbutton("Select database item", "raised");
         btnSelectCustomItem.addEventListener("click", async evt => {
             const objCustom = await modMMhelpers.pasteCustomClipDialog();
             console.log({ objCustom, eltCopied });
             if (!objCustom) return;
-            setDialogCustomItem(objCustom);
+            await setDialogCustomItem(objCustom);
             showCustomItem();
             setCustomInCurrentShapeEtc(true);
         });
@@ -1776,43 +1768,6 @@ export class CustomRenderer4jsMind {
 
         // const strCopiedCustom = eltCopied.firstElementChild?.dataset.jsmindCustom;
         const strCopiedCustom = eltCopied.lastElementChild?.dataset.jsmindCustom;
-        /*
-        if (strCopiedCustom) {
-            const objCopiedCustom = JSON.parse(strCopiedCustom);
-            const eltCustomLink = mkElt("div", { class: "jsmind-ednode-custom-link" });
-            // const btnCustomLink = mkElt("button", undefined, eltCustomLink);
-            // const btnCustomLink = await modMdc.mkMDCbutton(eltCustomLink, "raised");
-            const btnCustomLink = await modMdc.mkMDCiconButton(eltCustomLink, "", 48);
-
-            btnCustomLink.addEventListener("click", evt => {
-                console.log("goto provider");
-                // const strCustom = node_copied_data.custom;
-                // const objCustom = JSON.parse(strCustom);
-                showKeyInFc4i(objCopiedCustom.key);
-            });
-            const stCL = eltCustomLink.style;
-            // stCL.backgroundImage = `url(${this.linkRendererImg})`;
-            stCL.backgroundImage = `url(${this.#providers[objCopiedCustom.provider].img})`;
-            stCL.backgroundSize = "cover";
-            stCL.width = 48;
-            stCL.height = 48;
-            stCL.border = "1px solid black";
-            stCL.borderRadius = "4px";
-            // providerName = objCopiedCustom.provider || "fc4i";
-            providerName = objCopiedCustom.provider;
-            divCustomContent.appendChild(btnCustomLink);
-        } else {
-            const btnConvert2Custom = modMdc.mkMDCbutton("Link to custom", "raised");
-            divCustomContent.appendChild(btnConvert2Custom);
-            btnConvert2Custom.addEventListener("click", async evt => {
-                const objCustom = await modMMhelpers.pasteCustomClipDialog();
-                console.log({ objCustom });
-                if (!objCustom) return;
-                debugger;
-            });
-
-        }
-        */
 
         async function setCustomInCurrentShapeEtc(on) {
             if ("boolean" != typeof on) throw Error(`Not boolean: ${on}`);
@@ -1825,6 +1780,16 @@ export class CustomRenderer4jsMind {
                     const key = objCustom.key;
                     const provider = objCustom.provider;
                     currentShapeEtc.nodeCustom = { key, provider };
+                    const strBackup = detNodeChoiceCustom.dataset.backupCustom;
+                    if (strBackup) {
+                        const objBackup = JSON.parse(strBackup);
+                        // inpTitle
+                        taTopic.dispatchEvent(new Event("focus"));
+                        taTopic.value = objBackup.title;
+                        onTaTopicInput();
+                        inpLink.dispatchEvent(new Event("focus"));
+                        inpLink.value = objBackup.url;
+                    }
                 } else {
                     console.log("strCustom is undefined");
                 }
@@ -1874,14 +1839,26 @@ export class CustomRenderer4jsMind {
             inp.disabled = !enabled;
         }
 
+        async function addBackupCustom(objCustom) {
+            const key = objCustom.key;
+            const provider = objCustom.provider;
+            const r = await getOurCustomRenderer();
+            const rec = await r.getCustomRec(key, provider);
+            const url = rec.url;
+            const title = rec.title;
+            const objBackup = { title, url };
+            const strBackup = JSON.stringify(objBackup);
+            detNodeChoiceCustom.dataset.backupCustom = strBackup;
+            // return rec;
+        }
         async function showCustomItem() {
             if (detNodeChoiceCustom.dataset.jsmindCustom) {
                 const strCustom = detNodeChoiceCustom.dataset.jsmindCustom;
                 const objCopiedCustom = JSON.parse(strCustom);
                 const eltCustomLink = mkElt("div", { class: "jsmind-ednode-custom-link" });
-                const r = await getOurCustomRenderer();
                 const key = objCopiedCustom.key;
                 const provider = objCopiedCustom.provider;
+                const r = await getOurCustomRenderer();
                 const providerName = r.getProviderLongName(provider);
                 const rec = await r.getCustomRec(key, provider);
 
