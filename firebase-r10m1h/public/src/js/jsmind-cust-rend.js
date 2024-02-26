@@ -1645,7 +1645,7 @@ export class CustomRenderer4jsMind {
                     modMdc.setValidityMDC(inpLink, "Not a link");
                 }
             }
-            onAnyCtrlChange();
+            // onAnyCtrlChange();
         }
         const debounceOnInpLink = debounce(onInpLink, 1000);
         inpLink.addEventListener("input", debounceOnInpLink);
@@ -1797,6 +1797,7 @@ export class CustomRenderer4jsMind {
                         onTaTopicInput();
                         inpLink.dispatchEvent(new Event("focus"));
                         inpLink.value = objBackup.url;
+                        onInpLink();
                     }
                 } else {
                     console.log("strCustom is undefined");
