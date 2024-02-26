@@ -155,7 +155,7 @@ export class CustomRenderer4jsMind {
     }
     // addJmnodeBgAndText(eltJmnode) { return addJmnodeBgAndText(eltJmnode) }
     // fixLeftRightChildren(eltJmnode) { fixLeftRightChildren(eltJmnode); }
-    async updateEltNodeLink(eltJmnode) {
+    async OLDupdateEltNodeLink(eltJmnode) {
         // Moved to applyShapeEtc
         debugger;
         return;
@@ -1600,7 +1600,8 @@ export class CustomRenderer4jsMind {
         // const copiedWasCustom = eltCopied.lastElementChild.dataset.jsmindCustom != undefined;
         const initialCustomTopic = currentShapeEtc.nodeCustom;
         const copiedWasCustom = initialCustomTopic != undefined;
-        const initTopic = copiedWasCustom ? "" : initialTempData.topic;
+        // const initTopic = copiedWasCustom ? "" : initialTempData.topic;
+        const initTopic = initialTempData.topic;
         // const initCustomTopic = eltCopied.lastElementChild.dataset.jsmindCustom;
 
         const tafTopic = modMdc.mkMDCtextareaField("Topic", taTopic, initTopic);
@@ -1739,6 +1740,11 @@ export class CustomRenderer4jsMind {
                 tafTopic, tfLink,
                 // divLinkPreview
             ]);
+        detBasicNodeChoices.style = `
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        `;
 
 
         async function setDialogCustomItem(objCustom) {

@@ -947,8 +947,8 @@ export async function pageSetup() {
                     // const isCustomNode = topic.search(" data-jsmind-custom=") > 0;
                     if (!isPlainNode) {
                         getCustomRenderer().updateJmnodeFromCustom(eltJmnode);
-                    } else {
-                        getCustomRenderer().updateEltNodeLink(eltJmnode);
+                        // } else {
+                        // getCustomRenderer().updateEltNodeLink(eltJmnode);
                     }
                 }
                 break;
@@ -970,8 +970,8 @@ export async function pageSetup() {
                     // modCustRend.addJmnodeBgAndText(eltJmnode);
                     if (!isPlainNode) {
                         getCustomRenderer().updateJmnodeFromCustom(eltJmnode);
-                    } else {
-                        getCustomRenderer().updateEltNodeLink(eltJmnode);
+                        // } else {
+                        // getCustomRenderer().updateEltNodeLink(eltJmnode);
                     }
                     // const before_id = datadata[1];
                     // const parent_id = datadata[2];
