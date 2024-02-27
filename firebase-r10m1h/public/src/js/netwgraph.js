@@ -360,11 +360,22 @@ async function mkViewDialog(strEditedView) {
 
 let strCurrentSavedView;
 async function showSavedViews(strSaved, fingerPrint) {
+    let divFingerPrint = "";
+    if (fingerPrint) {
+        divFingerPrint = mkElt("div", undefined, fingerPrint);
+    }
+    const body = mkElt("div", undefined, [
+        mkElt("h2", undefined, "Saved views"),
+        divFingerPrint,
+        // divSaved,
+    ]);
+
     if (strSaved == null) {
-        const body = mkElt("span", undefined, "There are no saved views");
+        body.appendChild(mkElt("span", undefined, "There are no saved views"));
         modMdc.mkMDCdialogAlert(body);
         return;
     }
+
     strCurrentSavedView = strSaved;
     const arrSaved = JSON.parse(strSaved);
     const divSaved = mkElt("div");
@@ -373,15 +384,8 @@ async function showSavedViews(strSaved, fingerPrint) {
         gap: 10px;
         flex-direction: column;
     `;
-    let divFingerPrint = "";
-    if (fingerPrint) {
-        divFingerPrint = mkElt("div", undefined, fingerPrint);
-    }
-    const body = mkElt("div", undefined, [
-        mkElt("h2", undefined, "Saved views"),
-        divFingerPrint,
-        divSaved,
-    ]);
+    body.appendChild(divSaved);
+
     arrSaved.forEach(entrySaved => {
         if (fingerPrint && entrySaved.fingerPrint != fingerPrint) { return; }
         const creationTime = entrySaved.creationTime;
@@ -1120,18 +1124,20 @@ function computeNodesAndLinks() {
 
 async function chooseView() {
 
-    let fingerPrint;
+    const objFingerprint = { db: "fc4i" };
     if (mindmap) {
-        fingerPrint = "mindmap;" + mindmap.meta.name;
+        objFingerprint.mindmap = mindmap.meta.name;
     } else {
         const strSearch = searchFor.replaceAll("  ", " ").trim();
         const strTags = requiredTags.sort().map(t => `#t`).join(",");
-        fingerPrint = strSearch + ";" + strTags;
+        objFingerprint.search = strSearch;
+        objFingerprint.tags = strTags;
     }
-    console.log({ fingerPrint });
+    const fingerPrint = JSON.stringify(objFingerprint);
+    console.log({ objFingerprint });
 
     const divSource = mkElt("div", { class: "xmdc-card" });
-    const divOutput = mkElt("div", { class: "xmdc-card" });
+    const detSaved = mkElt("details", undefined, mkElt("summary", undefined, "Saved graphs"));
 
     if (mindmap) {
         const pMindmapError = mkElt("p", undefined, "Source mindmap is not handled yet");
@@ -1146,33 +1152,38 @@ async function chooseView() {
         const divMindmapData = mkElt("div", undefined, `Nodes: ${numMmNodes} (fc4i: ${numFc4i})`);
         divSource.appendChild(divMindmapData);
     } else {
-        const divReqTags = mkElt("div");
+        const eltReqTags = mkElt("span");
         if (requiredTags.length == 0) {
-            divReqTags.appendChild(mkElt("span", undefined, "No required tags"));
+            eltReqTags.appendChild(mkElt("span", undefined, "(no required tags)"));
         } else {
             requiredTags.forEach(t => {
                 const s = mkElt("span", { class: "tag-in-our-tags" }, `#${t}`);
-                divReqTags.appendChild(s);
+                eltReqTags.appendChild(s);
             });
         }
 
         const eltSearchFor = searchFor.length == 0 ?
-            mkElt("i", undefined, "(no search string)")
+            mkElt("span", undefined, "(no search string)")
             :
-            mkElt("b", undefined, searchFor);
-        const divSearched = mkElt("div", undefined, [
-            "Searched: ",
-            eltSearchFor
-        ]);
+            mkElt("span", undefined, searchFor);
 
         const divAltFc4i = mkElt("div", { class: "xmdc-card" }, [
             mkElt("div", undefined, [
-                `${numFc4i} records found in `,
                 mkElt("b", undefined, "Flashcard 4 Internet"),
             ]),
-            divSearched,
-            divReqTags,
+            mkElt("div", undefined, [
+                mkElt("b", undefined, "Searched: "),
+                eltSearchFor
+            ]),
+            mkElt("div", undefined, [
+                mkElt("b", undefined, "Tags: "),
+                eltReqTags,
+            ]),
+            mkElt("p", undefined, [
+                `${numFc4i} records found`,
+            ])
         ]);
+        divAltFc4i.style.lineHeight = "normal";
 
 
         const inpNumNodes = modMdc.mkMDCtextFieldInput(undefined, "number");
@@ -1180,10 +1191,11 @@ async function chooseView() {
         settingNumNodes.bindToInput(inpNumNodes);
 
         const tfNumNodes = modMdc.mkMDCtextFieldOutlined(
-            `N of nodes`,
+            // const tfNumNodes = modMdc.mkMDCtextField(
+            `Nodes`,
             inpNumNodes, settingNumNodes.getCachedValue());
-        const btnNewSample = modMdc.mkMDCbutton("Make sample", "raised");
-        btnNewSample.addEventListener("click", evt => {
+        const btnShow = modMdc.mkMDCbutton("Show graph", "raised");
+        btnShow.addEventListener("click", evt => {
             showGraph(fingerPrint);
         });
         const divInfoNewSample = mkElt("div", undefined, `
@@ -1191,47 +1203,52 @@ async function chooseView() {
         `);
         const divNewSampleInputs = mkElt("div", undefined, [
             tfNumNodes,
-            btnNewSample
+            divInfoNewSample,
         ]);
         divNewSampleInputs.style = `
-        display: grid;
-        gap: 10px;
-        grid-template-columns: 1fr max-content;
-    `;
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 60px 1fr;
+        `;
 
 
         const divNewSample = mkElt("div", undefined, [
             divNewSampleInputs,
-            divInfoNewSample,
+            mkElt("div", undefined, btnShow)
         ]);
         divNewSample.style = `
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        line-height: 1rem;
-        padding: 10px;
-    `;
-        divNewSample.classList.add("mdc-card");
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            line-height: 1rem;
+            NOpadding: 10px;
+        `;
+        // divNewSample.classList.add("mdc-card");
         // divSource.appendChild(divNewSample);
 
-        const btnOldSamples = modMdc.mkMDCbutton("Show old", "raised");
-        btnOldSamples.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+        const btnSaved = modMdc.mkMDCbutton("List", "raised");
+        btnSaved.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             const strJsonSaved = localStorage.getItem(keySavedViews);
             await showSavedViews(strJsonSaved, fingerPrint);
         }));
+        btnSaved.style = `
+            float: left;
+            margin-right: 10px;
+            margin-bottom: 8px;
+        `;
         const divOldSamples = mkElt("div", undefined, [
-            "Old samples from the same source",
-            btnOldSamples,
+            btnSaved,
+            "Saved views from this source",
         ]);
         divOldSamples.style = `
-        display: grid;
-        grid-template-columns: 1fr max-content;
-        gap: 10px;
+        NOdisplay: grid;
+        NOgrid-template-columns: 1fr max-content;
+        NOgap: 10px;
         padding: 10px;
-        margin-top: 20px;
+        NOmargin-top: 20px;
     `;
-        divOldSamples.classList.add("mdc-card");
-        divOutput.appendChild(divOldSamples);
+        // divOldSamples.classList.add("mdc-card");
+        detSaved.appendChild(divOldSamples);
 
         divSource.appendChild(mkElt("div", { class: "xmdc-card" }, [
             mkElt("div", { style: "display:flex; flex-direction:column; gap:15px" }, [
@@ -1257,10 +1274,9 @@ async function chooseView() {
         // divLoadView,
         mkElt("h3", undefined, "Source"),
         divSource,
-        mkElt("h3", undefined, "Output"),
-        divOutput,
-        // divNewSample,
-        // divOldSamples,
+        // mkElt("h3", undefined, "Saved"),
+        mkElt("hr", { style: "margin-top: 30px;" }),
+        detSaved,
     ]);
     const dlg = await modMdc.mkMDCdialogAlert(body, "Cancel");
     function closeDialog() { dlg.mdc.close(); }
