@@ -543,6 +543,7 @@ const setRequiredTags = new Set();
 let minConf;
 let maxConf;
 let searchFor;
+let mindmap;
 const setLinkTags = new Set();
 const setNoLinkTags = new Set();
 const setUsedLinkTags = new Set();
@@ -585,9 +586,9 @@ async function getFc4iRecs() {
     const parMindmap = sp.get("mindmap");
     if (parMindmap) {
         const modMMhelpers = await import("mindmap-helpers");
-        const mind = await modMMhelpers.getMindmap(parMindmap);
+        mindmap = await modMMhelpers.getMindmap(parMindmap);
         debugger;
-        const arrCustNodes = mind.data.filter(node => node.shapeEtc?.nodeCustom);
+        const arrCustNodes = mindmap.data.filter(node => node.shapeEtc?.nodeCustom);
         const arrCustKeys = arrCustNodes.map(node => node.shapeEtc.nodeCustom);
         const setCustKeys = new Set(arrCustKeys);
         const arrPromRec = [...setCustKeys].map(kp => {
@@ -597,7 +598,7 @@ async function getFc4iRecs() {
             return dbFc4i.getDbKey(key);
         });
         arrMatchAll = await Promise.all(arrPromRec)
-        alert("handling of mindmaps not implemented yet");
+        // alert("handling of mindmaps not implemented yet");
         return true;
     }
 
@@ -659,7 +660,7 @@ function buildDivTags() {
 
 
 
-    requiredTags.forEach(tag => {
+    requiredTags?.forEach(tag => {
         const elt = mkElt("span", { class: "tag-in-our-tags" }, [`#${tag}`]);
         elt.style.filter = "grayscale(1)";
         divSearchEtc.appendChild(elt);
@@ -1119,122 +1120,126 @@ function computeNodesAndLinks() {
 
 async function chooseView() {
 
-    const strSearch = searchFor.replaceAll("  ", " ").trim();
-    const strTags = requiredTags.sort().map(t => `#t`).join(",");
-    const fingerPrint = strSearch + ";" + strTags;
+    let fingerPrint;
+    if (mindmap) {
+        fingerPrint = "mindmap;" + mindmap.meta.name;
+    } else {
+        const strSearch = searchFor.replaceAll("  ", " ").trim();
+        const strTags = requiredTags.sort().map(t => `#t`).join(",");
+        fingerPrint = strSearch + ";" + strTags;
+    }
     console.log({ fingerPrint });
 
-    function mkViewAlt(txt, fun) {
-        const eltRad = mkElt("input", { type: "radio", name: "view-alt" });
-        eltRad.altFun = fun;
-        const txtFun = fun.name;
-        const lbl = mkElt("label", undefined, [eltRad, txtFun]);
-        return mkElt("p", undefined, lbl);
-    }
+    const divSource = mkElt("div", { class: "xmdc-card" });
+    const divOutput = mkElt("div", { class: "xmdc-card" });
 
-    const divAlts = mkElt("div", undefined, [
-        mkViewAlt("My own", testMyOwn),
-    ]);
-    divAlts.querySelector("input").checked = true;
-    divAlts.style.display = "none";
-
-    function mkSourceAlt(sourceName, txt) {
-        const eltRad = mkElt("input", { type: "radio", name: "source", value: sourceName });
-        const eltLbl = mkElt("label", undefined, [eltRad, txt]);
-        return mkElt("div", undefined, eltLbl);
-    }
-
-    const divReqTags = mkElt("div");
-    if (requiredTags.length == 0) {
-        divReqTags.appendChild(mkElt("span", undefined, "No required tags"));
+    if (mindmap) {
+        const pMindmapError = mkElt("p", undefined, "Source mindmap is not handled yet");
+        pMindmapError.style.background = "red";
+        pMindmapError.style.padding = "10px";
+        divSource.appendChild(pMindmapError);
+        divSource.appendChild(mkElt("i", undefined, "Mindmap"));
+        const divMindmapName = mkElt("div", undefined, mindmap.meta.name);
+        divSource.appendChild(divMindmapName);
+        const numMmNodes = mindmap.data.length;
+        const numFc4i = arrMatchAll.length;
+        const divMindmapData = mkElt("div", undefined, `Nodes: ${numMmNodes} (fc4i: ${numFc4i})`);
+        divSource.appendChild(divMindmapData);
     } else {
-        requiredTags.forEach(t => {
-            const s = mkElt("span", { class: "tag-in-our-tags" }, `#${t}`);
-            divReqTags.appendChild(s);
+        const divReqTags = mkElt("div");
+        if (requiredTags.length == 0) {
+            divReqTags.appendChild(mkElt("span", undefined, "No required tags"));
+        } else {
+            requiredTags.forEach(t => {
+                const s = mkElt("span", { class: "tag-in-our-tags" }, `#${t}`);
+                divReqTags.appendChild(s);
+            });
+        }
+
+        const eltSearchFor = searchFor.length == 0 ?
+            mkElt("i", undefined, "(no search string)")
+            :
+            mkElt("b", undefined, searchFor);
+        const divSearched = mkElt("div", undefined, [
+            "Searched: ",
+            eltSearchFor
+        ]);
+
+        const divAltFc4i = mkElt("div", { class: "xmdc-card" }, [
+            mkElt("div", undefined, [
+                `${numFc4i} records found in `,
+                mkElt("b", undefined, "Flashcard 4 Internet"),
+            ]),
+            divSearched,
+            divReqTags,
+        ]);
+
+
+        const inpNumNodes = modMdc.mkMDCtextFieldInput(undefined, "number");
+        inpNumNodes.min = 2;
+        settingNumNodes.bindToInput(inpNumNodes);
+
+        const tfNumNodes = modMdc.mkMDCtextFieldOutlined(
+            `N of nodes`,
+            inpNumNodes, settingNumNodes.getCachedValue());
+        const btnNewSample = modMdc.mkMDCbutton("Make sample", "raised");
+        btnNewSample.addEventListener("click", evt => {
+            showGraph(fingerPrint);
         });
-    }
-
-    const eltSearchFor = searchFor.length == 0 ?
-        mkElt("i", undefined, "(no search string)")
-        :
-        mkElt("b", undefined, searchFor);
-    const divSearched = mkElt("div", undefined, [
-        "Searched: ",
-        eltSearchFor
-    ]);
-
-    const divAltFc4i = mkElt("div", { class: "xmdc-card" }, [
-        mkElt("div", undefined, [
-            `${numFc4i} records found in `,
-            mkElt("b", undefined, "Flashcard 4 Internet"),
-        ]),
-        divSearched,
-        divReqTags,
-    ]);
-
-
-    const inpNumNodes = modMdc.mkMDCtextFieldInput(undefined, "number");
-    inpNumNodes.min = 2;
-    settingNumNodes.bindToInput(inpNumNodes);
-
-    const tfNumNodes = modMdc.mkMDCtextFieldOutlined(
-        `N of nodes`,
-        inpNumNodes, settingNumNodes.getCachedValue());
-    const btnNewSample = modMdc.mkMDCbutton("Make sample", "raised");
-    btnNewSample.addEventListener("click", evt => {
-        showGraph(fingerPrint);
-    });
-    const divInfoNewSample = mkElt("div", undefined, `
+        const divInfoNewSample = mkElt("div", undefined, `
             Select randomly this number of nodes.
         `);
-    const divNewSampleInputs = mkElt("div", undefined, [
-        tfNumNodes,
-        btnNewSample
-    ]);
-    divNewSampleInputs.style = `
+        const divNewSampleInputs = mkElt("div", undefined, [
+            tfNumNodes,
+            btnNewSample
+        ]);
+        divNewSampleInputs.style = `
         display: grid;
         gap: 10px;
         grid-template-columns: 1fr max-content;
     `;
 
 
-    const divNewSample = mkElt("div", undefined, [
-        divNewSampleInputs,
-        divInfoNewSample,
-    ]);
-    divNewSample.style = `
+        const divNewSample = mkElt("div", undefined, [
+            divNewSampleInputs,
+            divInfoNewSample,
+        ]);
+        divNewSample.style = `
         display: flex;
         flex-direction: column;
         gap: 10px;
         line-height: 1rem;
         padding: 10px;
     `;
-    divNewSample.classList.add("mdc-card");
+        divNewSample.classList.add("mdc-card");
+        // divSource.appendChild(divNewSample);
 
-    const btnOldSamples = modMdc.mkMDCbutton("Show old", "raised");
-    btnOldSamples.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-        const strJsonSaved = localStorage.getItem(keySavedViews);
-        await showSavedViews(strJsonSaved, fingerPrint);
-    }));
-    const divOldSamples = mkElt("div", undefined, [
-        "Old samples from the same source",
-        btnOldSamples,
-    ]);
-    divOldSamples.style = `
+        const btnOldSamples = modMdc.mkMDCbutton("Show old", "raised");
+        btnOldSamples.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            const strJsonSaved = localStorage.getItem(keySavedViews);
+            await showSavedViews(strJsonSaved, fingerPrint);
+        }));
+        const divOldSamples = mkElt("div", undefined, [
+            "Old samples from the same source",
+            btnOldSamples,
+        ]);
+        divOldSamples.style = `
         display: grid;
         grid-template-columns: 1fr max-content;
         gap: 10px;
         padding: 10px;
         margin-top: 20px;
     `;
-    divOldSamples.classList.add("mdc-card");
+        divOldSamples.classList.add("mdc-card");
+        divOutput.appendChild(divOldSamples);
 
-    const divSource = mkElt("div", { class: "xmdc-card" }, [
-        mkElt("div", { style: "display:flex; flex-direction:column; gap:15px" }, [
-            divAltFc4i,
-            // mkSourceAlt("random", "Random links, number nodes"),
-        ]),
-    ]);
+        divSource.appendChild(mkElt("div", { class: "xmdc-card" }, [
+            mkElt("div", { style: "display:flex; flex-direction:column; gap:15px" }, [
+                divAltFc4i,
+            ]),
+        ]));
+        divSource.appendChild(divNewSample);
+    }
 
     const iconHelp = modMdc.mkMDCicon("help");
     const aIconHelp = mkElt("a", { href: "/about.html#nwg", target: "_blank" }, iconHelp);
@@ -1246,20 +1251,6 @@ async function chooseView() {
     // fabHelp.style.backgroundColor = "goldenrod";
     fabHelp.style.backgroundColor = "aliceblue";
 
-    /*
-    let divLoadView = "";
-    const strJsonSavedView = localStorage.getItem(keySavedViews);
-    if (strJsonSavedView) {
-        const btnLoadSaved = modMdc.mkMDCbutton("Saved views", "outlined");
-        btnLoadSaved.addEventListener("click", evt => {
-            // showSavedViews(strJsonSavedView);
-            closeDialog();
-        });
-        divLoadView = mkElt("div", undefined, [
-            btnLoadSaved,
-        ]);
-    }
-    */
 
     const body = mkElt("div", undefined, [
         mkElt("h2", undefined, ["Network graph", fabHelp]),
@@ -1267,8 +1258,9 @@ async function chooseView() {
         mkElt("h3", undefined, "Source"),
         divSource,
         mkElt("h3", undefined, "Output"),
-        divNewSample,
-        divOldSamples,
+        divOutput,
+        // divNewSample,
+        // divOldSamples,
     ]);
     const dlg = await modMdc.mkMDCdialogAlert(body, "Cancel");
     function closeDialog() { dlg.mdc.close(); }
