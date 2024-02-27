@@ -491,7 +491,7 @@ async function displayMatchingReminders(searchFor, minConf, maxConf, requiredTag
     // const btnNetwG = modMdc.mkMDCiconButton("hub");
     // eltSearchBanner.appendChild(btnNetwG);
 
-    const fabNetwG = await mkFabNetwG();
+    const fabNetwG = await mkFabNetwG(mkNetwGraphURL);
     fabNetwG.style.marginLeft = "30px";
 
     // eltSearchBanner.appendChild(fabNetwG);
@@ -809,10 +809,9 @@ async function goHome() {
     divShowHits.style.height = "100%";
     const hHome = mkElt("div", { id: "h-your-items" }, [
         btnSearch,
-        // newbtnSearch,
         mkElt("div", undefined, [fieldSearch, homeTitle,]),
         divShowHits,
-        await mkFabNetwG(),
+        await mkFabNetwG(mkNetwGraphURL),
     ]);
     const pSearchBroken = mkElt("p", {
         style: "background:green; color:yellow; padding: 10px;",
@@ -1143,7 +1142,7 @@ function setLastSearch(objLastSearch) {
     const eltLastSearch = document.getElementById(idLastSearch);
     eltLastSearch.lastSearch = objLastSearch;
 }
-function mkTestNetwGraphURL() {
+function mkNetwGraphURL() {
     const url = new URL("/nwg/netwgraph.html", location.href);
     // const divSearchBanner = document.getElementById("div-search-banner");
     // if (divSearchBanner) {
@@ -1208,11 +1207,11 @@ async function mkMenu() {
 
     const aNetwGraph = mkElt("a", { href: "/nwg/netwgraph.html" }, "Test network graph (not ready)");
     aNetwGraph.addEventListener("click", evt => {
-        aNetwGraph.href = mkTestNetwGraphURL();
+        aNetwGraph.href = mkNetwGraphURL();
         // debugger;
     });
     aNetwGraph.addEventListener("contextmenu", evt => {
-        aNetwGraph.href = mkTestNetwGraphURL();
+        aNetwGraph.href = mkNetwGraphURL();
         // debugger;
     });
     const liTestNetwGraph = modMdc.mkMDCmenuItem(aNetwGraph);
@@ -2315,20 +2314,19 @@ async function getClipboardImages() {
 async function mkFabNetwG() {
     const modMdc = await import("util-mdc");
     const iconHub = modMdc.mkMDCicon("hub");
-    // const aIconHub = mkElt("a", { href: mkTestNetwGraphURL() }, iconHub);
 
     const aIconHub = mkElt("a", { href: "/nwg/netwgraph.html" }, iconHub);
     aIconHub.addEventListener("click", evt => {
-        aIconHub.href = mkTestNetwGraphURL();
+        // aIconHub.href = mkTestNetwGraphURL();
+        aIconHub.href = mkNetwGraphURL();
     });
     aIconHub.addEventListener("contextmenu", evt => {
-        aIconHub.href = mkTestNetwGraphURL();
+        aIconHub.href = mkNetwGraphURL();
     });
 
     aIconHub.style.lineHeight = "1rem";
     const titleNetwg = "Investigate as a graphical network";
     const fabNetwG = modMdc.mkMDCfab(aIconHub, titleNetwg, true)
-    // fabNetwG.style.marginLeft = "30px";
     fabNetwG.style = `
         background-color: goldenrod;
         position: absolute;

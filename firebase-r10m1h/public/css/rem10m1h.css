@@ -1371,7 +1371,7 @@ xdetails[open]:has(.expander)>.expander>.expander-content {
 
 /********************* JsMind **************************************/
 #jsmind-ednode-debug-button {
-    right: 0;
+    right: 48;
 }
 
 #my-dialog-content:has(#jsmind-ednode) {

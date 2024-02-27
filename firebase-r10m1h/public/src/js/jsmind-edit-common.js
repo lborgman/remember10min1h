@@ -604,6 +604,48 @@ export async function pageSetup() {
     let btnJsmindDebug;
     const idBtnJsmindDebug = "jsmind-ednode-debug-button";
 
+    async function mkNetGraphFAB4mindmap() {
+        // eltJmnode
+        function mkNetwGraphURL() {
+            alert("not ready");
+            const url = new URL("/nwg/netwgraph.html", location.href);
+            const prop = "mindmap";
+            const val = "NOTREADY";
+            url.searchParams.set(prop, val);
+            return url.href;
+        }
+        async function mkFabNetwG() {
+            const modMdc = await import("util-mdc");
+            const iconHub = modMdc.mkMDCicon("hub");
+
+            const aIconHub = mkElt("a", { href: "/nwg/netwgraph.html" }, iconHub);
+            aIconHub.addEventListener("click", evt => {
+                // aIconHub.href = mkTestNetwGraphURL();
+                aIconHub.href = mkNetwGraphURL();
+            });
+            aIconHub.addEventListener("contextmenu", evt => {
+                aIconHub.href = mkNetwGraphURL();
+            });
+
+            aIconHub.style.lineHeight = "1rem";
+            const titleNetwg = "Investigate as a graphical network";
+            const fabNetwG = modMdc.mkMDCfab(aIconHub, titleNetwg, true)
+            fabNetwG.style = `
+                background-color: goldenrod;
+                position: absolute;
+                top: 2px;
+                right: 20px;
+                z-index: 10;
+            `;
+            return fabNetwG;
+        }
+        const fabNetwG = await mkFabNetwG();
+        // document.body.appendChild(fabNetwG);
+        // jsMindContainer.appendChild(fabNetwG);
+        // fabNetwG.style.marginLeft = "30px";
+        return fabNetwG;
+    }
+
 
     let btnJsmindMenu;
     const idBtnJsmindMenu = "jsmind-menu-button";
@@ -640,6 +682,9 @@ export async function pageSetup() {
             evt.stopPropagation();
             jsMindContainer.classList.toggle("show-jsmind-debug");
         });
+
+        const nwgFAB = await mkNetGraphFAB4mindmap();
+        jsMindContainer.appendChild(nwgFAB);
 
 
         btnJsmindMenu = modMdc.mkMDCiconButton("menu", "Open menu", 40);
