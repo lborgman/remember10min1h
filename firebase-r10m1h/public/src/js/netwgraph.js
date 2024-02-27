@@ -405,7 +405,7 @@ async function showSavedViews(strSaved, fingerPrint) {
             :
             mkElt("div", undefined, [
                 mkElt("div", undefined, mkElt("b", undefined, "Your notes: ")),
-        divYourNotes,
+                divYourNotes,
             ]);
         const spanBtnsWhenMore = mkElt("span", undefined, [btnLess, btnEdit, btnDelete]);
         spanBtnsWhenMore.classList.add("when-more");
@@ -559,14 +559,42 @@ let showInfoOnNodeClick = false;
 let theBtnFocusNode;
 
 // addDialogGraphButtons();
-await getFc4iRecs();
-await chooseView();
-addDialogGraphButtons();
+if (checkParams()) {
+    if (await getFc4iRecs()) {
+        await chooseView();
+        addDialogGraphButtons();
+    }
+}
 
+function checkParams() {
+    const sp = new URLSearchParams(location.search);
+    if (sp.size == 0) return true;
+    const arrParNames = [...sp.keys()].sort();
+    const strParNames = JSON.stringify(arrParNames);
+    console.log({ strParNames });
+    debugger;
+    if (strParNames == '["mindmap"]') return true;
+    if (strParNames == '["maxConf","requiredTags","searchFor"]') return true;
+    alert("invalid params");
+    return false;
+}
 
 async function getFc4iRecs() {
     if (arrMatchAll) return;
     const sp = new URLSearchParams(location.search);
+
+    const parMindmap = sp.get("mindmap");
+    if (parMindmap) {
+        const modMMhelpers = await import("mindmap-helpers");
+        const mind = await modMMhelpers.getMindmap(parMindmap);
+        console.log({ mind });
+        alert("handling of mindmaps not implemented yet");
+        debugger;
+        const arrCustNodes = mind.data.filter(node => node.shapeEtc?.nodeCustom);
+        const arrCustKeys = arrCustNodes.map(node => node.shapeEtc.nodeCustom);
+        const setCustKeys = new Set(arrCustKeys);
+        return false;
+    }
 
     const parSearchFor = sp.get("searchFor");
     searchFor = parSearchFor === null ? "" : parSearchFor;
@@ -590,6 +618,7 @@ async function getFc4iRecs() {
     // function getDbMatching(searchFor, minConf, maxConf, requiredTags)
     arrMatchAll = await dbFc4i.getDbMatching(searchFor, minConf, maxConf, requiredTags);
     numFc4i = arrMatchAll.length;
+    return true;
 }
 function buildDivTags() {
     const spanSearchFor = mkElt("span", undefined, `Search: "${searchFor}",`);

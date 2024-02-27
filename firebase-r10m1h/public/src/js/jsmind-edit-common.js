@@ -607,11 +607,11 @@ export async function pageSetup() {
     async function mkNetGraphFAB4mindmap() {
         // eltJmnode
         function mkNetwGraphURL() {
-            alert("not ready");
+            // alert("not ready");
             const url = new URL("/nwg/netwgraph.html", location.href);
-            const prop = "mindmap";
-            const val = "NOTREADY";
-            url.searchParams.set(prop, val);
+            const sp = new URLSearchParams(location.search);
+            const mm = sp.get("mindmap");
+            url.searchParams.set("mindmap", mm);
             return url.href;
         }
         async function mkFabNetwG() {
