@@ -572,7 +572,6 @@ function checkParams() {
     const arrParNames = [...sp.keys()].sort();
     const strParNames = JSON.stringify(arrParNames);
     console.log({ strParNames });
-    debugger;
     if (strParNames == '["mindmap"]') return true;
     if (strParNames == '["maxConf","requiredTags","searchFor"]') return true;
     alert("invalid params");
@@ -587,13 +586,19 @@ async function getFc4iRecs() {
     if (parMindmap) {
         const modMMhelpers = await import("mindmap-helpers");
         const mind = await modMMhelpers.getMindmap(parMindmap);
-        console.log({ mind });
-        alert("handling of mindmaps not implemented yet");
         debugger;
         const arrCustNodes = mind.data.filter(node => node.shapeEtc?.nodeCustom);
         const arrCustKeys = arrCustNodes.map(node => node.shapeEtc.nodeCustom);
         const setCustKeys = new Set(arrCustKeys);
-        return false;
+        const arrPromRec = [...setCustKeys].map(kp => {
+            const key = kp.key;
+            const prov = kp.provider;
+            if (prov != "fc4i") throw Error(`Expected provider "fc4i", got "${prov}"`);
+            return dbFc4i.getDbKey(key);
+        });
+        arrMatchAll = await Promise.all(arrPromRec)
+        alert("handling of mindmaps not implemented yet");
+        return true;
     }
 
     const parSearchFor = sp.get("searchFor");
