@@ -183,7 +183,6 @@ export async function pasteCustomClipDialog() {
         const thisClip = JSON.parse(JSON.stringify(objClip));
         div1.dataset.clip = JSON.stringify(objClip);
         div1.addEventListener("click", evt => {
-            // const clipDataset = evt.target.closest(".jsmind-test-custom-clip").dataset.clip;
             result = thisClip;
             closeDialog();
         });
@@ -220,14 +219,16 @@ async function mkDivOneCustomClip(objCustomClip) {
     const divClip = mkElt("div", { class: "mdc-card jsmind-test-custom-clip" }, divClipInner);
     const blob = keyRec.images[0];
     if (blob) {
-        const eltBlob = mkElt("span", { class: "image-bg-cover image-thumb-size" });
+        const eltBlob = mkElt("span", { class: "image-bg-contain image-thumb-size" });
+        eltBlob.style.backgroundPositionY = "bottom";
         const urlBlob = URL.createObjectURL(blob);
         const urlBg = `url(${urlBlob})`;
         eltBlob.style.backgroundImage = urlBg;
         const divBlob = mkElt("div", { class: "dialog-mindmaps-image" }, eltBlob);
         divClipInner.appendChild(divBlob);
     }
-    const btnRemove = modMdc.mkMDCiconButton("delete_forever");
+    // const btnRemove = modMdc.mkMDCiconButton("delete_forever");
+    const btnRemove = modMdc.mkMDCiconButton("close");
     btnRemove.classList.add("upper-left-remove-button");
     btnRemove.addEventListener("click", evt => {
         evt.stopPropagation();
@@ -259,16 +260,14 @@ async function dialogShowCustomClipboard() {
 export async function dialogAdded2CustomClipboard(objAdded) {
     const modMdc = await import("util-mdc");
     const divObjAdded = await mkDivOneCustomClip(objAdded);
+    divObjAdded.style.width = "100%";
+    divObjAdded.style.height = "unset";
     const btnRemove = divObjAdded.lastElementChild;
     if (btnRemove.tagName != "BUTTON") throw Error(`Not button remove: ${btnRemove.tagName}`);
     btnRemove.remove();
     const title = mkElt("h2", undefined, "Copied to custom clipboard");
     const info = mkElt("p", undefined, [
-        "To use it open a mindmap.",
-        "You can then choose ",
-        // FIX-ME: menu item name????
-        mkElt("b", undefined, "Link node to custom content"),
-        " from the menu."
+        "To use it open a mindmap and edit a node.",
     ]);
     const btn = modMdc.mkMDCbutton("Show custom clipboard", "raised");
     btn.addEventListener("click", evt => {
@@ -335,7 +334,6 @@ export function addJsmindCopied4Mindmap(key, provider) {
     return objAdded;
 }
 function removeJsmindCopied4Mindmap(objRemove) {
-    debugger;
     const strRemove = JSON.stringify(objRemove);
     const arrOldClips = fetchJsmindCopied4Mindmap() || [];
     const arrNewClips = arrOldClips.filter(obj => {

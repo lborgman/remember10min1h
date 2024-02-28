@@ -1,6 +1,8 @@
 :root {
     --font-size: 16px;
     font-size: var(--font-size);
+    --thumb-h: 40px;
+    --thumb-w: 40px;
 }
 
 *:not(h1|h2|h3|h4|h5|h6) {
@@ -1784,7 +1786,7 @@ jmnode.selected {
     position: absolute;
     right: -5px;
     top: -5px;
-    background: rgba(0, 0, 0, 0.312);
+    background: rgba(0, 0, 0, 0.05);
 }
 
 /*
@@ -1972,3 +1974,57 @@ html.hide-error-popups .error-popup {
         font-variation-settings: 'wght' 100;
     }
 }
+
+
+
+
+
+
+.jsmind-test-custom-clip {
+    position: relative;
+    padding: 10px;
+    width: 150px;
+    height: 100px;
+    background: orange;
+    color: black;
+}
+
+.jsmind-test-custom-clip-inner {
+    display: grid;
+    grid-template-columns: 1fr var(--thumb-w);
+    align-items: end;
+    gap: 5px;
+    NOheight: 100%;
+    overflow: hidden;
+}
+
+.jsmind-test-custom-clip-inner>span:first-child {
+    NObackground-color: red;
+    line-height: normal;
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.jsmind-test-custom-clip-inner>span:last-child {
+    white-space: wrap;
+}
+
+#jsmind-test-custom-clipboard {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+#jsmind-test-custom-clipboard .jsmind-test-custom-clip {
+    width: 100%;
+    height: fit-content;
+}
+
+#jsmind-test-custom-paste {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
