@@ -591,7 +591,7 @@ async function getFc4iRecs() {
     if (parMindmap) {
         const modMMhelpers = await import("mindmap-helpers");
         mindmap = await modMMhelpers.getMindmap(parMindmap);
-        debugger;
+        // debugger;
         const arrCustNodes = mindmap.data.filter(node => node.shapeEtc?.nodeCustom);
         const arrCustKeys = arrCustNodes.map(node => node.shapeEtc.nodeCustom);
         const setCustKeys = new Set(arrCustKeys);
@@ -866,7 +866,7 @@ async function getNodesAndLinks(
             }
             r.tags.forEach(t => setLinkTags.add(t));
         });
-        buildFrom.requiredTags.forEach(t => { setLinkTags.delete(t); });
+        buildFrom.requiredTags?.forEach(t => { setLinkTags.delete(t); });
 
 
         function getPrelNodes() {
@@ -1148,7 +1148,7 @@ async function chooseView() {
         const divMindmapName = mkElt("div", undefined, mindmap.meta.name);
         divSource.appendChild(divMindmapName);
         const numMmNodes = mindmap.data.length;
-        const numFc4i = arrMatchAll.length;
+        numFc4i = arrMatchAll.length;
         const divMindmapData = mkElt("div", undefined, `Nodes: ${numMmNodes} (fc4i: ${numFc4i})`);
         divSource.appendChild(divMindmapData);
     } else {
@@ -1194,10 +1194,8 @@ async function chooseView() {
             // const tfNumNodes = modMdc.mkMDCtextField(
             `Nodes`,
             inpNumNodes, settingNumNodes.getCachedValue());
-        const btnShow = modMdc.mkMDCbutton("Show graph", "raised");
-        btnShow.addEventListener("click", evt => {
-            showGraph(fingerPrint);
-        });
+
+
         const divInfoNewSample = mkElt("div", undefined, `
             Select randomly this number of nodes.
         `);
@@ -1214,7 +1212,6 @@ async function chooseView() {
 
         const divNewSample = mkElt("div", undefined, [
             divNewSampleInputs,
-            mkElt("div", undefined, btnShow)
         ]);
         divNewSample.style = `
             display: flex;
@@ -1223,40 +1220,44 @@ async function chooseView() {
             line-height: 1rem;
             NOpadding: 10px;
         `;
-        // divNewSample.classList.add("mdc-card");
-        // divSource.appendChild(divNewSample);
-
-        const btnSaved = modMdc.mkMDCbutton("List", "raised");
-        btnSaved.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            const strJsonSaved = localStorage.getItem(keySavedViews);
-            await showSavedViews(strJsonSaved, fingerPrint);
-        }));
-        btnSaved.style = `
-            float: left;
-            margin-right: 10px;
-            margin-bottom: 8px;
-        `;
-        const divOldSamples = mkElt("div", undefined, [
-            btnSaved,
-            "Saved views from this source",
-        ]);
-        divOldSamples.style = `
-        NOdisplay: grid;
-        NOgrid-template-columns: 1fr max-content;
-        NOgap: 10px;
-        padding: 10px;
-        NOmargin-top: 20px;
-    `;
-        // divOldSamples.classList.add("mdc-card");
-        detSaved.appendChild(divOldSamples);
-
         divSource.appendChild(mkElt("div", { class: "xmdc-card" }, [
             mkElt("div", { style: "display:flex; flex-direction:column; gap:15px" }, [
                 divAltFc4i,
             ]),
         ]));
         divSource.appendChild(divNewSample);
+
     }
+    const btnShow = modMdc.mkMDCbutton("Show graph", "raised");
+    btnShow.addEventListener("click", evt => { showGraph(fingerPrint); });
+    const divBtnShow = mkElt("div", undefined, btnShow);
+    divBtnShow.style.marginTop = "5px";
+    divSource.appendChild( divBtnShow);
+
+    const btnSaved = modMdc.mkMDCbutton("List", "raised");
+    btnSaved.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+        const strJsonSaved = localStorage.getItem(keySavedViews);
+        await showSavedViews(strJsonSaved, fingerPrint);
+    }));
+    btnSaved.style = `
+            float: left;
+            margin-right: 10px;
+            margin-bottom: 8px;
+        `;
+    const divOldSamples = mkElt("div", undefined, [
+        btnSaved,
+        "Saved views from this source",
+    ]);
+    divOldSamples.style = `
+            NOdisplay: grid;
+            NOgrid-template-columns: 1fr max-content;
+            NOgap: 10px;
+            padding: 10px;
+            line-height: normal;
+            NOmargin-top: 20px;
+        `;
+    detSaved.appendChild(divOldSamples);
+
 
     const iconHelp = modMdc.mkMDCicon("help");
     const aIconHelp = mkElt("a", { href: "/about.html#nwg", target: "_blank" }, iconHelp);
