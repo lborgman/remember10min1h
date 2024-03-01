@@ -541,6 +541,7 @@ async function showSavedViews(strSaved, fingerPrint) {
 }
 
 let arrMatchAll;
+const mindmapLinks = [];
 let numFc4i;
 let requiredTags;
 const setRequiredTags = new Set();
@@ -603,6 +604,23 @@ async function getFc4iRecs() {
         });
         arrMatchAll = await Promise.all(arrPromRec)
         // alert("handling of mindmaps not implemented yet");
+        const mmNodesById = {};
+        mindmap.data.forEach(node => {
+            mmNodesById[node.id] = node;
+        });
+        mindmap.data.forEach(node => {
+            const nodeCustom = node.shapeEtc?.nodeCustom;
+            if (nodeCustom) {
+                const childKey = nodeCustom.key;
+                const parentId = node.parentid;
+                if (parentId) {
+                    const parentNode = mmNodesById[parentId];
+                    const parentKey = parentNode.shapeEtc.nodeCustom.key;
+                    const objLink = { childKey, parentKey }
+                    mindmapLinks.push(objLink);
+                }
+            }
+        });
         return true;
     }
 
@@ -904,6 +922,21 @@ function computeNodesAndLinks() {
     setExclTags.forEach(t => setNoLinkTags.add(t));
     setUsedLinkTags.clear();
     // setActuallyUsedLinkTags.clear();
+    const addNewLink = (idMin, idMax, linkKey, tag, arrTagNodes, tagNode0) => {
+        setUsedLinkTags.add(tag);
+        const tagSet = new Set();
+        tagSet.add(tag);
+        const link = {
+            source: idMin,
+            target: idMax,
+            setTags: tagSet,
+            linkKey
+        }
+        linksByKey[linkKey] = link;
+        objTagNodes[linkKey] = JSON.parse(JSON.stringify(arrTagNodes));
+        objTagNodes[linkKey].push(tagNode0);
+    }
+
     setLinkTags.forEach(t => {
         // if (setNoLinkTags.has(t)) {
         if (setExclTags.has(t)) {
@@ -916,43 +949,48 @@ function computeNodesAndLinks() {
         });
         if (arrTagNodes.length < 2) return;
         while (arrTagNodes.length > 0) {
-            const a0 = arrTagNodes.pop();
-            if (a0.id == undefined) {
-                console.error("a0.id == undefined", a0);
+            const tagNode0 = arrTagNodes.pop();
+            if (tagNode0.id == undefined) {
+                console.error("a0.id == undefined", tagNode0);
             }
+
             arrTagNodes.forEach(r => {
                 if (r.id == undefined) {
-                    console.error("r.id == undefined", r, a0);
+                    console.error("r.id == undefined", r, tagNode0);
                 }
-                const idMin = Math.min(a0.id, r.id);
-                const idMax = Math.max(a0.id, r.id);
+                const idMin = Math.min(tagNode0.id, r.id);
+                const idMax = Math.max(tagNode0.id, r.id);
                 // const linkKey = `${a0.id - r.id}`;
                 const linkKey = `${idMin} - ${idMax}`;
                 const oldLink = linksByKey[linkKey];
                 if (!oldLink) {
-                    setUsedLinkTags.add(t);
-                    const tagSet = new Set();
-                    tagSet.add(t);
-                    const link = {
-                        // source: a0.id,
-                        source: idMin,
-                        // target: r.id,
-                        target: idMax,
-                        // text: t,
-                        setTags: tagSet,
-                        linkKey
-                    }
-                    // console.log("no oldLink", link, a0, r);
-                    linksByKey[linkKey] = link;
-                    objTagNodes[linkKey] = JSON.parse(JSON.stringify(arrTagNodes));
-                    objTagNodes[linkKey].push(a0);
-                    // links.push(link);
+                    addNewLink(idMin, idMax, linkKey, t, arrTagNodes, tagNode0);
                 } else {
                     oldLink.setTags.add(t);
                 }
             });
         }
     });
+    const MINDMAP_TAG = "MINDMAP";
+    if (mindmapLinks.length > 0) {
+        setUsedLinkTags.add(MINDMAP_TAG);
+        const nodesByKey = {}
+        for (let i = 0, len = prelNodes.nodes.length; i < len; i++) {
+            const n = prelNodes.nodes[i];
+            const key = n.fc4i.r.key;
+            nodesByKey[key] = i;
+        }
+        mindmapLinks.forEach(l => {
+            console.log(l);
+            const child = nodesByKey[l.childKey];
+            const parent = nodesByKey[l.parentKey];
+            const idMin = Math.min(child, parent);
+            const idMax = Math.max(child, parent);
+            const linkKey = `${idMin} - ${idMax}`;
+            const oldLink = linksByKey[linkKey];
+        });
+    }
+
     links.push(...Object.values(linksByKey));
 
 
@@ -1232,7 +1270,7 @@ async function chooseView() {
     btnShow.addEventListener("click", evt => { showGraph(fingerPrint); });
     const divBtnShow = mkElt("div", undefined, btnShow);
     divBtnShow.style.marginTop = "5px";
-    divSource.appendChild( divBtnShow);
+    divSource.appendChild(divBtnShow);
 
     const btnSaved = modMdc.mkMDCbutton("List", "raised");
     btnSaved.addEventListener("click", errorHandlerAsyncEvent(async evt => {
