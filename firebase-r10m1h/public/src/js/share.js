@@ -891,7 +891,8 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
         btnFab.classList.add("fab-add-mindmap-1");
         btnFab.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             // await createAndShowNewMindmapFc4i();
-            await createAndShowNewMindmap("/fc4i-mindmaps.html");
+            // mindmap-helpers
+            await modMMhelpers.createAndShowNewMindmap("/fc4i-mindmaps.html");
         }));
         divMM.appendChild(btnFab);
         const detMM = mkElt("details", { class: "mdc-card" }, [sumMM, divMM]);
@@ -899,7 +900,9 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
     }
 
     function mkDivCustomCopy4Mindmaps() {
-        const btnAdd = modMdc.mkMDCbutton("Copy to", "raised");
+        // const btnAdd = modMdc.mkMDCbutton("Copy to", "raised");
+        const btnAdd = modMdc.mkMDCiconButton("content_copy", "Copy to");
+        // const aURLorig = modMdc.mkMDCiconButton("link", "Go to this item source page (aURLorig)");
         btnAdd.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             const key = btnAdd.closest(".container-remember").dataset.key;
             console.log("clicked add", key);
@@ -908,7 +911,8 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
             const objAdded = modMMhelpers.addJsmindCopied4Mindmap(key, "fc4i");
             modMMhelpers.dialogAdded2CustomClipboard(objAdded);
         }));
-        const btnFind = modMdc.mkMDCbutton("Find in", "raised");
+        // const btnFind = modMdc.mkMDCbutton("Find in", "raised");
+        const btnFind = modMdc.mkMDCiconButton("search", "Find in mindmaps");
         btnFind.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             const key = btnFind.closest(".container-remember").dataset.key;
             console.log("clicked find", key);

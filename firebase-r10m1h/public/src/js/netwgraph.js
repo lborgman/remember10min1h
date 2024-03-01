@@ -1407,7 +1407,7 @@ function getBtnContLeft() {
     return left;
 }
 function hideOrShowBtnRight() {
-    console.warn("hideOrShowBtnRigh");
+    // console.warn("hideOrShowBtnRigh");
     const left = getBtnContLeft();
     const btnRight = document.getElementById(btnRightId);
     if (left < 0) {
@@ -1886,7 +1886,7 @@ async function setupGraphDisplayer(opt) {
     function adjustGraphSize() {
         setVh();
         const bcr = elt3dGraph.getBoundingClientRect();
-        console.log("%cadjustGraphSize", "font-size:18px; background:yellowgreen;", bcr, (new Date()).toISOString());
+        // console.log("%cadjustGraphSize", "font-size:18px; background:yellowgreen;", bcr, (new Date()).toISOString());
         const newWidth = bcr.width;
         const newHeight = bcr.height;
         graph.renderer().setSize(newWidth, newHeight)
