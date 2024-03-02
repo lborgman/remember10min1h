@@ -933,8 +933,10 @@ function computeNodesAndLinks() {
             linkKey
         }
         linksByKey[linkKey] = link;
-        objTagNodes[linkKey] = JSON.parse(JSON.stringify(arrTagNodes));
-        objTagNodes[linkKey].push(tagNode0);
+        if (arrTagNodes) {
+            objTagNodes[linkKey] = JSON.parse(JSON.stringify(arrTagNodes));
+            objTagNodes[linkKey].push(tagNode0);
+        }
     }
 
     setLinkTags.forEach(t => {
@@ -960,7 +962,6 @@ function computeNodesAndLinks() {
                 }
                 const idMin = Math.min(tagNode0.id, r.id);
                 const idMax = Math.max(tagNode0.id, r.id);
-                // const linkKey = `${a0.id - r.id}`;
                 const linkKey = `${idMin} - ${idMax}`;
                 const oldLink = linksByKey[linkKey];
                 if (!oldLink) {
@@ -972,6 +973,7 @@ function computeNodesAndLinks() {
         }
     });
     const MINDMAP_TAG = "MINDMAP";
+    const setMindmapLinks = new Set();
     if (mindmapLinks.length > 0) {
         setUsedLinkTags.add(MINDMAP_TAG);
         const nodesByKey = {}
@@ -988,6 +990,13 @@ function computeNodesAndLinks() {
             const idMax = Math.max(child, parent);
             const linkKey = `${idMin} - ${idMax}`;
             const oldLink = linksByKey[linkKey];
+            if (!oldLink) {
+                // addNewLink(idMin, idMax, linkKey, MINDMAP_TAG, arrTagNodes, tagNode0);
+                addNewLink(idMin, idMax, linkKey, MINDMAP_TAG, undefined, undefined);
+                setMindmapLinks.add(linkKey);
+            } else {
+                oldLink.setTags.add(MINDMAP_TAG);
+            }
         });
     }
 
@@ -1003,6 +1012,14 @@ function computeNodesAndLinks() {
         const linkKey = link.linkKey;
         const lns = ids.map(id => {
             const arrTagNodes = objTagNodes[linkKey];
+            if (!arrTagNodes) {
+                // This should be for MINDMAP_TAG:
+                if (!setMindmapLinks.has(linkKey)) {
+                    console.error(`linkKey is not in setMindmapLinks`, linkKey, setMindmapLinks);
+                    throw Error(`${linkKey} is not in setMindmapLinks`);
+                }
+                return;
+            }
             for (let i = 0, len = arrTagNodes.length; i < len; i++) {
                 const n = arrTagNodes[i];
                 if (id == n.id) return n;
@@ -1016,6 +1033,7 @@ function computeNodesAndLinks() {
             // if (lns0.r.tags.indexOf(t) == -1) debugger;
             // const lns1 = lns[1];
             // if (lns1.r.tags.indexOf(t) == -1) debugger;
+            if (t == MINDMAP_TAG) return;
             lns.forEach(n => {
                 if (n.r.tags.indexOf(t) == -1) {
                     console.log({ n, t, link });
