@@ -548,7 +548,11 @@ const setRequiredTags = new Set();
 let minConf;
 let maxConf;
 let searchFor;
+
 let mindmap;
+let mindmapGlobals;
+const MINDMAP_TAG = "MINDMAP";
+
 const setLinkTags = new Set();
 const setNoLinkTags = new Set();
 const setUsedLinkTags = new Set();
@@ -592,6 +596,13 @@ async function getFc4iRecs() {
     if (parMindmap) {
         const modMMhelpers = await import("mindmap-helpers");
         mindmap = await modMMhelpers.getMindmap(parMindmap);
+        let mindmapRootData;
+        mindmap.data.forEach(d => {
+            // FIX-ME: Correct way to check??
+            if (d.id == "root") { mindmapRootData = d; }
+        });
+        mindmapGlobals = mindmapRootData.mindmapGlobals;
+        console.log({ mindmapRootData, mindmapGlobals });
         // debugger;
         const arrCustNodes = mindmap.data.filter(node => node.shapeEtc?.nodeCustom);
         const arrCustKeys = arrCustNodes.map(node => node.shapeEtc.nodeCustom);
@@ -972,7 +983,6 @@ function computeNodesAndLinks() {
             });
         }
     });
-    const MINDMAP_TAG = "MINDMAP";
     const setMindmapLinks = new Set();
     if (mindmapLinks.length > 0) {
         setUsedLinkTags.add(MINDMAP_TAG);
@@ -2367,12 +2377,17 @@ async function addNodeLinkHighlighter() {
             }
             let numTags = link.arrTags.length;
             let hiTag = false;
+            let mindmapTag = false;
             link.arrTags.forEach(t => {
                 if (setInvisibleTags.has(t)) numTags--;
                 if (theHighlightTag == t) hiTag = true;
+                if (MINDMAP_TAG == t) mindmapTag = true;
             });
             if (numTags == 0) return "#0000";
             if (hiTag) return highlightTagColor;
+            if (mindmapTag) {
+                if (!setInvisibleTags.has(MINDMAP_TAG)) { return mindmapGlobals.line_color; }
+            }
 
             let hi = setHighlightLinks.has(link);
             if (hi) {
@@ -2389,13 +2404,16 @@ async function addNodeLinkHighlighter() {
         })
         .linkWidth(link => {
             let hiTag = false;
+            let mindmapTag = false;
             link.arrTags.forEach(t => {
                 if (theHighlightTag == t) hiTag = true;
+                if (MINDMAP_TAG == t) mindmapTag = true;
             });
             const linkW = settingLinkW.getCachedValue();
-            if (hiTag) {
-                return linkW * 2;
+            if (mindmapTag) {
+                if (!setInvisibleTags.has(MINDMAP_TAG)) { return mindmapGlobals.line_width; }
             }
+            if (hiTag) { return linkW * 2; }
             let numTags = link.arrTags.length;
             link.arrTags.forEach(t => { if (setInvisibleTags.has(t)) numTags--; });
             if (numTags == 0) return 0;
