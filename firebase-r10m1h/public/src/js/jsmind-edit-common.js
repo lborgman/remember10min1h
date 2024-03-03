@@ -2055,7 +2055,7 @@ export async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits, pr
 }
 
 export async function dialogFindInMindMaps(key, provider) {
-    const modCustRend = await import("jsmind-cust-rend");
+    // const modCustRend = await import("jsmind-cust-rend");
     // const renderer = await modCustRend.getOurCustomRenderer();
     const arrMindmapsHits = await modMMhelpers.getMindmapsHits(key);
     console.log({ arrMindmapsHits });

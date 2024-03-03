@@ -878,6 +878,7 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
     })();
 
     // mkdetyour
+    // "toggle"
     function mkDetMindmaps() {
         const icoMM = modMdc.mkMDCicon("account_tree");
         icoMM.classList.add("mdc-theme--primary");
@@ -886,8 +887,10 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
             " Mindmaps"
         ]);
         const divMM = mkDivCustomCopy4Mindmaps();
-        const eltIcon = modMdc.mkMDCicon("add");
-        const btnFab = modMdc.mkMDCfab(eltIcon, "Create new mindmap", true);
+        // const eltIcon = modMdc.mkMDCicon("add");
+        const eltIcon = modMdc.mkMDCicon("list_alt_add");
+        // const btnFab = modMdc.mkMDCfab(eltIcon, "Create new mindmap", true);
+        const btnFab = modMdc.mkMDCfab(eltIcon, "List mindmaps or create new", true);
         btnFab.classList.add("fab-add-mindmap-1");
         btnFab.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             // await createAndShowNewMindmapFc4i();
@@ -895,7 +898,20 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
             await modMMhelpers.createAndShowNewMindmap("/fc4i-mindmaps.html");
         }));
         divMM.appendChild(btnFab);
+        const divOurMM = mkElt("div");
+        divMM.appendChild(divOurMM);
         const detMM = mkElt("details", { class: "mdc-card" }, [sumMM, divMM]);
+        detMM.addEventListener("toggle", errorHandlerAsyncEvent(async evt => {
+            if (detMM.open) {
+                const key = detMM.closest(".container-remember").dataset.key;
+                const arrMindmaps = await modMMhelpers.getMindmapsHits(key);
+                if (arrMindmaps.length == 0) {
+                    divOurMM.textContent = "Not found in any mindmaps.";
+                } else {
+                    divOurMM.textContent = `Found in ${arrMindmaps.length} mindmaps.`;
+                }
+            }
+        }));
         return detMM;
     }
 

@@ -156,8 +156,10 @@ export async function getMindmapsHits(customKey) {
                 // console.log({ nd, objCustom });
                 // if (objCustom.key == customKey) { hits.push(nd); }
                 const topic = nd.topic;
+                const key = nd.shapeEtc.nodeCustom.key;
                 // FIX-ME: key, provider, better search
-                if (topic.search(customKey) > 0) { hits.push(nd); };
+                // if (topic.search(customKey) > 0) { hits.push(nd); };
+                if (key == customKey) { hits.push(nd); };
                 if (topic == searchedTopic) { hits.push(nd); };
             });
             return m;
