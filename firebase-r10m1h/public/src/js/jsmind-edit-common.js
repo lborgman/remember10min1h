@@ -1913,6 +1913,7 @@ export function addScrollIntoViewOnSelect(jmDisp) {
     });
 }
 
+/*
 function mkEltLinkMindmapA(urlPath, topic, mkey, mhits, provider) {
     const url = new URL(urlPath, location);
     url.searchParams.set("mindmap", mkey);
@@ -1926,6 +1927,7 @@ function mkEltLinkMindmapA(urlPath, topic, mkey, mhits, provider) {
     eltA.href = url;
     return eltA;
 }
+*/
 
 export async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits, provider) {
     const toLink = typeof linkMindmapsPage;

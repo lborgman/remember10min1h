@@ -893,8 +893,6 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
         const btnFab = modMdc.mkMDCfab(eltIcon, "List mindmaps or create new", true);
         btnFab.classList.add("fab-add-mindmap-1");
         btnFab.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            // await createAndShowNewMindmapFc4i();
-            // mindmap-helpers
             await modMMhelpers.createAndShowNewMindmap("/fc4i-mindmaps.html");
         }));
         divMM.appendChild(btnFab);
@@ -905,10 +903,26 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
             if (detMM.open) {
                 const key = detMM.closest(".container-remember").dataset.key;
                 const arrMindmaps = await modMMhelpers.getMindmapsHits(key);
-                if (arrMindmaps.length == 0) {
+                const len = arrMindmaps.length;
+                if (len == 0) {
                     divOurMM.textContent = "Not found in any mindmaps.";
                 } else {
-                    divOurMM.textContent = `Found in ${arrMindmaps.length} mindmaps.`;
+                    const wrd = len == 1 ? "mindmap" : "mindmaps";
+                    divOurMM.textContent = `Found in ${len} ${wrd}.`;
+                    arrMindmaps.forEach(mhits => {
+                        const mm = mhits.jsmindmap;
+                        const mkey = mm.key;
+                        const d0 = mm.data[0];
+                        const topic = d0.topic;
+                        console.log({ mm, mkey, d0 });
+                        if (d0.id != "root") throw Error(`data[0] is not "root"`);
+                        const provider = "fc4i"; // FIX-ME:
+                        // const eltA = funMkEltLinkMindmap(topic, key, hits, provider);
+                        const hits = mhits.hits;
+                        const eltA = modMMhelpers.mkEltLinkMindmapA(topic, mkey, hits, provider);
+                        const divA = mkElt("div", undefined, eltA);
+                        divOurMM.appendChild(divA);
+                    });
                 }
             }
         }));
@@ -943,6 +957,7 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
             btnFind
         ]);
         div.style.display = "flex";
+        div.style.flexDirection = "column";
         div.style.gap = "10px";
         div.style.position = "relative";
         return div;

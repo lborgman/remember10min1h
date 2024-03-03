@@ -168,6 +168,22 @@ export async function getMindmapsHits(customKey) {
     return promArrMindmaps;
 }
 
+const urlMindmapsPage = "/mm4i/mm4i.html";
+export function mkEltLinkMindmapA(topic, mkey, mhits, provider) {
+    const url = new URL(urlMindmapsPage, location);
+    url.searchParams.set("mindmap", mkey);
+    if (mhits) {
+        url.searchParams.set("provider", provider);
+        const hits = mhits.map(h => h.id);
+        console.log({ hits })
+        url.searchParams.set("nodehits", hits);
+    }
+    const eltA = mkElt("a", undefined, topic);
+    eltA.href = url;
+    return eltA;
+}
+
+
 
 
 
