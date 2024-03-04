@@ -898,19 +898,36 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
         */
         const divOurMM = mkElt("div");
 
-        const btnAdd = modMdc.mkMDCiconButton("content_copy", "Copy to mindmap clipboard");
-        btnAdd.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            const key = btnAdd.closest(".container-remember").dataset.key;
+        const btnAdd2mmClipB = modMdc.mkMDCiconButton("content_copy", "Copy this item to mindmap clipboard");
+        btnAdd2mmClipB.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            const key = btnAdd2mmClipB.closest(".container-remember").dataset.key;
             console.log("clicked add", key);
             const modEditFc4iMM = await import("jsmind-edit-spec-fc4i");
             modEditFc4iMM.addProviderFc4i();
             const objAdded = modMMhelpers.addJsmindCopied4Mindmap(key, "fc4i");
             modMMhelpers.dialogAdded2CustomClipboard(objAdded);
         }));
-        const btnNewMM = modMdc.mkMDCiconButton("library_add", "New mindmap from this");
-        btnNewMM.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+
+        // FIX-ME: make this an <a>-button:
+        const btnNewMMfromRec = modMdc.mkMDCiconButton("library_add", "New mindmap from this item");
+        btnNewMMfromRec.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            const ans = await modMdc.mkMDCdialogConfirm("Create new mindmap with this item as root?");
+            if (ans != true) return;
+            const keyRec = btnAdd2mmClipB.closest(".container-remember").dataset.key;
+            const dbFc4i = await import("db-fc4i");
+            const rec = await dbFc4i.getDbKey(keyRec);
+            debugger;
+            const rootTopic = rec.title;
+            const jsMindMap = modMMhelpers.getNewMindmap(rootTopic);
+            const d0 = jsMindMap.data[0];
+            d0.shapeEtc = {};
+            d0.shapeEtc.nodeCustom = { key: keyRec, provider: "fc4i" };
+            const keyMM = jsMindMap.meta.name;
+            const dbMindmaps = await import("db-mindmaps");
+            await dbMindmaps.DBsetMindmap(keyMM, jsMindMap);
+            modMMhelpers.showMindmap(keyMM);
         }));
-        const divBtnMM = mkElt("div", undefined, [btnAdd, btnNewMM]);
+        const divBtnMM = mkElt("div", undefined, [btnAdd2mmClipB, btnNewMMfromRec]);
         divBtnMM.style = `
             display: flex;
             gap: 10px;
@@ -927,7 +944,17 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                     divOurMM.textContent = "Not found in any mindmaps.";
                 } else {
                     const wrd = len == 1 ? "mindmap" : "mindmaps";
-                    divOurMM.textContent = `Found in ${len} ${wrd}.`;
+                    divOurMM.textContent = `Found in ${len} ${wrd}:`;
+                    const divListMM = mkElt("div");
+                    divListMM.style = `
+                        display: flex;
+                        flex-direction: column;
+                        gap: 10px;
+                        margin-top: 10px;
+                        margin-left: 10px;
+                        margin-bottom: 20px;
+                    `;
+                    divOurMM.appendChild(divListMM);
                     arrMindmaps.forEach(mmRec => {
                         const mm = mmRec.jsmindmap;
                         const mkey = mm.key;
@@ -939,7 +966,13 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                         const hits = mmRec.hits;
                         const eltA = modMMhelpers.mkEltLinkMindmapA(topic, mkey, hits, provider);
                         const divA = mkElt("div", undefined, eltA);
-                        divOurMM.appendChild(divA);
+                        divA.style = `
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            width: 60%;
+                        `;
+                        divListMM.appendChild(divA);
                     });
                 }
             }
@@ -1078,7 +1111,6 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
         // const db = await getDb();
         // We now use val.key as db key
         // const res = await db.put(idbStoreName, val);
-        // const dbFc4i = await getDbFc4i();
         const dbFc4i = await import("db-fc4i");
         const res = await dbFc4i.setDbKey(key, val);
         console.warn("saveNow", { res });

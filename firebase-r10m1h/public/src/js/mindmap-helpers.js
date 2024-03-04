@@ -5,6 +5,7 @@ console.log("here is module mindmap-helpers.js");
 if (document.currentScript) throw Error("import .currentScript"); // is module
 if (!import.meta.url) throw Error("!import.meta.url"); // is module
 
+const URL_MINDMAPS_PAGE = "/mm4i/mm4i.html";
 
 // async function getDbMindmaps() { return await import("db-mindmaps") }
 // async function getDbFc4i() { return await import("db-fc4i"); }
@@ -14,20 +15,6 @@ if (!import.meta.url) throw Error("!import.meta.url"); // is module
 // getJsmindCust();
 import("jsmind-cust-rend");
 
-function OLDthrottleTO(fn, msDelay) {
-    let timeoutId;
-    return function (...args) {
-        if (timeoutId) {
-            // return; // original
-            clearTimeout(timeoutId); // my own
-        }
-        timeoutId = setTimeout(() => {
-            fn(...args);
-            // console.log("throttleTO(fn, delay)");
-            timeoutId = null;
-        }, msDelay);
-    }
-}
 
 
 
@@ -42,10 +29,11 @@ async function DBsaveNowThisMindmap(jmDisplayed) {
     await dbMindmaps.DBsetMindmap(keyName, objDataMind);
 }
 
-async function getNextMindmapKey() { return "mm-" + new Date().toISOString(); }
+function getNextMindmapKey() { return "mm-" + new Date().toISOString(); }
 
-function showMindmap(linkMindmapsPage, key) {
-    const url = new URL(linkMindmapsPage, location);
+export function showMindmap(key) {
+    // const url = new URL(linkMindmapsPage, location);
+    const url = new URL( URL_MINDMAPS_PAGE , location);
     url.searchParams.set("mindmap", key);
     // location.href = url; // FIX-ME:
     location.href = url.href; // FIX-ME:
@@ -59,8 +47,7 @@ export async function createAndShowNewMindmap(linkMindmapsPage) {
     // const dbMindmaps = await getDbMindmaps();
     const dbMindmaps = await import("db-mindmaps");
     await dbMindmaps.DBsetMindmap(keyName, jsMindMap);
-    // showMindmapFc4i(keyName);
-    showMindmap(linkMindmapsPage, keyName);
+    showMindmap(keyName);
 }
 
 export async function getMindmap(key) {
@@ -75,7 +62,7 @@ async function dialogCreateMindMap() {
     const dbMindmaps = await import("db-mindmaps");
 
     const title = mkElt("h2", undefined, "Create new mindmap");
-    const nextKey = await getNextMindmapKey();
+    // const nextKey = getNextMindmapKey();
     const pTopicOk = mkElt("p", undefined, "");
     pTopicOk.textContent = "Please input a topic name.";
     const inpRoot = modMdc.mkMDCtextFieldInput(undefined, "text");
@@ -124,8 +111,8 @@ async function dialogCreateMindMap() {
     console.log({ res });
     if (res) {
         const rootTopic = inpRoot.value.trim();
-        // getEmptyMap(nextKey, rootTopic, author, version, format);
-        const emptyJsmind = getEmptyMap(nextKey.toString(), rootTopic);
+        // getNewMindmap(nextKey, rootTopic, author, version, format);
+        const emptyJsmind = getNewMindmap(rootTopic);
         // return { jsmindmap: emptyJsmind };
         return emptyJsmind;
     }
@@ -170,9 +157,8 @@ export async function getMindmapsHits(customKey) {
     return promArrMindmaps;
 }
 
-const urlMindmapsPage = "/mm4i/mm4i.html";
 export function mkEltLinkMindmapA(topic, mkey, mhits, provider) {
-    const url = new URL(urlMindmapsPage, location);
+    const url = new URL(URL_MINDMAPS_PAGE, location);
     url.searchParams.set("mindmap", mkey);
     if (mhits) {
         url.searchParams.set("provider", provider);
@@ -379,8 +365,9 @@ function clearJsmindCopied4Mindmap() {
 
 
 
-function getEmptyMap(keyName, rootTopic, author, version, format) {
-    if (!keyName) throw Error("No key given for new mindmap");
+export function getNewMindmap(rootTopic, author, version, format) {
+    // if (!keyName) throw Error("No key given for new mindmap");
+    const keyName = getNextMindmapKey();
     format = format || "node_array";
     rootTopic = rootTopic || `Jsmind ${format}`;
     version = version || "1.0.0";
