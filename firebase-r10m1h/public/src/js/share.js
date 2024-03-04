@@ -886,22 +886,41 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
             icoMM,
             " Mindmaps"
         ]);
+        /*
         const divMM = mkDivCustomCopy4Mindmaps();
-        // const eltIcon = modMdc.mkMDCicon("add");
         const eltIcon = modMdc.mkMDCicon("list_alt_add");
-        // const btnFab = modMdc.mkMDCfab(eltIcon, "Create new mindmap", true);
         const btnFab = modMdc.mkMDCfab(eltIcon, "List mindmaps or create new", true);
         btnFab.classList.add("fab-add-mindmap-1");
         btnFab.addEventListener("click", errorHandlerAsyncEvent(async evt => {
             await modMMhelpers.createAndShowNewMindmap("/fc4i-mindmaps.html");
         }));
         divMM.appendChild(btnFab);
+        */
         const divOurMM = mkElt("div");
-        divMM.appendChild(divOurMM);
-        const detMM = mkElt("details", { class: "mdc-card" }, [sumMM, divMM]);
+
+        const btnAdd = modMdc.mkMDCiconButton("content_copy", "Copy to mindmap clipboard");
+        btnAdd.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+            const key = btnAdd.closest(".container-remember").dataset.key;
+            console.log("clicked add", key);
+            const modEditFc4iMM = await import("jsmind-edit-spec-fc4i");
+            modEditFc4iMM.addProviderFc4i();
+            const objAdded = modMMhelpers.addJsmindCopied4Mindmap(key, "fc4i");
+            modMMhelpers.dialogAdded2CustomClipboard(objAdded);
+        }));
+        const btnNewMM = modMdc.mkMDCiconButton("library_add", "New mindmap from this");
+        btnNewMM.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+        }));
+        const divBtnMM = mkElt("div", undefined, [btnAdd, btnNewMM]);
+        divBtnMM.style = `
+            display: flex;
+            gap: 10px;
+        `;
+
+        const detMM = mkElt("details", { class: "mdc-card" }, [sumMM, divOurMM, divBtnMM]);
         detMM.addEventListener("toggle", errorHandlerAsyncEvent(async evt => {
             if (detMM.open) {
                 const key = detMM.closest(".container-remember").dataset.key;
+                const provider = "fc4i";
                 const arrMindmaps = await modMMhelpers.getMindmapsHits(key);
                 const len = arrMindmaps.length;
                 if (len == 0) {
@@ -909,16 +928,15 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
                 } else {
                     const wrd = len == 1 ? "mindmap" : "mindmaps";
                     divOurMM.textContent = `Found in ${len} ${wrd}.`;
-                    arrMindmaps.forEach(mhits => {
-                        const mm = mhits.jsmindmap;
+                    arrMindmaps.forEach(mmRec => {
+                        const mm = mmRec.jsmindmap;
                         const mkey = mm.key;
                         const d0 = mm.data[0];
                         const topic = d0.topic;
                         console.log({ mm, mkey, d0 });
                         if (d0.id != "root") throw Error(`data[0] is not "root"`);
-                        const provider = "fc4i"; // FIX-ME:
                         // const eltA = funMkEltLinkMindmap(topic, key, hits, provider);
-                        const hits = mhits.hits;
+                        const hits = mmRec.hits;
                         const eltA = modMMhelpers.mkEltLinkMindmapA(topic, mkey, hits, provider);
                         const divA = mkElt("div", undefined, eltA);
                         divOurMM.appendChild(divA);

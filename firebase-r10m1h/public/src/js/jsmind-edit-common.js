@@ -786,6 +786,21 @@ export async function pageSetup() {
     }
 
     // https://github.com/hizzgdev/jsmind/blob/master/docs/en/1.usage.md#12-data-format
+    function checkParams() {
+        const sp = new URLSearchParams(location.search);
+        if (sp.size == 0) return true;
+        const arrParNames = [...sp.keys()].sort();
+        const strParNames = JSON.stringify(arrParNames);
+        console.log({ strParNames });
+        if (strParNames == '["mindmap"]') return true;
+        // if (strParNames == '["maxConf","requiredTags","searchFor"]') return true;
+        if (strParNames == '["mindmap","nodehits","provider"]') return true;
+        debugger;
+        alert("invalid params: " + strParNames);
+        return false;
+    }
+    checkParams();
+
     const mindmapKey = new URLSearchParams(location.search).get("mindmap");
     if (typeof mindmapKey === "string" && mindmapKey.length === 0) {
         throw Error("Parameter mindmapname should have a value (key/name of a mindmap)");
@@ -1934,7 +1949,8 @@ export async function dialogMindMaps(linkMindmapsPage, info, arrMindmapsHits, pr
     if (toLink !== "string") throw Error(`urlHtml typeof should be string, got ${toLink}`);
     // const eltA = funMkEltLinkMindmap(topic, m.key, m.hits);
     const funMkEltLinkMindmap =
-        (topic, mKey, mHits, provider) => mkEltLinkMindmapA(linkMindmapsPage, topic, mKey, mHits, provider);
+        // (topic, mKey, mHits, provider) => modMMhelpers.mkEltLinkMindmapA(linkMindmapsPage, topic, mKey, mHits, provider);
+        (topic, mKey, mHits, provider) => modMMhelpers.mkEltLinkMindmapA(topic, mKey, mHits, provider);
     // const dbMindmaps = await getDbMindmaps();
     const dbMindmaps = await import("db-mindmaps");
 
