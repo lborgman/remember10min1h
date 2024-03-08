@@ -930,8 +930,12 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
         const divBtnMM = mkElt("div", undefined, [btnAdd2mmClipB, btnNewMMfromRec]);
         divBtnMM.style = `
             display: flex;
+            flex-direction: row;
             gap: 10px;
+            width: fit-content;
+            padding: 0;
         `;
+        divBtnMM.classList.add("mdc-card");
 
         const detMM = mkElt("details", { class: "mdc-card" }, [sumMM, divOurMM, divBtnMM]);
         detMM.addEventListener("toggle", errorHandlerAsyncEvent(async evt => {

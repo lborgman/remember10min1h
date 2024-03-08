@@ -227,6 +227,7 @@ div.mdc-dialog__content ul.mdc-list[role=menu] li.mdc-list-item {
     position: relative;
     display: none;
 }
+
 #page-home #header-search-check {
     display: unset;
 }
@@ -1682,10 +1683,19 @@ div.bg-choice:not(input[disabled]):has(input:checked) {
 }
 
 .jsmind_container jmnodes jmnode {
-    overflow: hidden;
-    overflow: visible;
+    /*
+    max-width: 150px;
+    max-height: 94px;
+    display: grid;
+    grid-template-rows: 1fr;
+    */
     transition-duration: 1s;
     transition-property: left, top, width, height, transform 0.3s;
+    /* Try to handle overlfow in .jmnode-text with grid */
+}
+
+.jsmind_container jmnodes jmnode .jmnode-text {
+    overflow: hidden;
 }
 
 /* This does not display if I have set overflow:hidden on jmnode. */
@@ -2016,6 +2026,7 @@ html.hide-error-popups .error-popup {
     flex-wrap: wrap;
     gap: 10px;
 }
+
 #jsmind-test-custom-clipboard .jsmind-test-custom-clip {
     width: 100%;
     height: fit-content;
@@ -2027,4 +2038,3 @@ html.hide-error-popups .error-popup {
     flex-wrap: wrap;
     gap: 10px;
 }
-

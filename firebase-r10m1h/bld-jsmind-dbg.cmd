@@ -12,6 +12,6 @@ set es6d=%jsd%\es6
 @rem dir %es6d%
 set extd=public\ext\jsmind\
 @rem dir %extd%
-copy /-y %es6d%\jsmind-dbg.* %extd%
-copy /-y %jsd%\style\jsmind.css %extd%
+copy /y %es6d%\jsmind-dbg.* %extd%
+copy /y %jsd%\style\jsmind.css %extd%
 @rem dir %extd%
