@@ -369,6 +369,14 @@ export async function applyShapeEtc(shapeEtc, eltJmnode) {
         const rec = await renderer.getCustomRec(key, provider);
         if (rec) {
             foundCustom = true;
+            const blob = rec.images ? rec.images[0] : undefined;
+            if (blob) {
+                const urlBlob = URL.createObjectURL(blob);
+                const urlBg = `url(${urlBlob})`;
+                const backgroundImage = urlBg;
+                const divBg = eltJmnode.querySelector(".jmnode-bg");
+                divBg.style.backgroundImage = backgroundImage;
+            }
             // FIX-ME: long name
             // FIX-ME: looks like a race condition?
             //    Try to get around it by a simple check...
