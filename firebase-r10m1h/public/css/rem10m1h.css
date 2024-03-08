@@ -110,13 +110,15 @@ div.container-remember .mdc-card {
     background-color: black;
     border-color: #00000082;
     color: white;
+    color: yellow;
     position: fixed;
     z-index: 1000;
-    top: 20px;
+    top: 60px;
     left: 20px;
-    width: 300px;
+    width: 250px;
     display: grid;
     gap: 10px;
+    box-shadow: 3px 5px 5px 0px rgba(255,255,0,0.75);
 }
 
 /* #prompt4update * { } */

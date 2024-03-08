@@ -422,6 +422,25 @@ jmnodes jmnode {
     grid-template-rows: 1fr;
 }
 
+jmnodes jmnode.text-overflow div.jmnode-text {
+    NObackground-color: cyan;
+}
+jmnodes jmnode div.jmnode-overflow-indicator {
+    position: absolute;
+    bottom: 0;
+    right: 40px;
+    background-color: deepskyblue;
+    line-height: 80%;
+    padding: 0;
+    font-size: 12px;
+    border-radius: 4px;
+    padding: 2px;
+    display: none;
+}
+jmnodes jmnode.text-overflow div.jmnode-overflow-indicator {
+    display: unset;
+}
+
 jmnodes jmnode .jmnode-bg {
     position: absolute;
     top: 0;
