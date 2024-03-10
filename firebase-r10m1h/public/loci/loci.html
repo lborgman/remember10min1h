@@ -1,0 +1,133 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- This page © Copyright 2023, Lennart Borgman -->
+    <meta name="author" content="Lennart Borgman">
+    <meta name="description" content="Memory palace, loci, for Internet">
+    <link rel="manifest" href="manifest-loci.json">
+    <meta name="theme-color" content="#c0ca33">
+
+    <title>Memory Palace 4 Internet</title>
+    <link rel="icon" type="image/svg+xml" href="/img/loci.svg">
+
+
+    <!-- for MWC, https://github.com/material-components/material-web -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Material+Icons&amp;display=block" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Required styles for Material Web -->
+    <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.css">
+    <!-- <link rel="stylesheet" href="/ext/mdc/14.0.0/material-components-web.css"> -->
+
+    <link rel="stylesheet" href="/css/rem10m1h.css">
+    <link rel="stylesheet" href="/css/jsmind-edit.css">
+    <link id="jsmind-my-colors" rel="stylesheet" href="/css/var-colors.css">
+
+
+    <script src="/src/js/fc4i-importmaps.js"></script>
+
+
+    <script src="/src/js/error.js"></script>
+    <script src="/src/js/umd/idb.js"></script>
+    <!-- <script src="./src/js/is-displayed.js"></script> -->
+
+
+    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsmind@0.5/style/jsmind.css" /> -->
+    <link rel="stylesheet" href="/ext/jsmind/jsmind.css" />
+
+    <!-- <script src="https://cdn.jsdelivr.net/npm/jsmind@0.5/es6/jsmind.js"></script> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/jsmind/es6/jsmind.js"></script> -->
+    <!-- <script src="/ext/jsmind/jsmind-dbg.js"></script> -->
+
+    <!-- <script src="https://cdn.jsdelivr.net/npm/jsmind@0.5/es6/jsmind.draggable-node.js"></script> -->
+    <!-- <script src="/ext/jsmind/230406-jsmind.draggable-node.js"></script> -->
+
+    <!-- <script src="/ext/jsmind/chrome-src-jsmind.draggable-node.js"></script> -->
+
+    <!-- <script src="/src/js/mindmap-helpers.js"></script> -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+    <style>
+        #pannellum-container {
+            width: 300px;
+            height: 200px;
+        }
+    </style>
+</head>
+
+<body class="NOno-test-items">
+
+    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+
+    <div id="panorama" class="panorama"></div>
+
+    <script>
+        // https://pannellum.org/
+        async function imgIsEquirectangular(imgSrc) {
+            return new Promise((resolve) => {
+                const image = new Image();
+                image.onload = async () => {
+                    const natW = image.naturalWidth;
+                    const natH = image.naturalHeight;
+                    const isER = natW >= 2 * natH;
+                    console.log(isER, imgSrc);
+                    resolve(isER);
+                }
+                image.onerror = async () => {
+                    console.log("ERROR");
+                }
+                image.src = imgSrc;
+            });
+        }
+        // const eventName = "click";
+        // const eventName = "doubleclick";
+        // const eventName = "mouseup";
+        // console.log({ eventName });
+        (async () => {
+            // const srcImg = "https://pannellum.org/images/alma.jpg";
+            const srcImg = new URL("./testimg/PANO1.jpg", location);
+            const is360 = await imgIsEquirectangular(srcImg);
+            // const is360 = true;
+            if (is360) {
+                const cont = document.getElementById("panorama");
+                cont.style.outline = "1px dotted red";
+                const viewer = pannellum.viewer(
+                    // 'panorama',
+                    cont,
+                    {
+                        "type": "equirectangular",
+                        "panorama": srcImg,
+                        "autoLoad": true,
+                        "compass": true,
+                    });
+                let mousedownData;
+                viewer.on("mousedown", (evt) => {
+                    const coords = viewer.mouseEventToCoords(evt);
+                    const pitch = coords[0], yaw = coords[1];
+                    const cx = evt.clientX;
+                    const cy = evt.clientY;
+                    console.log("mousedown", { pitch, yaw, cx, cy, evt });
+                    mousedownData = { pitch, yaw, cx, cy };
+                });
+                viewer.on("mouseup", (evt) => {
+                    const coords = viewer.mouseEventToCoords(evt);
+                    const pitch = coords[0], yaw = coords[1];
+                    const cx = evt.clientX;
+                    const cy = evt.clientY;
+                    console.log("mouseup", { pitch, yaw, cx, cy });
+                    if (mousedownData.cx == cx && mousedownData.cy == cy) {
+                        viewer.addHotSpot({ pitch, yaw, type: "info", text: "infoText" });
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+
+</html>

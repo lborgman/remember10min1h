@@ -1217,6 +1217,19 @@ async function mkMenu() {
     const liTestNetwGraph = modMdc.mkMDCmenuItem(aNetwGraph);
     liTestNetwGraph.classList.add("test4all-item");
 
+    const aLoci = mkElt("a", { href: "/loci/loci.html" }, "Test loci (not ready)");
+    aLoci.addEventListener("click", evt => {
+        // aLoci.href = mkNetwGraphURL();
+        // debugger;
+    });
+    aLoci.addEventListener("contextmenu", evt => {
+        // aLoci.href = mkNetwGraphURL();
+        // debugger;
+    });
+    const liTestLoci = modMdc.mkMDCmenuItem(aLoci);
+    liTestLoci.classList.add("test4all-item");
+
+
     async function fixSizes() {
         import("/src/js/mod/fixBigImg.js").then(m => { const modX = m; modX.fix(); });
     }
@@ -1925,6 +1938,7 @@ async function mkMenu() {
             // liTestJsMindarrayTree,
             liTestShareWithArgs,
             liTestNetwGraph,
+            liTestLoci,
             liFixSizes,
             // liShowDebug,
             // liTestTimer,

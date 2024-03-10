@@ -584,6 +584,7 @@ function checkParams() {
     console.log({ strParNames });
     if (strParNames == '["mindmap"]') return true;
     if (strParNames == '["maxConf","requiredTags","searchFor"]') return true;
+    if (strParNames == '["maxConf","requiredTags"]') return true;
     alert("invalid params");
     return false;
 }
