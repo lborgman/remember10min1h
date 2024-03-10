@@ -68,6 +68,7 @@
     <div id="panorama" class="panorama"></div>
 
     <script>
+        let srcImg;
         // https://pannellum.org/
         async function imgIsEquirectangular(imgSrc) {
             return new Promise((resolve) => {
@@ -90,41 +91,92 @@
         // const eventName = "mouseup";
         // console.log({ eventName });
         (async () => {
-            // const srcImg = "https://pannellum.org/images/alma.jpg";
-            const srcImg = new URL("./testimg/PANO1.jpg", location);
-            const is360 = await imgIsEquirectangular(srcImg);
-            // const is360 = true;
-            if (is360) {
-                const cont = document.getElementById("panorama");
-                cont.style.outline = "1px dotted red";
-                const viewer = pannellum.viewer(
-                    // 'panorama',
-                    cont,
-                    {
-                        "type": "equirectangular",
-                        "panorama": srcImg,
-                        "autoLoad": true,
-                        "compass": true,
+            const modMdc = await import("util-mdc");
+            const immages = [
+                "https://pannellum.org/images/alma.jpg",
+                new URL("./testimg/PANO1.jpg", location),
+            ];
+            const divImgs = mkElt("div");
+            divImgs.style = `
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+            `;
+            const body = mkElt("div", undefined, [
+                divImgs,
+            ]);
+            immages.forEach(src => {
+                const eltImg = mkElt("div");
+                eltImg.style = `
+                    background-image: url(${src});
+                    background-size: contain;
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    width: 100px;
+                    height: 50px;
+                    outline: 1px dotted red;
+                `;
+                const eltRadio = mkElt("input", { type: "radio", name: "img", value: src });
+                const eltLbl = mkElt("label", undefined, [eltRadio, eltImg]);
+                divImgs.appendChild(eltLbl);
+            });
+            const btnTest = modMdc.mkMDCdialogButton("Test", "test");
+            const eltActions = modMdc.mkMDCdialogActions([btnTest]);
+            btnTest.addEventListener("click", evt => {
+                evt.stopPropagation();
+                evt.stopImmediatePropagation();
+                evt.preventDefault();
+                const checked = divImgs.querySelector("input[type=radio]:checked");
+                console.log({ checked });
+                if (!checked) {
+                    modMdc.mkMDCdialogAlert("Please choose an image");
+                    return;
+                }
+                srcImg = checked.value;
+                console.log({ srcImg });
+                closeDialog();
+                showPanorama();
+            });
+            function closeDialog() { dlg.mdc.close(); }
+
+            const dlg = await modMdc.mkMDCdialog(body, eltActions);
+            return;
+            // modMdc.mkMd
+            async function showPanorama() {
+                const is360 = await imgIsEquirectangular(srcImg);
+                // const is360 = true;
+                if (is360) {
+                    const cont = document.getElementById("panorama");
+                    cont.style.outline = "1px dotted red";
+                    const viewer = pannellum.viewer(
+                        // 'panorama',
+                        cont,
+                        {
+                            "type": "equirectangular",
+                            "panorama": srcImg,
+                            "autoLoad": true,
+                            "compass": true,
+                        });
+                    let mousedownData;
+                    viewer.on("mousedown", (evt) => {
+                        const coords = viewer.mouseEventToCoords(evt);
+                        const pitch = coords[0], yaw = coords[1];
+                        const cx = evt.clientX;
+                        const cy = evt.clientY;
+                        console.log("mousedown", { pitch, yaw, cx, cy, evt });
+                        mousedownData = { pitch, yaw, cx, cy };
                     });
-                let mousedownData;
-                viewer.on("mousedown", (evt) => {
-                    const coords = viewer.mouseEventToCoords(evt);
-                    const pitch = coords[0], yaw = coords[1];
-                    const cx = evt.clientX;
-                    const cy = evt.clientY;
-                    console.log("mousedown", { pitch, yaw, cx, cy, evt });
-                    mousedownData = { pitch, yaw, cx, cy };
-                });
-                viewer.on("mouseup", (evt) => {
-                    const coords = viewer.mouseEventToCoords(evt);
-                    const pitch = coords[0], yaw = coords[1];
-                    const cx = evt.clientX;
-                    const cy = evt.clientY;
-                    console.log("mouseup", { pitch, yaw, cx, cy });
-                    if (mousedownData.cx == cx && mousedownData.cy == cy) {
-                        viewer.addHotSpot({ pitch, yaw, type: "info", text: "infoText" });
-                    }
-                });
+                    viewer.on("mouseup", (evt) => {
+                        const coords = viewer.mouseEventToCoords(evt);
+                        const pitch = coords[0], yaw = coords[1];
+                        const cx = evt.clientX;
+                        const cy = evt.clientY;
+                        console.log("mouseup", { pitch, yaw, cx, cy });
+                        if (mousedownData.cx == cx && mousedownData.cy == cy) {
+                            viewer.addHotSpot({ pitch, yaw, type: "info", text: "infoText" });
+                        }
+                    });
+                }
             }
         })();
     </script>
