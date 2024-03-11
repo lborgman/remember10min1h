@@ -68,83 +68,165 @@
     <div id="panorama" class="panorama"></div>
 
     <script>
-        let srcImg;
         // https://pannellum.org/
-        async function imgIsEquirectangular(imgSrc) {
+        let srcImg;
+        let blobImg;
+        let srcPanorama;
+        function isBlobImage(src) { return typeof src == "object"; };
+        async function mkImageBlob(srcImg, scale) {
+            const tofSrcImg = typeof srcImg;
+            if (tofSrcImg != "string") throw Error(`typeof srcImg=="${tofSrcImg}", should be "string")`);
+            if (srcImg.slice(0, 4) == "blob") throw Error("srcImg is blob url");
+            // https://stackoverflow.com/questions/42471755/convert-image-into-blob-using-javascript
+            const img = new Image;
+            const eltCanvas = document.createElement("canvas");
+            const ctx = eltCanvas.getContext("2d");
+            const imgData = await getImgData(srcImg);
+            console.log("orig", { imgData });
+            return new Promise(resolve => {
+                img.onload = function () {
+                    eltCanvas.width = imgData.naturalWidth * scale;     // update canvas size to match image
+                    eltCanvas.height = imgData.naturalHeight * scale;
+                    // ctx.drawImage(this, 0, 0);       // draw in image
+                    // https://codesalad.dev/blog/how-to-resize-an-image-in-10-lines-of-javascript-29
+                    ctx.drawImage(this, 0, 0, eltCanvas.width, eltCanvas.height);       // draw in image
+                    eltCanvas.toBlob(function (blob) {        // get content as JPEG blob
+                        // here the image is a blob
+                        // blobImg = blob;
+                        resolve(blob);
+                    }, "image/jpeg", 0.75);
+                    // debugger;
+                };
+                img.crossOrigin = "";              // if from different origin
+                img.src = srcImg;
+            });
+        }
+        async function getImgData(strUrlImg) {
             return new Promise((resolve) => {
                 const image = new Image();
                 image.onload = async () => {
-                    const natW = image.naturalWidth;
-                    const natH = image.naturalHeight;
-                    const isER = natW >= 2 * natH;
-                    console.log(isER, imgSrc);
-                    resolve(isER);
+                    const naturalWidth = image.naturalWidth;
+                    const naturalHeight = image.naturalHeight;
+                    const width = image.width;
+                    const height = image.height;
+                    resolve({ naturalWidth, naturalHeight, width, height });
                 }
                 image.onerror = async () => {
                     console.log("ERROR");
                 }
-                image.src = imgSrc;
+                image.src = strUrlImg;
             });
         }
-        // const eventName = "click";
-        // const eventName = "doubleclick";
-        // const eventName = "mouseup";
-        // console.log({ eventName });
+
         (async () => {
             const modMdc = await import("util-mdc");
             const immages = [
                 "https://pannellum.org/images/alma.jpg",
                 new URL("./testimg/PANO1.jpg", location),
             ];
-            const divImgs = mkElt("div");
-            divImgs.style = `
-                display: flex;
-                gap: 10px;
-                flex-wrap: wrap;
-            `;
-            const body = mkElt("div", undefined, [
-                divImgs,
-            ]);
-            immages.forEach(src => {
-                const eltImg = mkElt("div");
-                eltImg.style = `
-                    background-image: url(${src});
-                    background-size: contain;
-                    background-repeat: no-repeat;
-                    background-position: center;
-                    width: 100px;
-                    height: 50px;
-                    outline: 1px dotted red;
-                `;
-                const eltRadio = mkElt("input", { type: "radio", name: "img", value: src });
-                const eltLbl = mkElt("label", undefined, [eltRadio, eltImg]);
-                divImgs.appendChild(eltLbl);
-            });
-            const btnTest = modMdc.mkMDCdialogButton("Test", "test");
-            const eltActions = modMdc.mkMDCdialogActions([btnTest]);
-            btnTest.addEventListener("click", evt => {
-                evt.stopPropagation();
-                evt.stopImmediatePropagation();
-                evt.preventDefault();
-                const checked = divImgs.querySelector("input[type=radio]:checked");
-                console.log({ checked });
-                if (!checked) {
-                    modMdc.mkMDCdialogAlert("Please choose an image");
-                    return;
-                }
-                srcImg = checked.value;
-                console.log({ srcImg });
-                closeDialog();
-                showPanorama();
-            });
-            function closeDialog() { dlg.mdc.close(); }
 
-            const dlg = await modMdc.mkMDCdialog(body, eltActions);
-            return;
-            // modMdc.mkMd
-            async function showPanorama() {
-                const is360 = await imgIsEquirectangular(srcImg);
+            dialogPreparePanorama();
+            async function dialogPreparePanorama() {
+                const divImgs = mkElt("div");
+                divImgs.style = `
+                    display: flex;
+                    gap: 10px;
+                    flex-wrap: wrap;
+                `;
+                const divBlobPreview = mkElt("div");
+                const chkUseBlob = mkElt("input", { type: "checkbox" });
+                const lblUseBlob = mkElt("label", undefined, ["Use blob:", chkUseBlob]);
+                const inpScale = mkElt("input", { type: "number" });
+                inpScale.value = 0.5;
+                const lblScale = mkElt("label", undefined, ["Scale:", inpScale]);
+                const divInputs = mkElt("div", undefined, [lblUseBlob, lblScale]);
+                divInputs.style = `
+                    display: flex;
+                    flex-direction: row;
+                    gap: 10px;
+                `;
+                const pBlob = mkElt("p", undefined, [
+                    mkElt("div", undefined, "Blob"),
+                    divInputs,
+                    divBlobPreview
+                ])
+                const body = mkElt("div", undefined, [
+                    divImgs,
+                    pBlob,
+                ]);
+                divBlobPreview.style = `
+                        background-size: contain;
+                        background-repeat: no-repeat;
+                        background-position: center;
+                        NOheight: 200px;
+                        aspect-ratio: 2 / 1;
+                        outline: 1px dotted red;
+                        color: red;
+                        font-size: 20px;
+                `;
+                immages.forEach(src => {
+                    const eltImg = mkElt("div");
+                    eltImg.style = `
+                        background-image: url(${src});
+                        background-size: contain;
+                        background-repeat: no-repeat;
+                        background-position: center;
+                        width: 100px;
+                        height: 50px;
+                        outline: 1px dotted red;
+                    `;
+                    const eltRadio = mkElt("input", { type: "radio", name: "img", value: src });
+                    const eltLbl = mkElt("label", undefined, [eltRadio, eltImg]);
+                    divImgs.appendChild(eltLbl);
+                    eltRadio.addEventListener("change", errorHandlerAsyncEvent(async evt => {
+                        const blobImg = await mkImageBlob(eltRadio.value, inpScale.value);
+                        const imgData = await getImgData(URL.createObjectURL(blobImg));
+                        divBlobPreview.textContent = `w:${imgData.width} h:${imgData.height}`;
+                        const srcBlob = URL.createObjectURL(blobImg);
+                        divBlobPreview.style.backgroundImage = `url(${srcBlob})`;
+                    }));
+
+                });
+                const btnShowPanorama = modMdc.mkMDCdialogButton("Test", "test");
+                const eltActions = modMdc.mkMDCdialogActions([btnShowPanorama]);
+                btnShowPanorama.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+                    evt.stopPropagation();
+                    evt.stopImmediatePropagation();
+                    evt.preventDefault();
+                    const checked = divImgs.querySelector("input[type=radio]:checked");
+                    console.log({ checked });
+                    if (!checked) {
+                        modMdc.mkMDCdialogAlert("Please choose an image");
+                        return;
+                    }
+                    srcImg = checked.value;
+                    srcPanorama = srcImg;
+                    console.log({ srcImg, srcPanorama });
+                    if (chkUseBlob.checked) {
+                        blobImg = await mkImageBlob(srcImg, inpScale.value);
+                        const imgData = await getImgData(URL.createObjectURL(blobImg));
+                        console.log("blob", { imgData });
+                        srcPanorama = blobImg;
+                        srcPanorama = isBlobImage(srcPanorama) ? URL.createObjectURL(srcPanorama) : srcPanorama;
+                    }
+                    closeDialog();
+                    showPanorama(srcPanorama);
+                }));
+
+                const dlg = await modMdc.mkMDCdialog(body, eltActions);
+                function closeDialog() { dlg.mdc.close(); }
+            }
+
+            async function showPanorama(srcPanorama) {
+                const dataImg = await getImgData(srcPanorama);
                 // const is360 = true;
+                const devMaxWebGlW = 8192; // FIX-ME: This is from Pixel 7
+                if (dataImg.naturalWidth > devMaxWebGlW) {
+                    const modImg = await import("images");
+                    // debugger;
+                    // modImg.shrinkImageBlob();
+                }
+                const is360 = true;
                 if (is360) {
                     const cont = document.getElementById("panorama");
                     cont.style.outline = "1px dotted red";
@@ -153,7 +235,7 @@
                         cont,
                         {
                             "type": "equirectangular",
-                            "panorama": srcImg,
+                            "panorama": srcPanorama,
                             "autoLoad": true,
                             "compass": true,
                         });
