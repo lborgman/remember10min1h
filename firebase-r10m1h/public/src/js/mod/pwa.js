@@ -352,7 +352,7 @@ async function promptForUpdate() {
             // hidePrompt();
             // document.body.textContent = "Updating...";
             dlgPrompt.textContent = "Updating, please wait ...";
-            dlgPrompt.style.boxShadow = "3px 5px 5px 6px rgba(255,50,0,0.75)";
+            dlgPrompt.style.boxShadow = "3px 5px 5px 12px rgba(255,50,0,0.75)";
             window.onbeforeunload = null;
             setTimeout(() => {
                 console.log("promptForUpdate 10, resolve");

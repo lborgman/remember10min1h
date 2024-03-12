@@ -70,7 +70,9 @@
     <script>
         // https://pannellum.org/
         let srcImg;
+        let scaleImg;
         let blobImg;
+        let srcBlobImg;
         let srcPanorama;
         function isBlobImage(src) { return typeof src == "object"; };
         async function mkImageBlob(srcImg, scale) {
@@ -127,6 +129,8 @@
 
             dialogPreparePanorama();
             async function dialogPreparePanorama() {
+                const debounceUpdateBlobAndPreview = debounce(updateBlobAndPreview);
+
                 const divImgs = mkElt("div");
                 divImgs.style = `
                     display: flex;
@@ -134,10 +138,41 @@
                     flex-wrap: wrap;
                 `;
                 const divBlobPreview = mkElt("div");
+                const divOrigPreview = mkElt("div");
+                async function updateBlobAndPreview() {
+                    // FIX-ME: Make this interruptable
+                    blobImg = await mkImageBlob(srcImg, scaleImg);
+                    srcBlobImg = URL.createObjectURL(blobImg);
+                    const dataBlob = await getImgData(URL.createObjectURL(blobImg));
+                    const dataOrig = await getImgData(srcImg);
+                    divBlobPreview.textContent = `Blob w:${dataBlob.width} h:${dataBlob.height}`;
+                    divOrigPreview.textContent = `Orig w:${dataOrig.width} h:${dataOrig.height}`;
+                    divBlobPreview.style.backgroundImage = `url(${srcBlobImg})`;
+                    divOrigPreview.style.backgroundImage = `url(${srcImg})`;
+                }
+
                 const chkUseBlob = mkElt("input", { type: "checkbox" });
                 const lblUseBlob = mkElt("label", undefined, ["Use blob:", chkUseBlob]);
                 const inpScale = mkElt("input", { type: "number" });
-                inpScale.value = 0.5;
+                scaleImg = 0.5;
+                inpScale.value = scaleImg;
+                inpScale.addEventListener("input", evt => {
+                    // FIX-ME: check value usable
+                    let usableValue = false;
+                    const strVal = inpScale.value.trim();
+                    let val;
+                    if (strVal.length > 0) {
+                        val = parseFloat(strVal);
+                        if (val > 0.2 && val < 2) usableValue = true;
+                    }
+                    if (!usableValue) {
+                        inpScale.style.backgroundColor = "yellow";
+                        return;
+                    }
+                    inpScale.style.backgroundColor = "unset";
+                    scaleImg = val;
+                    debounceUpdateBlobAndPreview();
+                });
                 const lblScale = mkElt("label", undefined, ["Scale:", inpScale]);
                 const divInputs = mkElt("div", undefined, [lblUseBlob, lblScale]);
                 divInputs.style = `
@@ -148,22 +183,25 @@
                 const pBlob = mkElt("p", undefined, [
                     mkElt("div", undefined, "Blob"),
                     divInputs,
-                    divBlobPreview
+                    divBlobPreview,
+                    divOrigPreview
                 ])
                 const body = mkElt("div", undefined, [
                     divImgs,
                     pBlob,
                 ]);
-                divBlobPreview.style = `
+                const previewStyle = `
                         background-size: contain;
                         background-repeat: no-repeat;
                         background-position: center;
-                        NOheight: 200px;
-                        aspect-ratio: 2 / 1;
+                        aspect-ratio: 4 / 1;
                         outline: 1px dotted red;
                         color: red;
                         font-size: 20px;
+                        text-shadow: 1px 0 black, -1px 0 black, 0 1px black, 0 -1px black, 0 0 2px black;
                 `;
+                divBlobPreview.style = previewStyle;
+                divOrigPreview.style = previewStyle;
                 immages.forEach(src => {
                     const eltImg = mkElt("div");
                     eltImg.style = `
@@ -178,13 +216,10 @@
                     const eltRadio = mkElt("input", { type: "radio", name: "img", value: src });
                     const eltLbl = mkElt("label", undefined, [eltRadio, eltImg]);
                     divImgs.appendChild(eltLbl);
-                    eltRadio.addEventListener("change", errorHandlerAsyncEvent(async evt => {
-                        const blobImg = await mkImageBlob(eltRadio.value, inpScale.value);
-                        const imgData = await getImgData(URL.createObjectURL(blobImg));
-                        divBlobPreview.textContent = `w:${imgData.width} h:${imgData.height}`;
-                        const srcBlob = URL.createObjectURL(blobImg);
-                        divBlobPreview.style.backgroundImage = `url(${srcBlob})`;
-                    }));
+                    eltRadio.addEventListener("change", evt => {
+                        srcImg = eltRadio.value;
+                        debounceUpdateBlobAndPreview();
+                    });
 
                 });
                 const btnShowPanorama = modMdc.mkMDCdialogButton("Test", "test");
@@ -203,11 +238,9 @@
                     srcPanorama = srcImg;
                     console.log({ srcImg, srcPanorama });
                     if (chkUseBlob.checked) {
-                        blobImg = await mkImageBlob(srcImg, inpScale.value);
-                        const imgData = await getImgData(URL.createObjectURL(blobImg));
-                        console.log("blob", { imgData });
-                        srcPanorama = blobImg;
-                        srcPanorama = isBlobImage(srcPanorama) ? URL.createObjectURL(srcPanorama) : srcPanorama;
+                        // blobImg = await mkImageBlob(srcImg, inpScale.value);
+                        srcPanorama = srcBlobImg;
+                        // srcPanorama = isBlobImage(srcPanorama) ? URL.createObjectURL(srcPanorama) : srcPanorama;
                     }
                     closeDialog();
                     showPanorama(srcPanorama);
