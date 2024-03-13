@@ -52,7 +52,9 @@
 
     <!-- <script src="/src/js/mindmap-helpers.js"></script> -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+    <!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script> -->
+    <script type="text/javascript" src="/ext/pannellum/libpannellum.js"></script>
+    <script type="text/javascript" src="/ext/pannellum/pannellum.js"></script>
     <style>
         #pannellum-container {
             width: 300px;
@@ -75,6 +77,62 @@
         let srcBlobImg;
         let srcPanorama;
         function isBlobImage(src) { return typeof src == "object"; };
+        async function addXmpdata(imgBlob, xmpData) {
+            // https://www.npmjs.com/package/png-itxt - doesn't work any more
+            // https://stackoverflow.com/questions/52549273/insert-png-comment-block-itxt-using-javascript
+            // https://github.com/kujirahand/node-png-metadata/blob/master/src/lib/png-metadata.js
+            // https://stackoverflow.com/questions/6965107/converting-between-strings-and-arraybuffers
+            // https://medium.com/@naveenkumarasinghe/javascript-lost-in-binaries-buffer-blob-uint8array-arraybuffer-ed8d2b4de44a
+            const modPngMeta = await import("/ext/png-meta/png-metadata.js");
+            const imgArrBuff = await imgBlob.arrayBuffer();
+
+            // const dec = new TextDecoder("utf-8");
+            // const enc = new TextEncoder();
+            // const imgStr = dec.decode(imgArrBuff);
+
+            // https://stackoverflow.com/questions/50198017/converting-arraybuffer-to-string-then-back-to-arraybuffer-using-textdecoder-text
+            // const imgStr = String.fromCharCode(...new Uint8Array(imgArrBuff));
+            const arrU8 = new Uint8Array(imgArrBuff);
+            const arrImgStr = [];
+            for (let i = 0, len = arrU8.length; i < len; i++) {
+                const charCode = arrU8[i];
+                const char = String.fromCharCode(charCode);
+                arrImgStr.push(char);
+            }
+            const imgStr1 = arrImgStr.join('');
+            const imgStr = BinaryToString(imgStr1);
+
+
+            const chunks = modPngMeta.metadata.splitChunk(imgStr);
+            if (!chunks) { debugger; }
+            const joinedChunks = modPngMeta.metadata.joinChunk(chunks);
+            // const newBlob = new Blob([joinedChunks]);
+            let newBlob = new Blob([joinedChunks], { type: "image/png" });
+            return newBlob;
+
+
+            function ArrayBufferToString(buffer) {
+                return BinaryToString(
+                    String.fromCharCode.apply(
+                        null,
+                        Array.prototype.slice.apply(new Uint8Array(buffer))));
+            }
+
+            function BinaryToString(binary) {
+                var error;
+
+                try {
+                    return decodeURIComponent(escape(binary));
+                } catch (_error) {
+                    error = _error;
+                    if (error instanceof URIError) {
+                        return binary;
+                    } else {
+                        throw error;
+                    }
+                }
+            }
+        }
         async function mkImageBlob(srcImg, scale) {
             const tofSrcImg = typeof srcImg;
             if (tofSrcImg != "string") throw Error(`typeof srcImg=="${tofSrcImg}", should be "string")`);
@@ -96,7 +154,7 @@
                         // here the image is a blob
                         // blobImg = blob;
                         resolve(blob);
-                    }, "image/jpeg", 0.75);
+                    }, "image/png", 0.75);
                     // debugger;
                 };
                 img.crossOrigin = "";              // if from different origin
@@ -142,7 +200,12 @@
                 async function updateBlobAndPreview() {
                     // FIX-ME: Make this interruptable
                     blobImg = await mkImageBlob(srcImg, scaleImg);
+                    // const blobAsText = await blobImg.text(); did not work
                     srcBlobImg = URL.createObjectURL(blobImg);
+
+                    const newBlob = await addXmpdata(blobImg, "not ready");
+                    srcBlobImg = URL.createObjectURL(newBlob);
+
                     const dataBlob = await getImgData(URL.createObjectURL(blobImg));
                     const dataOrig = await getImgData(srcImg);
                     divBlobPreview.textContent = `Blob w:${dataBlob.width} h:${dataBlob.height}`;
@@ -150,6 +213,11 @@
                     divBlobPreview.style.backgroundImage = `url(${srcBlobImg})`;
                     divOrigPreview.style.backgroundImage = `url(${srcImg})`;
                 }
+
+                const canvas = mkElt("canvas");
+                const webgl = canvas.getContext("webgl");
+                const MAX_WEBGL_WIDTH = webgl.getParameter(webgl.MAX_TEXTURE_SIZE);
+                const divMaxW = mkElt("div", undefined, `Max webgl width: ${MAX_WEBGL_WIDTH}`);
 
                 const chkUseBlob = mkElt("input", { type: "checkbox" });
                 const lblUseBlob = mkElt("label", undefined, ["Use blob:", chkUseBlob]);
@@ -183,6 +251,7 @@
                 const pBlob = mkElt("p", undefined, [
                     mkElt("div", undefined, "Blob"),
                     divInputs,
+                    divMaxW,
                     divBlobPreview,
                     divOrigPreview
                 ])
