@@ -7,7 +7,7 @@
     <!-- This page © Copyright 2023, Lennart Borgman -->
     <meta name="author" content="Lennart Borgman">
     <meta name="description" content="Memory palace, loci, for Internet">
-    <link rel="manifest" href="manifest-loci.json">
+    <!-- <link rel="manifest" href="manifest-loci.json"> -->
     <meta name="theme-color" content="#c0ca33">
 
     <title>Memory Palace 4 Internet</title>
@@ -93,13 +93,15 @@
             // https://stackoverflow.com/questions/50198017/converting-arraybuffer-to-string-then-back-to-arraybuffer-using-textdecoder-text
             // const imgStr = String.fromCharCode(...new Uint8Array(imgArrBuff));
             const arrU8 = new Uint8Array(imgArrBuff);
-            const arrImgStr = [];
+            const arrChars = [];
+            const arrCharcodes = [];
             for (let i = 0, len = arrU8.length; i < len; i++) {
                 const charCode = arrU8[i];
+                arrCharcodes.push(charCode);
                 const char = String.fromCharCode(charCode);
-                arrImgStr.push(char);
+                arrChars.push(char);
             }
-            const imgStr1 = arrImgStr.join('');
+            const imgStr1 = arrChars.join('');
             const imgStr = BinaryToString(imgStr1);
 
 
@@ -108,6 +110,7 @@
             const joinedChunks = modPngMeta.metadata.joinChunk(chunks);
             // const newBlob = new Blob([joinedChunks]);
             let newBlob = new Blob([joinedChunks], { type: "image/png" });
+            newBlob = new Blob([imgStr1], { type: "image/png" });
             return newBlob;
 
 
@@ -141,27 +144,36 @@
             const img = new Image;
             const eltCanvas = document.createElement("canvas");
             const ctx = eltCanvas.getContext("2d");
-            const imgData = await getImgData(srcImg);
-            console.log("orig", { imgData });
-            return new Promise(resolve => {
+            const imgSizes = await getImgSizes(srcImg);
+            console.log("orig", { imgSizes });
+            return new Promise((resolve, reject) => {
                 img.onload = function () {
-                    eltCanvas.width = imgData.naturalWidth * scale;     // update canvas size to match image
-                    eltCanvas.height = imgData.naturalHeight * scale;
-                    // ctx.drawImage(this, 0, 0);       // draw in image
+                    // if (typeof imgSizes != "undefined") {
+                    eltCanvas.width = imgSizes.naturalWidth * scale;     // update canvas size to match image
+                    eltCanvas.height = imgSizes.naturalHeight * scale;
+                    // }
                     // https://codesalad.dev/blog/how-to-resize-an-image-in-10-lines-of-javascript-29
                     ctx.drawImage(this, 0, 0, eltCanvas.width, eltCanvas.height);       // draw in image
-                    eltCanvas.toBlob(function (blob) {        // get content as JPEG blob
+                    eltCanvas.toBlob(blob => {        // get content as JPEG blob
                         // here the image is a blob
                         // blobImg = blob;
                         resolve(blob);
-                    }, "image/png", 0.75);
+                    },
+                        // "image/png"
+                        "image/webp", 0.75
+                        // "image/jpeg", 0.75
+                    );
                     // debugger;
                 };
+                img.onerror = function () {
+                    debugger;
+                    resolve(false);
+                }
                 img.crossOrigin = "";              // if from different origin
                 img.src = srcImg;
             });
         }
-        async function getImgData(strUrlImg) {
+        async function getImgSizes(strUrlImg) {
             return new Promise((resolve) => {
                 const image = new Image();
                 image.onload = async () => {
@@ -171,9 +183,12 @@
                     const height = image.height;
                     resolve({ naturalWidth, naturalHeight, width, height });
                 }
-                image.onerror = async () => {
-                    console.log("ERROR");
-                }
+                // image.onerror = async () => { console.log("ERROR"); }
+                image.addEventListener("error", evt => {
+                    console.log("ERROR", { evt, strUrlImg });
+                    debugger;
+                    resolve(false);
+                })
                 image.src = strUrlImg;
             });
         }
@@ -203,13 +218,13 @@
                     // const blobAsText = await blobImg.text(); did not work
                     srcBlobImg = URL.createObjectURL(blobImg);
 
-                    const newBlob = await addXmpdata(blobImg, "not ready");
-                    srcBlobImg = URL.createObjectURL(newBlob);
+                    // const newBlob = await addXmpdata(blobImg, "not ready");
+                    // srcBlobImg = URL.createObjectURL(newBlob);
 
-                    const dataBlob = await getImgData(URL.createObjectURL(blobImg));
-                    const dataOrig = await getImgData(srcImg);
-                    divBlobPreview.textContent = `Blob w:${dataBlob.width} h:${dataBlob.height}`;
-                    divOrigPreview.textContent = `Orig w:${dataOrig.width} h:${dataOrig.height}`;
+                    const sizesBlob = await getImgSizes(srcBlobImg);
+                    const sizesOrig = await getImgSizes(srcImg);
+                    divBlobPreview.textContent = `Blob w:${sizesBlob.width} h:${sizesBlob.height}`;
+                    divOrigPreview.textContent = `Orig w:${sizesOrig.width} h:${sizesOrig.height}`;
                     divBlobPreview.style.backgroundImage = `url(${srcBlobImg})`;
                     divOrigPreview.style.backgroundImage = `url(${srcImg})`;
                 }
@@ -320,10 +335,10 @@
             }
 
             async function showPanorama(srcPanorama) {
-                const dataImg = await getImgData(srcPanorama);
+                const sizesImg = await getImgSizes(srcPanorama);
                 // const is360 = true;
                 const devMaxWebGlW = 8192; // FIX-ME: This is from Pixel 7
-                if (dataImg.naturalWidth > devMaxWebGlW) {
+                if (sizesImg.naturalWidth > devMaxWebGlW) {
                     const modImg = await import("images");
                     // debugger;
                     // modImg.shrinkImageBlob();
