@@ -71,72 +71,31 @@
 
     <script>
         // https://pannellum.org/
+        const devMaxWebGlW = 8192; // FIX-ME: This is from Pixel 7
+        // const devMaxWebGlW = getMaxImageSize();
         let srcImg;
         let scaleImg;
         let blobImg;
         let srcBlobImg;
         let srcPanorama;
+
+        function getMaxImageSize() {
+            const canvas = mkElt("canvas");
+            const gl = canvas.getContext('experimental-webgl', { alpha: false, depth: false });
+            const devMaxWebGlW = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+            return devMaxWebGlW;
+        }
+
         function isBlobImage(src) { return typeof src == "object"; };
-        async function addXmpdata(imgBlob, xmpData) {
+        /*
+        async function addXmpdata(imgBlob, xmpData)
             // https://www.npmjs.com/package/png-itxt - doesn't work any more
             // https://stackoverflow.com/questions/52549273/insert-png-comment-block-itxt-using-javascript
             // https://github.com/kujirahand/node-png-metadata/blob/master/src/lib/png-metadata.js
             // https://stackoverflow.com/questions/6965107/converting-between-strings-and-arraybuffers
             // https://medium.com/@naveenkumarasinghe/javascript-lost-in-binaries-buffer-blob-uint8array-arraybuffer-ed8d2b4de44a
-            const modPngMeta = await import("/ext/png-meta/png-metadata.js");
-            const imgArrBuff = await imgBlob.arrayBuffer();
-
-            // const dec = new TextDecoder("utf-8");
-            // const enc = new TextEncoder();
-            // const imgStr = dec.decode(imgArrBuff);
-
-            // https://stackoverflow.com/questions/50198017/converting-arraybuffer-to-string-then-back-to-arraybuffer-using-textdecoder-text
-            // const imgStr = String.fromCharCode(...new Uint8Array(imgArrBuff));
-            const arrU8 = new Uint8Array(imgArrBuff);
-            const arrChars = [];
-            const arrCharcodes = [];
-            for (let i = 0, len = arrU8.length; i < len; i++) {
-                const charCode = arrU8[i];
-                arrCharcodes.push(charCode);
-                const char = String.fromCharCode(charCode);
-                arrChars.push(char);
-            }
-            const imgStr1 = arrChars.join('');
-            const imgStr = BinaryToString(imgStr1);
-
-
-            const chunks = modPngMeta.metadata.splitChunk(imgStr);
-            if (!chunks) { debugger; }
-            const joinedChunks = modPngMeta.metadata.joinChunk(chunks);
-            // const newBlob = new Blob([joinedChunks]);
-            let newBlob = new Blob([joinedChunks], { type: "image/png" });
-            newBlob = new Blob([imgStr1], { type: "image/png" });
-            return newBlob;
-
-
-            function ArrayBufferToString(buffer) {
-                return BinaryToString(
-                    String.fromCharCode.apply(
-                        null,
-                        Array.prototype.slice.apply(new Uint8Array(buffer))));
-            }
-
-            function BinaryToString(binary) {
-                var error;
-
-                try {
-                    return decodeURIComponent(escape(binary));
-                } catch (_error) {
-                    error = _error;
-                    if (error instanceof URIError) {
-                        return binary;
-                    } else {
-                        throw error;
-                    }
-                }
-            }
-        }
-        async function mkImageBlob(srcImg, scale) {
+        */
+        async function mkScaledImageBlob(srcImg, scale) {
             const tofSrcImg = typeof srcImg;
             if (tofSrcImg != "string") throw Error(`typeof srcImg=="${tofSrcImg}", should be "string")`);
             if (srcImg.slice(0, 4) == "blob") throw Error("srcImg is blob url");
@@ -214,7 +173,7 @@
                 const divOrigPreview = mkElt("div");
                 async function updateBlobAndPreview() {
                     // FIX-ME: Make this interruptable
-                    blobImg = await mkImageBlob(srcImg, scaleImg);
+                    blobImg = await mkScaledImageBlob(srcImg, scaleImg);
                     // const blobAsText = await blobImg.text(); did not work
                     srcBlobImg = URL.createObjectURL(blobImg);
 
@@ -227,6 +186,13 @@
                     divOrigPreview.textContent = `Orig w:${sizesOrig.width} h:${sizesOrig.height}`;
                     divBlobPreview.style.backgroundImage = `url(${srcBlobImg})`;
                     divOrigPreview.style.backgroundImage = `url(${srcImg})`;
+                    if (sizesOrig.width > devMaxWebGlW) {
+                        chkUseBlob.checked = true;
+                        chkUseBlob.disabled = true;
+                    } else {
+                        chkUseBlob.checked = false;
+                        chkUseBlob.disabled = false;
+                    }
                 }
 
                 const canvas = mkElt("canvas");
@@ -321,26 +287,29 @@
                     srcImg = checked.value;
                     srcPanorama = srcImg;
                     console.log({ srcImg, srcPanorama });
+                    let xmp;
                     if (chkUseBlob.checked) {
-                        // blobImg = await mkImageBlob(srcImg, inpScale.value);
                         srcPanorama = srcBlobImg;
-                        // srcPanorama = isBlobImage(srcPanorama) ? URL.createObjectURL(srcPanorama) : srcPanorama;
+                        const origBlob = await new Promise(resolve => {
+                            fetch(srcImg)
+                                .then(response => response.blob())
+                                .then(blob => resolve(blob));
+                        });
+                        xmp = await pannellum.parseGPanoXMP(origBlob);
                     }
                     closeDialog();
-                    showPanorama(srcPanorama);
+                    showPanorama(srcPanorama, xmp);
                 }));
 
                 const dlg = await modMdc.mkMDCdialog(body, eltActions);
                 function closeDialog() { dlg.mdc.close(); }
             }
 
-            async function showPanorama(srcPanorama) {
+            async function showPanorama(srcPanorama, xmp) {
                 const sizesImg = await getImgSizes(srcPanorama);
-                // const is360 = true;
-                const devMaxWebGlW = 8192; // FIX-ME: This is from Pixel 7
                 if (sizesImg.naturalWidth > devMaxWebGlW) {
-                    const modImg = await import("images");
-                    // debugger;
+                    // const modImg = await import("images");
+                    debugger;
                     // modImg.shrinkImageBlob();
                 }
                 const is360 = true;
@@ -351,10 +320,12 @@
                         // 'panorama',
                         cont,
                         {
-                            "type": "equirectangular",
-                            "panorama": srcPanorama,
-                            "autoLoad": true,
-                            "compass": true,
+                            type: "equirectangular",
+                            panorama: srcPanorama,
+                            autoLoad: true,
+                            compass: true,
+                            avoidShowingBackground: true,
+                            xmp
                         });
                     let mousedownData;
                     viewer.on("mousedown", (evt) => {

@@ -302,6 +302,8 @@ window.pannellum = (function (window, document, undefined) {
         } else {
             mergeConfig(null);
         }
+
+        xmp2config(initialConfig.xmp);
         processOptions(true);
 
         /**
@@ -425,7 +427,9 @@ window.pannellum = (function (window, document, undefined) {
                             return;
                         }
                         var img = this.response;
-                        const xmp = await parseGPanoXMP(img, p);
+                        // const xmp = await parseGPanoXMP(img, p);
+                        const xmp = await parseGPanoXMP(img);
+                        xmp2config(xmp);
                         loadPanorama(img);
                         infoDisplay.load.msg.innerHTML = '';
                     };
@@ -3295,6 +3299,42 @@ window.pannellum = (function (window, document, undefined) {
             container.classList.remove('pnlm-container');
         };
 
+        function xmp2config(xmp) {
+            if (!xmp) return;
+            if (xmp.fullWidth !== null && xmp.croppedWidth !== null &&
+                xmp.fullHeight !== null && xmp.croppedHeight !== null &&
+                xmp.topPixels !== null) {
+
+                // Set up viewer using GPano XMP data
+                if (specifiedPhotoSphereExcludes.indexOf('haov') < 0)
+                    config.haov = xmp.croppedWidth / xmp.fullWidth * 360;
+                if (specifiedPhotoSphereExcludes.indexOf('vaov') < 0)
+                    config.vaov = xmp.croppedHeight / xmp.fullHeight * 180;
+                if (specifiedPhotoSphereExcludes.indexOf('vOffset') < 0)
+                    config.vOffset = ((xmp.topPixels + xmp.croppedHeight / 2) / xmp.fullHeight - 0.5) * -180;
+                if (xmp.heading !== null && specifiedPhotoSphereExcludes.indexOf('northOffset') < 0) {
+                    // TODO: make sure this works correctly for partial panoramas
+                    config.northOffset = xmp.heading;
+                    if (config.compass !== false) {
+                        config.compass = true;
+                    }
+                }
+                if (xmp.horizonPitch !== null && xmp.horizonRoll !== null) {
+                    if (specifiedPhotoSphereExcludes.indexOf('horizonPitch') < 0)
+                        config.horizonPitch = xmp.horizonPitch;
+                    if (specifiedPhotoSphereExcludes.indexOf('horizonRoll') < 0)
+                        config.horizonRoll = xmp.horizonRoll;
+                }
+
+                if (xmp.pitch != null && specifiedPhotoSphereExcludes.indexOf('pitch') < 0)
+                    config.pitch = xmp.pitch;
+                if (xmp.yaw != null && specifiedPhotoSphereExcludes.indexOf('yaw') < 0)
+                    config.yaw = xmp.yaw;
+                if (xmp.hfov != null && specifiedPhotoSphereExcludes.indexOf('hfov') < 0)
+                    config.hfov = xmp.hfov;
+            }
+        }
+
         function loadPanorama(image) {
             // Load panorama
             panoImage.src = window.URL.createObjectURL(image);
@@ -3331,7 +3371,10 @@ window.pannellum = (function (window, document, undefined) {
 
     }
 
-    async function parseGPanoXMP(image, url) {
+    async function parseGPanoXMP(imageBlob, url) {
+        if (!(imageBlob instanceof Blob)) throw Error("Expected image blob");
+        const mainType = imageBlob.type.slice(0, imageBlob.type.indexOf("/"));
+        if (mainType != "image") throw Error(`Expected main blob type "image", got "${mainType}"`)
         return new Promise((resolve, reject) => {
             var reader = new FileReader();
             reader.addEventListener('loadend', function () {
@@ -3353,8 +3396,8 @@ window.pannellum = (function (window, document, undefined) {
                     var xmpData = img.substring(start, img.indexOf('</x:xmpmeta>') + 12);
 
                     // Extract the requested tag from the XMP data
-                    var getTag = function (tag) {
-                        var result;
+                    const getTag = function (tag) {
+                        let result;
                         if (xmpData.indexOf(tag + '="') >= 0) {
                             result = xmpData.substring(xmpData.indexOf(tag + '="') + tag.length + 2);
                             result = result.substring(0, result.indexOf('"'));
@@ -3385,47 +3428,15 @@ window.pannellum = (function (window, document, undefined) {
                     resolve(xmp);
                     return;
 
-                    if (xmp.fullWidth !== null && xmp.croppedWidth !== null &&
-                        xmp.fullHeight !== null && xmp.croppedHeight !== null &&
-                        xmp.topPixels !== null) {
-
-                        // Set up viewer using GPano XMP data
-                        if (specifiedPhotoSphereExcludes.indexOf('haov') < 0)
-                            config.haov = xmp.croppedWidth / xmp.fullWidth * 360;
-                        if (specifiedPhotoSphereExcludes.indexOf('vaov') < 0)
-                            config.vaov = xmp.croppedHeight / xmp.fullHeight * 180;
-                        if (specifiedPhotoSphereExcludes.indexOf('vOffset') < 0)
-                            config.vOffset = ((xmp.topPixels + xmp.croppedHeight / 2) / xmp.fullHeight - 0.5) * -180;
-                        if (xmp.heading !== null && specifiedPhotoSphereExcludes.indexOf('northOffset') < 0) {
-                            // TODO: make sure this works correctly for partial panoramas
-                            config.northOffset = xmp.heading;
-                            if (config.compass !== false) {
-                                config.compass = true;
-                            }
-                        }
-                        if (xmp.horizonPitch !== null && xmp.horizonRoll !== null) {
-                            if (specifiedPhotoSphereExcludes.indexOf('horizonPitch') < 0)
-                                config.horizonPitch = xmp.horizonPitch;
-                            if (specifiedPhotoSphereExcludes.indexOf('horizonRoll') < 0)
-                                config.horizonRoll = xmp.horizonRoll;
-                        }
-
-                        if (xmp.pitch != null && specifiedPhotoSphereExcludes.indexOf('pitch') < 0)
-                            config.pitch = xmp.pitch;
-                        if (xmp.yaw != null && specifiedPhotoSphereExcludes.indexOf('yaw') < 0)
-                            config.yaw = xmp.yaw;
-                        if (xmp.hfov != null && specifiedPhotoSphereExcludes.indexOf('hfov') < 0)
-                            config.hfov = xmp.hfov;
-                    }
                 }
 
             });
 
             // https://stackoverflow.com/questions/55836771/why-is-readasbinarystring-deprecated
             if (reader.readAsBinaryString !== undefined)
-                reader.readAsBinaryString(image);
+                reader.readAsBinaryString(imageBlob);
             else
-                reader.readAsText(image);
+                reader.readAsText(imageBlob);
         });
     }
 
