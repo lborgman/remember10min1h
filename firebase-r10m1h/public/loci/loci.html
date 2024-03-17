@@ -57,8 +57,18 @@
     <script type="text/javascript" src="/ext/pannellum/pannellum.js"></script>
     <style>
         #pannellum-container {
-            width: 300px;
-            height: 200px;
+            NOwidth: 300px;
+            NOheight: 200px;
+        }
+
+        #panorama {
+            NOwidth: 90vw;
+            aspect-ratio: 1 / 1;
+            width: unset;
+            height: unset;
+            max-width: 90vw;
+            max-height: 90vh;
+            outline: 2px dashed red;
         }
     </style>
 </head>
@@ -72,21 +82,21 @@
     <script>
         // https://pannellum.org/
         const devMaxWebGlW = 8192; // FIX-ME: This is from Pixel 7
-        // const devMaxWebGlW = getMaxImageSize();
+        // const devMaxWebGlW = getDeviceMaxImageSize();
         let srcImg;
+        let xmpImg;
         let scaleImg;
         let blobImg;
         let srcBlobImg;
         let srcPanorama;
 
-        function getMaxImageSize() {
+        function getDeviceMaxImageSize() {
             const canvas = mkElt("canvas");
             const gl = canvas.getContext('experimental-webgl', { alpha: false, depth: false });
             const devMaxWebGlW = gl.getParameter(gl.MAX_TEXTURE_SIZE);
             return devMaxWebGlW;
         }
 
-        function isBlobImage(src) { return typeof src == "object"; };
         /*
         async function addXmpdata(imgBlob, xmpData)
             // https://www.npmjs.com/package/png-itxt - doesn't work any more
@@ -157,10 +167,26 @@
             const immages = [
                 "https://pannellum.org/images/alma.jpg",
                 new URL("./testimg/PANO1.jpg", location),
+                new URL("./testimg/PHOTOSPHERE1.jpg", location),
             ];
 
-            dialogPreparePanorama();
-            async function dialogPreparePanorama() {
+            dialogChooseImage4Panorama();
+            async function dialogChooseMemoriesForImage(srcRoomImg) {
+                const divPreview = mkElt("div");
+                divPreview.style = `
+                        background-image: url(${srcRoomImg});
+                        background-size: contain;
+                        background-repeat: no-repeat;
+                        height: 100%;
+                        ratio: 1 / 2;
+                `;
+                const body = mkElt("div", undefined, [
+                    mkElt("h2", undefined, "Choose memories"),
+                    divPreview,
+                ]);
+                return await modMdc.mkMDCdialogConfirm(body);
+            }
+            async function dialogChooseImage4Panorama() {
                 const debounceUpdateBlobAndPreview = debounce(updateBlobAndPreview);
 
                 const divImgs = mkElt("div");
@@ -171,21 +197,35 @@
                 `;
                 const divBlobPreview = mkElt("div");
                 const divOrigPreview = mkElt("div");
+
                 async function updateBlobAndPreview() {
                     // FIX-ME: Make this interruptable
+                    if (srcImg == undefined) return;
+
+                    divOrigPreview.style.backgroundImage = `url(${srcImg})`;
                     blobImg = await mkScaledImageBlob(srcImg, scaleImg);
                     // const blobAsText = await blobImg.text(); did not work
                     srcBlobImg = URL.createObjectURL(blobImg);
+                    divBlobPreview.style.backgroundImage = `url(${srcBlobImg})`;
 
                     // const newBlob = await addXmpdata(blobImg, "not ready");
                     // srcBlobImg = URL.createObjectURL(newBlob);
 
-                    const sizesBlob = await getImgSizes(srcBlobImg);
                     const sizesOrig = await getImgSizes(srcImg);
-                    divBlobPreview.textContent = `Blob w:${sizesBlob.width} h:${sizesBlob.height}`;
                     divOrigPreview.textContent = `Orig w:${sizesOrig.width} h:${sizesOrig.height}`;
-                    divBlobPreview.style.backgroundImage = `url(${srcBlobImg})`;
-                    divOrigPreview.style.backgroundImage = `url(${srcImg})`;
+
+                    const sizesBlob = await getImgSizes(srcBlobImg);
+                    divBlobPreview.textContent = `Blob w:${sizesBlob.width} h:${sizesBlob.height} s:${blobImg.size}`;
+
+                    const origBlob = await new Promise(resolve => {
+                        fetch(srcImg)
+                            .then(response => response.blob())
+                            .then(blob => resolve(blob));
+                    });
+                    xmpImg = await pannellum.parseGPanoXMP(origBlob);
+                    divXmpInfo.textContent = JSON.stringify(xmpImg, undefined, 4);
+
+
                     if (sizesOrig.width > devMaxWebGlW) {
                         chkUseBlob.checked = true;
                         chkUseBlob.disabled = true;
@@ -203,7 +243,7 @@
                 const chkUseBlob = mkElt("input", { type: "checkbox" });
                 const lblUseBlob = mkElt("label", undefined, ["Use blob:", chkUseBlob]);
                 const inpScale = mkElt("input", { type: "number" });
-                scaleImg = 0.5;
+                scaleImg = 0.2;
                 inpScale.value = scaleImg;
                 inpScale.addEventListener("input", evt => {
                     // FIX-ME: check value usable
@@ -212,7 +252,7 @@
                     let val;
                     if (strVal.length > 0) {
                         val = parseFloat(strVal);
-                        if (val > 0.2 && val < 2) usableValue = true;
+                        if (val > 0.02 && val < 2) usableValue = true;
                     }
                     if (!usableValue) {
                         inpScale.style.backgroundColor = "yellow";
@@ -229,14 +269,17 @@
                     flex-direction: row;
                     gap: 10px;
                 `;
+                const divXmpInfo = mkElt("pre");
                 const pBlob = mkElt("p", undefined, [
                     mkElt("div", undefined, "Blob"),
                     divInputs,
                     divMaxW,
+                    divOrigPreview,
                     divBlobPreview,
-                    divOrigPreview
+                    divXmpInfo,
                 ])
                 const body = mkElt("div", undefined, [
+                    mkElt("h2", undefined, "Choose image"),
                     divImgs,
                     pBlob,
                 ]);
@@ -250,8 +293,9 @@
                         font-size: 20px;
                         text-shadow: 1px 0 black, -1px 0 black, 0 1px black, 0 -1px black, 0 0 2px black;
                 `;
-                divBlobPreview.style = previewStyle;
                 divOrigPreview.style = previewStyle;
+                divBlobPreview.style = previewStyle;
+
                 immages.forEach(src => {
                     const eltImg = mkElt("div");
                     eltImg.style = `
@@ -272,9 +316,9 @@
                     });
 
                 });
-                const btnShowPanorama = modMdc.mkMDCdialogButton("Test", "test");
-                const eltActions = modMdc.mkMDCdialogActions([btnShowPanorama]);
-                btnShowPanorama.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+                const btnConfirmImage = modMdc.mkMDCdialogButton("Continue", "Choose image");
+                const eltActions = modMdc.mkMDCdialogActions([btnConfirmImage]);
+                btnConfirmImage.addEventListener("click", errorHandlerAsyncEvent(async evt => {
                     evt.stopPropagation();
                     evt.stopImmediatePropagation();
                     evt.preventDefault();
@@ -287,18 +331,14 @@
                     srcImg = checked.value;
                     srcPanorama = srcImg;
                     console.log({ srcImg, srcPanorama });
-                    let xmp;
                     if (chkUseBlob.checked) {
                         srcPanorama = srcBlobImg;
-                        const origBlob = await new Promise(resolve => {
-                            fetch(srcImg)
-                                .then(response => response.blob())
-                                .then(blob => resolve(blob));
-                        });
-                        xmp = await pannellum.parseGPanoXMP(origBlob);
                     }
+                    const idImg = "not ready";
+                    const memories = await dialogChooseMemoriesForImage(srcPanorama);
+                    if (!memories) return;
                     closeDialog();
-                    showPanorama(srcPanorama, xmp);
+                    showPanorama(srcPanorama, xmpImg);
                 }));
 
                 const dlg = await modMdc.mkMDCdialog(body, eltActions);
@@ -343,9 +383,14 @@
                         const cy = evt.clientY;
                         console.log("mouseup", { pitch, yaw, cx, cy });
                         if (mousedownData.cx == cx && mousedownData.cy == cy) {
-                            viewer.addHotSpot({ pitch, yaw, type: "info", text: "infoText" });
+                            // viewer.addHotSpot({ pitch, yaw, type: "info", text: "infoText" });
+                            myAddHotSpot({ pitch, yaw, type: "info", text: "infoText" });
                         }
                     });
+                    function myAddHotSpot(data) {
+                        viewer.addHotSpot(data);
+                    }
+
                 }
             }
         })();
