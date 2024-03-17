@@ -357,7 +357,7 @@ async function promptForUpdate() {
             setTimeout(() => {
                 console.log("promptForUpdate 10, resolve");
                 resolve(true);
-            }, 1200);
+            }, 500);
         });
     });
 }
