@@ -208,44 +208,57 @@
 
                 const idImg = mkIdImg(srcType, srcOrigName);
                 const arrHotspotGrps = getAllHotspotGrps(idImg);
-                const divSubjects = mkElt("div");
-                divSubjects.style = `
+                const divExistingGrps = mkElt("div");
+                divExistingGrps.style = `
                     display: flex;
                     flex-direction: column;
                     gap: 10px;
                     `;
+                const divGrps = mkElt("div", undefined, divExistingGrps);
+                const divBtnDelGrps = mkElt("div");
                 if (arrHotspotGrps.length > 0) {
                     arrHotspotGrps.forEach(item => {
                         // const item = JSON.parse(localStorage.getItem(k));
                         const id = item.id;
                         if (item.id) {
                             const rad = mkElt("input", { type: "radio", name: "mem", value: id });
+                            rad.dataset.subject = item.subject;
                             const lbl = mkElt("label", undefined, [rad, item.subject]);
-                            divSubjects.appendChild(lbl);
+                            divExistingGrps.appendChild(lbl);
                         }
                     });
+                    const btnDelGrps = modMdc.mkMDCbutton("delete groups");
+                    btnDelGrps.addEventListener("click", evt => {
+                        const arrKeys = getAllHotspotGrpKeys(idImg);
+                        arrKeys.forEach(k => localStorage.removeItem(k));
+                        divExistingGrps.textContent = "All groups have been deleted";
+                    });
+                    divBtnDelGrps.appendChild(btnDelGrps);
                 } else {
-                    divSubjects.textContent = "There are no saved subjects for this image.";
+                    divExistingGrps.textContent = "There are no saved subjects for this image.";
                 }
                 const radNew = mkElt("input", { type: "radio", name: "mem", value: "FROM_INPUT" });
                 const inpNew = mkElt("input", { type: "text" });
                 const lblNew = mkElt("label", undefined, [radNew, "New: ", inpNew]);
-                divSubjects.appendChild(lblNew);
-                const rad1 = divSubjects.querySelector("input[type=radio]");
+                divExistingGrps.appendChild(lblNew);
+                const rad1 = divExistingGrps.querySelector("input[type=radio]");
                 rad1.checked = true;
 
                 const body = mkElt("div", undefined, [
                     mkElt("h2", undefined, "Choose subject"),
                     divPreview,
-                    divSubjects,
+                    // divExistingGrps,
+                    divGrps,
+                    divBtnDelGrps,
                 ]);
                 // return await modMdc.mkMDCdialogConfirm(body);
                 // return await modMdc.mkMDCdialogConfirm(body);
                 const btnCancel = modMdc.mkMDCdialogButton("Cancel", "close");
                 const btnConfirmSubject = modMdc.mkMDCdialogButton("Continue", "continue", true);
                 let subject4image;
+                let idGrp4image;
                 btnConfirmSubject.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-                    const checked = divSubjects.querySelector("input[type=radio]:checked");
+                    const checked = divExistingGrps.querySelector("input[type=radio]:checked");
                     if (checked == radNew) {
                         subject4image = inpNew.value.trim();
                         if (subject4image.length == 0) {
@@ -257,7 +270,8 @@
                             return;
                         }
                     } else {
-                        subject4image = checked.value;
+                        idGrp4image = checked.value;
+                        subject4image = checked.dataset.subject;
                     }
                     console.log({ checked, subject4image, inpNew });
                     // closeDialog();
@@ -272,9 +286,9 @@
                             case "continue":
                                 const rec = {
                                     subjectGrp: subject4image, // FIX-ME: subject vs id
+                                    idGrp: idGrp4image,
                                     idImg
                                 }
-                                // resolve(subject4image);
                                 resolve(rec);
                                 break;
                             case "close":
@@ -434,20 +448,20 @@
                     if (chkUseBlob.checked) {
                         srcPanorama = srcBlobImg;
                     }
-                    const recMemorySubject = await dialogChooseSubjectForImage("app", srcImgOrig, srcPanorama);
-                    if (!recMemorySubject) return;
+                    const objHotspotsGrp = await dialogChooseSubjectForImage("app", srcImgOrig, srcPanorama);
+                    if (!objHotspotsGrp) return;
                     closeDialog();
-                    showPanorama(srcPanorama, xmpImg, recMemorySubject);
+                    showPanorama(srcPanorama, xmpImg, objHotspotsGrp);
                 }));
 
                 const dlg = await modMdc.mkMDCdialog(body, eltActions);
                 function closeDialog() { dlg.mdc.close(); }
             }
 
-            async function showPanorama(srcPanorama, xmp, recMemSubj) {
+            async function showPanorama(srcPanorama, xmp, objHotspotsGrp4panorama) {
                 // title here
                 const eltTitle = document.getElementById("palace-title");
-                eltTitle.textContent = recMemSubj.subjGrp; // FIX-ME:
+                eltTitle.textContent = objHotspotsGrp4panorama.subjGrp; // FIX-ME:
                 const sizesImg = await getImgSizes(srcPanorama);
                 if (sizesImg.naturalWidth > devMaxWebGlW) {
                     // const modImg = await import("images");
@@ -458,9 +472,7 @@
                 if (is360) {
                     const cont = document.getElementById("panorama");
                     cont.style.outline = "1px dotted red";
-                    const viewer = pannellum.viewer(
-                        // 'panorama',
-                        cont,
+                    config =
                         {
                             type: "equirectangular",
                             panorama: srcPanorama,
@@ -468,7 +480,19 @@
                             compass: true,
                             avoidShowingBackground: true,
                             xmp
-                        });
+                        };
+
+                    const hotspotGrpKey = mkHotspotGrpKey(objHotspotsGrp4panorama.idImg, objHotspotsGrp4panorama.idGrp);
+                    const strOldRec = localStorage.getItem(hotspotGrpKey);
+                    const oldRec = strOldRec ? JSON.parse(strOldRec) : undefined;
+                    if (oldRec) {
+                        debugger;
+                        const arrHotspots = oldRec.hotspots;
+                        if (arrHotspots.length > 0) { config.hotSpots = arrHotspots; }
+                        // arrHotspots.forEach(hs => { viewer.addHotSpot(hs); });
+                    }
+
+                    const viewer = pannellum.viewer( cont, config);
                     let mousedownData;
                     viewer.on("mousedown", (evt) => {
                         const coords = viewer.mouseEventToCoords(evt);
@@ -485,8 +509,7 @@
                         const cy = evt.clientY;
                         console.log("mouseup", { pitch, yaw, cx, cy });
                         if (mousedownData.cx == cx && mousedownData.cy == cy) {
-                            // viewer.addHotSpot({ pitch, yaw, type: "info", text: "infoText" });
-                            addHotSpot(viewer, recMemSubj, { pitch, yaw, type: "info", text: "infoText" });
+                            addHotSpot(viewer, objHotspotsGrp4panorama, { pitch, yaw, type: "info", text: "infoText" });
                         }
                     });
 
@@ -523,8 +546,6 @@
 
         function addHotSpot(viewer, recHotspotGrp, data) {
             viewer.addHotSpot(data);
-            // const hotspotKeyPrefix = mkHotspotKeyPrefix(recMemSubj.idImg);
-            // FIX-ME: subject vs id
             const recHotspot = {
                 pitch: data.pitch,
                 yaw: data.yaw,
