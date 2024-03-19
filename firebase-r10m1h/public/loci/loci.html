@@ -58,6 +58,12 @@
     <script type="text/javascript" src="/ext/pannellum/libpannellum.js"></script>
     <script type="text/javascript" src="/ext/pannellum/pannellum.js"></script>
     <style>
+        .my-hotspot-div {
+            padding: 10px;
+            min-width: 100px;
+            opacity: 0.5;
+        }
+
         #pannellum-container {
             NOwidth: 300px;
             NOheight: 200px;
@@ -473,26 +479,25 @@
                     const cont = document.getElementById("panorama");
                     cont.style.outline = "1px dotted red";
                     config =
-                        {
-                            type: "equirectangular",
-                            panorama: srcPanorama,
-                            autoLoad: true,
-                            compass: true,
-                            avoidShowingBackground: true,
-                            xmp
-                        };
+                    {
+                        type: "equirectangular",
+                        panorama: srcPanorama,
+                        autoLoad: true,
+                        compass: true,
+                        avoidShowingBackground: true,
+                        xmp,
+                        createTooltipFunc: MYcreateTooltipFunc,
+                    };
 
                     const hotspotGrpKey = mkHotspotGrpKey(objHotspotsGrp4panorama.idImg, objHotspotsGrp4panorama.idGrp);
                     const strOldRec = localStorage.getItem(hotspotGrpKey);
                     const oldRec = strOldRec ? JSON.parse(strOldRec) : undefined;
                     if (oldRec) {
-                        debugger;
                         const arrHotspots = oldRec.hotspots;
                         if (arrHotspots.length > 0) { config.hotSpots = arrHotspots; }
-                        // arrHotspots.forEach(hs => { viewer.addHotSpot(hs); });
                     }
 
-                    const viewer = pannellum.viewer( cont, config);
+                    const viewer = pannellum.viewer(cont, config);
                     let mousedownData;
                     viewer.on("mousedown", (evt) => {
                         const coords = viewer.mouseEventToCoords(evt);
@@ -509,7 +514,12 @@
                         const cy = evt.clientY;
                         console.log("mouseup", { pitch, yaw, cx, cy });
                         if (mousedownData.cx == cx && mousedownData.cy == cy) {
-                            addHotSpot(viewer, objHotspotsGrp4panorama, { pitch, yaw, type: "info", text: "infoText" });
+                            const hs = {
+                                pitch, yaw,
+                                type: "info",
+                                text: "infoText",
+                            };
+                            MYaddHotSpot(viewer, objHotspotsGrp4panorama, hs);
                         }
                     });
 
@@ -544,7 +554,31 @@
 
         }
 
-        function addHotSpot(viewer, recHotspotGrp, data) {
+        function MYcreateTooltipFunc(div, hs) {
+            origCreateTooltipFunc();
+            const myDiv = mkElt("div", undefined, "my div");
+            myDiv.classList.add("my-hotspot-div");
+            myDiv.classList.add("mdc-card");
+            myDiv.classList.add("display-none");
+            div.appendChild(myDiv);
+            div.addEventListener("click", evt => {
+                myDiv.classList.toggle("display-none");
+            });
+            function origCreateTooltipFunc() {
+                const span = mkElt("span", undefined, "HS: " + hs.text);
+                // if (hs.text || hs.video || hs.image) {
+                div.classList.add('pnlm-tooltip');
+                div.appendChild(span);
+                span.style.width = span.scrollWidth - 20 + 'px';
+                span.style.marginLeft = -(span.scrollWidth - div.offsetWidth) / 2 + 'px';
+                span.style.marginTop = -span.scrollHeight - 12 + 'px';
+                // }
+            }
+        }
+
+
+        function MYaddHotSpot(viewer, recHotspotGrp, data) {
+            data.createTooltipFunc = MYcreateTooltipFunc;
             viewer.addHotSpot(data);
             const recHotspot = {
                 pitch: data.pitch,

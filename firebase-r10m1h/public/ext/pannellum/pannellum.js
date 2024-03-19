@@ -1823,8 +1823,9 @@ window.pannellum = (function (window, document, undefined) {
                 uiContainer.appendChild(div);
             }
 
-            if (hs.createTooltipFunc) {
-                hs.createTooltipFunc(div, hs.createTooltipArgs);
+            if (config.createTooltipFunc) {
+                // config.createTooltipFunc(div, hs.createTooltipArgs);
+                config.createTooltipFunc(div, hs);
             } else if (hs.text || hs.video || hs.image) {
                 div.classList.add('pnlm-tooltip');
                 div.appendChild(span);
