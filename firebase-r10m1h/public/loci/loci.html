@@ -436,6 +436,8 @@
                     });
 
                 });
+                const firstImageRadio = divImgs.querySelector("input[name=img]");
+                firstImageRadio.checked = true;
                 const btnConfirmImage = modMdc.mkMDCdialogButton("Continue", "Choose image");
                 const eltActions = modMdc.mkMDCdialogActions([btnConfirmImage]);
                 btnConfirmImage.addEventListener("click", errorHandlerAsyncEvent(async evt => {
@@ -471,10 +473,11 @@
                 if (sizesImg.naturalWidth > devMaxWebGlW) {
                     debugger;
                 }
+                const hotspotGrpKey = mkHotspotGrpKey(objHotspotGrp4panorama.idImg, objHotspotGrp4panorama.idGrp);
                 const cont = document.getElementById("panorama");
+                cont.dataset.hotspotGrpKey = hotspotGrpKey;
                 cont.style.outline = "1px dotted red";
 
-                const hotspotGrpKey = mkHotspotGrpKey(objHotspotGrp4panorama.idImg, objHotspotGrp4panorama.idGrp);
                 config =
                 {
                     type: "equirectangular",
@@ -522,13 +525,14 @@
 
                 function addHotSpotToPanorama(data) {
                     data.createTooltipFunc = MYcreateTooltipFunc;
+                    data.id = Date.now();
                     viewer.addHotSpot(data);
                     const recHotspot = {
                         pitch: data.pitch,
                         yaw: data.yaw,
                         type: data.type,
                         text: data.text,
-                        id: Date.now(),
+                        id: data.id,
                     }
                     const oldGrp = !!objHotspotGrp4panorama.idGrp;
                     if (!oldGrp) { objHotspotGrp4panorama.idGrp = new Date().toISOString(); }
@@ -547,6 +551,7 @@
                     rec.hotspots.push(recHotspot);
                     localStorage.setItem(hotspotGrpKey, JSON.stringify(rec));
                 }
+
 
             }
         })();
@@ -580,10 +585,23 @@
 
         async function editHotspot(div, hs) {
             const modMdc = await import("util-mdc");
-            const body = mkElt("div", undefined, "body");
+            const divPanorama = document.getElementById("panorama");
+            const hotspotGrpKey = divPanorama.dataset.hotspotGrpKey
+            debugger;
+            const json = JSON.parse(localStorage.getItem(hotspotGrpKey));
+            const hotspots = json.hotspots;
+            const hotspot = (hotspots.filter(h => h.id == hs.id))[0];
+            const inpText = mkElt("input", { type: "text" });
+            inpText.value = hotspot.text;
+            const body = mkElt("div", undefined, [
+                inpText,
+            ]);
             const ans = modMdc.mkMDCdialogConfirm(body, "save");
         }
+
         async function MYcreateTooltipFunc(div, hs) {
+            div.dataset.hotspotId = hs.id;
+            // div.dataset.hotspotGrpKey = config.hotspotGrpKey;
             // origCreateTooltipFunc();
             const modMdc = await import("util-mdc");
 
