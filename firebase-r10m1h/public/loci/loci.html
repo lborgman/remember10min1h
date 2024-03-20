@@ -282,7 +282,7 @@
                     console.log({ checked, subject4image, inpNew });
                     // closeDialog();
                 }));
-                const eltActions = modMdc.mkMDCdialogActions([btnCancel, btnConfirmSubject]);
+                const eltActions = modMdc.mkMDCdialogActions([btnConfirmSubject, btnCancel]);
                 const dlg = await modMdc.mkMDCdialog(body, eltActions);
                 function closeDialog() { dlg.mdc.close(); }
                 return await new Promise((resolve, reject) => {
@@ -593,10 +593,40 @@
             const hotspot = (hotspots.filter(h => h.id == hs.id))[0];
             const inpText = mkElt("input", { type: "text" });
             inpText.value = hotspot.text;
+            const title = hs.id ? "Edit hotspot" : "Create hotspot";
             const body = mkElt("div", undefined, [
+                mkElt("h2", undefined, title),
                 inpText,
             ]);
             const ans = modMdc.mkMDCdialogConfirm(body, "save");
+            return ans;
+
+            const btnCancel = modMdc.mkMDCdialogButton("Cancel", "close");
+            const btnSave = modMdc.mkMDCdialogButton("Save", "Save");
+            const eltActions = modMdc.mkMDCdialogActions([btnSave, btnCancel]);
+            const dlg = await modMdc.mkMDCdialog(body, eltActions);
+            function closeDialog() { dlg.mdc.close(); }
+            return await new Promise((resolve, reject) => {
+                dlg.dom.addEventListener("MDCDialog:closed", errorHandlerAsyncEvent(async evt => {
+                    const action = evt.detail.action;
+                    switch (action) {
+                        case "continue":
+                            const rec = {
+                                subjectGrp: subject4image, // FIX-ME: subject vs id
+                                idGrp: idGrp4image,
+                                idImg
+                            }
+                            resolve(rec);
+                            break;
+                        case "close":
+                            resolve(false);
+                            break;
+                        default:
+                            throw Error(`error in mkMDCdialogConfirm, action is ${action}`)
+                    }
+                }));
+            });
+
         }
 
         async function MYcreateTooltipFunc(div, hs) {
