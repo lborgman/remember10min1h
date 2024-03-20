@@ -906,11 +906,26 @@ export function mkMDCdialogActions(buttons) {
     return mkElt("div", { class: "mdc-dialog__actions" }, buttons);
 }
 
-export async function mkMDCdialogConfirm(body, titleOk, titleCancel, noCancel) {
+export async function mkMDCdialogConfirm(body, titleOk, titleCancel, noCancel, funHandleResult) {
+    const tofTitle = typeof titleOk;
+    accectValueType(tofTitle, "string");
+    const tofCancel = typeof titleCancel;
+    accectValueType(tofCancel, "string");
+    const tofNoCancel = typeof noCancel;
+    accectValueType(tofNoCancel, "boolean");
+    const tofFun = typeof funHandleResult;
+    accectValueType(tofNoCancel, "function");
+    function accectValueType(tof, valType) {
+        if (tof == "undefined") return;
+        if (tof == valType) return;
+        throw Error(`Expected type ${valType}, got ${tof}`);
+    }
     titleOk = titleOk || "Ok";
     titleCancel = titleCancel || "Cancel";
     const btnOk = mkMDCdialogButton(titleOk, "confirm", true);
     const btnCancel = mkMDCdialogButton(titleCancel, "close");
+    const funResolve = funHandleResult || (() => true);
+    // const handleResult = () => true;
     // const eltActions = mkMDCdialogActions([btnOk, btnCancel]);
     const arrBtns = [btnOk, btnCancel];
     if (noCancel) arrBtns.length = 1;
@@ -921,7 +936,8 @@ export async function mkMDCdialogConfirm(body, titleOk, titleCancel, noCancel) {
             const action = evt.detail.action;
             switch (action) {
                 case "confirm":
-                    resolve(true);
+                    // resolve(true);
+                    resolve(funResolve());
                     break;
                 case "close":
                     resolve(false);

@@ -598,7 +598,9 @@
                 mkElt("h2", undefined, title),
                 inpText,
             ]);
-            const ans = modMdc.mkMDCdialogConfirm(body, "save");
+            // mkMDCdialogConfirm(body, titleOk, titleCancel, noCancel, funHandleResult)
+            const handleResult = () => "handled";
+            const ans = await modMdc.mkMDCdialogConfirm(body, "save", undefined, undefined, handleResult);
             return ans;
 
             const btnCancel = modMdc.mkMDCdialogButton("Cancel", "close");
