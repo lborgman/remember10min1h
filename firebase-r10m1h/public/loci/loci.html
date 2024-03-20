@@ -61,7 +61,7 @@
         .my-hotspot-div {
             padding: 10px;
             min-width: 100px;
-            opacity: 0.5;
+            NOopacity: 0.5;
         }
 
         #pannellum-container {
@@ -464,66 +464,90 @@
                 function closeDialog() { dlg.mdc.close(); }
             }
 
-            async function showPanorama(srcPanorama, xmp, objHotspotsGrp4panorama) {
-                // title here
+            async function showPanorama(srcPanorama, xmp, objHotspotGrp4panorama) {
                 const eltTitle = document.getElementById("palace-title");
-                eltTitle.textContent = objHotspotsGrp4panorama.subjGrp; // FIX-ME:
+                eltTitle.textContent = objHotspotGrp4panorama.subjGrp;
                 const sizesImg = await getImgSizes(srcPanorama);
                 if (sizesImg.naturalWidth > devMaxWebGlW) {
-                    // const modImg = await import("images");
                     debugger;
-                    // modImg.shrinkImageBlob();
                 }
-                const is360 = true;
-                if (is360) {
-                    const cont = document.getElementById("panorama");
-                    cont.style.outline = "1px dotted red";
-                    config =
-                    {
-                        type: "equirectangular",
-                        panorama: srcPanorama,
-                        autoLoad: true,
-                        compass: true,
-                        avoidShowingBackground: true,
-                        xmp,
-                        createTooltipFunc: MYcreateTooltipFunc,
-                    };
+                const cont = document.getElementById("panorama");
+                cont.style.outline = "1px dotted red";
 
-                    const hotspotGrpKey = mkHotspotGrpKey(objHotspotsGrp4panorama.idImg, objHotspotsGrp4panorama.idGrp);
-                    const strOldRec = localStorage.getItem(hotspotGrpKey);
-                    const oldRec = strOldRec ? JSON.parse(strOldRec) : undefined;
-                    if (oldRec) {
-                        const arrHotspots = oldRec.hotspots;
-                        if (arrHotspots.length > 0) { config.hotSpots = arrHotspots; }
+                const hotspotGrpKey = mkHotspotGrpKey(objHotspotGrp4panorama.idImg, objHotspotGrp4panorama.idGrp);
+                config =
+                {
+                    type: "equirectangular",
+                    panorama: srcPanorama,
+                    autoLoad: true,
+                    compass: true,
+                    avoidShowingBackground: true,
+                    xmp,
+                    createTooltipFunc: MYcreateTooltipFunc,
+                    hotspotGrpKey,
+                };
+
+                const strOldRec = localStorage.getItem(hotspotGrpKey);
+                const oldRec = strOldRec ? JSON.parse(strOldRec) : undefined;
+                if (oldRec) {
+                    const arrHotspots = oldRec.hotspots;
+                    if (arrHotspots.length > 0) { config.hotSpots = arrHotspots; }
+                }
+
+                const viewer = pannellum.viewer(cont, config);
+                let mousedownData;
+                viewer.on("mousedown", (evt) => {
+                    const coords = viewer.mouseEventToCoords(evt);
+                    const pitch = coords[0], yaw = coords[1];
+                    const cx = evt.clientX;
+                    const cy = evt.clientY;
+                    console.log("mousedown", { pitch, yaw, cx, cy, evt });
+                    mousedownData = { pitch, yaw, cx, cy };
+                });
+                viewer.on("mouseup", (evt) => {
+                    const coords = viewer.mouseEventToCoords(evt);
+                    const pitch = coords[0], yaw = coords[1];
+                    const cx = evt.clientX;
+                    const cy = evt.clientY;
+                    console.log("mouseup", { pitch, yaw, cx, cy });
+                    if (mousedownData.cx == cx && mousedownData.cy == cy) {
+                        const hs = {
+                            pitch, yaw,
+                            type: "info",
+                            text: "infoText",
+                        };
+                        addHotSpotToPanorama(hs);
                     }
+                });
 
-                    const viewer = pannellum.viewer(cont, config);
-                    let mousedownData;
-                    viewer.on("mousedown", (evt) => {
-                        const coords = viewer.mouseEventToCoords(evt);
-                        const pitch = coords[0], yaw = coords[1];
-                        const cx = evt.clientX;
-                        const cy = evt.clientY;
-                        console.log("mousedown", { pitch, yaw, cx, cy, evt });
-                        mousedownData = { pitch, yaw, cx, cy };
-                    });
-                    viewer.on("mouseup", (evt) => {
-                        const coords = viewer.mouseEventToCoords(evt);
-                        const pitch = coords[0], yaw = coords[1];
-                        const cx = evt.clientX;
-                        const cy = evt.clientY;
-                        console.log("mouseup", { pitch, yaw, cx, cy });
-                        if (mousedownData.cx == cx && mousedownData.cy == cy) {
-                            const hs = {
-                                pitch, yaw,
-                                type: "info",
-                                text: "infoText",
-                            };
-                            MYaddHotSpot(viewer, objHotspotsGrp4panorama, hs);
-                        }
-                    });
-
+                function addHotSpotToPanorama(data) {
+                    data.createTooltipFunc = MYcreateTooltipFunc;
+                    viewer.addHotSpot(data);
+                    const recHotspot = {
+                        pitch: data.pitch,
+                        yaw: data.yaw,
+                        type: data.type,
+                        text: data.text,
+                        id: Date.now(),
+                    }
+                    const oldGrp = !!objHotspotGrp4panorama.idGrp;
+                    if (!oldGrp) { objHotspotGrp4panorama.idGrp = new Date().toISOString(); }
+                    const hotspotGrpKey = mkHotspotGrpKey(objHotspotGrp4panorama.idImg, objHotspotGrp4panorama.idGrp);
+                    const strOldRec = oldGrp ? localStorage.getItem(hotspotGrpKey) : undefined;
+                    const oldRec = strOldRec ? JSON.parse(strOldRec) : undefined;
+                    console.log({ data, objHotspotGrp4panorama, hotspotGrpKey, strOldRec, oldRec, recHotspot });
+                    // prefix
+                    debugger;
+                    const rec = oldRec ||
+                    {
+                        subject: objHotspotGrp4panorama.subjectGrp,
+                        id: objHotspotGrp4panorama.idGrp,
+                        hotspots: []
+                    }
+                    rec.hotspots.push(recHotspot);
+                    localStorage.setItem(hotspotGrpKey, JSON.stringify(rec));
                 }
+
             }
         })();
 
@@ -554,15 +578,51 @@
 
         }
 
-        function MYcreateTooltipFunc(div, hs) {
-            origCreateTooltipFunc();
-            const myDiv = mkElt("div", undefined, "my div");
+        async function editHotspot(div, hs) {
+            const modMdc = await import("util-mdc");
+            const body = mkElt("div", undefined, "body");
+            const ans = modMdc.mkMDCdialogConfirm(body, "save");
+        }
+        async function MYcreateTooltipFunc(div, hs) {
+            // origCreateTooltipFunc();
+            const modMdc = await import("util-mdc");
+
+            const btnClose = modMdc.mkMDCiconButton("close", "Close");
+            btnClose.classList.add("icon-button-30");
+            btnClose.style.background = "rgba(255, 0, 0, 0.2)";
+            btnClose.style.position = "absolute";
+            btnClose.style.top = "-7px";
+            btnClose.style.left = "-7px";
+
+            const btnEdit = modMdc.mkMDCiconButton("edit", "Edit");
+            btnEdit.classList.add("icon-button-30");
+            btnEdit.style.background = "rgba(255, 0, 0, 0.2)";
+            btnEdit.style.position = "absolute";
+            btnEdit.style.top = "-7px";
+            btnEdit.style.left = "50px";
+            btnEdit.addEventListener("click", evt => {
+                editHotspot(div, hs);
+            });
+
+            const myDiv = mkElt("div", undefined, [
+                btnClose,
+                btnEdit,
+                mkElt("div", undefined, "my test5 div")
+            ]);
+            myDiv.style.paddingTop = "37px";
             myDiv.classList.add("my-hotspot-div");
             myDiv.classList.add("mdc-card");
             myDiv.classList.add("display-none");
+
+            btnClose.addEventListener("click", evt => {
+                evt.stopPropagation();
+                setTimeout(() => { myDiv.classList.add("display-none"); }, 400);
+            });
+
+
             div.appendChild(myDiv);
             div.addEventListener("click", evt => {
-                myDiv.classList.toggle("display-none");
+                myDiv.classList.remove("display-none");
             });
             function origCreateTooltipFunc() {
                 const span = mkElt("span", undefined, "HS: " + hs.text);
@@ -577,32 +637,6 @@
         }
 
 
-        function MYaddHotSpot(viewer, recHotspotGrp, data) {
-            data.createTooltipFunc = MYcreateTooltipFunc;
-            viewer.addHotSpot(data);
-            const recHotspot = {
-                pitch: data.pitch,
-                yaw: data.yaw,
-                type: data.type,
-                text: data.text,
-            }
-            const oldGrp = !!recHotspotGrp.idGrp;
-            if (!oldGrp) { recHotspotGrp.idGrp = new Date().toISOString(); }
-            const hotspotGrpKey = mkHotspotGrpKey(recHotspotGrp.idImg, recHotspotGrp.idGrp);
-            const strOldRec = oldGrp ? localStorage.getItem(hotspotGrpKey) : undefined;
-            const oldRec = strOldRec ? JSON.parse(strOldRec) : undefined;
-            console.log({ data, recHotspotGrp, hotspotGrpKey, strOldRec, oldRec, recHotspot });
-            // prefix
-            debugger;
-            const rec = oldRec ||
-            {
-                subject: recHotspotGrp.subjectGrp,
-                id: recHotspotGrp.idGrp,
-                hotspots: []
-            }
-            rec.hotspots.push(recHotspot);
-            localStorage.setItem(hotspotGrpKey, JSON.stringify(rec));
-        }
 
     </script>
 </body>
