@@ -583,7 +583,7 @@
 
         }
 
-        async function editHotspot(div, hs) {
+        async function editHotspot(divValues, hs) {
             const modMdc = await import("util-mdc");
             const divPanorama = document.getElementById("panorama");
             const hotspotGrpKey = divPanorama.dataset.hotspotGrpKey
@@ -614,7 +614,15 @@
                 saveHotspots.push(hotspot);
                 saveJson.hotspots = saveHotspots;
                 localStorage.setItem(hotspotGrpKey, JSON.stringify(saveJson));
+                const divParent = divValues.parentElement;
+                divValues.remove();
+                const newDivValues = mkDivHotspotValues(hotspot);
+                divParent.appendChild(newDivValues);
             }
+        }
+
+        function mkDivHotspotValues(hs) {
+            return mkElt("div", undefined, hs.text);
         }
 
         async function MYcreateTooltipFunc(div, hs, hotspotGrpKey) {
@@ -630,6 +638,8 @@
             btnClose.style.top = "-7px";
             btnClose.style.left = "-7px";
 
+            const divValues = mkDivHotspotValues(hs);
+
             const btnEdit = modMdc.mkMDCiconButton("edit", "Edit");
             btnEdit.classList.add("icon-button-30");
             btnEdit.style.background = "rgba(255, 0, 0, 0.2)";
@@ -637,14 +647,14 @@
             btnEdit.style.top = "-7px";
             btnEdit.style.left = "50px";
             btnEdit.addEventListener("click", evt => {
-                editHotspot(div, hs, hotspotGrpKey);
+                editHotspot(divValues, hs, hotspotGrpKey);
             });
 
             const myDiv = mkElt("div", undefined, [
                 btnClose,
                 btnEdit,
                 // mkElt("div", undefined, "my test5 div"),
-                mkElt("div", undefined, hs.text)
+                divValues,
             ]);
             myDiv.style.paddingTop = "37px";
             myDiv.classList.add("my-hotspot-div");
