@@ -584,6 +584,9 @@
         }
 
         async function editHotspot(divValues, hs) {
+            const tn = divValues.tagName ;
+            if (tn != "DIV") throw Error(`Expeced DIV, got ${tn}`);
+            if (!divValues.parentElement) throw Error("divValues.parentElement is null");
             const modMdc = await import("util-mdc");
             const divPanorama = document.getElementById("panorama");
             const hotspotGrpKey = divPanorama.dataset.hotspotGrpKey
@@ -605,8 +608,6 @@
                 }
             };
             const ans = await modMdc.mkMDCdialogConfirm(body, "save", undefined, undefined, handleResult);
-            debugger;
-            // return ans;
             if (ans == "update") {
                 const saveJson = JSON.parse(localStorage.getItem(hotspotGrpKey));
                 const oldHotspots = saveJson.hotspots;
@@ -647,6 +648,8 @@
             btnEdit.style.top = "-7px";
             btnEdit.style.left = "50px";
             btnEdit.addEventListener("click", evt => {
+                // editHotspot(divValues, hs, hotspotGrpKey);
+                const divValues = myDiv.lastElementChild;
                 editHotspot(divValues, hs, hotspotGrpKey);
             });
 
