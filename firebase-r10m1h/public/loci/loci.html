@@ -491,9 +491,9 @@
                 };
 
                 const strOldRec = localStorage.getItem(hotspotGrpKey);
-                const oldRec = strOldRec ? JSON.parse(strOldRec) : undefined;
-                if (oldRec) {
-                    const arrHotspots = oldRec.hotspots;
+                let recHotspotGrp = strOldRec ? JSON.parse(strOldRec) : undefined;
+                if (recHotspotGrp) {
+                    const arrHotspots = recHotspotGrp.hotspots;
                     if (arrHotspots.length > 0) { config.hotSpots = arrHotspots; }
                 }
 
@@ -524,7 +524,7 @@
                 });
 
                 function addHotSpotToPanorama(data) {
-                    data.createTooltipFunc = MYcreateTooltipFunc;
+                    // data.createTooltipFunc = MYcreateTooltipFunc;
                     data.id = Date.now();
                     viewer.addHotSpot(data);
                     const recHotspot = {
@@ -587,7 +587,6 @@
             const modMdc = await import("util-mdc");
             const divPanorama = document.getElementById("panorama");
             const hotspotGrpKey = divPanorama.dataset.hotspotGrpKey
-            debugger;
             const json = JSON.parse(localStorage.getItem(hotspotGrpKey));
             const hotspots = json.hotspots;
             const hotspot = (hotspots.filter(h => h.id == hs.id))[0];
@@ -599,39 +598,26 @@
                 inpText,
             ]);
             // mkMDCdialogConfirm(body, titleOk, titleCancel, noCancel, funHandleResult)
-            const handleResult = () => "handled";
+            const handleResult = () => {
+                if (inpText.value != hotspot.text) {
+                    hotspot.text = inpText.value;
+                    return "update";
+                }
+            };
             const ans = await modMdc.mkMDCdialogConfirm(body, "save", undefined, undefined, handleResult);
-            return ans;
-
-            const btnCancel = modMdc.mkMDCdialogButton("Cancel", "close");
-            const btnSave = modMdc.mkMDCdialogButton("Save", "Save");
-            const eltActions = modMdc.mkMDCdialogActions([btnSave, btnCancel]);
-            const dlg = await modMdc.mkMDCdialog(body, eltActions);
-            function closeDialog() { dlg.mdc.close(); }
-            return await new Promise((resolve, reject) => {
-                dlg.dom.addEventListener("MDCDialog:closed", errorHandlerAsyncEvent(async evt => {
-                    const action = evt.detail.action;
-                    switch (action) {
-                        case "continue":
-                            const rec = {
-                                subjectGrp: subject4image, // FIX-ME: subject vs id
-                                idGrp: idGrp4image,
-                                idImg
-                            }
-                            resolve(rec);
-                            break;
-                        case "close":
-                            resolve(false);
-                            break;
-                        default:
-                            throw Error(`error in mkMDCdialogConfirm, action is ${action}`)
-                    }
-                }));
-            });
-
+            debugger;
+            // return ans;
+            if (ans == "update") {
+                const saveJson = JSON.parse(localStorage.getItem(hotspotGrpKey));
+                const oldHotspots = saveJson.hotspots;
+                const saveHotspots = oldHotspots.filter(h => h.id != hs.id);
+                saveHotspots.push(hotspot);
+                saveJson.hotspots = saveHotspots;
+                localStorage.setItem(hotspotGrpKey, JSON.stringify(saveJson));
+            }
         }
 
-        async function MYcreateTooltipFunc(div, hs) {
+        async function MYcreateTooltipFunc(div, hs, hotspotGrpKey) {
             div.dataset.hotspotId = hs.id;
             // div.dataset.hotspotGrpKey = config.hotspotGrpKey;
             // origCreateTooltipFunc();
@@ -651,13 +637,14 @@
             btnEdit.style.top = "-7px";
             btnEdit.style.left = "50px";
             btnEdit.addEventListener("click", evt => {
-                editHotspot(div, hs);
+                editHotspot(div, hs, hotspotGrpKey);
             });
 
             const myDiv = mkElt("div", undefined, [
                 btnClose,
                 btnEdit,
-                mkElt("div", undefined, "my test5 div")
+                // mkElt("div", undefined, "my test5 div"),
+                mkElt("div", undefined, hs.text)
             ]);
             myDiv.style.paddingTop = "37px";
             myDiv.classList.add("my-hotspot-div");

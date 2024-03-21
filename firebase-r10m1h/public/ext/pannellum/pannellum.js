@@ -1825,6 +1825,7 @@ window.pannellum = (function (window, document, undefined) {
 
             if (config.createTooltipFunc) {
                 // config.createTooltipFunc(div, hs.createTooltipArgs);
+                // config.createTooltipFunc(div, hs, config.hotspotGrpKey);
                 config.createTooltipFunc(div, hs);
             } else if (hs.text || hs.video || hs.image) {
                 div.classList.add('pnlm-tooltip');
