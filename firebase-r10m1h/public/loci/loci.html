@@ -540,8 +540,6 @@
                     const strOldRec = oldGrp ? localStorage.getItem(hotspotGrpKey) : undefined;
                     const oldRec = strOldRec ? JSON.parse(strOldRec) : undefined;
                     console.log({ data, objHotspotGrp4panorama, hotspotGrpKey, strOldRec, oldRec, recHotspot });
-                    // prefix
-                    debugger;
                     const rec = oldRec ||
                     {
                         subject: objHotspotGrp4panorama.subjectGrp,
@@ -552,15 +550,11 @@
                     localStorage.setItem(hotspotGrpKey, JSON.stringify(rec));
 
                     const divHs = data.div;
-                    divHs.style.backgroundColor = "red";
-                    divHs.style.outline = "2px solid yellow";
+                    addHilightHotspot(divHs);
                     setTimeout(errorHandlerAsyncEvent(async () => {
                         const divValues = divHs.lastElementChild.lastElementChild;
                         await editHotspot(divValues, recHotspot, hotspotGrpKey);
-                        setTimeout(() => {
-                            divHs.style.backgroundColor = null;
-                            divHs.style.outline = null;
-                        }, 2000);
+                        setTimeout(() => { removeHilightHotspot(divHs); }, 2000);
                     }), 1000);
                 }
 
@@ -595,6 +589,15 @@
 
         }
 
+        function addHilightHotspot(divHs) {
+            divHs.style.backgroundColor = "red";
+            divHs.style.outline = "2px solid yellow";
+        }
+        function removeHilightHotspot(divHs) {
+            divHs.style.backgroundColor = null;
+            divHs.style.outline = null;
+        }
+
         async function editHotspot(divValues, hs) {
             const tn = divValues.tagName;
             if (tn != "DIV") throw Error(`Expeced DIV, got ${tn}`);
@@ -605,17 +608,23 @@
             const json = JSON.parse(localStorage.getItem(hotspotGrpKey));
             const hotspots = json.hotspots;
             const hotspot = (hotspots.filter(h => h.id == hs.id))[0];
-            const inpText = mkElt("input", { type: "text" });
-            inpText.value = hotspot.text;
+            // const inpText = mkElt("input", { type: "text" });
+            // inpText.value = hotspot.text;
+            const taDesc = modMdc.mkMDCtextFieldTextarea(undefined, 4, 30);
+            // taDesc.style.resize = "vertical";
+            const tafDesc = modMdc.mkMDCtextareaField("Description", taDesc, hotspot.text);
+            tafDesc.style.width = "100%";
             const title = hs.id ? "Edit hotspot" : "Create hotspot";
             const body = mkElt("div", undefined, [
                 mkElt("h2", undefined, title),
-                inpText,
+                // inpText,
+                // mkElt("hr"),
+                tafDesc,
             ]);
             // mkMDCdialogConfirm(body, titleOk, titleCancel, noCancel, funHandleResult)
             const handleResult = () => {
-                if (inpText.value != hotspot.text) {
-                    hotspot.text = inpText.value;
+                if (taDesc.value != hotspot.text) {
+                    hotspot.text = taDesc.value;
                     return "update";
                 }
             };
@@ -678,13 +687,18 @@
 
             btnClose.addEventListener("click", evt => {
                 evt.stopPropagation();
-                setTimeout(() => { myDiv.classList.add("display-none"); }, 400);
+                addHilightHotspot(div);
+                setTimeout(() => {
+                    myDiv.classList.add("display-none");
+                }, 400);
+                setTimeout(() => removeHilightHotspot(div), 1200);
             });
 
 
             div.appendChild(myDiv);
             div.addEventListener("click", evt => {
-                myDiv.classList.remove("display-none");
+                addHilightHotspot(div);
+                setTimeout(() => myDiv.classList.remove("display-none"), 700);
             });
             function origCreateTooltipFunc() {
                 const span = mkElt("span", undefined, "HS: " + hs.text);
