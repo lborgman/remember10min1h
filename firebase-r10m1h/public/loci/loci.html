@@ -554,12 +554,14 @@
                     const divHs = data.div;
                     divHs.style.backgroundColor = "red";
                     divHs.style.outline = "2px solid yellow";
-                    setTimeout(() => {
-                        divHs.style.backgroundColor = null;
-                        divHs.style.outline = null;
+                    setTimeout(errorHandlerAsyncEvent(async () => {
                         const divValues = divHs.lastElementChild.lastElementChild;
-                        editHotspot(divValues, recHotspot, hotspotGrpKey);
-                    }, 2000);
+                        await editHotspot(divValues, recHotspot, hotspotGrpKey);
+                        setTimeout(() => {
+                            divHs.style.backgroundColor = null;
+                            divHs.style.outline = null;
+                        }, 2000);
+                    }), 1000);
                 }
 
 
