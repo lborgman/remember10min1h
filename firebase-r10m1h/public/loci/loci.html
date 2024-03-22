@@ -550,6 +550,16 @@
                     }
                     rec.hotspots.push(recHotspot);
                     localStorage.setItem(hotspotGrpKey, JSON.stringify(rec));
+
+                    const divHs = data.div;
+                    divHs.style.backgroundColor = "red";
+                    divHs.style.outline = "2px solid yellow";
+                    setTimeout(() => {
+                        divHs.style.backgroundColor = null;
+                        divHs.style.outline = null;
+                        const divValues = divHs.lastElementChild.lastElementChild;
+                        editHotspot(divValues, recHotspot, hotspotGrpKey);
+                    }, 2000);
                 }
 
 
@@ -584,7 +594,7 @@
         }
 
         async function editHotspot(divValues, hs) {
-            const tn = divValues.tagName ;
+            const tn = divValues.tagName;
             if (tn != "DIV") throw Error(`Expeced DIV, got ${tn}`);
             if (!divValues.parentElement) throw Error("divValues.parentElement is null");
             const modMdc = await import("util-mdc");
