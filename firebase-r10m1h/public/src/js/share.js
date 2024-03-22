@@ -209,11 +209,24 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
     btnBannerDelete.addEventListener("click", errorHandlerAsyncEvent(async evt => {
         handleEvtDeleteRem(evt);
     }));
+    const btnBannerCopy = modMdc.mkMDCiconButton("content_copy", "Copy to custom clipboard");
+    btnBannerCopy.classList.add("mdc-theme--secondary-bg");
+    btnBannerCopy.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+        add2CustomClipboard(btnBannerCopy);
+    }));
+    const divBannerBtns = mkElt("div", undefined, [btnBannerCopy, btnBannerDelete]);
+    divBannerBtns.style = `
+        display: flex;
+        flex-direction: column;
+    `;
     const firstImageBlob = record?.images ? record.images[0] : null;
     const eltImg = firstImageBlob ? mkImageThumb(firstImageBlob) : "";
     const divBanner = mkElt("h3", { class: "rem-banner-title" }, [
         eltImg,
-        divBannerTitle, btnBannerDelete]);
+        divBannerTitle,
+        // btnBannerDelete,
+        divBannerBtns
+    ]);
     if (firstImageBlob) divBanner.classList.add("has-image");
     eltRemember.appendChild(divBanner);
 
@@ -984,17 +997,21 @@ export async function mkEltInputRemember(record, headerTitle, saveNewNow) {
         return detMM;
     }
 
+    async function add2CustomClipboard(btnAdd) {
+        const key = btnAdd.closest(".container-remember").dataset.key;
+        console.log("clicked add", key);
+        const modEditFc4iMM = await import("jsmind-edit-spec-fc4i");
+        modEditFc4iMM.addProviderFc4i();
+        const objAdded = modMMhelpers.addJsmindCopied4Mindmap(key, "fc4i");
+        modMMhelpers.dialogAdded2CustomClipboard(objAdded);
+    }
+
     function mkDivCustomCopy4Mindmaps() {
         // const btnAdd = modMdc.mkMDCbutton("Copy to", "raised");
         const btnAdd = modMdc.mkMDCiconButton("content_copy", "Copy to");
         // const aURLorig = modMdc.mkMDCiconButton("link", "Go to this item source page (aURLorig)");
         btnAdd.addEventListener("click", errorHandlerAsyncEvent(async evt => {
-            const key = btnAdd.closest(".container-remember").dataset.key;
-            console.log("clicked add", key);
-            const modEditFc4iMM = await import("jsmind-edit-spec-fc4i");
-            modEditFc4iMM.addProviderFc4i();
-            const objAdded = modMMhelpers.addJsmindCopied4Mindmap(key, "fc4i");
-            modMMhelpers.dialogAdded2CustomClipboard(objAdded);
+            add2CustomClipboard(btnAdd);
         }));
         // const btnFind = modMdc.mkMDCbutton("Find in", "raised");
         const btnFind = modMdc.mkMDCiconButton("search", "Find in mindmaps");
