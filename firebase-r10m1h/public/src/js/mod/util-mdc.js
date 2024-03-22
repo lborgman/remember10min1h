@@ -906,7 +906,7 @@ export function mkMDCdialogActions(buttons) {
     return mkElt("div", { class: "mdc-dialog__actions" }, buttons);
 }
 
-export async function mkMDCdialogConfirm(body, titleOk, titleCancel, noCancel, funHandleResult) {
+export async function mkMDCdialogConfirm(body, titleOk, titleCancel, noCancel, funHandleResult, tellMeSaveButton) {
     const tofTitle = typeof titleOk;
     accectValueType(tofTitle, "string");
     const tofCancel = typeof titleCancel;
@@ -923,6 +923,7 @@ export async function mkMDCdialogConfirm(body, titleOk, titleCancel, noCancel, f
     titleOk = titleOk || "Ok";
     titleCancel = titleCancel || "Cancel";
     const btnOk = mkMDCdialogButton(titleOk, "confirm", true);
+    if (tellMeSaveButton) { tellMeSaveButton(btnOk); }
     const btnCancel = mkMDCdialogButton(titleCancel, "close");
     const funResolve = funHandleResult || (() => true);
     // const handleResult = () => true;

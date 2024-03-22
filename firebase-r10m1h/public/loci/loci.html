@@ -608,27 +608,90 @@
             const json = JSON.parse(localStorage.getItem(hotspotGrpKey));
             const hotspots = json.hotspots;
             const hotspot = (hotspots.filter(h => h.id == hs.id))[0];
-            // const inpText = mkElt("input", { type: "text" });
-            // inpText.value = hotspot.text;
-            const taDesc = modMdc.mkMDCtextFieldTextarea(undefined, 4, 30);
-            // taDesc.style.resize = "vertical";
+            const taDesc = modMdc.mkMDCtextFieldTextarea(undefined, 3, 30);
             const tafDesc = modMdc.mkMDCtextareaField("Description", taDesc, hotspot.text);
-            tafDesc.style.width = "100%";
+
+            const inpURL = modMdc.mkMDCtextFieldInput(undefined, "url");
+            inpURL.classList.add("remember-url");
+            inpURL.addEventListener("input", evt => {
+                divURLlockedValue.textContent = inpURL.value;
+            });
+            const strUrl = hs.url ? hs.url : "";
+            const tfURL = modMdc.mkMDCtextField("Link", inpURL, strUrl);
+
+            const divInputs = mkElt("div", undefined, [
+                tafDesc,
+                tfURL,
+            ]);
+            divInputs.style = `
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            `;
+
+            const debounceInputHandling = debounce(checkCanSave, 500);
+            divInputs.addEventListener("input", evt => {
+                evt.stopPropagation();
+                debounceInputHandling();
+            });
+
+            let saveButton;
+            let savedValues;
+            function checkCanSave() {
+                const strCurrent = JSON.stringify(getCurrentValues());
+                const strSaved = JSON.stringify(savedValues);
+                const canSave = strCurrent != strSaved;
+                console.log("checkCanSave", canSave);
+                if (!canSave) {
+                    setSaveButtonState(false);
+                } else {
+                    setSaveButtonState(true);
+                }
+            }
+
             const title = hs.id ? "Edit hotspot" : "Create hotspot";
             const body = mkElt("div", undefined, [
                 mkElt("h2", undefined, title),
-                // inpText,
-                // mkElt("hr"),
-                tafDesc,
+                divInputs
             ]);
-            // mkMDCdialogConfirm(body, titleOk, titleCancel, noCancel, funHandleResult)
+
+            function getCurrentValues() {
+                const val = {};
+                val.desc = taDesc.value;
+                val.url = inpURL.value;
+                return val;
+            }
+
+            function setSaveButtonState(canSave) {
+                if (canSave) {
+                    // FIX-ME: btnSave
+                    saveButton.disabled = false;
+                    saveButton.style.opacity = null;
+                    // container.classList.add("not-saved");
+                    // this.restartSaveNowTimer();
+                } else {
+                    saveButton.disabled = true;
+                    saveButton.style.opacity = 0.5;
+                    // No container yet if not on screen
+                    // container?.classList.remove("not-saved");
+                }
+            }
+
             const handleResult = () => {
                 if (taDesc.value != hotspot.text) {
                     hotspot.text = taDesc.value;
                     return "update";
                 }
             };
-            const ans = await modMdc.mkMDCdialogConfirm(body, "save", undefined, undefined, handleResult);
+
+            function tellMeSaveButton(btn) {
+                // debugger;
+                saveButton = btn;
+                setSaveButtonState(false);
+                savedValues = getCurrentValues();
+            }
+            const ans = await modMdc.mkMDCdialogConfirm(
+                body, "save", undefined, undefined, handleResult, tellMeSaveButton);
             if (ans == "update") {
                 const saveJson = JSON.parse(localStorage.getItem(hotspotGrpKey));
                 const oldHotspots = saveJson.hotspots;
