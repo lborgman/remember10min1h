@@ -540,7 +540,7 @@
                     }
                     const oldGrp = !!objHotspotGrp4panorama.idGrp;
                     // dataset
-                    if (!oldGrp) { 
+                    if (!oldGrp) {
                         // debugger;
                         throw Error("hotspot .idGrp is undefined");
                         // objHotspotGrp4panorama.idGrp = new Date().toISOString();
@@ -625,19 +625,14 @@
 
             const inpURL = modMdc.mkMDCtextFieldInput(undefined, "url");
             inpURL.classList.add("remember-url");
+            const reportInpURLvalidity = () => inpURL.reportValidity();
+            const debounceReportInpURLvalidity = debounce(reportInpURLvalidity, 700);
             inpURL.addEventListener("input", evt => {
-                // divURLlockedValue.textContent = inpURL.value;
-                const valid = inpURL.reportValidity();
+                const valid = inpURL.checkValidity();
                 if (!valid) {
                     evt.stopImmediatePropagation();
                     setSaveButtonState(false);
-                }
-                return;
-                if (inpURL.value.trim() == "hej") {
-                    // modMdc.setValidityMDC(taImgPattern, "");
-                    modMdc.setValidityMDC(inpURL, "");
-                } else {
-                    modMdc.setValidityMDC(inpURL, "test");
+                    debounceReportInpURLvalidity();
                 }
             });
             const strUrl = hs.url ? hs.url : "";
