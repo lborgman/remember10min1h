@@ -275,6 +275,10 @@
                             modMdc.mkMDCdialogAlert("Please input a name for the new subject!");
                             return;
                         }
+                        // idGrp4image = checked.value;
+                        // const memKeyPrefix = mkHotspotKeyPrefix(idImg);
+                        // objHotspotGrp4panorama.idGrp = new Date().toISOString();
+                        idGrp4image = new Date().toISOString();
                     } else {
                         idGrp4image = checked.value;
                         subject4image = checked.dataset.subject;
@@ -535,7 +539,12 @@
                         id: data.id,
                     }
                     const oldGrp = !!objHotspotGrp4panorama.idGrp;
-                    if (!oldGrp) { objHotspotGrp4panorama.idGrp = new Date().toISOString(); }
+                    // dataset
+                    if (!oldGrp) { 
+                        // debugger;
+                        throw Error("hotspot .idGrp is undefined");
+                        // objHotspotGrp4panorama.idGrp = new Date().toISOString();
+                    }
                     const hotspotGrpKey = mkHotspotGrpKey(objHotspotGrp4panorama.idImg, objHotspotGrp4panorama.idGrp);
                     const strOldRec = oldGrp ? localStorage.getItem(hotspotGrpKey) : undefined;
                     const oldRec = strOldRec ? JSON.parse(strOldRec) : undefined;
@@ -570,7 +579,10 @@
             return `${srcType}-${fn}`;
         }
         function mkHotspotKeyPrefix(idImg) { return `mem-${idImg}-`; }
-        function mkHotspotGrpKey(idImg, idGrp) { return `mem-${idImg}-${idGrp}`; }
+        function mkHotspotGrpKey(idImg, idGrp) {
+            if (idGrp == undefined) debugger;
+            return `mem-${idImg}-${idGrp}`;
+        }
 
         function getAllHotspotGrpKeys(idImg) {
             const memKeyPrefix = mkHotspotKeyPrefix(idImg);
@@ -614,7 +626,19 @@
             const inpURL = modMdc.mkMDCtextFieldInput(undefined, "url");
             inpURL.classList.add("remember-url");
             inpURL.addEventListener("input", evt => {
-                divURLlockedValue.textContent = inpURL.value;
+                // divURLlockedValue.textContent = inpURL.value;
+                const valid = inpURL.reportValidity();
+                if (!valid) {
+                    evt.stopImmediatePropagation();
+                    setSaveButtonState(false);
+                }
+                return;
+                if (inpURL.value.trim() == "hej") {
+                    // modMdc.setValidityMDC(taImgPattern, "");
+                    modMdc.setValidityMDC(inpURL, "");
+                } else {
+                    modMdc.setValidityMDC(inpURL, "test");
+                }
             });
             const strUrl = hs.url ? hs.url : "";
             const tfURL = modMdc.mkMDCtextField("Link", inpURL, strUrl);
@@ -640,7 +664,8 @@
             function checkCanSave() {
                 const strCurrent = JSON.stringify(getCurrentValues());
                 const strSaved = JSON.stringify(savedValues);
-                const canSave = strCurrent != strSaved;
+                const canSave = (strCurrent != strSaved)
+                    && (inpURL.value.trim() == "" || inpURL.checkValidity());
                 console.log("checkCanSave", canSave);
                 if (!canSave) {
                     setSaveButtonState(false);
@@ -678,8 +703,13 @@
             }
 
             const handleResult = () => {
-                if (taDesc.value != hotspot.text) {
-                    hotspot.text = taDesc.value;
+                const isUpdate =
+                    (taDesc.value.trim() != hotspot.text)
+                    ||
+                    (inpURL.value.trim() != hotspot.url);
+                if (isUpdate) {
+                    hotspot.text = taDesc.value.trim();
+                    hotspot.url = inpURL.value.trim();
                     return "update";
                 }
             };
@@ -707,7 +737,18 @@
         }
 
         function mkDivHotspotValues(hs) {
-            return mkElt("div", undefined, hs.text);
+            const innerDesc = hs.url ? mkElt("a", { href: hs.url }) : mkElt("span");
+            if (hs.text.length == 0) {
+                innerDesc.textContent = "(No description)";
+                innerDesc.style.color = "rgba(255, 0, 0, 0.5)";
+                innerDesc.style.fontStyle = "italic";
+            } else {
+                innerDesc.textContent = hs.text;
+            }
+            const divDesc = mkElt("div", undefined, innerDesc);
+            divDesc.style.fontSize = "1.2rem";
+            divDesc.style.fontWeight = "bold";
+            return divDesc;
         }
 
         async function MYcreateTooltipFunc(div, hs, hotspotGrpKey) {
