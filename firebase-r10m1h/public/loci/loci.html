@@ -60,8 +60,15 @@
     <style>
         .my-hotspot-div {
             padding: 10px;
-            min-width: 100px;
+            width: clamp(100px, 40vw, 200px);
+            NOmin-width: 100px;
             NOopacity: 0.5;
+            NOfont-size: clamp(1rem, 5vw, 1.2rem);
+        }
+
+        .my-hotspot-text {
+            font-size: clamp(1rem, 5vw, 1.2rem);
+            font-weight: bold;
         }
 
         #pannellum-container {
@@ -110,6 +117,7 @@
     </div>
 
     <script>
+        import("pwa");
         // https://pannellum.org/
         const devMaxWebGlW = 8192; // FIX-ME: This is from Pixel 7
         // const devMaxWebGlW = getDeviceMaxImageSize();
@@ -313,12 +321,73 @@
             async function dialogChooseImage4Panorama() {
                 const debounceUpdateBlobAndPreview = debounce(updateBlobAndPreview);
 
-                const divImgs = mkElt("div");
-                divImgs.style = `
+                const divPasteImage = mkElt("div", { class: "div-paste-image" });
+                const iconAdd = modMdc.mkMDCicon("add");
+                const btnAdd = modMdc.mkMDCfab(iconAdd, "Add your own image", true);
+                function restartButtonStateTimer() { console.log("restartButtonStateTimner")};
+                btnAdd.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+                    const modImages = await import("images");
+                    const clipboardAccessOk = await modImages.isClipboardPermissionStateOk();
+                    if (clipboardAccessOk == false) {
+                        debugPasteLine(`addPasteButton event 1`);
+                        modImages.alertHowToUnblockPermissions();
+                        return;
+                    }
+                    const resultImageBlobs = await modImages.getImagesFromClipboard();
+                    if (Array.isArray(resultImageBlobs)) {
+                        if (resultImageBlobs.length == 0) {
+                            modImages.alertNoImagesFound();
+                        } else {
+                            const toDiv = divPasteImage;
+                            const maxBlobOutSize = 40 * 1000;
+                            for (const blob of resultImageBlobs) {
+                                // const eltImgCard = await modImages.mkImageCardFromBigImage(blob, toDiv, maxBlobOutSize);
+                                const eltImgCard = await modImages.mkImageCardFromBigImage(blob, maxBlobOutSize);
+                                modImages.addFunOnRemoveImageCard(eltImgCard, restartButtonStateTimer);
+                                toDiv.appendChild(eltImgCard);
+                            }
+                            restartButtonStateTimer();
+                        }
+                    } else {
+                        // Should be an error object
+                        const err = resultImageBlobs;
+                        console.log({ err });
+                        if (!err instanceof Error) {
+                            debugger;
+                            throw Error(`resultImages is not instanceof Error`);
+                        }
+                        switch (err.name) {
+                            case "NotAllowedError":
+                                handleClipboardReadNotAllowed();
+                                break;
+                            case "DataError":
+                                modImages.alertNoImagesFound();
+                                break;
+                            default:
+                                debugger;
+                                throw Error(`Unknown error name: ${err.name}, ${err.message}`);
+                        }
+                    }
+
+                    function handleClipboardReadNotAllowed() {
+                        modMdc.mkMDCdialogAlert("Please allow reading clipboard");
+                    }
+
+                }));
+                // const divUploadImage = mkElt("div", undefined, btnAdd);
+                const divBuiltinHeader = mkElt("div", undefined, ["Builtin images:"]);
+                const divYourImagesHeader = mkElt("div", undefined, ["Your own images:", btnAdd]);
+                styleImageList = `
                     display: flex;
                     gap: 10px;
                     flex-wrap: wrap;
                 `;
+                const divImmages = mkElt("div");
+                divImmages.style = styleImageList;
+                const divYourImages = mkElt("div");
+                divYourImages.style = styleImageList;
+
+
                 const divBlobPreview = mkElt("div");
                 const divOrigPreview = mkElt("div");
 
@@ -404,7 +473,11 @@
                 ])
                 const body = mkElt("div", undefined, [
                     mkElt("h2", undefined, "Choose image"),
-                    divImgs,
+                    divBuiltinHeader,
+                    divImmages,
+                    divYourImagesHeader,
+                    // divUploadImage,
+                    divYourImages,
                     pBlob,
                 ]);
                 const previewStyle = `
@@ -433,14 +506,14 @@
                     `;
                     const eltRadio = mkElt("input", { type: "radio", name: "img", value: src });
                     const eltLbl = mkElt("label", undefined, [eltRadio, eltImg]);
-                    divImgs.appendChild(eltLbl);
+                    divImmages.appendChild(eltLbl);
                     eltRadio.addEventListener("change", evt => {
                         srcImgOrig = eltRadio.value;
                         debounceUpdateBlobAndPreview();
                     });
 
                 });
-                const firstImageRadio = divImgs.querySelector("input[name=img]");
+                const firstImageRadio = divImmages.querySelector("input[name=img]");
                 firstImageRadio.checked = true;
                 const btnConfirmImage = modMdc.mkMDCdialogButton("Continue", "Choose image");
                 const eltActions = modMdc.mkMDCdialogActions([btnConfirmImage]);
@@ -448,7 +521,7 @@
                     evt.stopPropagation();
                     evt.stopImmediatePropagation();
                     evt.preventDefault();
-                    const checked = divImgs.querySelector("input[type=radio]:checked");
+                    const checked = divImmages.querySelector("input[type=radio]:checked");
                     console.log({ checked });
                     if (!checked) {
                         modMdc.mkMDCdialogAlert("Please choose an image");
@@ -621,6 +694,7 @@
             const hotspots = json.hotspots;
             const hotspot = (hotspots.filter(h => h.id == hs.id))[0];
             const taDesc = modMdc.mkMDCtextFieldTextarea(undefined, 3, 30);
+            taDesc.fontSize = "clamp(1rem, 5vw, 1.2rem)";
             const tafDesc = modMdc.mkMDCtextareaField("Description", taDesc, hotspot.text);
 
             const inpURL = modMdc.mkMDCtextFieldInput(undefined, "url");
@@ -741,8 +815,9 @@
                 innerDesc.textContent = hs.text;
             }
             const divDesc = mkElt("div", undefined, innerDesc);
-            divDesc.style.fontSize = "1.2rem";
-            divDesc.style.fontWeight = "bold";
+            divDesc.classList.add("my-hotspot-text");
+            // divDesc.style.fontSize = "1.2rem";
+            // divDesc.style.fontWeight = "bold";
             return divDesc;
         }
 
