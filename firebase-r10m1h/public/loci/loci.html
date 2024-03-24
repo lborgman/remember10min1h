@@ -71,6 +71,10 @@
             font-weight: bold;
         }
 
+        .div-paste-image {
+            outline: 1px dotted yellowgreen;
+        }
+
         #pannellum-container {
             NOwidth: 300px;
             NOheight: 200px;
@@ -144,6 +148,7 @@
             // https://medium.com/@naveenkumarasinghe/javascript-lost-in-binaries-buffer-blob-uint8array-arraybuffer-ed8d2b4de44a
         */
         async function mkScaledImageBlob(srcImg, scale) {
+            const modImages = await import("images");
             const tofSrcImg = typeof srcImg;
             if (tofSrcImg != "string") throw Error(`typeof srcImg=="${tofSrcImg}", should be "string")`);
             if (srcImg.slice(0, 4) == "blob") throw Error("srcImg is blob url");
@@ -151,7 +156,7 @@
             const img = new Image;
             const eltCanvas = document.createElement("canvas");
             const ctx = eltCanvas.getContext("2d");
-            const imgSizes = await getImgSizes(srcImg);
+            const imgSizes = await modImages.getImgSizes(srcImg);
             console.log("orig", { imgSizes });
             return new Promise((resolve, reject) => {
                 img.onload = function () {
@@ -180,26 +185,6 @@
                 img.src = srcImg;
             });
         }
-        async function getImgSizes(strUrlImg) {
-            return new Promise((resolve) => {
-                const image = new Image();
-                image.onload = async () => {
-                    const naturalWidth = image.naturalWidth;
-                    const naturalHeight = image.naturalHeight;
-                    const width = image.width;
-                    const height = image.height;
-                    resolve({ naturalWidth, naturalHeight, width, height });
-                }
-                // image.onerror = async () => { console.log("ERROR"); }
-                image.addEventListener("error", evt => {
-                    console.log("ERROR", { evt, strUrlImg });
-                    debugger;
-                    resolve(false);
-                })
-                image.src = strUrlImg;
-            });
-        }
-
         (async () => {
             const modMdc = await import("util-mdc");
             const immages = [
@@ -319,12 +304,13 @@
                 });
             }
             async function dialogChooseImage4Panorama() {
+                const modImages = await import("images");
                 const debounceUpdateBlobAndPreview = debounce(updateBlobAndPreview);
 
                 const divPasteImage = mkElt("div", { class: "div-paste-image" });
                 const iconAdd = modMdc.mkMDCicon("add");
                 const btnAdd = modMdc.mkMDCfab(iconAdd, "Add your own image", true);
-                function restartButtonStateTimer() { console.log("restartButtonStateTimner")};
+                function restartButtonStateTimer() { console.log("restartButtonStateTimner") };
                 btnAdd.addEventListener("click", errorHandlerAsyncEvent(async evt => {
                     const modImages = await import("images");
                     const clipboardAccessOk = await modImages.isClipboardPermissionStateOk();
@@ -339,7 +325,17 @@
                             modImages.alertNoImagesFound();
                         } else {
                             const toDiv = divPasteImage;
-                            const maxBlobOutSize = 40 * 1000;
+                            const inpMax = mkElt("input", { type: "number" });
+                            inpMax.value = 100;
+                            const bdy = mkElt("div", undefined, inpMax);
+                            const funHandleResult = () => {
+                                return {
+                                    maxBlobSize: inpMax.value,
+                                }
+                            }
+                            const { maxBlobSize } = await modMdc.mkMDCdialogConfirm(bdy, "Continue", undefined, true, funHandleResult);
+                            debugger;
+                            const maxBlobOutSize = maxBlobSize * 1000;
                             for (const blob of resultImageBlobs) {
                                 // const eltImgCard = await modImages.mkImageCardFromBigImage(blob, toDiv, maxBlobOutSize);
                                 const eltImgCard = await modImages.mkImageCardFromBigImage(blob, maxBlobOutSize);
@@ -404,10 +400,10 @@
                     // const newBlob = await addXmpdata(blobImg, "not ready");
                     // srcBlobImg = URL.createObjectURL(newBlob);
 
-                    const sizesOrig = await getImgSizes(srcImgOrig);
+                    const sizesOrig = await modImages.getImgSizes(srcImgOrig);
                     divOrigPreview.textContent = `Orig w:${sizesOrig.width} h:${sizesOrig.height}`;
 
-                    const sizesBlob = await getImgSizes(srcBlobImg);
+                    const sizesBlob = await modImages.getImgSizes(srcBlobImg);
                     divBlobPreview.textContent = `Blob w:${sizesBlob.width} h:${sizesBlob.height} s:${blobImg.size}`;
 
                     const origBlob = await new Promise(resolve => {
@@ -476,6 +472,7 @@
                     divBuiltinHeader,
                     divImmages,
                     divYourImagesHeader,
+                    divPasteImage,
                     // divUploadImage,
                     divYourImages,
                     pBlob,
@@ -546,7 +543,7 @@
             async function showPanorama(srcPanorama, xmp, objHotspotGrp4panorama) {
                 const eltTitle = document.getElementById("palace-title");
                 eltTitle.textContent = objHotspotGrp4panorama.subjGrp;
-                const sizesImg = await getImgSizes(srcPanorama);
+                const sizesImg = await modImages.getImgSizes(srcPanorama);
                 if (sizesImg.naturalWidth > devMaxWebGlW) {
                     debugger;
                 }

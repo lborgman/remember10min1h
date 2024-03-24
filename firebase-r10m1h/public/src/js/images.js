@@ -10,6 +10,27 @@ function debugPasteLine(txt) {
     console.log("DEBUG", txt);
 }
 
+export async function getImgSizes(strUrlImg) {
+    return new Promise((resolve) => {
+        const image = new Image();
+        image.onload = async () => {
+            const naturalWidth = image.naturalWidth;
+            const naturalHeight = image.naturalHeight;
+            const width = image.width;
+            const height = image.height;
+            resolve({ naturalWidth, naturalHeight, width, height });
+        }
+        // image.onerror = async () => { console.log("ERROR"); }
+        image.addEventListener("error", evt => {
+            console.log("ERROR", { evt, strUrlImg });
+            debugger;
+            resolve(false);
+        })
+        image.src = strUrlImg;
+    });
+}
+
+
 export async function shrinkImageBlob(imageBlobIn, maxBlobSize) {
     maxBlobSize = maxBlobSize || getMaxImageBlobSize();
     // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob
@@ -55,6 +76,8 @@ export async function shrinkImageBlob(imageBlobIn, maxBlobSize) {
             while (++n < nMax && blobSize > maxBlobSize) {
                 // https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas/convertToBlob
                 retImageBlob = await new Promise((resolveToBlob) => {
+                    // Only webp and jpeg allow the quality parameter.
+                    // As I remember it webp is the better one today?
                     canvas.toBlob(blob => resolveToBlob(blob), 'image/webp', quality);
                 });
                 blobSize = retImageBlob.size;

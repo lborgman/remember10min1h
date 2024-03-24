@@ -914,7 +914,7 @@ export async function mkMDCdialogConfirm(body, titleOk, titleCancel, noCancel, f
     const tofNoCancel = typeof noCancel;
     accectValueType(tofNoCancel, "boolean");
     const tofFun = typeof funHandleResult;
-    accectValueType(tofNoCancel, "function");
+    accectValueType(tofFun, "function");
     function accectValueType(tof, valType) {
         if (tof == "undefined") return;
         if (tof == valType) return;
