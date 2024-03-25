@@ -10,6 +10,21 @@ function debugPasteLine(txt) {
     console.log("DEBUG", txt);
 }
 
+function getWebgl_MAX_TEXTURE_SIZE() {
+    const canvas = mkElt("canvas");
+    const webgl = canvas.getContext("webgl");
+    return webgl.getParameter(webgl.MAX_TEXTURE_SIZE);
+}
+export const webgl_MAX_TEXTURE_SIZE = getWebgl_MAX_TEXTURE_SIZE();
+
+export function getMaxWebglWH(w, h) {
+    const maxWH = Math.max(w, h);
+    const minWH = Math.min(w, h);
+    const big = webgl_MAX_TEXTURE_SIZE;
+    const small = big * minWH / maxWH;
+    return (w > h) ? { w: big, h: small } : { w: small, h: big };
+}
+
 export async function getImgSizes(strUrlImg) {
     return new Promise((resolve) => {
         const image = new Image();
@@ -31,7 +46,8 @@ export async function getImgSizes(strUrlImg) {
 }
 
 
-export async function shrinkImageBlob(imageBlobIn, maxBlobSize) {
+export async function shrinkImgBlobToSizes(imageBlobIn, maxBlobSize) {
+    // https://stackoverflow.com/questions/42471755/convert-image-into-blob-using-javascrinkpt
     maxBlobSize = maxBlobSize || getMaxImageBlobSize();
     // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob
     // Switch to OffscreenCanvas!
@@ -295,22 +311,17 @@ export async function mkImageCardFromBigImage(blobIn, maxBlobOutSize) {
         typeOut,
         quality
     } =
-        // await shrinkImageBlob(blobIn, maxBlobSize);
-        await shrinkImageBlob(blobIn);
+        // await shrinkImgBlobToSizes(blobIn, maxBlobSize);
+        await shrinkImgBlobToSizes(blobIn);
 
-    // FIX-ME: lastQuality
     const tS = shrinked.toFixed(3)
     const tQ = quality.toFixed(2);
-    // const tQ = lastQuality.toFixed(2);
     const sizeOut = blobOut.size;
     const tIn = typeIn.slice(6);
     const tOut = typeOut.slice(6);
     const msg = `${tIn} *${tS},~${tQ},${msElapsed}ms=> ${tOut},${(sizeOut / 1000).toFixed()}kB`;
-    // console.log(msg);
 
     const eltImageCard = await mkImageCard(blobOut, "blob-to-store", msg);
-    // toDiv.appendChild(eltImageCard);
-    // const btnDel = eltNewImage.querySelector(".image-delete");
     setTimeout(() => {
         const bcr = eltImageCard.getBoundingClientRect();
         if (bcr.bottom < window.innerHeight) return;

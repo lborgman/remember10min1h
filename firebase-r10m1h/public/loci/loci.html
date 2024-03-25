@@ -124,7 +124,6 @@
         import("pwa");
         // https://pannellum.org/
         const devMaxWebGlW = 8192; // FIX-ME: This is from Pixel 7
-        // const devMaxWebGlW = getDeviceMaxImageSize();
         let srcImgOrig;
         let xmpImg;
         let scaleImg;
@@ -132,12 +131,6 @@
         let srcBlobImg;
         let srcPanorama;
 
-        function getDeviceMaxImageSize() {
-            const canvas = mkElt("canvas");
-            const gl = canvas.getContext('experimental-webgl', { alpha: false, depth: false });
-            const devMaxWebGlW = gl.getParameter(gl.MAX_TEXTURE_SIZE);
-            return devMaxWebGlW;
-        }
 
         /*
         async function addXmpdata(imgBlob, xmpData)
@@ -151,31 +144,22 @@
             const modImages = await import("images");
             const tofSrcImg = typeof srcImg;
             if (tofSrcImg != "string") throw Error(`typeof srcImg=="${tofSrcImg}", should be "string")`);
+
             if (srcImg.slice(0, 4) == "blob") throw Error("srcImg is blob url");
-            // https://stackoverflow.com/questions/42471755/convert-image-into-blob-using-javascript
-            const img = new Image;
-            const eltCanvas = document.createElement("canvas");
-            const ctx = eltCanvas.getContext("2d");
             const imgSizes = await modImages.getImgSizes(srcImg);
             console.log("orig", { imgSizes });
+
+            // https://stackoverflow.com/questions/42471755/convert-image-into-blob-using-javascript
+            // https://codesalad.dev/blog/how-to-resize-an-image-in-10-lines-of-javascript-29
+            const eltCanvas = document.createElement("canvas");
+            const ctx = eltCanvas.getContext("2d");
+            eltCanvas.width = imgSizes.naturalWidth * scale;     // update canvas size to match image
+            eltCanvas.height = imgSizes.naturalHeight * scale;
             return new Promise((resolve, reject) => {
+                const img = new Image;
                 img.onload = function () {
-                    // if (typeof imgSizes != "undefined") {
-                    eltCanvas.width = imgSizes.naturalWidth * scale;     // update canvas size to match image
-                    eltCanvas.height = imgSizes.naturalHeight * scale;
-                    // }
-                    // https://codesalad.dev/blog/how-to-resize-an-image-in-10-lines-of-javascript-29
                     ctx.drawImage(this, 0, 0, eltCanvas.width, eltCanvas.height);       // draw in image
-                    eltCanvas.toBlob(blob => {        // get content as JPEG blob
-                        // here the image is a blob
-                        // blobImg = blob;
-                        resolve(blob);
-                    },
-                        // "image/png"
-                        "image/webp", 0.75
-                        // "image/jpeg", 0.75
-                    );
-                    // debugger;
+                    eltCanvas.toBlob(blob => { resolve(blob); }, "image/webp", 0.75);
                 };
                 img.onerror = function () {
                     debugger;
@@ -424,9 +408,7 @@
                     }
                 }
 
-                const canvas = mkElt("canvas");
-                const webgl = canvas.getContext("webgl");
-                const MAX_WEBGL_WIDTH = webgl.getParameter(webgl.MAX_TEXTURE_SIZE);
+                const MAX_WEBGL_WIDTH = modImages.MAX_WEBGL_WIDTH;
                 const divMaxW = mkElt("div", undefined, `Max webgl width: ${MAX_WEBGL_WIDTH}`);
 
                 const chkUseBlob = mkElt("input", { type: "checkbox" });
@@ -541,6 +523,7 @@
             }
 
             async function showPanorama(srcPanorama, xmp, objHotspotGrp4panorama) {
+                const modImages = await import("images");
                 const eltTitle = document.getElementById("palace-title");
                 eltTitle.textContent = objHotspotGrp4panorama.subjGrp;
                 const sizesImg = await modImages.getImgSizes(srcPanorama);

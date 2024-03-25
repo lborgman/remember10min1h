@@ -203,8 +203,8 @@ export async function fix() {
 
             async function showImgInfo(imgToShow, recToShow) {
                 const img0 = imgToShow;
-                // const retResize = await modImg.shrinkImageBlob(img0, maxOutSize);
-                const retResize = await modImg.shrinkImageBlob(img0);
+                // const retResize = await modImg.shrinkImgBlobToSizes(img0, maxOutSize);
+                const retResize = await modImg.shrinkImgBlobToSizes(img0);
                 console.log({ retResize });
                 const img0New = retResize.blobOut;
 
@@ -267,8 +267,8 @@ export async function fix() {
                     const img0 = r.images[0];
                     if (!img0) continue;
                     if (img0.size > maxOutSize) {
-                        // const retResize = await modImg.shrinkImageBlob(img0, maxOutSize);
-                        const retResize = await modImg.shrinkImageBlob(img0);
+                        // const retResize = await modImg.shrinkImgBlobToSizes(img0, maxOutSize);
+                        const retResize = await modImg.shrinkImgBlobToSizes(img0);
                         console.log({ retResize });
                         const img0New = retResize.blobOut;
 
