@@ -22,7 +22,7 @@ export function getMaxWebglWH(w, h) {
     const minWH = Math.min(w, h);
     const big = webgl_MAX_TEXTURE_SIZE;
     const small = big * minWH / maxWH;
-    return (w > h) ? { w: big, h: small } : { w: small, h: big };
+    return (w > h) ? { webglW: big, webglH: small } : { webglW: small, webglH: big };
 }
 
 export async function getImgSizes(strUrlImg) {
@@ -33,6 +33,7 @@ export async function getImgSizes(strUrlImg) {
             const naturalHeight = image.naturalHeight;
             const width = image.width;
             const height = image.height;
+            const { webglW, webglH } = getMaxWebglWH(naturalWidth, naturalHeight);
             resolve({ naturalWidth, naturalHeight, width, height });
         }
         // image.onerror = async () => { console.log("ERROR"); }

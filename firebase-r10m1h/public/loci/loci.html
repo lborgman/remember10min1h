@@ -140,7 +140,8 @@
             // https://stackoverflow.com/questions/6965107/converting-between-strings-and-arraybuffers
             // https://medium.com/@naveenkumarasinghe/javascript-lost-in-binaries-buffer-blob-uint8array-arraybuffer-ed8d2b4de44a
         */
-        async function mkScaledImageBlob(srcImg, scale) {
+        async function mkScaledImageBlob(srcImg, scale, quality) {
+            // MAX_TEXTURE_SIZE
             const modImages = await import("images");
             const tofSrcImg = typeof srcImg;
             if (tofSrcImg != "string") throw Error(`typeof srcImg=="${tofSrcImg}", should be "string")`);
@@ -149,17 +150,19 @@
             const imgSizes = await modImages.getImgSizes(srcImg);
             console.log("orig", { imgSizes });
 
+            const newW = scale ? imgSizes.naturalWidth * scale : imgSizes.webglW;     // update canvas size to match image
+            const newH = scale ? imgSizes.naturalHeight * scale : imgSizes.webglH;     // update canvas size to match image
             // https://stackoverflow.com/questions/42471755/convert-image-into-blob-using-javascript
             // https://codesalad.dev/blog/how-to-resize-an-image-in-10-lines-of-javascript-29
             const eltCanvas = document.createElement("canvas");
             const ctx = eltCanvas.getContext("2d");
-            eltCanvas.width = imgSizes.naturalWidth * scale;     // update canvas size to match image
-            eltCanvas.height = imgSizes.naturalHeight * scale;
+            eltCanvas.width = newW;     // update canvas size to match image
+            eltCanvas.height = newH;
             return new Promise((resolve, reject) => {
                 const img = new Image;
                 img.onload = function () {
                     ctx.drawImage(this, 0, 0, eltCanvas.width, eltCanvas.height);       // draw in image
-                    eltCanvas.toBlob(blob => { resolve(blob); }, "image/webp", 0.75);
+                    eltCanvas.toBlob(blob => { resolve(blob); }, "image/webp", quality);
                 };
                 img.onerror = function () {
                     debugger;
@@ -376,7 +379,9 @@
                     if (srcImgOrig == undefined) return;
 
                     divOrigPreview.style.backgroundImage = `url(${srcImgOrig})`;
-                    blobImg = await mkScaledImageBlob(srcImgOrig, scaleImg);
+                    let scale;
+                    if (radScaleFree) { scale = scaleImg; }
+                    blobImg = await mkScaledImageBlob(srcImgOrig, scale, inpQuality.value);
                     // const blobAsText = await blobImg.text(); did not work
                     srcBlobImg = URL.createObjectURL(blobImg);
                     divBlobPreview.style.backgroundImage = `url(${srcBlobImg})`;
@@ -408,12 +413,14 @@
                     }
                 }
 
-                const MAX_WEBGL_WIDTH = modImages.MAX_WEBGL_WIDTH;
-                const divMaxW = mkElt("div", undefined, `Max webgl width: ${MAX_WEBGL_WIDTH}`);
+                const MAX_TEXTURE_SIZE = modImages.webgl_MAX_TEXTURE_SIZE;
+                if (isNaN(MAX_TEXTURE_SIZE)) throw Error(`MAX_TEXTURE_SIZE == ${MAX_TEXTURE_SIZE}`);
+                const divMaxWebgl = mkElt("div", undefined, `Max webgl width/height: ${MAX_TEXTURE_SIZE}`);
 
                 const chkUseBlob = mkElt("input", { type: "checkbox" });
                 const lblUseBlob = mkElt("label", undefined, ["Use blob:", chkUseBlob]);
                 const inpScale = mkElt("input", { type: "number" });
+                inpScale.style.width = "50px";
                 scaleImg = 0.2;
                 inpScale.value = scaleImg;
                 inpScale.addEventListener("input", evt => {
@@ -427,24 +434,41 @@
                     }
                     if (!usableValue) {
                         inpScale.style.backgroundColor = "yellow";
+                        scaleImg = undefined;
                         return;
                     }
                     inpScale.style.backgroundColor = "unset";
                     scaleImg = val;
-                    debounceUpdateBlobAndPreview();
                 });
-                const lblScale = mkElt("label", undefined, ["Scale:", inpScale]);
-                const divInputs = mkElt("div", undefined, [lblUseBlob, lblScale]);
-                divInputs.style = `
+                const radScaleFree = mkElt("input", { type: "radio", name: "scale", value: "free" });
+                const radScaleWebgl = mkElt("input", { type: "radio", name: "scale", value: "webgl" });
+                const lblScaleFree = mkElt("label", undefined, [radScaleFree, "Scale: ", inpScale]);
+                const lblScaleWebgl = mkElt("label", undefined, [radScaleWebgl, "Max webgl"]);
+                radScaleWebgl.checked = true;
+
+                const inpQuality = mkElt("input", { type: "number" });
+                inpQuality.style.width = "50px";
+                inpQuality.value = 0.7;
+                const lblQuality = mkElt("label", undefined, ["Quality: ", inpQuality]);
+                const divBlobInputs = mkElt("div", undefined, [
+                    mkElt("div", undefined, mkElt("b", undefined, "Blob inputs:")),
+                    lblUseBlob,
+                    lblScaleWebgl,
+                    lblScaleFree,
+                    lblQuality,
+                ]);
+                divBlobInputs.addEventListener("input", evt => debounceUpdateBlobAndPreview());
+                divBlobInputs.classList.add("mdc-card");
+                divBlobInputs.style = `
                     display: flex;
-                    flex-direction: row;
-                    gap: 10px;
+                    flex-direction: column;
+                    gap: 5px;
+                    padding: 10px;
                 `;
                 const divXmpInfo = mkElt("pre");
                 const pBlob = mkElt("p", undefined, [
-                    mkElt("div", undefined, "Blob"),
-                    divInputs,
-                    divMaxW,
+                    divBlobInputs,
+                    divMaxWebgl,
                     divOrigPreview,
                     divBlobPreview,
                     divXmpInfo,
