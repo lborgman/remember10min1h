@@ -140,7 +140,7 @@
             // https://stackoverflow.com/questions/6965107/converting-between-strings-and-arraybuffers
             // https://medium.com/@naveenkumarasinghe/javascript-lost-in-binaries-buffer-blob-uint8array-arraybuffer-ed8d2b4de44a
         */
-        async function mkScaledImageBlob(srcImg, scale, quality) {
+        async function mkScaledImageBlob(srcImg, scale, quality, shrink) {
             // MAX_TEXTURE_SIZE
             const modImages = await import("images");
             const tofSrcImg = typeof srcImg;
@@ -148,7 +148,7 @@
 
             if (srcImg.slice(0, 4) == "blob") throw Error("srcImg is blob url");
             const imgSizes = await modImages.getImgSizes(srcImg);
-            console.log("orig", { imgSizes });
+            // console.log("orig", { imgSizes });
 
             const newW = scale ? imgSizes.naturalWidth * scale : imgSizes.webglW;     // update canvas size to match image
             const newH = scale ? imgSizes.naturalHeight * scale : imgSizes.webglH;     // update canvas size to match image
@@ -162,11 +162,11 @@
             div.appendChild(eltCanvas);
             const ctx = eltCanvas.getContext("2d");
             // FIX-ME: seems to use too much memory. Try a shrinked size:
-            const shrink = 0.2;
+            // const shrink = 0.2;
             eltCanvas.width = newW * shrink;     // update canvas size to match image
             eltCanvas.height = newH * shrink;
             // return;
-            console.log("mkScaledImageBlob, before return new", { srcImg, scale, quality, newW, newH });
+            console.log("mkScaledImageBlob", { srcImg, newW, newH });
             return new Promise((resolve, reject) => {
                 const img = new Image;
                 img.onload = function () {
@@ -421,7 +421,7 @@
                     divOrigPreview.style.backgroundImage = `url(${srcImgOrig})`;
                     let scale;
                     if (radScaleFree.checked) { scale = scaleImg; }
-                    blobImg = await mkScaledImageBlob(srcImgOrig, scale, inpQuality.value);
+                    blobImg = await mkScaledImageBlob(srcImgOrig, scale, inpQuality.value, inpShrink.value);
                     return;
                     // const blobAsText = await blobImg.text(); did not work
                     srcBlobImg = URL.createObjectURL(blobImg);
@@ -491,12 +491,20 @@
                 inpQuality.style.width = "50px";
                 inpQuality.value = 0.7;
                 const lblQuality = mkElt("label", undefined, ["Quality: ", inpQuality]);
+                // quality =
+
+                const inpShrink = mkElt("input", { type: "number" });
+                inpShrink.style.width = "50px";
+                inpShrink.value = 0.5;
+                const lblShrink = mkElt("label", undefined, ["Shrink: ", inpShrink]);
+
                 const divBlobInputs = mkElt("div", undefined, [
                     mkElt("div", undefined, mkElt("b", undefined, "Blob inputs:")),
                     lblUseBlob,
                     lblScaleWebgl,
                     lblScaleFree,
                     lblQuality,
+                    lblShrink,
                 ]);
                 divBlobInputs.addEventListener("input", evt => {
                     console.log("dvBlobInputs, input", evt.target, evt);
