@@ -155,14 +155,47 @@
             // https://stackoverflow.com/questions/42471755/convert-image-into-blob-using-javascript
             // https://codesalad.dev/blog/how-to-resize-an-image-in-10-lines-of-javascript-29
             const eltCanvas = document.createElement("canvas");
+            // xmp info
+            const div = document.getElementById("xmp-info").parentElement;
+            const divLast = div.lastElementChild;
+            if (divLast.tagName == "CANVAS") divLast.remove();
+            div.appendChild(eltCanvas);
             const ctx = eltCanvas.getContext("2d");
-            eltCanvas.width = newW;     // update canvas size to match image
-            eltCanvas.height = newH;
+            // FIX-ME: seems to use too much memory. Try a shrinked size:
+            const shrink = 0.2;
+            eltCanvas.width = newW * shrink;     // update canvas size to match image
+            eltCanvas.height = newH * shrink;
+            // return;
+            console.log("mkScaledImageBlob, before return new", { srcImg, scale, quality, newW, newH });
             return new Promise((resolve, reject) => {
                 const img = new Image;
                 img.onload = function () {
-                    ctx.drawImage(this, 0, 0, eltCanvas.width, eltCanvas.height);       // draw in image
-                    eltCanvas.toBlob(blob => { resolve(blob); }, "image/webp", quality);
+                    // console.log("before drawImage");
+                    const nowDrawBefore = Date.now();
+                    ctx.drawImage(img, 0, 0, eltCanvas.width, eltCanvas.height);       // draw in image
+                    const nowDrawAfter = Date.now();
+                    // console.log("after drawImage, continuing..., funCallback");
+                    // resolve(true); return;
+                    const constCallback = blob => {
+                        console.log("constCallback", blob.size);
+                        resolve(blob);
+                    }
+                    let nowBlobCB;
+                    function funCallback(blob) {
+                        nowBlobCB = Date.now();
+                        const msDraw = nowDrawAfter - nowDrawBefore;
+                        const msBlob = nowBlobAfter - nowBlobBefore;
+                        const msBlobCB = nowBlobCB - nowBlobBefore;
+                        console.log("funCallback", blob.size.toLocaleString("en-US"),
+                            { quality, shrink, msDraw, msBlob, msBlobCB });
+                        resolve(blob);
+                    }
+
+                    // console.log("before toBlob", quality);
+                    const nowBlobBefore = Date.now();
+                    eltCanvas.toBlob(funCallback, "image/webp", quality);
+                    const nowBlobAfter = Date.now();
+                    // console.log("after toBlob");
                 };
                 img.onerror = function () {
                     debugger;
@@ -293,6 +326,11 @@
             async function dialogChooseImage4Panorama() {
                 const modImages = await import("images");
                 const debounceUpdateBlobAndPreview = debounce(updateBlobAndPreview, 2000);
+                const wrappedDebounceUpdateBlobAndPreview =
+                    () => {
+                        console.warn("wrapped");
+                        debounceUpdateBlobAndPreview();
+                    }
 
                 const divPasteImage = mkElt("div", { class: "div-paste-image" });
                 const iconAdd = modMdc.mkMDCicon("add");
@@ -375,6 +413,8 @@
                 const divOrigPreview = mkElt("div");
 
                 async function updateBlobAndPreview() {
+                    console.warn("updateBlobAndPreview");
+                    // debugger;
                     // FIX-ME: Make this interruptable
                     if (srcImgOrig == undefined) return;
 
@@ -382,6 +422,7 @@
                     let scale;
                     if (radScaleFree.checked) { scale = scaleImg; }
                     blobImg = await mkScaledImageBlob(srcImgOrig, scale, inpQuality.value);
+                    return;
                     // const blobAsText = await blobImg.text(); did not work
                     srcBlobImg = URL.createObjectURL(blobImg);
                     divBlobPreview.style.backgroundImage = `url(${srcBlobImg})`;
@@ -457,7 +498,10 @@
                     lblScaleFree,
                     lblQuality,
                 ]);
-                divBlobInputs.addEventListener("input", evt => debounceUpdateBlobAndPreview());
+                divBlobInputs.addEventListener("input", evt => {
+                    console.log("dvBlobInputs, input", evt.target, evt);
+                    wrappedDebounceUpdateBlobAndPreview();
+                });
                 divBlobInputs.classList.add("mdc-card");
                 divBlobInputs.style = `
                     display: flex;
@@ -466,6 +510,7 @@
                     padding: 10px;
                 `;
                 const divXmpInfo = mkElt("pre");
+                divXmpInfo.id = "xmp-info";
                 const detXmpInfo = mkElt("details", undefined, [
                     mkElt("summary", undefined, "XMP info"),
                     divXmpInfo,
@@ -516,7 +561,9 @@
                     divImmages.appendChild(eltLbl);
                     eltRadio.addEventListener("change", evt => {
                         srcImgOrig = eltRadio.value;
-                        debounceUpdateBlobAndPreview();
+                        console.log("eltRadio, event change");
+                        // FIX-ME: try setTimeout to get immediate feedback on eltRadio
+                        setTimeout(() => wrappedDebounceUpdateBlobAndPreview(), 10);
                     });
 
                 });

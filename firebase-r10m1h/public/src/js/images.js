@@ -58,6 +58,7 @@ export async function shrinkImgBlobToSizes(imageBlobIn, maxBlobSize) {
     let lastQuality;
 
     const startDate = new Date();
+    const objectUrlBlobIn = URL.createObjectURL(imageBlobIn);
     return new Promise((resolve) => {
         const image = new Image();
         let imageBlobSize;
@@ -110,6 +111,7 @@ export async function shrinkImgBlobToSizes(imageBlobIn, maxBlobSize) {
             const sizeOut = retImageBlob.size;
             const typeOut = retImageBlob.type;
             const shrinked = sizeOut / sizeIn;
+            URL.revokeObjectURL(objectUrlBlobIn);
             resolve({
                 blobOut: retImageBlob,
                 shrinked,
@@ -124,8 +126,7 @@ export async function shrinkImgBlobToSizes(imageBlobIn, maxBlobSize) {
         console.log({ imageBlobIn, imageBlobSize, imageBlobType });
         // debugPasteLineOn = true;
         debugPasteLine(`imageBlob, imageBlobSize: ${imageBlobSize}, imageBlobType: ${imageBlobType} }`);
-        const urlBlobHelper = URL.createObjectURL(imageBlobIn);
-        image.src = urlBlobHelper
+        image.src = objectUrlBlobIn
     });
 }
 
