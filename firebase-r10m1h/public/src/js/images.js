@@ -34,7 +34,7 @@ export async function getImgSizes(strUrlImg) {
             const width = image.width;
             const height = image.height;
             const { webglW, webglH } = getMaxWebglWH(naturalWidth, naturalHeight);
-            resolve({ naturalWidth, naturalHeight, width, height });
+            resolve({ naturalWidth, naturalHeight, width, height, webglW, webglH });
         }
         // image.onerror = async () => { console.log("ERROR"); }
         image.addEventListener("error", evt => {

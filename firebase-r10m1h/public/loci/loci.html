@@ -292,7 +292,7 @@
             }
             async function dialogChooseImage4Panorama() {
                 const modImages = await import("images");
-                const debounceUpdateBlobAndPreview = debounce(updateBlobAndPreview);
+                const debounceUpdateBlobAndPreview = debounce(updateBlobAndPreview, 2000);
 
                 const divPasteImage = mkElt("div", { class: "div-paste-image" });
                 const iconAdd = modMdc.mkMDCicon("add");
@@ -380,7 +380,7 @@
 
                     divOrigPreview.style.backgroundImage = `url(${srcImgOrig})`;
                     let scale;
-                    if (radScaleFree) { scale = scaleImg; }
+                    if (radScaleFree.checked) { scale = scaleImg; }
                     blobImg = await mkScaledImageBlob(srcImgOrig, scale, inpQuality.value);
                     // const blobAsText = await blobImg.text(); did not work
                     srcBlobImg = URL.createObjectURL(blobImg);
@@ -466,12 +466,16 @@
                     padding: 10px;
                 `;
                 const divXmpInfo = mkElt("pre");
+                const detXmpInfo = mkElt("details", undefined, [
+                    mkElt("summary", undefined, "XMP info"),
+                    divXmpInfo,
+                ]);
                 const pBlob = mkElt("p", undefined, [
                     divBlobInputs,
                     divMaxWebgl,
                     divOrigPreview,
                     divBlobPreview,
-                    divXmpInfo,
+                    detXmpInfo,
                 ])
                 const body = mkElt("div", undefined, [
                     mkElt("h2", undefined, "Choose image"),
