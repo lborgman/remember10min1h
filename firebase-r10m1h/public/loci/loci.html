@@ -198,6 +198,7 @@
 
             if (srcImg.slice(0, 4) == "blob") throw Error("srcImg is blob url");
             const imgSizes = await modImages.getImgSizes(srcImg);
+            const wasOK = imgSizes.alreadyOK || false;
             const szIn = Math.floor(imgSizes.blobSize / 1000);
             // console.log("orig", { imgSizes });
 
@@ -237,14 +238,16 @@
                         const msDraw = nowDrawAfter - nowDrawBefore;
                         const msBlob = nowBlobAfter - nowBlobBefore;
                         const msBlobCB = nowBlobCB - nowBlobBefore;
+                        const sBlob = Math.round(msBlobCB / 1000);
                         const szOut = Math.floor(blob.size / 1000);
                         console.log("funCallback", szOut.toLocaleString("en-US"),
                             { quality, shrinkLength, msDraw, msBlob, msBlobCB });
                         addShrinkImageResult({
-                            szIn, szOut,
-                            quality, shrink: shrinkArea,
+                            szI: szIn, szO: szOut,
+                            qu: quality, sh: shrinkArea,
                             // msDraw, msBlob,
-                            msBlobCB
+                            sBlob,
+                            wasOK
                         });
                         testsOnly1Active?.sendEvent();
                         resolve(blob);
@@ -481,8 +484,7 @@
                     // let scale;
                     if (radScaleFree.checked) { scale = scaleImg; }
                     blobImg = await mkScaledImageBlob(srcImgOrig, inpQuality.value, inpShrink.value);
-                    return;
-                    // const blobAsText = await blobImg.text(); did not work
+                    // return;
                     srcBlobImg = URL.createObjectURL(blobImg);
                     divBlobPreview.style.backgroundImage = `url(${srcBlobImg})`;
 
@@ -563,35 +565,62 @@
 
                 async function runTests() {
                     const testImmages = [
-                        "https://pannellum.org/images/alma.jpg",          // ??MB
-                        // new URL("./testimg/PANO1.jpg", location),         // 6.2MB
-                        // new URL("./testimg/PHOTOSPHERE1.jpg", location),  // 5.4MB
-                        // new URL("./testimg/Botan-SPHERE1.jpg", location), // 6.9MB
+                        "https://pannellum.org/images/alma.jpg",          // 1.5MB
+                        (new URL("./testimg/PANO1.jpg", location)).href,         // 6.2MB
+                        (new URL("./testimg/PHOTOSPHERE1.jpg", location)).href,  // 5.4MB
+                        (new URL("./testimg/Botan-SPHERE1.jpg", location)).href, // 6.9MB
                     ];
-                    async function run1Test(srcUrl, quality, shrink) {
+                    async function run1Test(srcUrl, quality, shrinkArea) {
                         // shrink
-                        mkScaledImageBlob(srcUrl, quality, shrink);
+                        mkScaledImageBlob(srcUrl, quality, shrinkArea);
                         await testsOnly1Active.promiseEvent();
                     }
 
                     modMdc.mkMDCsnackbar("Starting tests...", 5 * 1000);
                     clearShrinkImageResult();
                     testsOnly1Active = new Only1Event();
-                    const arrQuality = [0.7];
-                    const arrShrink = [0.1];
-                    // testImmages.forEach(async srcUrl => {
+                    const arrQuality = [0.6, 0.8];
+                    const arrShrinkArea = [0.2, 0.5];
+                    const numTests = arrQuality.length * arrShrinkArea.length * testImmages.length;
+                    const eltCompletedNum = mkElt("span", undefined, "0");
+                    const eltCompleted = mkElt("span", undefined, [eltCompletedNum, `/${numTests}`]);
+                    const eltSecondsNum = mkElt("span", undefined, "0");
+                    const eltSeconds = mkElt("span", undefined, ["(", eltSecondsNum, " seconds)"]);
+                    const divTestRunning = mkElt("div", undefined, [
+                        eltCompleted,
+                        eltSeconds
+                    ]);
+                    divTestRunning.style = `
+                        display: flex;
+                        gap: 15px;
+                    `;
+                    // "show
+                    divResults.textContent = "";
+                    divResults.appendChild(mkElt("h3", undefined, "Running tests..."));
+                    divResults.appendChild(divTestRunning);
+                    let numDone = 0;
+                    // let seconds = 0;
+                    const msStart = Date.now();
+                    const interv = setInterval(() => {
+                        // seconds++;
+                        // eltSecondsNum.textContent = seconds;
+                        const ms = Date.now() - msStart;
+                        eltSecondsNum.textContent = Math.round(ms / 1000);
+                    }, 300);
                     for (let ii = 0, iilen = testImmages.length; ii < iilen; ii++) {
-                        const srcUrl = testImmages[ii];
-                        for (let si = 0, silen = arrShrink.length; si < silen; si++) {
-                            const shrink = arrShrink[si];
+                        for (let si = 0, silen = arrShrinkArea.length; si < silen; si++) {
                             for (let qi = 0, qilen = arrQuality.length; qi < qilen; qi++) {
+                                const srcUrl = testImmages[ii];
+                                const shrinkArea = arrShrinkArea[si];
                                 const quality = arrQuality[qi];
-                                // mkScaledImageBlob(srcUrl, quality, shrink);
-                                // await testsOnly1Active.promiseEvent();
-                                await run1Test(srcUrl, quality, shrink);
+                                await run1Test(srcUrl, quality, shrinkArea);
+                                numDone++;
+                                eltCompletedNum.textContent = numDone;
                             }
                         }
                     }
+                    clearInterval(interv);
+                    divResults.appendChild(mkElt("p", undefined, "Ready!"));
                     modMdc.mkMDCsnackbar("... finished tests", 5 * 1000);
                 }
                 const btnRunTests = modMdc.mkMDCbutton("Rerun tests");

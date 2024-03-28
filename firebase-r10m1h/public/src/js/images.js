@@ -18,6 +18,9 @@ function getWebgl_MAX_TEXTURE_SIZE() {
 export const webgl_MAX_TEXTURE_SIZE = getWebgl_MAX_TEXTURE_SIZE();
 
 export function getMaxWebglWH(w, h) {
+    if (Math.max(w, h) <= webgl_MAX_TEXTURE_SIZE) {
+        return { webglW: w, webglH: h, alreadyOK: true }
+    }
     const maxWH = Math.max(w, h);
     const minWH = Math.min(w, h);
     const big = webgl_MAX_TEXTURE_SIZE;
@@ -36,8 +39,8 @@ export async function getImgSizes(strUrlImg) {
             const naturalHeight = image.naturalHeight;
             const width = image.width;
             const height = image.height;
-            const { webglW, webglH } = getMaxWebglWH(naturalWidth, naturalHeight);
-            resolve({ naturalWidth, naturalHeight, width, height, webglW, webglH, blobSize });
+            const { webglW, webglH, alreadyOK } = getMaxWebglWH(naturalWidth, naturalHeight);
+            resolve({ naturalWidth, naturalHeight, width, height, webglW, webglH, blobSize, alreadyOK });
         }
         // image.onerror = async () => { console.log("ERROR"); }
         image.addEventListener("error", evt => {
