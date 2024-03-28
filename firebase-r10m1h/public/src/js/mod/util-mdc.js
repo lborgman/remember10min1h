@@ -2102,7 +2102,7 @@ export async function getPerMinutesS2T() {
 
 
 // https://material.io/components/data-tables/web#data-tables
-export function mkMDCdataTable(tableName, columnLabels) {
+export function mkMDCdataTable(tableName, columnLabels, exampleRow4sort) {
     let numColumns;
     // <table class="mdc-data-table__table" aria-label="Dessert calories">
     const eltTable = mkElt("table", { class: "mdc-data-table__table", "aria-label": tableName });
@@ -2114,11 +2114,79 @@ export function mkMDCdataTable(tableName, columnLabels) {
         numColumns = columnLabels.length;
         // <tr class="mdc-data-table__header-row">
         const trHead = mkElt("tr", { class: "mdc-data-table__header-row" });
-        columnLabels.forEach(lbl => {
-            // <th class="mdc-data-table__header-cell" role="columnheader" scope="col">
-            const th = mkElt("th", { class: "mdc-data-table__header-cell", role: "columnheader", scope: "col" }, lbl);
-            trHead.appendChild(th);
-        });
+        // columnLabels.forEach(lbl => {
+        for (let c = 0, len = columnLabels.length; c < len; c++) {
+            const lbl = columnLabels[c];
+            if (!exampleRow4sort) {
+                // <th class="mdc-data-table__header-cell" role="columnheader" scope="col">
+                const th = mkElt("th",
+                    {
+                        class: "mdc-data-table__header-cell",
+                        role: "columnheader",
+                        scope: "col"
+                    },
+                    lbl);
+                trHead.appendChild(th);
+            } else {
+                const val = exampleRow4sort[c];
+                const numeric = !isNaN(val);
+                const idLbl = lbl.replaceAll(" ", "");
+                /*
+                <th
+                    class="mdc-data-table__header-cell mdc-data-table__header-cell--with-sort"
+                    role="columnheader"
+                    scope="col"
+                    aria-sort="none"
+                    data-column-id="dessert"
+                >
+                */
+                const thAttribs = {
+                    class: "mdc-data-table__header-cell mdc-data-table__header-cell--with-sort",
+                    role: "columnheader",
+                    scope: "col",
+                    "aria-sort": "none",
+                    "data-column-id": lbl
+                }
+                /*
+                <div class="mdc-data-table__header-cell-label">
+                    Dessert
+                </div>
+                <button class="mdc-icon-button material-icons mdc-data-table__sort-icon-button"
+                    aria-label="Sort by dessert"
+                    aria-describedby="dessert-status-label">arrow_upward
+                </button>
+                <div class="mdc-data-table__sort-status-label" aria-hidden="true" id="dessert-status-label">
+                </div>
+                */
+                const divCellLabel = mkElt("div",
+                    {
+                        class: "mdc-data-table__header-cell-label"
+                    }, lbl);
+                const btn = mkElt("button",
+                    {
+                        class: "mdc-icon-button material-icons mdc-data-table__sort-icon-button",
+                        "aria-label": `Sort by ${lbl}`,
+                        "aria-describedby": `${idLbl}-status-label`
+                    },
+                    "arrow_upward"
+                );
+                const divStatus = mkElt("div",
+                    {
+                        class: "mdc-data-table__sort-status-label",
+                        "aria-hidden": "true",
+                        id: `${idLbl}-status-label`
+                    });
+                // <div class="mdc-data-table__header-cell-wrapper">
+                const divThWrapper = mkElt("div", { class: "mdc-data-table__header-cell-wrapper" }, [
+                    divCellLabel,
+                    btn,
+                    divStatus
+                ]);
+                const th = mkElt("th", thAttribs, divThWrapper);
+                trHead.appendChild(th);
+            }
+        }
+        // });
         const eltThead = mkElt("thead", undefined, trHead);
         eltTable.appendChild(eltThead);
     }

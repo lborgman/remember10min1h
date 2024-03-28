@@ -131,7 +131,54 @@
         let srcBlobImg;
         let srcPanorama;
 
+        // https://stackoverflow.com/questions/45831911/is-there-any-eventemitter-in-browser-side-that-has-similar-logic-in-nodejs/53917410#53917410
+        class Only1Event extends EventTarget {
+            // For serializing.
+            #eventName; #listening;
+            #promise;
+            constructor() {
+                super();
+                this.#eventName = "only1event";
+                this.#listening = false;
+            }
+            addEventListener(handler) {
+                throw Error("Call .promiseEvent instead");
+            }
+            promiseEvent() {
+                if (this.#listening) throw Error("Already listening");
+                this.#listening = true;
+                this.#promise = new Promise(resolve => {
+                    super.addEventListener(this.#eventName, resolve);
+                });
+                return this.#promise;
+            }
+            dispatchEvent() {
+                throw Error("Call .sendEvent instead");
+            }
+            sendEvent() {
+                if (!this.#listening) throw Error("Not listening");
+                this.#listening = false;
+                super.dispatchEvent(new Event(this.#eventName));
+            }
 
+        }
+
+        let testsOnly1Active;
+
+        const KEY_SHRINK = "KEY_SHRINK";
+        function addShrinkImageResult(rec) {
+            const old = getShrinkImageResult();
+            old.push(rec);
+            localStorage.setItem(KEY_SHRINK, JSON.stringify(old));
+        }
+        function getShrinkImageResult() {
+            const strOld = localStorage.getItem(KEY_SHRINK);
+            const old = strOld ? JSON.parse(strOld) : [];
+            return old;
+        }
+        function clearShrinkImageResult() {
+            localStorage.removeItem(KEY_SHRINK);
+        }
         /*
         async function addXmpdata(imgBlob, xmpData)
             // https://www.npmjs.com/package/png-itxt - doesn't work any more
@@ -140,7 +187,10 @@
             // https://stackoverflow.com/questions/6965107/converting-between-strings-and-arraybuffers
             // https://medium.com/@naveenkumarasinghe/javascript-lost-in-binaries-buffer-blob-uint8array-arraybuffer-ed8d2b4de44a
         */
-        async function mkScaledImageBlob(srcImg, scale, quality, shrink) {
+        async function mkScaledImageBlob(srcImg, quality, shrinkArea) {
+            // if (scale) throw Error(`scale is used, ${scale}`);
+            const shrinkLength = shrinkArea ? Math.sqrt(shrinkArea) : 1;
+
             // MAX_TEXTURE_SIZE
             const modImages = await import("images");
             const tofSrcImg = typeof srcImg;
@@ -148,10 +198,11 @@
 
             if (srcImg.slice(0, 4) == "blob") throw Error("srcImg is blob url");
             const imgSizes = await modImages.getImgSizes(srcImg);
+            const szIn = Math.floor(imgSizes.blobSize / 1000);
             // console.log("orig", { imgSizes });
 
-            const newW = scale ? imgSizes.naturalWidth * scale : imgSizes.webglW;     // update canvas size to match image
-            const newH = scale ? imgSizes.naturalHeight * scale : imgSizes.webglH;     // update canvas size to match image
+            const newW = shrinkLength * imgSizes.webglW;     // update canvas size to match image
+            const newH = shrinkLength * imgSizes.webglH;     // update canvas size to match image
             // https://stackoverflow.com/questions/42471755/convert-image-into-blob-using-javascript
             // https://codesalad.dev/blog/how-to-resize-an-image-in-10-lines-of-javascript-29
             const eltCanvas = document.createElement("canvas");
@@ -163,8 +214,8 @@
             const ctx = eltCanvas.getContext("2d");
             // FIX-ME: seems to use too much memory. Try a shrinked size:
             // const shrink = 0.2;
-            eltCanvas.width = newW * shrink;     // update canvas size to match image
-            eltCanvas.height = newH * shrink;
+            eltCanvas.width = newW * shrinkLength;     // update canvas size to match image
+            eltCanvas.height = newH * shrinkLength;
             // return;
             console.log("mkScaledImageBlob", { srcImg, newW, newH });
             return new Promise((resolve, reject) => {
@@ -186,8 +237,16 @@
                         const msDraw = nowDrawAfter - nowDrawBefore;
                         const msBlob = nowBlobAfter - nowBlobBefore;
                         const msBlobCB = nowBlobCB - nowBlobBefore;
-                        console.log("funCallback", blob.size.toLocaleString("en-US"),
-                            { quality, shrink, msDraw, msBlob, msBlobCB });
+                        const szOut = Math.floor(blob.size / 1000);
+                        console.log("funCallback", szOut.toLocaleString("en-US"),
+                            { quality, shrinkLength, msDraw, msBlob, msBlobCB });
+                        addShrinkImageResult({
+                            szIn, szOut,
+                            quality, shrink: shrinkArea,
+                            // msDraw, msBlob,
+                            msBlobCB
+                        });
+                        testsOnly1Active?.sendEvent();
                         resolve(blob);
                     }
 
@@ -419,9 +478,9 @@
                     if (srcImgOrig == undefined) return;
 
                     divOrigPreview.style.backgroundImage = `url(${srcImgOrig})`;
-                    let scale;
+                    // let scale;
                     if (radScaleFree.checked) { scale = scaleImg; }
-                    blobImg = await mkScaledImageBlob(srcImgOrig, scale, inpQuality.value, inpShrink.value);
+                    blobImg = await mkScaledImageBlob(srcImgOrig, inpQuality.value, inpShrink.value);
                     return;
                     // const blobAsText = await blobImg.text(); did not work
                     srcBlobImg = URL.createObjectURL(blobImg);
@@ -460,10 +519,11 @@
 
                 const chkUseBlob = mkElt("input", { type: "checkbox" });
                 const lblUseBlob = mkElt("label", undefined, ["Use blob:", chkUseBlob]);
-                const inpScale = mkElt("input", { type: "number" });
-                inpScale.style.width = "50px";
-                scaleImg = 0.2;
-                inpScale.value = scaleImg;
+                // const inpScale = mkElt("input", { type: "number" });
+                // inpScale.style.width = "50px";
+                // scaleImg = 0.2;
+                // inpScale.value = scaleImg;
+                /*
                 inpScale.addEventListener("input", evt => {
                     // FIX-ME: check value usable
                     let usableValue = false;
@@ -481,9 +541,10 @@
                     inpScale.style.backgroundColor = "unset";
                     scaleImg = val;
                 });
+                */
                 const radScaleFree = mkElt("input", { type: "radio", name: "scale", value: "free" });
                 const radScaleWebgl = mkElt("input", { type: "radio", name: "scale", value: "webgl" });
-                const lblScaleFree = mkElt("label", undefined, [radScaleFree, "Scale: ", inpScale]);
+                // const lblScaleFree = mkElt("label", undefined, [radScaleFree, "Scale: ", inpScale]);
                 const lblScaleWebgl = mkElt("label", undefined, [radScaleWebgl, "Max webgl"]);
                 radScaleWebgl.checked = true;
 
@@ -495,16 +556,104 @@
 
                 const inpShrink = mkElt("input", { type: "number" });
                 inpShrink.style.width = "50px";
-                inpShrink.value = 0.5;
-                const lblShrink = mkElt("label", undefined, ["Shrink: ", inpShrink]);
+                inpShrink.value = 0.2;
+                const lblShrink = mkElt("label", undefined, ["Shrink area: ", inpShrink]);
 
+                const divResults = mkElt("div");
+
+                async function runTests() {
+                    const testImmages = [
+                        "https://pannellum.org/images/alma.jpg",          // ??MB
+                        // new URL("./testimg/PANO1.jpg", location),         // 6.2MB
+                        // new URL("./testimg/PHOTOSPHERE1.jpg", location),  // 5.4MB
+                        // new URL("./testimg/Botan-SPHERE1.jpg", location), // 6.9MB
+                    ];
+                    async function run1Test(srcUrl, quality, shrink) {
+                        // shrink
+                        mkScaledImageBlob(srcUrl, quality, shrink);
+                        await testsOnly1Active.promiseEvent();
+                    }
+
+                    modMdc.mkMDCsnackbar("Starting tests...", 5 * 1000);
+                    clearShrinkImageResult();
+                    testsOnly1Active = new Only1Event();
+                    const arrQuality = [0.7];
+                    const arrShrink = [0.1];
+                    // testImmages.forEach(async srcUrl => {
+                    for (let ii = 0, iilen = testImmages.length; ii < iilen; ii++) {
+                        const srcUrl = testImmages[ii];
+                        for (let si = 0, silen = arrShrink.length; si < silen; si++) {
+                            const shrink = arrShrink[si];
+                            for (let qi = 0, qilen = arrQuality.length; qi < qilen; qi++) {
+                                const quality = arrQuality[qi];
+                                // mkScaledImageBlob(srcUrl, quality, shrink);
+                                // await testsOnly1Active.promiseEvent();
+                                await run1Test(srcUrl, quality, shrink);
+                            }
+                        }
+                    }
+                    modMdc.mkMDCsnackbar("... finished tests", 5 * 1000);
+                }
+                const btnRunTests = modMdc.mkMDCbutton("Rerun tests");
+                btnRunTests.addEventListener("click", evt => {
+                    evt.stopPropagation();
+                    setTimeout(runTests, 10);
+                });
+                const btnClearResults = modMdc.mkMDCbutton("Clear");
+                btnClearResults.addEventListener("click", evt => {
+                    evt.stopPropagation();
+                    if (confirm("Delete shrink image results?")) {
+                        clearShrinkImageResult();
+                        alert("Shrink image result data is deleted");
+                    }
+                });
+                const btnShowResults = modMdc.mkMDCbutton("Show");
+                btnShowResults.addEventListener("click", evt => {
+                    evt.stopPropagation();
+                    const objResult = getShrinkImageResult();
+                    const objR0 = objResult[0];
+                    if (!objR0) {
+                        divResults.textContent = "No saved results found.";
+                        return;
+                    }
+                    const arrLabels = Object.keys(objR0);
+                    divResults.textContent = "";
+                    // addShrinkImageResult({ blobSize, quality, shrink, msDraw, msBlob, msBlobCB });
+                    const table = modMdc.mkMDCdataTable("Shrink image results",
+                        // ["blobSize", "quality", "shrink", "msDraw", "msBlob", "msBlobCB"],
+                        arrLabels,
+                        // objResult[0]
+                    );
+                    divResults.appendChild(table.eltContainer);
+                    objResult.sort((a, b) => a.msBlobCB - b.msBlobCB);
+                    objResult.forEach(rec => {
+                        const values = Object.values(rec);
+                        const row = modMdc.mkMDCdataTableRow(values);
+                        modMdc.addMDCrow2Table(row, table);
+                    });
+                })
+                const divBtnResults = mkElt("div", undefined, [
+                    btnShowResults,
+                    btnClearResults,
+                    btnRunTests,
+                ]);
+                divBtnResults.style = `
+                    display: flex;
+                    gap: 10px;
+                `;
+                const detShrinkTests = mkElt("details", undefined, [
+                    mkElt("summary", undefined, "Shrink image test results"),
+                    divBtnResults,
+                    divResults,
+                ])
                 const divBlobInputs = mkElt("div", undefined, [
                     mkElt("div", undefined, mkElt("b", undefined, "Blob inputs:")),
                     lblUseBlob,
                     lblScaleWebgl,
-                    lblScaleFree,
-                    lblQuality,
                     lblShrink,
+                    // lblScaleFree,
+                    lblQuality,
+                    detShrinkTests,
                 ]);
                 divBlobInputs.addEventListener("input", evt => {
                     console.log("dvBlobInputs, input", evt.target, evt);

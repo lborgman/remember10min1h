@@ -26,6 +26,9 @@ export function getMaxWebglWH(w, h) {
 }
 
 export async function getImgSizes(strUrlImg) {
+    const resp = await fetch(strUrlImg);
+    const blob = await resp.blob();
+    const blobSize = blob.size;
     return new Promise((resolve) => {
         const image = new Image();
         image.onload = async () => {
@@ -34,14 +37,14 @@ export async function getImgSizes(strUrlImg) {
             const width = image.width;
             const height = image.height;
             const { webglW, webglH } = getMaxWebglWH(naturalWidth, naturalHeight);
-            resolve({ naturalWidth, naturalHeight, width, height, webglW, webglH });
+            resolve({ naturalWidth, naturalHeight, width, height, webglW, webglH, blobSize });
         }
         // image.onerror = async () => { console.log("ERROR"); }
         image.addEventListener("error", evt => {
             console.log("ERROR", { evt, strUrlImg });
             debugger;
             resolve(false);
-        })
+        });
         image.src = strUrlImg;
     });
 }
