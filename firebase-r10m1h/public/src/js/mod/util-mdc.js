@@ -2200,15 +2200,16 @@ export function mkMDCdataTableRow(columns) {
     const tr = mkElt("tr", { class: "mdc-data-table__row" });
     let first = true;
     columns.forEach(cell => {
-        let row;
+        let eltColumn;
+        const strCell = `${cell}`;
         if (first) {
             // <th class="mdc-data-table__cell" scope="row">Frozen yogurt</th>
-            row = mkElt("th", { class: "mdc-data-table__cell", scope: "row" }, cell);
+            eltColumn = mkElt("td", { class: "mdc-data-table__cell", scope: "row" }, strCell);
         } else {
             // <td class="mdc-data-table__cell mdc-data-table__cell--numeric">24</td>
-            row = mkElt("th", { class: "mdc-data-table__cell" }, cell);
+            eltColumn = mkElt("td", { class: "mdc-data-table__cell" }, strCell);
         }
-        tr.appendChild(row);
+        tr.appendChild(eltColumn);
         first = false;
     });
     const numColumns = columns.length;

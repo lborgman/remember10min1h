@@ -412,24 +412,80 @@
                             modImages.alertNoImagesFound();
                         } else {
                             const toDiv = divPasteImage;
-                            const inpMax = mkElt("input", { type: "number" });
-                            inpMax.value = 100;
-                            const bdy = mkElt("div", undefined, inpMax);
+
+                            const inpQuality = mkElt("input", { type: "number" });
+                            inpQuality.style.width = "50px";
+                            inpQuality.value = 0.7;
+                            const lblQuality = mkElt("label", undefined, ["Quality: ", inpQuality]);
+
+
+                            const inpShrink = mkElt("input", { type: "number" });
+                            inpShrink.style.width = "50px";
+                            inpShrink.value = 0.5;
+                            const lblShrink = mkElt("label", undefined, ["Shrink area: ", inpShrink]);
+
+                            const divImgInputs = mkElt("div", undefined, [
+                                lblQuality,
+                                lblShrink
+                            ]);
+                            divImgInputs.style = `
+                                display: flex;
+                                flex-direction: row;
+                                gap: 10px;
+                            `;
+                            divImgInputs.addEventListener("input", evt => {
+                                evt.stopPropagation();
+                            });
+                            const inpName = mkElt("input", { type: "text" });
+                            const lblName = mkElt("label", undefined, ["Name: ", inpName]);
+                            const divPreview = mkElt("div");
+                            divPreview.style = `
+                                width: 100%;
+                                aspect-ratio: 1 / 1;
+                                border: 1px dashed red;
+                                background-color: yellow;
+                                background-size: contain;
+                                background-repeat: no-repeat;
+                            `;
+                            const bdy = mkElt("div", undefined, [
+                                mkElt("h2", undefined, "Save image"),
+                                divImgInputs,
+                                lblName,
+                                divPreview,
+                            ]);
                             const funHandleResult = () => {
                                 return {
-                                    maxBlobSize: inpMax.value,
+                                    imgBlob: false,
                                 }
                             }
-                            const { maxBlobSize } = await modMdc.mkMDCdialogConfirm(bdy, "Continue", undefined, true, funHandleResult);
+                            // FIX-ME: several
+                            const origBlob = resultImageBlobs[0]
+                            const origObjUrl = URL.createObjectURL(origBlob);
+                            divPreview.style.backgroundImage = `url(${origObjUrl})`;
+                            // xmp =
+                            const xmpOrig = await pannellum.parseGPanoXMP(origBlob);
+
+                            // mkScaledImageBlob(origObjUrl, quality, shrinkArea);
+                            let outBlob;
+                            outBlob = await mkScaledImageBlob(origObjUrl, inpQuality.value, inpShrink.value);
+                            const outObjUrl = URL.createObjectURL(outBlob);
+                            const config = {
+                                type: "equirectangular",
+                                panorama: outObjUrl,
+                                autoLoad: true,
+                                // compass: true,
+                                avoidShowingBackground: true,
+                                xmp: xmpOrig,
+                                // createTooltipFunc: MYcreateTooltipFunc,
+                                // hotspotGrpKey,
+                            };
+
+                            const viewer = pannellum.viewer(divPreview, config);
+
+                            const { imgBlob } = await modMdc.mkMDCdialogConfirm(bdy, "Continue", "Cancel", true, funHandleResult);
+                            URL.revokeObjectURL(origObjUrl);
                             debugger;
-                            const maxBlobOutSize = maxBlobSize * 1000;
-                            for (const blob of resultImageBlobs) {
-                                // const eltImgCard = await modImages.mkImageCardFromBigImage(blob, toDiv, maxBlobOutSize);
-                                const eltImgCard = await modImages.mkImageCardFromBigImage(blob, maxBlobOutSize);
-                                modImages.addFunOnRemoveImageCard(eltImgCard, restartButtonStateTimer);
-                                toDiv.appendChild(eltImgCard);
-                            }
-                            restartButtonStateTimer();
+
                         }
                     } else {
                         // Should be an error object
@@ -558,14 +614,16 @@
 
                 const inpShrink = mkElt("input", { type: "number" });
                 inpShrink.style.width = "50px";
-                inpShrink.value = 0.2;
+                inpShrink.value = 0.5;
                 const lblShrink = mkElt("label", undefined, ["Shrink area: ", inpShrink]);
 
                 const divResults = mkElt("div");
 
                 async function runTests() {
+                    const arrQuality = [0.4, 0.6, 0.8];
+                    const arrShrinkArea = [0.1, 0.2, 0.5, 1];
                     const testImmages = [
-                        "https://pannellum.org/images/alma.jpg",          // 1.5MB
+                        "https://pannellum.org/images/alma.jpg",                 // 1.5MB
                         (new URL("./testimg/PANO1.jpg", location)).href,         // 6.2MB
                         (new URL("./testimg/PHOTOSPHERE1.jpg", location)).href,  // 5.4MB
                         (new URL("./testimg/Botan-SPHERE1.jpg", location)).href, // 6.9MB
@@ -579,8 +637,6 @@
                     modMdc.mkMDCsnackbar("Starting tests...", 5 * 1000);
                     clearShrinkImageResult();
                     testsOnly1Active = new Only1Event();
-                    const arrQuality = [0.6, 0.8];
-                    const arrShrinkArea = [0.2, 0.5];
                     const numTests = arrQuality.length * arrShrinkArea.length * testImmages.length;
                     const eltCompletedNum = mkElt("span", undefined, "0");
                     const eltCompleted = mkElt("span", undefined, [eltCompletedNum, `/${numTests}`]);
