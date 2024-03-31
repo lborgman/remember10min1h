@@ -131,6 +131,16 @@
         let srcBlobImg;
         let srcPanorama;
 
+        function setSaveButtonState(saveButton, canSave) {
+            if (canSave) {
+                saveButton.disabled = false;
+                saveButton.style.opacity = null;
+            } else {
+                saveButton.disabled = true;
+                saveButton.style.opacity = 0.5;
+            }
+        }
+
         // https://stackoverflow.com/questions/45831911/is-there-any-eventemitter-in-browser-side-that-has-similar-logic-in-nodejs/53917410#53917410
         class Only1Event extends EventTarget {
             // For serializing.
@@ -333,8 +343,6 @@
                     divGrps,
                     divBtnDelGrps,
                 ]);
-                // return await modMdc.mkMDCdialogConfirm(body);
-                // return await modMdc.mkMDCdialogConfirm(body);
                 const btnCancel = modMdc.mkMDCdialogButton("Cancel", "close");
                 const btnConfirmSubject = modMdc.mkMDCdialogButton("Continue", "continue", true);
                 let subject4image;
@@ -491,6 +499,12 @@
                             imgBlob: false,
                         }
                     }
+                    let saveButton;
+                    const tellMeSaveButton = (btn) => {
+                        console.log({ btn });
+                        saveButton = btn;
+                        setSaveButtonState(saveButton, false);
+                    }
                     // FIX-ME: several
                     const origBlob = resultImageBlobs[0]
                     const origObjUrl = URL.createObjectURL(origBlob);
@@ -516,7 +530,11 @@
                         updateOutBlobAndPreview();
                     }, 200);
 
-                    const { imgBlob } = await modMdc.mkMDCdialogConfirm(bdy, "Save", "Cancel", true, funHandleResult);
+                    const { imgBlob } = await modMdc.mkMDCdialogConfirm(bdy, "Save",
+                        undefined, undefined,
+                        funHandleResult,
+                        tellMeSaveButton,
+                    );
                     URL.revokeObjectURL(origObjUrl);
                     // debugger;
                     console.log({ imgBlob });
@@ -1028,7 +1046,7 @@
                 const valid = inpURL.checkValidity();
                 if (!valid) {
                     evt.stopImmediatePropagation();
-                    setSaveButtonState(false);
+                    setSaveButtonState(saveButton, false);
                     debounceReportInpURLvalidity();
                 }
             });
@@ -1060,9 +1078,9 @@
                     && (inpURL.value.trim() == "" || inpURL.checkValidity());
                 console.log("checkCanSave", canSave);
                 if (!canSave) {
-                    setSaveButtonState(false);
+                    setSaveButtonState(saveButton, false);
                 } else {
-                    setSaveButtonState(true);
+                    setSaveButtonState(saveButton, true);
                 }
             }
 
@@ -1079,20 +1097,6 @@
                 return val;
             }
 
-            function setSaveButtonState(canSave) {
-                if (canSave) {
-                    // FIX-ME: btnSave
-                    saveButton.disabled = false;
-                    saveButton.style.opacity = null;
-                    // container.classList.add("not-saved");
-                    // this.restartSaveNowTimer();
-                } else {
-                    saveButton.disabled = true;
-                    saveButton.style.opacity = 0.5;
-                    // No container yet if not on screen
-                    // container?.classList.remove("not-saved");
-                }
-            }
 
             const handleResult = () => {
                 const isUpdate =
@@ -1109,7 +1113,7 @@
             function tellMeSaveButton(btn) {
                 // debugger;
                 saveButton = btn;
-                setSaveButtonState(false);
+                setSaveButtonState(saveButton, false);
                 savedValues = getCurrentValues();
             }
             const ans = await modMdc.mkMDCdialogConfirm(
