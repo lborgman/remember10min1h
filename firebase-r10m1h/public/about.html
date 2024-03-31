@@ -38,10 +38,11 @@
 
         .header-images {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
             gap: 2px;
-            width: 60px;
+            width: 150px;
             cursor: pointer;
+            scale: unset;
         }
 
         .header-images span {
@@ -84,8 +85,12 @@
 
         #header-images {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
             gap: 10px;
+            scale: 0.6;
+            width: 128vw;
+            background-color: greenyellow;
+            transform: translateX(-37vw);
         }
 
         #header-images a {
@@ -95,7 +100,7 @@
         }
 
         #header-images a span {
-            padding: 5px;
+            padding: 4px;
         }
 
         #temp-helper {
@@ -207,36 +212,37 @@
 
 
                 <details class="mdc-card my-mdc-card-styles dark-side">
-                    <summary>Where are my data saved?</summary>
-                    <p style="font-style:italic">
-                        Please notice that anything you save in those web apps is only saved on your device
-                        (in your web browser).
-                        If you want more permanent notes I recommend
-                        <a href="https://9to5google.com/2023/01/31/what-you-can-do-google-keep/" target="_blank">Google
-                            Keep</a>.
-                    </p>
-                </details>
-
-
-                <details class="mdc-card my-mdc-card-styles dark-side">
                     <summary>The dark side - Technology</summary>
-                    <h2>The dark side - Technology</h2>
-                    <p>This app is actually just a web site with two additions
-                        (made possible by that it is a PWA):
-                    <div style="margin-top: 10px;">1) You can view it even if you are not online.</div>
-                    <div>2) You can 'share' to it.</div>
-                    </p>
-                    <h3>Good security</h3>
-                    <p>Because this app is just a web site it is just as secure as a web site.
-                        It can't harm your mobile or computer (more than a web site can).
-                    </p>
-                    <h3>Share currently works only on Android</h3>
-                    <p>Unfortunately ´share´ to this app can only work on Android with Google Chrome today.
-                        It is the only case where the technical capabilities are available now.
-                        But you can still use this app now on for example both on iPhone and Windows.
-                        It is just the possibility to 'share' that does not work there.
-                    </p>
-                    <!-- 
+                    <details class="mdc-card my-mdc-card-styles dark-side">
+                        <summary>Your data is only saved on your current device</summary>
+                        <p style="font-style:italic">
+                            Please notice that anything you save in those web apps is only saved on your device
+                            (in your web browser).
+                            If you want more permanent notes I recommend
+                            <a href="https://9to5google.com/2023/01/31/what-you-can-do-google-keep/"
+                                target="_blank">Google
+                                Keep</a>.
+                        </p>
+                    </details>
+                    <details class="mdc-card my-mdc-card-styles dark-side">
+                        <summary>The really dark side</summary>
+                        <h2>Technology (advanced)</h2>
+                        <p>This app is actually just a web site with two additions
+                            (made possible by that it is a PWA):
+                        <div style="margin-top: 10px;">1) You can view it even if you are not online.</div>
+                        <div>2) You can 'share' to it.</div>
+                        </p>
+                        <h3>Good security</h3>
+                        <p>Because this app is just a web site it is just as secure as a web site.
+                            It can't harm your mobile or computer (more than a web site can).
+                        </p>
+                        <h3>Share currently works only on Android</h3>
+                        <p>Unfortunately ´share´ to this app can only work on Android with Google Chrome today.
+                            It is the only case where the technical capabilities are available now.
+                            But you can still use this app now on for example both on iPhone and Windows.
+                            It is just the possibility to 'share' that does not work there.
+                        </p>
+                        <!-- 
                     <h3 style="color:red">Reminders - do they work?</h3>
                     <div>
                         <p>Unfortunately <a href="https://github.com/beverloo/notification-triggers/issues/7"
@@ -248,6 +254,7 @@
                         <p><img src="/img/btn-check-reminders.png" width="50%"></p>
                     </div>
                     -->
+                    </details>
                 </details>
 
 
@@ -378,8 +385,8 @@
                 <a href="/loci/loci.html">Open</a>
             </div>
             <h3>Sharp or blurry image?</h3>
-            <a href="https://www.sciencealert.com/autism-can-boost-cognitive-performance-and-we-may-finally-know-why"
-                >image noise and brain</a>
+            <a href="https://www.sciencealert.com/autism-can-boost-cognitive-performance-and-we-may-finally-know-why">image
+                noise and brain</a>
         </section>
 
 
