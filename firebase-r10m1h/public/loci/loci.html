@@ -131,7 +131,7 @@
         let srcBlobImg;
         let srcPanorama;
 
-        function setSaveButtonState(saveButton, canSave) {
+        function setButtonState(saveButton, canSave) {
             if (canSave) {
                 saveButton.disabled = false;
                 saveButton.style.opacity = null;
@@ -418,7 +418,7 @@
                     }
                     mkTimestamp("0");
                     const modImages = await import("images");
-                    modMdc.mkMDCsnackbar("Fetching clipboard image...", 4 * 1000);
+                    modMdc.mkMDCsnackbar("Fetching clipboard image...", 9 * 1000);
                     const clipboardAccessOk = await modImages.isClipboardPermissionStateOk();
                     if (clipboardAccessOk == false) {
                         debugPasteLine(`addPasteButton event 1`);
@@ -478,8 +478,8 @@
                     });
                     const inpName = mkElt("input", { type: "text" });
                     const lblName = mkElt("label", undefined, ["Name: ", inpName]);
-                    const divPreview = mkElt("div");
-                    divPreview.style = `
+                    const divSavePreview = mkElt("div");
+                    divSavePreview.style = `
                                 width: 100%;
                                 aspect-ratio: 1 / 1;
                                 border: 1px dashed red;
@@ -492,28 +492,58 @@
                         divImgInputs,
                         lblName,
                         mkElt("div", undefined, "Preview:"),
-                        divPreview,
+                        divSavePreview,
                     ]);
+                    let outBlob;
                     const funHandleResult = () => {
                         return {
-                            imgBlob: false,
+                            imgBlob: outBlob,
                         }
                     }
-                    let saveButton;
-                    const tellMeSaveButton = (btn) => {
-                        console.log({ btn });
-                        saveButton = btn;
-                        setSaveButtonState(saveButton, false);
+                    let saveButtonImg;
+                    const tellMeOkButton = (btn) => {
+                        mkTimestamp("tellMeOkButton");
+                        saveButtonImg = btn;
+                        // closeDialog
+                        setButtonState(saveButtonImg, false);
+                        updateOutBlobAndPreview();
                     }
                     // FIX-ME: several
                     const origBlob = resultImageBlobs[0]
                     const origObjUrl = URL.createObjectURL(origBlob);
-                    // divPreview.style.backgroundImage = `url(${origObjUrl})`;
                     const xmpOrig = await pannellum.parseGPanoXMP(origBlob);
 
+                    function setSaveState(state) {
+                        switch (state) {
+                            case "working":
+                                setButtonState(saveButtonImg, false);
+                                divSavePreview.textContent = "";
+                                const eltTellWorking = mkElt("p", undefined, " Working...");
+                                eltTellWorking.style.margin = "20px";
+                                eltTellWorking.style.color = "red";
+                                eltTellWorking.style.fontSize = "1.2rem";
+                                divSavePreview.appendChild(eltTellWorking);
+                                break;
+                            case "ready":
+                                divSavePreview.textContent = "";
+                                const eltTellPreview = mkElt("span", undefined, "Preview");
+                                eltTellPreview.style = `
+                                    font-size: 2rem;
+                                    color: red;
+                                    position: absolute;
+                                    bottom: 10px;
+                                    right: 10px;
+                                    z-index: 10;
+                                `;
+                                divSavePreview.appendChild(eltTellPreview);
+                                setButtonState(saveButtonImg, true);
+                                break;
+                            default:
+                                throw Error(`Unknown state: ${state}`);
+                        }
+                    }
                     async function updateOutBlobAndPreview() {
-                        // mkScaledImageBlob(origObjUrl, quality, shrinkArea);
-                        let outBlob;
+                        setSaveState("working");
                         outBlob = await mkScaledImageBlob(origObjUrl, inpQuality.value, inpShrink.value);
                         const outObjUrl = URL.createObjectURL(outBlob);
                         const config = {
@@ -523,21 +553,27 @@
                             avoidShowingBackground: true,
                             xmp: xmpOrig,
                         };
-                        const viewer = pannellum.viewer(divPreview, config);
+                        setSaveState("ready");
+                        const viewer = pannellum.viewer(divSavePreview, config);
                     }
-                    setTimeout(() => {
-                        mkTimestamp("setTimeout updateOutBlobAndPreview");
-                        updateOutBlobAndPreview();
-                    }, 200);
 
                     const { imgBlob } = await modMdc.mkMDCdialogConfirm(bdy, "Save",
                         undefined, undefined,
                         funHandleResult,
-                        tellMeSaveButton,
+                        tellMeOkButton,
                     );
                     URL.revokeObjectURL(origObjUrl);
-                    // debugger;
                     console.log({ imgBlob });
+                    if (imgBlob) {
+                        const newBlobUrl = URL.createObjectURL(imgBlob);
+                        // const objHotspotsGrp = await dialogChooseSubjectForImage("custom", srcImgOrig, srcPanorama);
+                        let imgName =inpName.value.trim();
+                        if (imgName.length == 0) throw Error("inpName is empty");
+                        imgName = "DUMMY-TEST";
+                        const objHotspotsGrp = await dialogChooseSubjectForImage("custom", imgName, newBlobUrl);
+                        showPanorama(newBlobUrl, xmpOrig, objHotspotsGrp);
+                    }
+                    // debugger;
 
 
                 }
@@ -593,7 +629,6 @@
                     });
                     xmpImg = await pannellum.parseGPanoXMP(origBlob);
                     divXmpInfo.textContent = JSON.stringify(xmpImg, undefined, 4);
-
 
                     if (sizesOrig.width > devMaxWebGlW) {
                         chkUseBlob.checked = true;
@@ -986,11 +1021,16 @@
         })();
 
         function mkIdImg(srcType, srcOrigNm) {
-            const u = new URL(srcOrigNm);
-            const pn = u.pathname;
-            const lIdx = pn.lastIndexOf("/");
-            const fn = pn.slice(lIdx + 1);
-            return `${srcType}-${fn}`;
+            try {
+                const u = new URL(srcOrigNm);
+                const pn = u.pathname;
+                const lIdx = pn.lastIndexOf("/");
+                const fn = pn.slice(lIdx + 1);
+                return `${srcType}-${fn}`;
+            } catch (err) {
+                console.log({ err });
+                return `${srcType}-${srcOrigNm}`;
+            }
         }
         function mkHotspotKeyPrefix(idImg) { return `mem-${idImg}-`; }
         function mkHotspotGrpKey(idImg, idGrp) {
@@ -1046,7 +1086,7 @@
                 const valid = inpURL.checkValidity();
                 if (!valid) {
                     evt.stopImmediatePropagation();
-                    setSaveButtonState(saveButton, false);
+                    setButtonState(saveButtonHotspot, false);
                     debounceReportInpURLvalidity();
                 }
             });
@@ -1069,7 +1109,7 @@
                 debounceInputHandling();
             });
 
-            let saveButton;
+            let saveButtonHotspot;
             let savedValues;
             function checkCanSave() {
                 const strCurrent = JSON.stringify(getCurrentValues());
@@ -1078,9 +1118,9 @@
                     && (inpURL.value.trim() == "" || inpURL.checkValidity());
                 console.log("checkCanSave", canSave);
                 if (!canSave) {
-                    setSaveButtonState(saveButton, false);
+                    setButtonState(saveButtonHotspot, false);
                 } else {
-                    setSaveButtonState(saveButton, true);
+                    setButtonState(saveButtonHotspot, true);
                 }
             }
 
@@ -1110,14 +1150,14 @@
                 }
             };
 
-            function tellMeSaveButton(btn) {
+            function tellMeOkButton(btn) {
                 // debugger;
-                saveButton = btn;
-                setSaveButtonState(saveButton, false);
+                saveButtonHotspot = btn;
+                setButtonState(saveButtonHotspot, false);
                 savedValues = getCurrentValues();
             }
             const ans = await modMdc.mkMDCdialogConfirm(
-                body, "save", undefined, undefined, handleResult, tellMeSaveButton);
+                body, "save", undefined, undefined, handleResult, tellMeOkButton);
             if (ans == "update") {
                 const saveJson = JSON.parse(localStorage.getItem(hotspotGrpKey));
                 const oldHotspots = saveJson.hotspots;
