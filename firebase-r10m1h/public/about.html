@@ -87,10 +87,12 @@
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
             gap: 10px;
-            scale: 0.6;
+            NObackground-color: greenyellow;
             width: 128vw;
-            background-color: greenyellow;
-            transform: translateX(-37vw);
+            margin-left: 10px;
+            margin-bottom: -30px;
+            transform-origin: top left;
+            transform: scale(0.6);
         }
 
         #header-images a {
@@ -162,27 +164,6 @@
                     Are you like me trying to learn from a lot of different things you find on the internet?
                     Then these three small web apps might be something for you too.
                 </p>
-                <details class="mdc-card my-mdc-card-styles" style="background-color: rgb(24, 119, 242); color: white;">
-                    <summary>Contact</summary>
-                    <p>
-                        <img src="/img/f_logo_RGB-White_58.png" style="width: 30px; float: left; margin-right: 10px">I
-                        have
-                        created a Facebook group, <a href="https://www.facebook.com/groups/flashcards4internet"
-                            target="_blank" style="color: white">Flashcards 4 Internet</a>, where you can comment
-                        on this app.
-                        Suggestions are very welcome!
-                    </p>
-                    <p>
-                        If you find some bugs you can tell me in the Facebook group above.
-                        I will be glad if you do. 🎃
-                    </p>
-                    <p>
-                        If you are a bit technical it is often easier for me if you enter an issue
-                        for the bug here at
-                        <a href="https://github.com/lborgman/remember10min1h/issues">those web apps repository at
-                            GitHub</a>
-                    </p>
-                </details>
 
                 <details class="mdc-card my-mdc-card-styles">
                     <summary>Tips for learning</summary>
@@ -211,51 +192,6 @@
                 </details>
 
 
-                <details class="mdc-card my-mdc-card-styles dark-side">
-                    <summary>The dark side - Technology</summary>
-                    <details class="mdc-card my-mdc-card-styles dark-side">
-                        <summary>Your data is only saved on your current device</summary>
-                        <p style="font-style:italic">
-                            Please notice that anything you save in those web apps is only saved on your device
-                            (in your web browser).
-                            If you want more permanent notes I recommend
-                            <a href="https://9to5google.com/2023/01/31/what-you-can-do-google-keep/"
-                                target="_blank">Google
-                                Keep</a>.
-                        </p>
-                    </details>
-                    <details class="mdc-card my-mdc-card-styles dark-side">
-                        <summary>The really dark side</summary>
-                        <h2>Technology (advanced)</h2>
-                        <p>This app is actually just a web site with two additions
-                            (made possible by that it is a PWA):
-                        <div style="margin-top: 10px;">1) You can view it even if you are not online.</div>
-                        <div>2) You can 'share' to it.</div>
-                        </p>
-                        <h3>Good security</h3>
-                        <p>Because this app is just a web site it is just as secure as a web site.
-                            It can't harm your mobile or computer (more than a web site can).
-                        </p>
-                        <h3>Share currently works only on Android</h3>
-                        <p>Unfortunately ´share´ to this app can only work on Android with Google Chrome today.
-                            It is the only case where the technical capabilities are available now.
-                            But you can still use this app now on for example both on iPhone and Windows.
-                            It is just the possibility to 'share' that does not work there.
-                        </p>
-                        <!-- 
-                    <h3 style="color:red">Reminders - do they work?</h3>
-                    <div>
-                        <p>Unfortunately <a href="https://github.com/beverloo/notification-triggers/issues/7"
-                                target="_blank">timers for reminders are not yet supported in PWA:s</a>.</p>
-                        <p>So I have added a workaround.
-                            And actually I think works perhaps even better. 😌
-                            At the top right there is a button.
-                            Just click that to check for reminders.</p>
-                        <p><img src="/img/btn-check-reminders.png" width="50%"></p>
-                    </div>
-                    -->
-                    </details>
-                </details>
 
 
             </div>
@@ -397,6 +333,73 @@
                 <a href="/tl/text-and-link.html">Open</a>
             </div>
         </section>
+
+        <details class="mdc-card my-mdc-card-styles" style="background-color: rgb(24, 119, 242); color: white;">
+            <summary>Contact</summary>
+            <p>
+                <img src="/img/f_logo_RGB-White_58.png" style="width: 30px; float: left; margin-right: 10px">I
+                have
+                created a Facebook group, <a href="https://www.facebook.com/groups/flashcards4internet" target="_blank"
+                    style="color: white">Flashcards 4 Internet</a>, where you can comment
+                on this app.
+                Suggestions are very welcome!
+            </p>
+            <p>
+                If you find some bugs you can tell me in the Facebook group above.
+                I will be glad if you do. 🎃
+            </p>
+            <p>
+                If you are a bit technical it is often easier for me if you enter an issue
+                for the bug here at
+                <a href="https://github.com/lborgman/remember10min1h/issues">those web apps repository at
+                    GitHub</a>
+            </p>
+        </details>
+
+        <details class="mdc-card my-mdc-card-styles dark-side">
+            <summary>The dark side - Technology</summary>
+            <details class="mdc-card my-mdc-card-styles dark-side">
+                <summary>Your data is only saved on your current device</summary>
+                <p style="font-style:italic">
+                    Please notice that anything you save in those web apps is only saved on your device
+                    (in your web browser).
+                    If you want more permanent notes I recommend
+                    <a href="https://9to5google.com/2023/01/31/what-you-can-do-google-keep/" target="_blank">Google
+                        Keep</a>.
+                </p>
+            </details>
+            <details class="mdc-card my-mdc-card-styles dark-side">
+                <summary>The really dark side</summary>
+                <h2>Technology (advanced)</h2>
+                <p>This app is actually just a web site with two additions
+                    (made possible by that it is a PWA):
+                <div style="margin-top: 10px;">1) You can view it even if you are not online.</div>
+                <div>2) You can 'share' to it.</div>
+                </p>
+                <h3>Good security</h3>
+                <p>Because this app is just a web site it is just as secure as a web site.
+                    It can't harm your mobile or computer (more than a web site can).
+                </p>
+                <h3>Share currently works only on Android</h3>
+                <p>Unfortunately ´share´ to this app can only work on Android with Google Chrome today.
+                    It is the only case where the technical capabilities are available now.
+                    But you can still use this app now on for example both on iPhone and Windows.
+                    It is just the possibility to 'share' that does not work there.
+                </p>
+                <!-- 
+                    <h3 style="color:red">Reminders - do they work?</h3>
+                    <div>
+                        <p>Unfortunately <a href="https://github.com/beverloo/notification-triggers/issues/7"
+                                target="_blank">timers for reminders are not yet supported in PWA:s</a>.</p>
+                        <p>So I have added a workaround.
+                            And actually I think works perhaps even better. 😌
+                            At the top right there is a button.
+                            Just click that to check for reminders.</p>
+                        <p><img src="/img/btn-check-reminders.png" width="50%"></p>
+                    </div>
+                    -->
+            </details>
+        </details>
 
     </main>
 
