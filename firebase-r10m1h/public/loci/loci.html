@@ -196,7 +196,8 @@
             const tofSrcImg = typeof srcImg;
             if (tofSrcImg != "string") throw Error(`typeof srcImg=="${tofSrcImg}", should be "string")`);
 
-            if (srcImg.slice(0, 4) == "blob") throw Error("srcImg is blob url");
+            // if (srcImg.slice(0, 4) == "blob") throw Error("srcImg is blob url");
+            if (srcImg.slice(0, 4) == "blob") console.warn("srcImg is blob url");
             const imgSizes = await modImages.getImgSizes(srcImg);
             const wasOK = imgSizes.alreadyOK || false;
             const szIn = Math.floor(imgSizes.blobSize / 1000);
@@ -398,8 +399,18 @@
                 const iconAdd = modMdc.mkMDCicon("add");
                 const btnAdd = modMdc.mkMDCfab(iconAdd, "Add your own image", true);
                 function restartButtonStateTimer() { console.log("restartButtonStateTimner") };
-                btnAdd.addEventListener("click", errorHandlerAsyncEvent(async evt => {
+
+                async function dialogAddImage() {
+                    let msPrev = Date.now();
+                    function mkTimestamp(pos) {
+                        const msNow = Date.now();
+                        const msElapsed = msNow - msPrev;
+                        msPrev = msNow;
+                        console.log(`dialogAddImage ${pos}`, msElapsed);
+                    }
+                    mkTimestamp("0");
                     const modImages = await import("images");
+                    modMdc.mkMDCsnackbar("Fetching clipboard image...", 4 * 1000);
                     const clipboardAccessOk = await modImages.isClipboardPermissionStateOk();
                     if (clipboardAccessOk == false) {
                         debugPasteLine(`addPasteButton event 1`);
@@ -407,87 +418,8 @@
                         return;
                     }
                     const resultImageBlobs = await modImages.getImagesFromClipboard();
-                    if (Array.isArray(resultImageBlobs)) {
-                        if (resultImageBlobs.length == 0) {
-                            modImages.alertNoImagesFound();
-                        } else {
-                            const toDiv = divPasteImage;
-
-                            const inpQuality = mkElt("input", { type: "number" });
-                            inpQuality.style.width = "50px";
-                            inpQuality.value = 0.7;
-                            const lblQuality = mkElt("label", undefined, ["Quality: ", inpQuality]);
-
-
-                            const inpShrink = mkElt("input", { type: "number" });
-                            inpShrink.style.width = "50px";
-                            inpShrink.value = 0.5;
-                            const lblShrink = mkElt("label", undefined, ["Shrink area: ", inpShrink]);
-
-                            const divImgInputs = mkElt("div", undefined, [
-                                lblQuality,
-                                lblShrink
-                            ]);
-                            divImgInputs.style = `
-                                display: flex;
-                                flex-direction: row;
-                                gap: 10px;
-                            `;
-                            divImgInputs.addEventListener("input", evt => {
-                                evt.stopPropagation();
-                            });
-                            const inpName = mkElt("input", { type: "text" });
-                            const lblName = mkElt("label", undefined, ["Name: ", inpName]);
-                            const divPreview = mkElt("div");
-                            divPreview.style = `
-                                width: 100%;
-                                aspect-ratio: 1 / 1;
-                                border: 1px dashed red;
-                                background-color: yellow;
-                                background-size: contain;
-                                background-repeat: no-repeat;
-                            `;
-                            const bdy = mkElt("div", undefined, [
-                                mkElt("h2", undefined, "Save image"),
-                                divImgInputs,
-                                lblName,
-                                divPreview,
-                            ]);
-                            const funHandleResult = () => {
-                                return {
-                                    imgBlob: false,
-                                }
-                            }
-                            // FIX-ME: several
-                            const origBlob = resultImageBlobs[0]
-                            const origObjUrl = URL.createObjectURL(origBlob);
-                            divPreview.style.backgroundImage = `url(${origObjUrl})`;
-                            // xmp =
-                            const xmpOrig = await pannellum.parseGPanoXMP(origBlob);
-
-                            // mkScaledImageBlob(origObjUrl, quality, shrinkArea);
-                            let outBlob;
-                            outBlob = await mkScaledImageBlob(origObjUrl, inpQuality.value, inpShrink.value);
-                            const outObjUrl = URL.createObjectURL(outBlob);
-                            const config = {
-                                type: "equirectangular",
-                                panorama: outObjUrl,
-                                autoLoad: true,
-                                // compass: true,
-                                avoidShowingBackground: true,
-                                xmp: xmpOrig,
-                                // createTooltipFunc: MYcreateTooltipFunc,
-                                // hotspotGrpKey,
-                            };
-
-                            const viewer = pannellum.viewer(divPreview, config);
-
-                            const { imgBlob } = await modMdc.mkMDCdialogConfirm(bdy, "Continue", "Cancel", true, funHandleResult);
-                            URL.revokeObjectURL(origObjUrl);
-                            debugger;
-
-                        }
-                    } else {
+                    mkTimestamp("1");
+                    if (!Array.isArray(resultImageBlobs)) {
                         // Should be an error object
                         const err = resultImageBlobs;
                         console.log({ err });
@@ -497,22 +429,105 @@
                         }
                         switch (err.name) {
                             case "NotAllowedError":
-                                handleClipboardReadNotAllowed();
-                                break;
+                                modMdc.mkMDCdialogAlert("Please allow reading clipboard");
+                                return;
                             case "DataError":
                                 modImages.alertNoImagesFound();
-                                break;
+                                return;
                             default:
                                 debugger;
                                 throw Error(`Unknown error name: ${err.name}, ${err.message}`);
                         }
                     }
-
-                    function handleClipboardReadNotAllowed() {
-                        modMdc.mkMDCdialogAlert("Please allow reading clipboard");
+                    if (resultImageBlobs.length == 0) {
+                        modImages.alertNoImagesFound();
+                        return;
                     }
+                    const toDiv = divPasteImage;
 
-                }));
+                    const inpQuality = mkElt("input", { type: "number" });
+                    inpQuality.style.width = "50px";
+                    inpQuality.value = 0.7;
+                    const lblQuality = mkElt("label", undefined, ["Quality: ", inpQuality]);
+
+
+                    const inpShrink = mkElt("input", { type: "number" });
+                    inpShrink.style.width = "50px";
+                    inpShrink.value = 0.5;
+                    const lblShrink = mkElt("label", undefined, ["Shrink area: ", inpShrink]);
+
+                    const divImgInputs = mkElt("div", undefined, [
+                        lblQuality,
+                        lblShrink
+                    ]);
+                    divImgInputs.style = `
+                                display: flex;
+                                flex-direction: row;
+                                gap: 10px;
+                            `;
+                    divImgInputs.addEventListener("input", evt => {
+                        evt.stopPropagation();
+                    });
+                    const inpName = mkElt("input", { type: "text" });
+                    const lblName = mkElt("label", undefined, ["Name: ", inpName]);
+                    const divPreview = mkElt("div");
+                    divPreview.style = `
+                                width: 100%;
+                                aspect-ratio: 1 / 1;
+                                border: 1px dashed red;
+                                background-color: yellow;
+                                background-size: contain;
+                                background-repeat: no-repeat;
+                            `;
+                    const bdy = mkElt("div", undefined, [
+                        mkElt("h2", undefined, "Save image"),
+                        divImgInputs,
+                        lblName,
+                        mkElt("div", undefined, "Preview:"),
+                        divPreview,
+                    ]);
+                    const funHandleResult = () => {
+                        return {
+                            imgBlob: false,
+                        }
+                    }
+                    // FIX-ME: several
+                    const origBlob = resultImageBlobs[0]
+                    const origObjUrl = URL.createObjectURL(origBlob);
+                    // divPreview.style.backgroundImage = `url(${origObjUrl})`;
+                    const xmpOrig = await pannellum.parseGPanoXMP(origBlob);
+
+                    async function updateOutBlobAndPreview() {
+                        // mkScaledImageBlob(origObjUrl, quality, shrinkArea);
+                        let outBlob;
+                        outBlob = await mkScaledImageBlob(origObjUrl, inpQuality.value, inpShrink.value);
+                        const outObjUrl = URL.createObjectURL(outBlob);
+                        const config = {
+                            type: "equirectangular",
+                            panorama: outObjUrl,
+                            autoLoad: true,
+                            avoidShowingBackground: true,
+                            xmp: xmpOrig,
+                        };
+                        const viewer = pannellum.viewer(divPreview, config);
+                    }
+                    setTimeout(() => {
+                        mkTimestamp("setTimeout updateOutBlobAndPreview");
+                        updateOutBlobAndPreview();
+                    }, 200);
+
+                    const { imgBlob } = await modMdc.mkMDCdialogConfirm(bdy, "Save", "Cancel", true, funHandleResult);
+                    URL.revokeObjectURL(origObjUrl);
+                    // debugger;
+                    console.log({ imgBlob });
+
+
+                }
+
+                btnAdd.addEventListener("click", evt => {
+                    console.log("clicked btnAdd");
+                    dialogAddImage();
+                });
                 // const divUploadImage = mkElt("div", undefined, btnAdd);
                 const divBuiltinHeader = mkElt("div", undefined, ["Builtin images:"]);
                 const divYourImagesHeader = mkElt("div", undefined, ["Your own images:", btnAdd]);
@@ -788,8 +803,9 @@
                 divBlobPreview.style = previewStyle;
 
                 immages.forEach(src => {
-                    const eltImg = mkElt("div");
-                    eltImg.style = `
+                    // Fit image easier, but you don't get "copy image":
+                    const eltBgImg = mkElt("div");
+                    eltBgImg.style = `
                         background-image: url(${src});
                         background-size: contain;
                         background-repeat: no-repeat;
@@ -798,8 +814,18 @@
                         height: 50px;
                         outline: 1px dotted red;
                     `;
+                    // To get "copy image":
+                    const eltImg = mkElt("img");
+                    eltImg.src = src;
+                    eltImg.style = `
+                        width: 100px;
+                        height: 50px;
+                        outline: 1px dotted blue;
+                    `;
+                    // const eltViewImg = eltBgImg;
+                    const eltViewImg = eltImg;
                     const eltRadio = mkElt("input", { type: "radio", name: "img", value: src });
-                    const eltLbl = mkElt("label", undefined, [eltRadio, eltImg]);
+                    const eltLbl = mkElt("label", undefined, [eltRadio, eltViewImg]);
                     divImmages.appendChild(eltLbl);
                     eltRadio.addEventListener("change", evt => {
                         srcImgOrig = eltRadio.value;
