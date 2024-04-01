@@ -39,8 +39,9 @@ export async function getImgSizes(strUrlImg) {
             const naturalHeight = image.naturalHeight;
             const width = image.width;
             const height = image.height;
+            const equirect = naturalWidth == 2 * naturalHeight;
             const { webglW, webglH, alreadyOK } = getMaxWebglWH(naturalWidth, naturalHeight);
-            resolve({ naturalWidth, naturalHeight, width, height, webglW, webglH, blobSize, alreadyOK });
+            resolve({ equirect, naturalWidth, naturalHeight, width, height, webglW, webglH, blobSize, alreadyOK });
         }
         // image.onerror = async () => { console.log("ERROR"); }
         image.addEventListener("error", evt => {

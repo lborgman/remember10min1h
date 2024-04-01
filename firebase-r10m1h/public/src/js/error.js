@@ -1094,27 +1094,33 @@ async function popupDialog(title, body, severity) {
     switch (severity) {
         case "error":
             {
-                const btnUpdate = mkElt("button", undefined, "Update now");
-                const styleUpdate = "background:black; color:white; padding:10px; display: none;";
-                const divUpdate = mkElt("div", { style: styleUpdate }, ["Update available ", btnUpdate]);
-                body.insertBefore(divUpdate, body.firstElementChild)
-                const modPwa = await import("pwa");
-                btnUpdate.addEventListener("click", async evt => {
-                    modPwa.updateNow();
-                });
-                // if (modPwa.hasUpdate())
-                // debugger;
-                if (modPwa.isShowingUpdatePrompt()) {
-                    console.log("?????? isShowingUpdatePrompt");
-                    window.onbeforeunload = null;
-                    setTimeout(() => divUpdate.style.display = "block", 100);
-                } else {
-                    window.addEventListener("pwa-update-available", evt => {
-                        console.log("?????? pwa-update-available");
-                        window.onbeforeunload = null;
-                        divUpdate.style.display = "block";
-                    });
-                }
+                (async () => {
+                    try {
+                        const modPwa = await import("pwa");
+                        const btnUpdate = mkElt("button", undefined, "Update now");
+                        const styleUpdate = "background:black; color:white; padding:10px; display: none;";
+                        const divUpdate = mkElt("div", { style: styleUpdate }, ["Update available ", btnUpdate]);
+                        body.insertBefore(divUpdate, body.firstElementChild)
+                        btnUpdate.addEventListener("click", async evt => {
+                            modPwa.updateNow();
+                        });
+                        // if (modPwa.hasUpdate())
+                        // debugger;
+                        if (modPwa.isShowingUpdatePrompt()) {
+                            console.log("?????? isShowingUpdatePrompt");
+                            window.onbeforeunload = null;
+                            setTimeout(() => divUpdate.style.display = "block", 100);
+                        } else {
+                            window.addEventListener("pwa-update-available", evt => {
+                                console.log("?????? pwa-update-available");
+                                window.onbeforeunload = null;
+                                divUpdate.style.display = "block";
+                            });
+                        }
+                    } catch (err) {
+                        debugger;
+                    }
+                })();
             }
             styleDia += "background:yellow; border:2px solid red;";
             // debugger;

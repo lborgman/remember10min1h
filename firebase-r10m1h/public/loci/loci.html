@@ -512,6 +512,9 @@
                     const origBlob = resultImageBlobs[0]
                     const origObjUrl = URL.createObjectURL(origBlob);
                     const xmpOrig = await pannellum.parseGPanoXMP(origBlob);
+                    const sizesOrig = await modImages.getImgSizes(origObjUrl);
+                    // debugger;
+                    // const equirectangularOrig = 
 
                     function setSaveState(state) {
                         switch (state) {
@@ -554,6 +557,19 @@
                             xmp: xmpOrig,
                         };
                         setSaveState("ready");
+                        if (!xmpOrig && !sizesOrig.equirect) {
+                            // debugger;
+                            const modPannellum2d = await import("/ext/pannellum/pannellum2d.js");
+                            // debugger;
+                            const config = {
+                                src: outObjUrl,
+                                imgSizes: sizesOrig,
+                                zoom: 0.5,
+                                imageId: "img",
+                            }
+                            modPannellum2d.viewer(divSavePreview, config);
+                            return;
+                        }
                         const viewer = pannellum.viewer(divSavePreview, config);
                     }
 
@@ -567,7 +583,7 @@
                     if (imgBlob) {
                         const newBlobUrl = URL.createObjectURL(imgBlob);
                         // const objHotspotsGrp = await dialogChooseSubjectForImage("custom", srcImgOrig, srcPanorama);
-                        let imgName =inpName.value.trim();
+                        let imgName = inpName.value.trim();
                         if (imgName.length == 0) throw Error("inpName is empty");
                         imgName = "DUMMY-TEST";
                         const objHotspotsGrp = await dialogChooseSubjectForImage("custom", imgName, newBlobUrl);
@@ -919,9 +935,16 @@
             }
 
             async function showPanorama(srcPanorama, xmp, objHotspotGrp4panorama) {
-                const modImages = await import("images");
                 const eltTitle = document.getElementById("palace-title");
                 eltTitle.textContent = objHotspotGrp4panorama.subjGrp;
+                if (!xmp) {
+                    debugger;
+                    const modPannellum2d = import("/ext/pannellum/pannellum2d.js");
+                    debugger;
+                    return;
+                }
+
+                const modImages = await import("images");
                 const sizesImg = await modImages.getImgSizes(srcPanorama);
                 if (sizesImg.naturalWidth > devMaxWebGlW) {
                     debugger;

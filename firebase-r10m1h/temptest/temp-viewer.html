@@ -1,0 +1,91 @@
+<head>
+    <script src="../public/src/js/error.js"></script>
+    <style>
+        body {
+            background: black;
+            padding: 20px;
+        }
+
+        #container {
+            width: 50%;
+            aspect-ratio: 1 / 1;
+            background-color: deepskyblue;
+            position: relative;
+            overflow: hidden;
+            outline: 1px dotted yellow;
+            cursor: grab;
+        }
+
+        #img {
+            width: 160%;
+            position: absolute;
+            outline: 1px dotted red;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <img id="img" draggable="false">
+    </div>
+    <script>
+        const eltCont = document.getElementById("container");
+        const eltImg = document.getElementById("img");
+        eltImg.style.left = "10px";
+        eltImg.style.top = "20px";
+        eltImg.src = "http://localhost:5004/img/loci.svg";
+        let moving = false;
+        let bcrImg;
+        let bcrC;
+        const initDiff = {}
+        eltCont.addEventListener("mousedown", evt => {
+            evt.stopPropagation();
+            console.log({ evt });
+            moving = true;
+            eltImg.style.cursor = "grabbing";
+            bcrC = eltCont.getBoundingClientRect();
+            bcrImg = eltImg.getBoundingClientRect();
+            initDiff.X = bcrImg.left - evt.clientX;
+            initDiff.Y = bcrImg.top - evt.clientY;
+            console.log({ initDiff, bcrImg });
+        });
+        eltCont.addEventListener("mouseup", evt => {
+            evt.stopPropagation();
+            moving = false;
+            eltImg.style.cursor = null;
+        });
+        eltCont.addEventListener("mouseleave", evt => {
+            moving = false;
+            eltImg.style.cursor = null;
+        });
+        const debounceMoveImg = debounce(moveImg, 0);
+        const throttleMoveImg = throttleRA(moveImg);
+        eltCont.addEventListener("mousemove", evt => {
+            evt.stopPropagation();
+            if (!moving) return;
+            // debounceMoveImg(evt.clientX, evt.clientY);
+            throttleMoveImg(evt.clientX, evt.clientY);
+        });
+        function moveImg(mouseX, mouseY) {
+            let left = mouseX + initDiff.X
+            let top = mouseY + initDiff.Y
+
+            const imgBigger = true;
+            if (!imgBigger) {
+                left = Math.max(left, 0);
+                top = Math.max(top, 0);
+                left = Math.min(left, bcrC.right - bcrImg.width - bcrC.left);
+                top = Math.min(top, bcrC.bottom - bcrImg.height - bcrC.top);
+            } else {
+                left = Math.min(left, 0);
+                top = Math.min(top, 0);
+                left = Math.max(left, bcrC.right - bcrImg.width - bcrC.left);
+                top = Math.max(top, bcrC.bottom - bcrImg.height - bcrC.top);
+            }
+
+            eltImg.style.left = `${left}px`;
+            eltImg.style.top = `${top}px`;
+        }
+    </script>
+
+</body>
