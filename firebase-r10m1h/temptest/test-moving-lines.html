@@ -1,0 +1,108 @@
+<head>
+    <script>
+        function makeBreathPattern(holdLow, breathIn, holdHigh, breathOut) {
+            const pattY = {
+                holdLow: 0,
+                breathIn: 0,
+                holdHigh: 1,
+                breathOut: 1,
+            }
+            const patt = {
+                holdLow,
+                breathIn,
+                holdHigh,
+                breathOut,
+            }
+            for (const k in patt) {
+                const v = patt[k];
+                if (isNaN(v)) throw Error(`Value for ${k} is not numeric: ${v}`);
+                // if (v <= 0) throw Error(`Value for ${k} is not positive: ${v}`);
+                if (v <= 1) throw Error(`Value for ${k} is too small: ${v}`);
+                if (v >= 10) throw Error(`Value for ${k} is too big: ${v}`);
+            }
+            const pattW = Object.values(patt)
+                .reduce((acc, next) => acc = acc + next, 0);
+            const pattPoints = [];
+            let pointY;
+            let pointX = 0;
+            for (part in patt) {
+                pointY = pattY[part];
+                pattPoints.push({ pointX, pointY, part });
+                const diffX = patt[part];
+                pointX += diffX;
+            }
+            return {
+                patt,
+                pattW,
+                pattPoints
+            };
+        }
+        let eltCanvas;
+        let ctxCanvas;
+        let bcrCanvas;
+        function drawPattern(patt, numPatt, atTime) {
+            bcrCanvas = eltCanvas.getBoundingClientRect();
+            ctxCanvas.clearRect(0, 0, eltCanvas.width, eltCanvas.height);
+            // const totTime = Object.values(patt).reduce((acc, next) => acc + next, 0);
+            // console.log({ totTime });
+            const points = patt.pattPoints;
+            ctxCanvas.beginPath();
+            const p0 = points[0];
+            // ctxCanvas.moveTo(pattX2canvasX(p0.pointX), pattY2canvasY(p0.pointY));
+            moveTo(p0);
+            for (let i = 1, len = points.length; i < 3; i++) {
+                const pnt = points[i];
+                // ctxCanvas.lineTo(pattX2canvasX(pnt.pointX), pattY2canvasY(pnt.pointY));
+                lineTo(pnt);
+            }
+            ctxCanvas.lineWidth = 20;
+            ctxCanvas.stroke();
+            function moveTo(pnt) {
+                const pntCanvas = pnt2canvas(pnt);
+                ctxCanvas.moveTo(pntCanvas.x, pntCanvas.y);
+            }
+            function lineTo(pnt) {
+                const pntCanvas = pnt2canvas(pnt);
+                ctxCanvas.lineTo(pntCanvas.x, pntCanvas.y);
+            }
+            function pnt2canvas(pnt) {
+                return {
+                    x: pattX2canvasX(pnt.pointX),
+                    y: pattY2canvasY(pnt.pointY),
+                }
+            }
+            function pattX2canvasX(pattX) {
+                return pattX / (patt.pattW * numPatt) * bcrCanvas.width;
+            }
+            function pattY2canvasY(pattY) {
+                const bottom = bcrCanvas.height * 0.2;
+                return pattY * bcrCanvas.height
+            }
+        }
+        function setupCanvas() {
+            eltCanvas = document.getElementById("my-canvas");
+            eltCanvas.style = `
+                background-color: yellow;
+                outline: 2px dotted red;
+                width: 50%;
+                height: 50%;
+                NObackground-image: url("https://static-cdn.sr.se/images/83/5f3f6e55-5d96-489a-853b-e9f9e7702ec5.jpg?preset=1024x576&format=webp");
+                background-size: cover;
+            `;
+            ctxCanvas = eltCanvas.getContext("2d");
+        }
+
+    </script>
+</head>
+
+<body>
+    <canvas id="my-canvas"></canvas>
+    <script>
+        setupCanvas();
+        const myPatt = makeBreathPattern(2, 4, 3, 7);
+        console.log({ myPatt });
+        drawPattern(myPatt, 1);
+
+    </script>
+
+</body>
