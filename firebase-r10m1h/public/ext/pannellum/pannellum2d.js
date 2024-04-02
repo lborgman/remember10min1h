@@ -23,21 +23,32 @@ export async function viewer(divPanorama, config) {
     let moving = false;
     let bcrImg;
     let bcrC;
-    const initDiff = {}
-        let imgBiggerW;
-        let imgBiggerH;
+    const mouse2img = {}
+    let imgBiggerW;
+    let imgBiggerH;
+
+    function saveMouse2img(evt) {
+        // bcrImg = eltImg.getBoundingClientRect();
+        // mouse2img.X = bcrImg.left - evt.clientX;
+        // mouse2img.Y = bcrImg.top - evt.clientY;
+        // if (mouse2img.X == -evt.offsetX) { console.log("eq"); } else { console.log("not eq"); }
+
+        mouse2img.X = - evt.offsetX;
+        mouse2img.Y = - evt.offsetY;
+    }
+
     eltCont.addEventListener("mousedown", evt => {
         evt.stopPropagation();
-        console.log({ evt });
         moving = true;
         eltImg.style.cursor = "grabbing";
-        bcrC = eltCont.getBoundingClientRect();
+
+        saveMouse2img(evt);
+
         bcrImg = eltImg.getBoundingClientRect();
-        initDiff.X = bcrImg.left - evt.clientX;
-        initDiff.Y = bcrImg.top - evt.clientY;
+        bcrC = eltCont.getBoundingClientRect();
         imgBiggerW = bcrImg.width > bcrC.width;
         imgBiggerH = bcrImg.height > bcrC.height;
-        console.log({ initDiff, bcrImg });
+        // console.log({ evt, mouse2img, bcrImg, bcrC });
     });
     eltCont.addEventListener("mouseup", evt => {
         evt.stopPropagation();
@@ -53,29 +64,38 @@ export async function viewer(divPanorama, config) {
     eltCont.addEventListener("mousemove", evt => {
         evt.stopPropagation();
         if (!moving) return;
-        // debounceMoveImg(evt.clientX, evt.clientY);
-        throttleMoveImg(evt.clientX, evt.clientY);
+        // debounceMoveImg(evt);
+        throttleMoveImg(evt);
     });
-    function moveImg(mouseX, mouseY) {
-        let left = mouseX + initDiff.X
-        let top = mouseY + initDiff.Y
+    function moveImg(evt) {
+        let left = evt.clientX + mouse2img.X;
+        let top = evt.clientY + mouse2img.Y;
+        let finalLeft, finalTop;
+        let needMouse2img = false;
 
         if (!imgBiggerW) {
             left = Math.max(left, 0);
-            left = Math.min(left, bcrC.right - bcrImg.width - bcrC.left);
+            finalLeft = Math.min(left, bcrC.right - bcrImg.width - bcrC.left);
         } else {
             left = Math.min(left, 0);
-            left = Math.max(left, bcrC.right - bcrImg.width - bcrC.left);
+            finalLeft = Math.max(left, bcrC.right - bcrImg.width - bcrC.left);
         }
+        if (finalLeft != left) { needMouse2img = true; }
+        left = finalLeft;
+
         if (!imgBiggerH) {
             top = Math.max(top, 0);
-            top = Math.min(top, bcrC.bottom - bcrImg.height - bcrC.top);
+            finalTop = Math.min(top, bcrC.bottom - bcrImg.height - bcrC.top);
         } else {
             top = Math.min(top, 0);
-            top = Math.max(top, bcrC.bottom - bcrImg.height - bcrC.top);
+            finalTop = Math.max(top, bcrC.bottom - bcrImg.height - bcrC.top);
         }
+        if (finalTop != top) { needMouse2img = true; }
+        top = finalTop;
 
         eltImg.style.left = `${left}px`;
         eltImg.style.top = `${top}px`;
+
+        if (needMouse2img) { saveMouse2img(evt); }
     }
 }
