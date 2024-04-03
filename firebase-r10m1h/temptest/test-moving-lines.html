@@ -1,4 +1,6 @@
 <head>
+    <!-- <script src="/src/js/error.js"></script> -->
+    <script src="../public/src/js/error.js"></script>
     <script>
         function makeBreathPattern(holdLow, breathIn, holdHigh, breathOut) {
             const pattY = {
@@ -44,7 +46,7 @@
         let msLastDraw;
         let pxPerMs;
         // const msStart = Date.now();
-        const msStart = document.timeline.currentTime;
+        let msStart = document.timeline.currentTime;
         function drawPattern(patt, numPatt, atTime) {
             atTime = atTime || 0;
             bcrCanvas = eltCanvas.getBoundingClientRect();
@@ -156,8 +158,12 @@
                 return pattY * height + top;
             }
         }
-        function setupCanvas() {
-            eltCanvas = document.getElementById("my-canvas");
+        function setupCanvas(container) {
+            // const container = document.body;
+            // eltCanvas = document.getElementById("my-canvas");
+            eltCanvas = document.createElement("canvas");
+            container.appendChild(eltCanvas)
+            // eltCanvas.id = "my-canvas";
             eltCanvas.style = `
                 background-color: darkgoldenrod;
                 outline: 2px dotted red;
@@ -170,21 +176,62 @@
             `;
             ctxCanvas = eltCanvas.getContext("2d");
         }
+        let myPatt = makeBreathPattern(2, 4, 3, 7);
+        let isRunning = false;
+        function setupControls(container) {
+            const btnStart = mkElt("button", undefined, "Start");
+            btnStart.id = "start-button";
+            btnStart.addEventListener("click", evt => {
+                document.documentElement.classList.add("running");
+                console.log({ myPatt });
+                isRunning = true;
+                animateLines();
+            });
+            const btnStop = mkElt("button", undefined, "Stop");
+            btnStop.addEventListener("click", evt => {
+                document.documentElement.classList.remove("running");
+                isRunning = false;
+                msStart = document.timeline.currentTime;
+                redraw();
+            });
+            btnStop.id = "stop-button";
+            const divControls = mkElt("div", undefined, [
+                "controls",
+                btnStart,
+                btnStop,
+            ]);
+            container.appendChild(divControls);
+        }
+        function setupThings() {
+            const container = document.body;
+            setupCanvas(container);
+            setupControls(container);
+        }
 
     </script>
     <style>
         body {
             background: black;
+            color: red;
+        }
+
+        #stop-button {
+            display: none;
+        }
+
+        .running #start-button {
+            display: none;
+        }
+
+        .running #stop-button {
+            display: unset;
         }
     </style>
 </head>
 
 <body>
-    <canvas id="my-canvas"></canvas>
     <script>
-        setupCanvas();
-        const myPatt = makeBreathPattern(2, 4, 3, 7);
-        console.log({ myPatt });
+        setupThings();
 
         function redraw() {
             drawPattern(myPatt, 1.2);
@@ -214,8 +261,10 @@
         }
 
         let numRedraw = 0;
-        animate();
-        function animate() {
+        redraw();
+        // animateLines();
+        function animateLines() {
+            if (!isRunning) return;
             const ok = checkRedraw();
             if (!ok) return;
             requestAnimationFrame(() => {
@@ -223,7 +272,7 @@
                     console.log("stopping sec check", { numRedraw });
                     return;
                 }
-                animate();
+                animateLines();
             });
         }
 
