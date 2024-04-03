@@ -2,6 +2,8 @@
     <!-- <script src="/src/js/error.js"></script> -->
     <script src="../public/src/js/error.js"></script>
     <script>
+        let stopRedraw = false;
+        let numChecks = 0;
         function makeBreathPattern(holdLow, breathIn, holdHigh, breathOut) {
             const pattY = {
                 holdLow: 0,
@@ -47,13 +49,15 @@
         let pxPerMs;
         // const msStart = Date.now();
         let msStart = document.timeline.currentTime;
-        function drawPattern(patt, numPatt, atTime) {
-            atTime = atTime || 0;
+        let canvasSec;
+        function drawPattern(patt, numPatt) {
             bcrCanvas = eltCanvas.getBoundingClientRect();
             eltCanvas.width = bcrCanvas.width;
             eltCanvas.height = bcrCanvas.height;
             ctxCanvas.clearRect(0, 0, eltCanvas.width, eltCanvas.height);
+
             const points = patt.pattPoints;
+            canvasSec = patt.pattW * numPatt;
 
             ctxCanvas.beginPath();
 
@@ -127,7 +131,7 @@
             }
             function pnt2canvas(pnt) {
                 const sec = (msLastDraw - msStart) / 1000;
-                const x = pnt.pointX - sec;
+                const x = pnt.pointX - sec + canvasSec / 2;
                 const pntC = {
                     x: pattX2canvasX(x),
                     y: pattY2canvasY(pnt.pointY),
@@ -176,7 +180,7 @@
             `;
             ctxCanvas = eltCanvas.getContext("2d");
         }
-        let myPatt = makeBreathPattern(2, 4, 3, 7);
+        let myPatt = makeBreathPattern(2, 4, 5, 7);
         let isRunning = false;
         function setupControls(container) {
             const btnStart = mkElt("button", undefined, "Start");
@@ -185,6 +189,9 @@
                 document.documentElement.classList.add("running");
                 console.log({ myPatt });
                 isRunning = true;
+                msStart = document.timeline.currentTime;
+                numChecks = 0;
+                numRedraw = 0;
                 animateLines();
             });
             const btnStop = mkElt("button", undefined, "Stop");
@@ -236,12 +243,10 @@
         function redraw() {
             drawPattern(myPatt, 1.2);
         }
-        let stopRedraw = false;
-        let numChecks = 0;
         // checkRedraw();
         function checkRedraw() {
             // const ms = Date.now() - msStart;
-            const ms = document.timeline.currentTime;
+            const ms = document.timeline.currentTime - msStart;
             if (ms > 19 * 1000) {
                 console.log("stopping time...");
                 stopRedraw = true;
@@ -253,9 +258,7 @@
                 return false;
             }
             const px = Math.floor(pxPerMs * ms);
-            if (px == 0) {
-                return;
-            }
+            // if (px == 0) { return; }
             redraw();
             return true;
         }
