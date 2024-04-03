@@ -2,8 +2,48 @@
     <!-- <script src="/src/js/error.js"></script> -->
     <script src="../public/src/js/error.js"></script>
     <script>
+        let eltCanvas;
+        let ctxCanvas;
+        let bcrCanvas
+
+        let currentPointY = 0;
+        let middleX;
+
+        const currentPointCanvas = {
+            cX: undefined,
+            cY: undefined,
+        }
+
+        function drawCurrentPoint(color) {
+            // const cX = pattX2canvasX(middleX);
+            // const cY = pattY2canvasY(currentPointY);
+            const cX = currentPointCanvas.cX;
+            const cY = currentPointCanvas.cY;
+            // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/ellipse
+            // const cR = pattY2canvasY(0) / 20;
+            const cR = currentPointCanvas.cR;
+            ctxCanvas.beginPath();
+            ctxCanvas.ellipse(cX, cY, cR, cR, 0, 0, 2 * Math.PI);
+            ctxCanvas.strokeStyle = "red";
+            ctxCanvas.fillStyle = color;
+            ctxCanvas.stroke();
+            ctxCanvas.fill();
+        }
+
+
+
+        let currentPattern = "user"
+        const breathPatterns = {
+            user: makeBreathPattern(2, 4, 3, 5),
+        }
         let stopRedraw = false;
         let numChecks = 0;
+        const textForParts = {
+            holdLow: "Hold...",
+            breathIn: "Breath in",
+            holdHigh: "Hold...",
+            breathOut: "Breath Out",
+        }
         function makeBreathPattern(holdLow, breathIn, holdHigh, breathOut) {
             const pattY = {
                 holdLow: 0,
@@ -42,14 +82,19 @@
                 pattPoints
             };
         }
-        let eltCanvas;
-        let ctxCanvas;
-        let bcrCanvas;
+
         let msLastDraw;
         let pxPerMs;
         // const msStart = Date.now();
         let msStart = document.timeline.currentTime;
         let canvasSec;
+
+        function tellState(txtState) {
+            const divInstructions = document.getElementById("elt-instructions");
+            divInstructions.textContent = txtState;
+        }
+        function tellInitialState() { tellState(`Current pattern: ${currentPattern}`); }
+
         function drawPattern(patt, numPatt) {
             bcrCanvas = eltCanvas.getBoundingClientRect();
             eltCanvas.width = bcrCanvas.width;
@@ -63,7 +108,8 @@
 
             ctxCanvas.lineWidth = 3;
             ctxCanvas.lineCap = "round"; // FIX-ME: does not work?? Bug???
-            ctxCanvas.strokeStyle = "blue";
+            // ctxCanvas.strokeStyle = "blue";
+            ctxCanvas.strokeStyle = "yellowgreen";
 
             // msLastDraw = Date.now();
             msLastDraw = document.timeline.currentTime;
@@ -73,7 +119,7 @@
             let protect = 0;
             let lastCanvasX = true;
             let lastPoint;
-            const middleX = numPatt * patt.pattW / 2;
+            middleX = numPatt * patt.pattW / 2;
             const middleCanvasX = pattX2canvasX(middleX);
             let middleY = 0.2;
             while (protect++ < 5 && lastCanvasX) {
@@ -95,6 +141,9 @@
                             const nextY = nextPoint.pointY;
                             const part = (middleCanvasX - lastCanvasX) / (nextCanvasX - lastCanvasX);
                             middleY = lastY + (nextY - lastY) * part;
+                            // eltIn.textContent = lastPoint.part;
+                            const txtState = textForParts[lastPoint.part];
+                            tellState(txtState);
                         }
                     }
 
@@ -103,19 +152,13 @@
                 }
             }
             ctxCanvas.stroke();
-            drawCurrentPoint(middleY);
-            function drawCurrentPoint(y) {
-                const cX = pattX2canvasX(middleX);
-                const cY = pattY2canvasY(y);
-                // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/ellipse
-                const cR = pattY2canvasY(0) / 20;
-                ctxCanvas.beginPath();
-                ctxCanvas.ellipse(cX, cY, cR, cR, 0, 0, 2 * Math.PI);
-                ctxCanvas.strokeStyle = "red";
-                ctxCanvas.fillStyle = "green";
-                ctxCanvas.stroke();
-                ctxCanvas.fill();
-            }
+            currentPointY = middleY;
+            const clrPoint = isRunning ? "orange" : "green";
+
+            currentPointCanvas.cX = pattX2canvasX(middleX);
+            currentPointCanvas.cY = pattY2canvasY(currentPointY);
+            currentPointCanvas.cR = pattY2canvasY(0) / 20;
+            drawCurrentPoint(clrPoint);
             function moveTo(pnt) {
                 const pntCanvas = pnt2canvas(pnt);
                 ctxCanvas.moveTo(pntCanvas.x, pntCanvas.y);
@@ -176,12 +219,13 @@
                 aspect-ratio: 1 / 1;
                 NObackground-image: url(https://static-cdn.sr.se/images/83/e295c2fb-fd0b-4b40-b22d-57ec63ab7b67.jpg?preset=1024x576&format=webp);
                 NObackground-image: url("https://static-cdn.sr.se/images/83/5f3f6e55-5d96-489a-853b-e9f9e7702ec5.jpg?preset=1024x576&format=webp");
-                NObackground-image: url(https://static-cdn.sr.se/images/83/ebffc0d1-3bf9-48ad-921f-9449fdc46fcf.jpg?preset=1024x576&format=webp);
+                background-image: url(https://static-cdn.sr.se/images/83/ebffc0d1-3bf9-48ad-921f-9449fdc46fcf.jpg?preset=1024x576&format=webp);
                 background-size: cover;
             `;
             ctxCanvas = eltCanvas.getContext("2d");
         }
-        let myPatt = makeBreathPattern(2, 4, 5, 7);
+        // let myPatt = makeBreathPattern(2, 4, 5, 7);
+        let myPatt = breathPatterns[currentPattern];
         let isRunning = false;
         function setupControls(container) {
             const btnStart = mkElt("button", undefined, "Start");
@@ -195,19 +239,38 @@
                 numRedraw = 0;
                 animateLines();
             });
-            const btnStop = mkElt("button", undefined, "Stop");
-            btnStop.addEventListener("click", evt => {
+
+            const btnReset = mkElt("button", undefined, "Reset");
+            btnReset.addEventListener("click", evt => {
                 document.documentElement.classList.remove("running");
                 isRunning = false;
                 msStart = document.timeline.currentTime;
+                // divInstructions.textContent = "Click start to do it again";
+                // tellState("Click start to do it again");
+                tellInitialState();
                 redraw();
             });
-            btnStop.id = "stop-button";
+            btnReset.id = "stop-button";
+
+            const btnSettings = mkElt("button", undefined, "Settings");
+            btnSettings.addEventListener("click", evt => {
+            });
+            btnSettings.id = "settings-button";
+
+            const divInstructions = mkElt("p", undefined, "Wait ");
+            divInstructions.id = "elt-instructions";
+            container.appendChild(divInstructions);
+            tellInitialState();
+
             const divControls = mkElt("div", undefined, [
-                "controls",
                 btnStart,
-                btnStop,
+                btnReset,
+                btnSettings,
             ]);
+            divControls.style = `
+                display: flex;
+                gap: 20px;
+            `;
             container.appendChild(divControls);
         }
         function setupThings() {
@@ -242,7 +305,7 @@
         setupThings();
 
         function redraw() {
-            drawPattern(myPatt, 1.2);
+            drawPattern(myPatt, 1.05);
         }
         // checkRedraw();
         function checkRedraw() {
@@ -250,6 +313,9 @@
             const ms = document.timeline.currentTime - msStart;
             if (ms > 19 * 1000) {
                 console.log("stopping time...");
+                tellState("Finished");
+                drawCurrentPoint("gray");
+                isRunning = false;
                 stopRedraw = true;
                 return false;
             }
