@@ -108,7 +108,7 @@
                 const cX = pattX2canvasX(middleX);
                 const cY = pattY2canvasY(y);
                 // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/ellipse
-                const cR = pattY2canvasY(1) / 20;
+                const cR = pattY2canvasY(0) / 20;
                 ctxCanvas.beginPath();
                 ctxCanvas.ellipse(cX, cY, cR, cR, 0, 0, 2 * Math.PI);
                 ctxCanvas.strokeStyle = "red";
@@ -159,7 +159,8 @@
                 const top = bcrCanvas.height * 0.2;
                 const height = bcrCanvas.height - top - bottom;
                 const invertY = Math.abs(pattY - 1);
-                return pattY * height + top;
+                // return pattY * height + top;
+                return invertY * height + top;
             }
         }
         function setupCanvas(container) {
@@ -257,8 +258,7 @@
                 stopRedraw = true;
                 return false;
             }
-            const px = Math.floor(pxPerMs * ms);
-            // if (px == 0) { return; }
+            // const px = Math.floor(pxPerMs * ms); if (px == 0) { return; }
             redraw();
             return true;
         }
