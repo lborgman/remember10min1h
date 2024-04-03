@@ -40,59 +40,105 @@
         let eltCanvas;
         let ctxCanvas;
         let bcrCanvas;
+        let msLastDraw;
+        let pxPerMs;
+        // const msStart = Date.now();
+        const msStart = document.timeline.currentTime;
         function drawPattern(patt, numPatt, atTime) {
+            atTime = atTime || 0;
             bcrCanvas = eltCanvas.getBoundingClientRect();
+            // if (bcrCanvas.width != eltCanvas.width) debugger;
+            // if (bcrCanvas.height != eltCanvas.height) debugger;
+            eltCanvas.width = bcrCanvas.width;
+            eltCanvas.height = bcrCanvas.height;
             ctxCanvas.clearRect(0, 0, eltCanvas.width, eltCanvas.height);
-            // const totTime = Object.values(patt).reduce((acc, next) => acc + next, 0);
-            // console.log({ totTime });
             const points = patt.pattPoints;
+
             ctxCanvas.beginPath();
+
+            ctxCanvas.lineWidth = 10;
+            ctxCanvas.lineCap = "round"; // FIX-ME: does not work?? Bug???
+            ctxCanvas.strokeStyle = "blue";
+
+            // msLastDraw = Date.now();
+            msLastDraw = document.timeline.currentTime;
+
             const p0 = points[0];
-            // ctxCanvas.moveTo(pattX2canvasX(p0.pointX), pattY2canvasY(p0.pointY));
             moveTo(p0);
-            for (let i = 1, len = points.length; i < 3; i++) {
+            for (let i = 1, len = points.length; i < len; i++) {
                 const pnt = points[i];
                 // ctxCanvas.lineTo(pattX2canvasX(pnt.pointX), pattY2canvasY(pnt.pointY));
                 lineTo(pnt);
             }
-            ctxCanvas.lineWidth = 20;
+            const pntLast = {
+                pointX: patt.pattW,
+                pointY: 0
+            }
+            lineTo(pntLast);
             ctxCanvas.stroke();
             function moveTo(pnt) {
                 const pntCanvas = pnt2canvas(pnt);
                 ctxCanvas.moveTo(pntCanvas.x, pntCanvas.y);
             }
             function lineTo(pnt) {
+                // console.log("lineTo", pnt);
                 const pntCanvas = pnt2canvas(pnt);
                 ctxCanvas.lineTo(pntCanvas.x, pntCanvas.y);
             }
             function pnt2canvas(pnt) {
-                return {
-                    x: pattX2canvasX(pnt.pointX),
+                const sec = (msLastDraw - msStart) / 1000;
+                const x = pnt.pointX - sec;
+                const pntC = {
+                    x: pattX2canvasX(x),
                     y: pattY2canvasY(pnt.pointY),
                 }
+                // console.log({ pntC });
+                return pntC;
+            }
+            function mkPxPerMs() {
+                pxPerMs = bcrCanvas.width / (patt.pattW * numPatt);
             }
             function pattX2canvasX(pattX) {
-                return pattX / (patt.pattW * numPatt) * bcrCanvas.width;
+                const msElapsed = msLastDraw - msStart;
+                const msInpattern = msElapsed % Math.floor(patt.pattW * 1000);
+                const currX = pattX - msInpattern / 1000;
+                mkPxPerMs();
+                // return pattX / (patt.pattW * numPatt) * bcrCanvas.width;
+                // return bcrCanvas.width * pattX / (patt.pattW * numPatt);
+                // return pattX * bcrCanvas.width / (patt.pattW * numPatt);
+                // return pattX * pxPerMs;
+                return currX * pxPerMs;
             }
             function pattY2canvasY(pattY) {
                 const bottom = bcrCanvas.height * 0.2;
-                return pattY * bcrCanvas.height
+                const top = bcrCanvas.height * 0.2;
+                const height = bcrCanvas.height - top - bottom;
+                const invertY = Math.abs(pattY - 1);
+                return invertY * height + top;
             }
         }
         function setupCanvas() {
             eltCanvas = document.getElementById("my-canvas");
             eltCanvas.style = `
-                background-color: yellow;
+                background-color: darkgoldenrod;
                 outline: 2px dotted red;
                 width: 50%;
-                height: 50%;
-                NObackground-image: url("https://static-cdn.sr.se/images/83/5f3f6e55-5d96-489a-853b-e9f9e7702ec5.jpg?preset=1024x576&format=webp");
+                NOheight: 50%;
+                aspect-ratio: 1 / 1;
+                background-image: url(https://static-cdn.sr.se/images/83/e295c2fb-fd0b-4b40-b22d-57ec63ab7b67.jpg?preset=1024x576&format=webp);
+                background-image: url("https://static-cdn.sr.se/images/83/5f3f6e55-5d96-489a-853b-e9f9e7702ec5.jpg?preset=1024x576&format=webp");
+                background-image: url(https://static-cdn.sr.se/images/83/ebffc0d1-3bf9-48ad-921f-9449fdc46fcf.jpg?preset=1024x576&format=webp);
                 background-size: cover;
             `;
             ctxCanvas = eltCanvas.getContext("2d");
         }
 
     </script>
+    <style>
+        body {
+            background: black;
+        }
+    </style>
 </head>
 
 <body>
@@ -101,7 +147,60 @@
         setupCanvas();
         const myPatt = makeBreathPattern(2, 4, 3, 7);
         console.log({ myPatt });
-        drawPattern(myPatt, 1);
+        // drawPattern(myPatt, 1);
+
+        // redraw();
+        function redraw() {
+            drawPattern(myPatt, 1);
+        }
+        let stopRedraw = false;
+        let numChecks = 0;
+        function checkRedraw() {
+            // const ms = Date.now() - msStart;
+            const ms = document.timeline.currentTime;
+            if (ms > 5 * 1000) {
+                console.log("stopping...");
+                stopRedraw = true;
+                return false;
+            }
+            if (numChecks > 100) {
+                console.log("stopping num...");
+                stopRedraw = true;
+                return false;
+            }
+            const px = Math.floor(pxPerMs * ms);
+            if (px == 0) {
+                return;
+            }
+            redraw();
+            return true;
+        }
+
+        let numTh = 0;
+        const throttleRedraw = throttleRA(checkRedraw);
+        throttleRedraw();
+
+        // FIX-ME: remove??
+        function throttleRA(fn) {
+            let requestId;
+            return function (...args) {
+                if (numTh++ > 1000) {
+                    console.log("stopping throttle...");
+                    return;
+                }
+                if (requestId) {
+                    return;
+                }
+                const reqFun = () => {
+                    if (!fn(...args)) return;
+                    requestId = requestAnimationFrame(() => {
+                        reqFun();
+                        requestId = null;
+                    });
+                };
+                reqFun();
+            }
+        }
 
     </script>
 
