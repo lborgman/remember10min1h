@@ -31,6 +31,7 @@
                 const diffX = patt[part];
                 pointX += diffX;
             }
+            console.log({ pattPoints });
             return {
                 patt,
                 pattW,
@@ -47,8 +48,6 @@
         function drawPattern(patt, numPatt, atTime) {
             atTime = atTime || 0;
             bcrCanvas = eltCanvas.getBoundingClientRect();
-            // if (bcrCanvas.width != eltCanvas.width) debugger;
-            // if (bcrCanvas.height != eltCanvas.height) debugger;
             eltCanvas.width = bcrCanvas.width;
             eltCanvas.height = bcrCanvas.height;
             ctxCanvas.clearRect(0, 0, eltCanvas.width, eltCanvas.height);
@@ -56,7 +55,7 @@
 
             ctxCanvas.beginPath();
 
-            ctxCanvas.lineWidth = 10;
+            ctxCanvas.lineWidth = 3;
             ctxCanvas.lineCap = "round"; // FIX-ME: does not work?? Bug???
             ctxCanvas.strokeStyle = "blue";
 
@@ -65,17 +64,52 @@
 
             const p0 = points[0];
             moveTo(p0);
-            for (let i = 1, len = points.length; i < len; i++) {
-                const pnt = points[i];
-                // ctxCanvas.lineTo(pattX2canvasX(pnt.pointX), pattY2canvasY(pnt.pointY));
-                lineTo(pnt);
+            let protect = 0;
+            let lastCanvasX = true;
+            let lastPoint;
+            const middleX = numPatt * patt.pattW / 2;
+            const middleCanvasX = pattX2canvasX(middleX);
+            let middleY = 0.2;
+            while (protect++ < 5 && lastCanvasX) {
+                for (let i = 0, len = points.length; i < len; i++) {
+                    const pnt = points[i];
+                    const nextPoint = { ...pnt }
+                    nextPoint.pointX = pnt.pointX + (protect - 1) * patt.pattW;
+                    // if (nextPoint.pointX <= lastX) debugger;
+                    // lastX = nextX;
+
+                    const nextCanvasX = lineTo(nextPoint);
+                    if (!nextCanvasX) break;
+
+                    if (lastCanvasX < middleCanvasX && middleCanvasX <= nextCanvasX) {
+                        if (!lastPoint) {
+                            middleY = 0;
+                        } else {
+                            const lastY = lastPoint.pointY;
+                            const nextY = nextPoint.pointY;
+                            const part = (middleCanvasX - lastCanvasX) / (nextCanvasX - lastCanvasX);
+                            middleY = lastY + (nextY - lastY) * part;
+                        }
+                    }
+
+                    lastPoint = nextPoint;
+                    lastCanvasX = nextCanvasX;
+                }
             }
-            const pntLast = {
-                pointX: patt.pattW,
-                pointY: 0
-            }
-            lineTo(pntLast);
             ctxCanvas.stroke();
+            drawCurrentPoint(middleY);
+            function drawCurrentPoint(y) {
+                const cX = pattX2canvasX(middleX);
+                const cY = pattY2canvasY(y);
+                // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/ellipse
+                const cR = pattY2canvasY(1) / 20;
+                ctxCanvas.beginPath();
+                ctxCanvas.ellipse(cX, cY, cR, cR, 0, 0, 2 * Math.PI);
+                ctxCanvas.strokeStyle = "red";
+                ctxCanvas.fillStyle = "green";
+                ctxCanvas.stroke();
+                ctxCanvas.fill();
+            }
             function moveTo(pnt) {
                 const pntCanvas = pnt2canvas(pnt);
                 ctxCanvas.moveTo(pntCanvas.x, pntCanvas.y);
@@ -84,6 +118,10 @@
                 // console.log("lineTo", pnt);
                 const pntCanvas = pnt2canvas(pnt);
                 ctxCanvas.lineTo(pntCanvas.x, pntCanvas.y);
+                if (pntCanvas.x < eltCanvas.width) {
+                    return pntCanvas.x; // So we don't have to calculate it again...
+                }
+                return false;
             }
             function pnt2canvas(pnt) {
                 const sec = (msLastDraw - msStart) / 1000;
@@ -101,12 +139,13 @@
             function pattX2canvasX(pattX) {
                 const msElapsed = msLastDraw - msStart;
                 const msInpattern = msElapsed % Math.floor(patt.pattW * 1000);
-                const currX = pattX - msInpattern / 1000;
+                // const currX = pattX - msInpattern / 1000;
+                const currX = pattX - msElapsed / 1000;
                 mkPxPerMs();
                 // return pattX / (patt.pattW * numPatt) * bcrCanvas.width;
                 // return bcrCanvas.width * pattX / (patt.pattW * numPatt);
                 // return pattX * bcrCanvas.width / (patt.pattW * numPatt);
-                // return pattX * pxPerMs;
+                return pattX * pxPerMs;
                 return currX * pxPerMs;
             }
             function pattY2canvasY(pattY) {
@@ -114,7 +153,7 @@
                 const top = bcrCanvas.height * 0.2;
                 const height = bcrCanvas.height - top - bottom;
                 const invertY = Math.abs(pattY - 1);
-                return invertY * height + top;
+                return pattY * height + top;
             }
         }
         function setupCanvas() {
@@ -123,11 +162,10 @@
                 background-color: darkgoldenrod;
                 outline: 2px dotted red;
                 width: 50%;
-                NOheight: 50%;
                 aspect-ratio: 1 / 1;
-                background-image: url(https://static-cdn.sr.se/images/83/e295c2fb-fd0b-4b40-b22d-57ec63ab7b67.jpg?preset=1024x576&format=webp);
-                background-image: url("https://static-cdn.sr.se/images/83/5f3f6e55-5d96-489a-853b-e9f9e7702ec5.jpg?preset=1024x576&format=webp");
-                background-image: url(https://static-cdn.sr.se/images/83/ebffc0d1-3bf9-48ad-921f-9449fdc46fcf.jpg?preset=1024x576&format=webp);
+                NObackground-image: url(https://static-cdn.sr.se/images/83/e295c2fb-fd0b-4b40-b22d-57ec63ab7b67.jpg?preset=1024x576&format=webp);
+                NObackground-image: url("https://static-cdn.sr.se/images/83/5f3f6e55-5d96-489a-853b-e9f9e7702ec5.jpg?preset=1024x576&format=webp");
+                NObackground-image: url(https://static-cdn.sr.se/images/83/ebffc0d1-3bf9-48ad-921f-9449fdc46fcf.jpg?preset=1024x576&format=webp);
                 background-size: cover;
             `;
             ctxCanvas = eltCanvas.getContext("2d");
@@ -147,19 +185,18 @@
         setupCanvas();
         const myPatt = makeBreathPattern(2, 4, 3, 7);
         console.log({ myPatt });
-        // drawPattern(myPatt, 1);
 
-        // redraw();
         function redraw() {
-            drawPattern(myPatt, 1);
+            drawPattern(myPatt, 1.2);
         }
         let stopRedraw = false;
         let numChecks = 0;
+        // checkRedraw();
         function checkRedraw() {
             // const ms = Date.now() - msStart;
             const ms = document.timeline.currentTime;
-            if (ms > 5 * 1000) {
-                console.log("stopping...");
+            if (ms > 19 * 1000) {
+                console.log("stopping time...");
                 stopRedraw = true;
                 return false;
             }
@@ -176,30 +213,18 @@
             return true;
         }
 
-        let numTh = 0;
-        const throttleRedraw = throttleRA(checkRedraw);
-        throttleRedraw();
-
-        // FIX-ME: remove??
-        function throttleRA(fn) {
-            let requestId;
-            return function (...args) {
-                if (numTh++ > 1000) {
-                    console.log("stopping throttle...");
+        let numRedraw = 0;
+        animate();
+        function animate() {
+            const ok = checkRedraw();
+            if (!ok) return;
+            requestAnimationFrame(() => {
+                if (numRedraw++ > 3000) {
+                    console.log("stopping sec check", { numRedraw });
                     return;
                 }
-                if (requestId) {
-                    return;
-                }
-                const reqFun = () => {
-                    if (!fn(...args)) return;
-                    requestId = requestAnimationFrame(() => {
-                        reqFun();
-                        requestId = null;
-                    });
-                };
-                reqFun();
-            }
+                animate();
+            });
         }
 
     </script>
