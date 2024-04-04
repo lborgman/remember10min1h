@@ -1,7 +1,29 @@
 <head>
+    <!-- for MWC, https://github.com/material-components/material-web -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Material+Icons&amp;display=block" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+
+    <!-- Required styles for Material Web -->
+    <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.css">
+    <script src="http://localhost:8080/public/ext/mdc/material-components-web.js"></script>
+    <!-- <script src="//:8080/public/ext/mdc/material-components-web.js"></script> -->
     <!-- <script src="/src/js/error.js"></script> -->
+    <script type="importmap">
+        {
+          "imports": {
+            "comment": "relative path does not seem to work here??",
+            "util-mdc": "http://localhost:8080/public/src/js/mod/util-mdc.js"
+          }
+        }
+    </script>
     <script src="../public/src/js/error.js"></script>
+    <!-- <script src="../public/src/js/mod/util-mdc.js"></script> -->
     <script>
+        if (location.href != "http://localhost:8080/temptest/test-moving-lines.html") throw Error("run http-server . in firebase-r10m1h");
         let eltCanvas;
         let ctxCanvas;
         let bcrCanvas
@@ -32,19 +54,24 @@
 
 
 
-        let currentPattern = "user"
         const breathPatterns = {
-            user: makeBreathPattern(2, 4, 3, 5),
+            "Awake": makeBreathPattern(6, 0, 2, 0),
+            "Square": makeBreathPattern(4, 4, 4, 4),
+            "Deep Calm": makeBreathPattern(4, 7, 8, 0),
+            "Pranayama": makeBreathPattern(7, 4, 8, 4),
+            "Ujjayi": makeBreathPattern(7, 0, 7, 0),
+            "Custom Exercis": makeBreathPattern(2, 4, 3, 5),
         }
+        let currentPattern = "Pranayama";
         let stopRedraw = false;
         let numChecks = 0;
         const textForParts = {
             holdLow: "Hold...",
-            breathIn: "Breath in",
+            breathIn: "Inhale",
             holdHigh: "Hold...",
-            breathOut: "Breath Out",
+            breathOut: "Exhale",
         }
-        function makeBreathPattern(holdLow, breathIn, holdHigh, breathOut) {
+        function makeBreathPattern(breathIn, holdHigh, breathOut, holdLow) {
             const pattY = {
                 holdLow: 0,
                 breathIn: 0,
@@ -61,7 +88,7 @@
                 const v = patt[k];
                 if (isNaN(v)) throw Error(`Value for ${k} is not numeric: ${v}`);
                 // if (v <= 0) throw Error(`Value for ${k} is not positive: ${v}`);
-                if (v <= 1) throw Error(`Value for ${k} is too small: ${v}`);
+                if (v < 0) throw Error(`Value for ${k} is too small: ${v}`);
                 if (v >= 10) throw Error(`Value for ${k} is too big: ${v}`);
             }
             const pattW = Object.values(patt)
@@ -89,11 +116,19 @@
         let msStart = document.timeline.currentTime;
         let canvasSec;
 
-        function tellState(txtState) {
+        function tellState(txtState, hideIt) {
             const divInstructions = document.getElementById("elt-instructions");
             divInstructions.textContent = txtState;
+            if (hideIt) {
+                divInstructions.style.visibility = "hidden";
+            } else {
+                divInstructions.style.visibility = null;
+            }
         }
-        function tellInitialState() { tellState(`Current pattern: ${currentPattern}`); }
+        function tellInitialState() {
+            // tellState(`Current pattern: ${currentPattern}`);
+            tellState("Not started ", true);
+        }
 
         function drawPattern(patt, numPatt) {
             bcrCanvas = eltCanvas.getBoundingClientRect();
@@ -224,15 +259,18 @@
             `;
             ctxCanvas = eltCanvas.getContext("2d");
         }
-        // let myPatt = makeBreathPattern(2, 4, 5, 7);
-        let myPatt = breathPatterns[currentPattern];
         let isRunning = false;
-        function setupControls(container) {
-            const btnStart = mkElt("button", undefined, "Start");
+        async function setupControls(container) {
+            const modMdc = await import("util-mdc");
+            // const modMdc = await import("http://localhost:8080/public/src/js/mod/util-mdc.js");
+            // const btnStart = mkElt("button", undefined, "Start");
+            const iconStart = modMdc.mkMDCicon("play_arrow");
+            const btnStart = modMdc.mkMDCiconButton(iconStart, "Start");
+            btnStart.classList.add("icon-button-30");
             btnStart.id = "start-button";
             btnStart.addEventListener("click", evt => {
                 document.documentElement.classList.add("running");
-                console.log({ myPatt });
+                console.log({ currentPattern });
                 isRunning = true;
                 msStart = document.timeline.currentTime;
                 numChecks = 0;
@@ -240,22 +278,88 @@
                 animateLines();
             });
 
-            const btnReset = mkElt("button", undefined, "Reset");
-            btnReset.addEventListener("click", evt => {
+            function initCurrentPattern() {
                 document.documentElement.classList.remove("running");
                 isRunning = false;
                 msStart = document.timeline.currentTime;
-                // divInstructions.textContent = "Click start to do it again";
-                // tellState("Click start to do it again");
                 tellInitialState();
                 redraw();
+            }
+            const iconReplay = modMdc.mkMDCicon("replay");
+            const btnReset = modMdc.mkMDCiconButton(iconReplay, "Rewind", 16);
+            btnReset.classList.add("icon-button-30");
+            btnReset.addEventListener("click", evt => {
+                initCurrentPattern();
             });
-            btnReset.id = "stop-button";
+            btnReset.id = "replay-button";
 
-            const btnSettings = mkElt("button", undefined, "Settings");
-            btnSettings.addEventListener("click", evt => {
+            const iconSettings = modMdc.mkMDCicon("settings");
+            const btnSettings = modMdc.mkMDCiconButton(iconSettings, "Start");
+            btnSettings.classList.add("icon-button-30");
+            btnSettings.addEventListener("click", async evt => {
+                const divPattList = mkElt("div");
+                divPattList.style = `
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                `;
+                const funHandleResult = () => {
+                    const rad = divPattList.querySelector("input[name=pattName]:checked");
+                    return { pattName: rad.value };
+                };
+
+                const bdy = mkElt("div", undefined, [
+                    mkElt("h2", undefined, "Settings"),
+                    divPattList,
+                ]);
+                for (const pn in breathPatterns) {
+                    console.log({ pn });
+                    const rad = mkElt("input", { type: "radio", name: "pattName", value: pn });
+                    if (currentPattern == pn) rad.checked = true;
+                    const eltName = mkElt("b", undefined, pn);
+                    eltName.style = `margin-right: 5px; margin-left: 5px;`;
+                    const eltInfo = mkElt("span", undefined, [eltName, mkPattString(pn)]);
+                    // eltInfo.style = ` display: flex; gap: 5px; `;
+                    // const lbl = mkElt("label", undefined, [rad, pn]);
+                    const lbl = mkElt("label", undefined, [rad, eltInfo]);
+                    divPattList.appendChild(lbl);
+                }
+                const { pattName } = await modMdc.mkMDCdialogConfirm(bdy, "Save",
+                    undefined, undefined,
+                    funHandleResult,
+                    // tellMeOkButton,
+                );
+                currentPattern = pattName || currentPattern;
+                tellCurrentPattern();
+                initCurrentPattern();
             });
             btnSettings.id = "settings-button";
+
+            const divPatternInfo = mkElt("p", undefined, "Wait ");
+            divPatternInfo.id = "elt-pattern-info";
+            container.appendChild(divPatternInfo);
+            setTimeout(tellCurrentPattern, 100);
+            function mkPattString(pattName) {
+                const p = breathPatterns[pattName].patt;
+                const strPatt = `(${p.breathIn}-${p.holdHigh}-${p.breathOut}-${p.holdLow})`;
+                return strPatt;
+            }
+            function tellCurrentPattern() {
+                const divPatternInfo = document.getElementById("elt-pattern-info");
+                divPatternInfo.textContent = "";
+                const eltName = mkElt("span", undefined, currentPattern);
+                eltName.style = `
+                    font-weight: bold;
+                    margin-right: 10px;
+                `;
+                divPatternInfo.appendChild(eltName);
+                // const p = breathPatterns[currentPattern].patt;
+                // const strPatt = `${p.breathIn}-${p.holdHigh}-${p.breathOut}-${p.holdLow}`;
+                const strPatt = mkPattString(currentPattern);
+                const eltPatt = mkElt("span", undefined, strPatt);
+                divPatternInfo.appendChild(eltPatt);
+                // debugger;
+            }
 
             const divInstructions = mkElt("p", undefined, "Wait ");
             divInstructions.id = "elt-instructions";
@@ -269,7 +373,7 @@
             ]);
             divControls.style = `
                 display: flex;
-                gap: 20px;
+                gap: 5px;
             `;
             container.appendChild(divControls);
         }
@@ -283,10 +387,10 @@
     <style>
         body {
             background: black;
-            color: red;
+            color: orange;
         }
 
-        #stop-button {
+        #replay-button {
             display: none;
         }
 
@@ -294,7 +398,11 @@
             display: none;
         }
 
-        .running #stop-button {
+        .running #settings-button {
+            display: none;
+        }
+
+        .running #replay-button {
             display: unset;
         }
     </style>
@@ -305,6 +413,7 @@
         setupThings();
 
         function redraw() {
+            let myPatt = breathPatterns[currentPattern];
             drawPattern(myPatt, 1.05);
         }
         // checkRedraw();
@@ -324,14 +433,17 @@
                 stopRedraw = true;
                 return false;
             }
-            // const px = Math.floor(pxPerMs * ms); if (px == 0) { return; }
             redraw();
             return true;
         }
 
         let numRedraw = 0;
-        redraw();
-        // animateLines();
+        setTimeout(() => {
+            msStart = document.timeline.currentTime;
+            redraw();
+        }, 100);
+
+
         function animateLines() {
             if (!isRunning) return;
             const ok = checkRedraw();
