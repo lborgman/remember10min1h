@@ -11,7 +11,7 @@
     <script src="http://localhost:8080/public/ext/mdc/material-components-web.js"></script>
     <!-- <script src="//:8080/public/ext/mdc/material-components-web.js"></script> -->
     <!-- <script src="/src/js/error.js"></script> -->
-    
+
     <link rel="stylesheet" href="http://localhost:8080/public/css/rem10m1h.css">
     <style>
         :root {
@@ -52,7 +52,9 @@
             const cR = currentPointCanvas.cR;
             ctxCanvas.beginPath();
             ctxCanvas.ellipse(cX, cY, cR, cR, 0, 0, 2 * Math.PI);
-            ctxCanvas.strokeStyle = "red";
+            ctxCanvas.strokeStyle = "darkgoldenrod";
+            // ctxCanvas.strokeWidth = 2;
+            ctxCanvas.lineWidth = cR * 2.0;
             ctxCanvas.fillStyle = color;
             ctxCanvas.stroke();
             ctxCanvas.fill();
@@ -69,6 +71,79 @@
             "Custom Exercis": makeBreathPattern(2, 4, 3, 5),
         }
         let currentPattern = "Pranayama";
+
+        function tellCurrentPattern() {
+            const divPatternInfo = document.getElementById("elt-pattern-info");
+            divPatternInfo.textContent = "";
+            const eltName = mkElt("span", undefined, currentPattern);
+            eltName.style = `
+                    font-weight: bold;
+                    margin-right: 10px;
+                `;
+            divPatternInfo.appendChild(eltName);
+            // const p = breathPatterns[currentPattern].patt;
+            // const strPatt = `${p.breathIn}-${p.holdHigh}-${p.breathOut}-${p.holdLow}`;
+            const strPatt = mkPattString(currentPattern);
+            const eltPatt = mkElt("span", undefined, strPatt);
+            divPatternInfo.appendChild(eltPatt);
+            // debugger;
+        }
+
+        function initCurrentPattern() {
+            document.documentElement.classList.remove("running");
+            isRunning = false;
+            msStart = document.timeline.currentTime;
+            tellInitialState();
+            redraw();
+        }
+
+
+        function mkPattString(pattName) {
+            const p = breathPatterns[pattName].patt;
+            const strPatt = `(${p.breathIn}-${p.holdHigh}-${p.breathOut}-${p.holdLow})`;
+            return strPatt;
+        }
+
+        async function dialogPattern() {
+            const modMdc = await import("util-mdc");
+            const divPattList = mkElt("div");
+            divPattList.style = `
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                `;
+            const funHandleResult = () => {
+                const rad = divPattList.querySelector("input[name=pattName]:checked");
+                return { pattName: rad.value };
+            };
+
+            const bdy = mkElt("div", undefined, [
+                mkElt("h2", undefined, "Breathing pattern"),
+                divPattList,
+            ]);
+            bdy.id = "dialog-pattern";
+            for (const pn in breathPatterns) {
+                console.log({ pn });
+                const rad = mkElt("input", { type: "radio", name: "pattName", value: pn });
+                if (currentPattern == pn) rad.checked = true;
+                const eltName = mkElt("b", undefined, pn);
+                eltName.style = `margin-right: 5px; margin-left: 5px;`;
+                const eltInfo = mkElt("span", undefined, [eltName, mkPattString(pn)]);
+                // eltInfo.style = ` display: flex; gap: 5px; `;
+                // const lbl = mkElt("label", undefined, [rad, pn]);
+                const lbl = mkElt("label", undefined, [rad, eltInfo]);
+                divPattList.appendChild(lbl);
+            }
+            const { pattName } = await modMdc.mkMDCdialogConfirm(bdy, "Save",
+                undefined, undefined,
+                funHandleResult,
+                // tellMeOkButton,
+            );
+            currentPattern = pattName || currentPattern;
+            tellCurrentPattern();
+            initCurrentPattern();
+        }
+
         let stopRedraw = false;
         let numChecks = 0;
         const textForParts = {
@@ -147,9 +222,8 @@
 
             ctxCanvas.beginPath();
 
-            ctxCanvas.lineWidth = 3;
+            ctxCanvas.lineWidth = 5;
             ctxCanvas.lineCap = "round"; // FIX-ME: does not work?? Bug???
-            // ctxCanvas.strokeStyle = "blue";
             ctxCanvas.strokeStyle = "yellowgreen";
 
             // msLastDraw = Date.now();
@@ -194,11 +268,11 @@
             }
             ctxCanvas.stroke();
             currentPointY = middleY;
-            const clrPoint = isRunning ? "orange" : "green";
+            const clrPoint = isRunning ? "yellow" : "yellowgreen";
 
             currentPointCanvas.cX = pattX2canvasX(middleX);
             currentPointCanvas.cY = pattY2canvasY(currentPointY);
-            currentPointCanvas.cR = pattY2canvasY(0) / 20;
+            currentPointCanvas.cR = pattY2canvasY(0) / 30;
             drawCurrentPoint(clrPoint);
             function moveTo(pnt) {
                 const pntCanvas = pnt2canvas(pnt);
@@ -255,13 +329,14 @@
             // eltCanvas.id = "my-canvas";
             eltCanvas.style = `
                 background-color: darkgoldenrod;
-                outline: 2px dotted red;
-                width: 50%;
+                outline: 2px dotted darkgoldenrod;
+                width: 100%;
                 aspect-ratio: 1 / 1;
                 NObackground-image: url(https://static-cdn.sr.se/images/83/e295c2fb-fd0b-4b40-b22d-57ec63ab7b67.jpg?preset=1024x576&format=webp);
                 NObackground-image: url("https://static-cdn.sr.se/images/83/5f3f6e55-5d96-489a-853b-e9f9e7702ec5.jpg?preset=1024x576&format=webp");
                 background-image: url(https://static-cdn.sr.se/images/83/ebffc0d1-3bf9-48ad-921f-9449fdc46fcf.jpg?preset=1024x576&format=webp);
                 background-size: cover;
+                background-position: center;
             `;
             ctxCanvas = eltCanvas.getContext("2d");
         }
@@ -284,13 +359,6 @@
                 animateLines();
             });
 
-            function initCurrentPattern() {
-                document.documentElement.classList.remove("running");
-                isRunning = false;
-                msStart = document.timeline.currentTime;
-                tellInitialState();
-                redraw();
-            }
             const iconReplay = modMdc.mkMDCicon("replay");
             const btnReset = modMdc.mkMDCiconButton(iconReplay, "Rewind");
             // btnReset.classList.add("icon-button-30");
@@ -299,96 +367,74 @@
             });
             btnReset.id = "replay-button";
 
-            const divChangeTime = (()=> {
+            const divChangeTime = (() => {
                 const iconLess = modMdc.mkMDCicon("expand_circle_down");
                 const btnLess = modMdc.mkMDCiconButton(iconLess, "Shorter");
-                const iconMore = modMdc.mkMDCicon("expand_circle_up");
+
+                // const iconMore = modMdc.mkMDCicon("expand_circle_up");
+                // FIX-ME: For some reason the up version does not work??
+                //    Using this workaround:
+                const iconMore = modMdc.mkMDCicon("expand_circle_down");
+                iconMore.style.transform = "rotate(180deg)";
                 const btnMore = modMdc.mkMDCiconButton(iconMore, "Longer");
+
                 const eltShow = mkElt("span", undefined, "time");
                 eltShow.style = `
-                    background: green;
+                    background-color: #0004;
                     padding: 4px;
                     width: 50px;
+                    text-align: center;
                 `;
-                const div = mkElt("div", undefined, [
+                const div = mkElt("div", { class: "mdc-card", id: "set-time" }, [
                     btnLess, eltShow, btnMore
                 ]);
                 div.style = `
                     background-color: rgba(255, 255, 0, 0.2);
-                    display: inline-flex;
+                    NOdisplay: inline-flex;
+                    flex-direction: row;
                     gap: 5px;
+                    align-items: center;
                 `;
-                div.id = "div-time";
                 return div;
             })();
 
-            const iconSettings = modMdc.mkMDCicon("settings");
+            // const iconSettings = modMdc.mkMDCicon("settings");
+            // const iconSettings = modMdc.mkMDCicon("settings_heart");
+            const iconSettings = modMdc.mkMDCicon("video_settings");
+            // const iconSettings = modMdc.mkMDCicon("spa");
             const btnSettings = modMdc.mkMDCiconButton(iconSettings, "Start");
             // btnSettings.classList.add("icon-button-30");
             btnSettings.addEventListener("click", async evt => {
-                const divPattList = mkElt("div");
-                divPattList.style = `
-                    display: flex;
-                    flex-direction: column;
-                    gap: 10px;
-                `;
-                const funHandleResult = () => {
-                    const rad = divPattList.querySelector("input[name=pattName]:checked");
-                    return { pattName: rad.value };
-                };
-
+                // dialogPattern();
                 const bdy = mkElt("div", undefined, [
-                    mkElt("h2", undefined, "Settings"),
-                    divPattList,
+                    mkElt("h2", undefined, "Breath speed"),
+                    "not implemented yet",
                 ]);
-                for (const pn in breathPatterns) {
-                    console.log({ pn });
-                    const rad = mkElt("input", { type: "radio", name: "pattName", value: pn });
-                    if (currentPattern == pn) rad.checked = true;
-                    const eltName = mkElt("b", undefined, pn);
-                    eltName.style = `margin-right: 5px; margin-left: 5px;`;
-                    const eltInfo = mkElt("span", undefined, [eltName, mkPattString(pn)]);
-                    // eltInfo.style = ` display: flex; gap: 5px; `;
-                    // const lbl = mkElt("label", undefined, [rad, pn]);
-                    const lbl = mkElt("label", undefined, [rad, eltInfo]);
-                    divPattList.appendChild(lbl);
-                }
-                const { pattName } = await modMdc.mkMDCdialogConfirm(bdy, "Save",
-                    undefined, undefined,
-                    funHandleResult,
-                    // tellMeOkButton,
-                );
-                currentPattern = pattName || currentPattern;
-                tellCurrentPattern();
-                initCurrentPattern();
+                modMdc.mkMDCdialogConfirm(bdy);
             });
             btnSettings.id = "settings-button";
 
-            const divPatternInfo = mkElt("p", undefined, "Wait ");
-            divPatternInfo.id = "elt-pattern-info";
-            container.appendChild(divPatternInfo);
+            // mkMDCfab(eltIcon, title, mini, extendTitle)
+            const icoPattern = modMdc.mkMDCicon("spa");
+            icoPattern.style.color = "greenyellow";
+            const fabPattern = modMdc.mkMDCfab(icoPattern, "Choose breathing pattern", true);
+            fabPattern.addEventListener("click", evt => {
+                dialogPattern();
+            });
+            fabPattern.style.backgroundColor = "orange";
+            fabPattern.style.backgroundColor = "#ffa500a1";
+            const eltPatternInfo = mkElt("span", undefined, "Wait")
+            eltPatternInfo.id = "elt-pattern-info";
+            const divPattern = mkElt("p", undefined, [
+                fabPattern,
+                eltPatternInfo,
+            ]);
+            divPattern.style = `
+                display: flex;
+                gap: 10px;
+            `;
+            container.appendChild(divPattern);
             setTimeout(tellCurrentPattern, 100);
-            function mkPattString(pattName) {
-                const p = breathPatterns[pattName].patt;
-                const strPatt = `(${p.breathIn}-${p.holdHigh}-${p.breathOut}-${p.holdLow})`;
-                return strPatt;
-            }
-            function tellCurrentPattern() {
-                const divPatternInfo = document.getElementById("elt-pattern-info");
-                divPatternInfo.textContent = "";
-                const eltName = mkElt("span", undefined, currentPattern);
-                eltName.style = `
-                    font-weight: bold;
-                    margin-right: 10px;
-                `;
-                divPatternInfo.appendChild(eltName);
-                // const p = breathPatterns[currentPattern].patt;
-                // const strPatt = `${p.breathIn}-${p.holdHigh}-${p.breathOut}-${p.holdLow}`;
-                const strPatt = mkPattString(currentPattern);
-                const eltPatt = mkElt("span", undefined, strPatt);
-                divPatternInfo.appendChild(eltPatt);
-                // debugger;
-            }
 
             const divInstructions = mkElt("p", undefined, "Wait ");
             divInstructions.id = "elt-instructions";
@@ -408,7 +454,17 @@
             container.appendChild(divControls);
         }
         function setupThings() {
-            const container = document.body;
+            // const container = document.body;
+            const container = mkElt("section");
+            container.style = `
+                max-height: 100%;
+                max-width: 100%;
+                max-width: calc(100% - 40px);
+                aspect-ratio: 1.0 / 1.4;
+                NObackground: gray;
+                margin: 20px auto;
+            `;
+            document.body.appendChild(container);
             setupCanvas(container);
             setupControls(container);
         }
@@ -420,9 +476,6 @@
             color: orange;
         }
 
-        #replay-button {
-            display: none;
-        }
 
         .running #start-button {
             display: none;
@@ -432,8 +485,27 @@
             display: none;
         }
 
+
+        #set-time {
+            display: inline-flex;
+        }
+
+        .running #set-time {
+            display: none;
+        }
+
+
+        #replay-button {
+            display: none;
+        }
+
         .running #replay-button {
             display: unset;
+        }
+
+
+        div.mdc-dialog__surface:has(#dialog-pattern) {
+            background-color: orange;
         }
     </style>
 </head>
