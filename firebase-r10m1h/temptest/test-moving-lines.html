@@ -3,8 +3,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
+
+
+
     <link href="https://fonts.googleapis.com/css?family=Material+Icons&amp;display=block" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- 
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    -->
+
 
     <!-- Required styles for Material Web -->
     <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.css">
@@ -30,6 +38,19 @@
     <!-- <script src="../public/src/js/mod/util-mdc.js"></script> -->
     <script>
         if (location.href != "http://localhost:8080/temptest/test-moving-lines.html") throw Error("run http-server . in firebase-r10m1h");
+
+        let isRunning = false;
+        function isRunningFun() { return document.documentElement.classList.contains("running"); }
+        function setStateRunning(on) {
+            if (on) {
+                document.documentElement.classList.add("running");
+                isRunning = true;
+            } else {
+                document.documentElement.classList.remove("running");
+                isRunning = false;
+            }
+        }
+
         let eltCanvas;
         let ctxCanvas;
         let bcrCanvas
@@ -90,8 +111,7 @@
         }
 
         function initCurrentPattern() {
-            document.documentElement.classList.remove("running");
-            isRunning = false;
+            setStateRunning(false);
             msStart = document.timeline.currentTime;
             tellInitialState();
             redraw();
@@ -352,10 +372,10 @@
                 myOwn: "https://photos.app.goo.gl/jYiWHQ56oTDUfAcJA",
             };
             let useImage;
-            useImage = availableImages.srRedFlower;
             useImage = availableImages.srYellowFlower;
+            useImage = availableImages.myOwn; // does not work, CORS
             useImage = availableImages.srFlowerAndBees;
-            useImage = availableImages.myOwn;
+            useImage = availableImages.srRedFlower;
             eltCanvas.style = `
                 background-color: darkgoldenrod;
                 outline: 2px dotted darkgoldenrod;
@@ -370,7 +390,6 @@
             `;
             ctxCanvas = eltCanvas.getContext("2d");
         }
-        let isRunning = false;
         async function setupControls(container) {
             const modMdc = await import("util-mdc");
             // const modMdc = await import("http://localhost:8080/public/src/js/mod/util-mdc.js");
@@ -380,9 +399,10 @@
             // btnStart.classList.add("icon-button-30");
             btnStart.id = "start-button";
             btnStart.addEventListener("click", evt => {
-                document.documentElement.classList.add("running");
+                // document.documentElement.classList.add("running");
+                setStateRunning(true);
                 console.log({ currentPattern });
-                isRunning = true;
+                // isRunning = true;
                 msStart = document.timeline.currentTime;
                 numChecks = 0;
                 numRedraw = 0;
@@ -431,7 +451,6 @@
             // const iconSettings = modMdc.mkMDCicon("settings");
             // const iconSettings = modMdc.mkMDCicon("settings_heart");
             const iconSettings = modMdc.mkMDCicon("video_settings");
-            // const iconSettings = modMdc.mkMDCicon("spa");
             const btnSettings = modMdc.mkMDCiconButton(iconSettings, "Start");
             // btnSettings.classList.add("icon-button-30");
             btnSettings.addEventListener("click", async evt => {
@@ -445,18 +464,40 @@
             btnSettings.id = "settings-button";
 
             // mkMDCfab(eltIcon, title, mini, extendTitle)
-            const icoPattern = modMdc.mkMDCicon("spa");
-            icoPattern.style.color = "greenyellow";
-            const fabPattern = modMdc.mkMDCfab(icoPattern, "Choose breathing pattern", true);
+            const icoPatternSpa = modMdc.mkMDCicon("spa");
+            icoPatternSpa.style.color = "greenyellow";
+            const fabPattern = modMdc.mkMDCfab(icoPatternSpa, "Choose breathing pattern", true);
             fabPattern.addEventListener("click", evt => {
+                if (isRunningFun()) { return; }
                 dialogPattern();
             });
             fabPattern.style.backgroundColor = "orange";
             fabPattern.style.backgroundColor = "#ffa500a1";
+
+            // const icoImages = modMdc.mkMDCicon("add_photo_alternative");
+            const icoImages = modMdc.mkMDCicon("image_search");
+            icoImages.style.color = "greenyellow";
+            const fabImages = modMdc.mkMDCfab(icoImages, "Choose breathing pattern", true);
+            fabImages.addEventListener("click", async evt => {
+                // dialogPattern();
+                if (isRunningFun()) { return; }
+                alert("not ready");
+            });
+            fabImages.style.backgroundColor = "orange";
+            fabImages.style.backgroundColor = "#ffa500a1";
+
+
             const eltPatternInfo = mkElt("span", undefined, "Wait")
             eltPatternInfo.id = "elt-pattern-info";
-            const divPattern = mkElt("p", undefined, [
+
+            const eltPatternButtons = mkElt("span", undefined, [
                 fabPattern,
+                fabImages,
+            ]);
+            eltPatternButtons.id = "pattern-buttons";
+
+            const divPattern = mkElt("p", undefined, [
+                eltPatternButtons,
                 eltPatternInfo,
             ]);
             divPattern.style = `
@@ -506,6 +547,11 @@
             color: orange;
         }
 
+        .running #pattern-buttons {
+            NOdisplay: none;
+            opacity: 0.2;
+            filter: grayscale();
+        }
 
         .running #start-button {
             display: none;
@@ -566,7 +612,8 @@
                 console.log("stopping time...");
                 tellState("Finished");
                 drawCurrentPoint("gray");
-                isRunning = false;
+                setStateRunning(false);
+                // isRunning = false;
                 stopRedraw = true;
                 return false;
             }
