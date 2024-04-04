@@ -6,16 +6,22 @@
     <link href="https://fonts.googleapis.com/css?family=Material+Icons&amp;display=block" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-
     <!-- Required styles for Material Web -->
     <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.css">
     <script src="http://localhost:8080/public/ext/mdc/material-components-web.js"></script>
     <!-- <script src="//:8080/public/ext/mdc/material-components-web.js"></script> -->
     <!-- <script src="/src/js/error.js"></script> -->
+    
+    <link rel="stylesheet" href="http://localhost:8080/public/css/rem10m1h.css">
+    <style>
+        :root {
+            --icon-button-size: 48;
+        }
+    </style>
+
     <script type="importmap">
         {
           "imports": {
-            "comment": "relative path does not seem to work here??",
             "util-mdc": "http://localhost:8080/public/src/js/mod/util-mdc.js"
           }
         }
@@ -266,7 +272,7 @@
             // const btnStart = mkElt("button", undefined, "Start");
             const iconStart = modMdc.mkMDCicon("play_arrow");
             const btnStart = modMdc.mkMDCiconButton(iconStart, "Start");
-            btnStart.classList.add("icon-button-30");
+            // btnStart.classList.add("icon-button-30");
             btnStart.id = "start-button";
             btnStart.addEventListener("click", evt => {
                 document.documentElement.classList.add("running");
@@ -286,16 +292,39 @@
                 redraw();
             }
             const iconReplay = modMdc.mkMDCicon("replay");
-            const btnReset = modMdc.mkMDCiconButton(iconReplay, "Rewind", 16);
-            btnReset.classList.add("icon-button-30");
+            const btnReset = modMdc.mkMDCiconButton(iconReplay, "Rewind");
+            // btnReset.classList.add("icon-button-30");
             btnReset.addEventListener("click", evt => {
                 initCurrentPattern();
             });
             btnReset.id = "replay-button";
 
+            const divChangeTime = (()=> {
+                const iconLess = modMdc.mkMDCicon("expand_circle_down");
+                const btnLess = modMdc.mkMDCiconButton(iconLess, "Shorter");
+                const iconMore = modMdc.mkMDCicon("expand_circle_up");
+                const btnMore = modMdc.mkMDCiconButton(iconMore, "Longer");
+                const eltShow = mkElt("span", undefined, "time");
+                eltShow.style = `
+                    background: green;
+                    padding: 4px;
+                    width: 50px;
+                `;
+                const div = mkElt("div", undefined, [
+                    btnLess, eltShow, btnMore
+                ]);
+                div.style = `
+                    background-color: rgba(255, 255, 0, 0.2);
+                    display: inline-flex;
+                    gap: 5px;
+                `;
+                div.id = "div-time";
+                return div;
+            })();
+
             const iconSettings = modMdc.mkMDCicon("settings");
             const btnSettings = modMdc.mkMDCiconButton(iconSettings, "Start");
-            btnSettings.classList.add("icon-button-30");
+            // btnSettings.classList.add("icon-button-30");
             btnSettings.addEventListener("click", async evt => {
                 const divPattList = mkElt("div");
                 divPattList.style = `
@@ -369,6 +398,7 @@
             const divControls = mkElt("div", undefined, [
                 btnStart,
                 btnReset,
+                divChangeTime,
                 btnSettings,
             ]);
             divControls.style = `
