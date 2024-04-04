@@ -122,6 +122,7 @@
                 divPattList,
             ]);
             bdy.id = "dialog-pattern";
+            bdy.classList.add("colored-dialog");
             for (const pn in breathPatterns) {
                 console.log({ pn });
                 const rad = mkElt("input", { type: "radio", name: "pattName", value: pn });
@@ -327,6 +328,34 @@
             eltCanvas = document.createElement("canvas");
             container.appendChild(eltCanvas)
             // eltCanvas.id = "my-canvas";
+
+
+            //// Images that can be used. Copyright??? Ask user?
+            let srPreset;
+            srPreset = "256x144";
+            srPreset = "1012x576";
+            srPreset = "512x288";
+            const availableImages = {
+                //////// SR generell
+                // ?format=webp&preset=${srPreset}`,
+                //// Flowers
+                srRedFlower:
+                    `https://static-cdn.sr.se/images/2689/995b2007-ad8d-4b6f-8b6c-5fc105d84831.jpg?format=webp&preset=${srPreset}`,
+                srYellowFlower:
+                    `https://static-cdn.sr.se/images/2689/8b2c6f4f-a143-4dd4-85c5-be23f5c26aad.jpg?format=webp&preset=${srPreset}`,
+
+                //////// SR Veckans bild
+                // https://sverigesradio.se/grupp/25727
+                srFlowerAndBees:
+                    `https://static-cdn.sr.se/images/78/8d578df3-5bfa-4fad-9a72-44a99234f8ff.jpg?format=webp&preset=${srPreset}`,
+
+                myOwn: "https://photos.app.goo.gl/jYiWHQ56oTDUfAcJA",
+            };
+            let useImage;
+            useImage = availableImages.srRedFlower;
+            useImage = availableImages.srYellowFlower;
+            useImage = availableImages.srFlowerAndBees;
+            useImage = availableImages.myOwn;
             eltCanvas.style = `
                 background-color: darkgoldenrod;
                 outline: 2px dotted darkgoldenrod;
@@ -334,7 +363,8 @@
                 aspect-ratio: 1 / 1;
                 NObackground-image: url(https://static-cdn.sr.se/images/83/e295c2fb-fd0b-4b40-b22d-57ec63ab7b67.jpg?preset=1024x576&format=webp);
                 NObackground-image: url("https://static-cdn.sr.se/images/83/5f3f6e55-5d96-489a-853b-e9f9e7702ec5.jpg?preset=1024x576&format=webp");
-                background-image: url(https://static-cdn.sr.se/images/83/ebffc0d1-3bf9-48ad-921f-9449fdc46fcf.jpg?preset=1024x576&format=webp);
+                NObackground-image: url(https://static-cdn.sr.se/images/83/ebffc0d1-3bf9-48ad-921f-9449fdc46fcf.jpg?preset=1024x576&format=webp);
+                background-image: url(${useImage});
                 background-size: cover;
                 background-position: center;
             `;
@@ -504,7 +534,17 @@
         }
 
 
-        div.mdc-dialog__surface:has(#dialog-pattern) {
+        div.mdc-dialog__surface:has(#test-dialog-pattern) {
+            background-color: orange;
+        }
+
+        div.mdc-dialog__surface:has(#testdialog-pattern) {
+            background-color: #333300;
+            color: orange !important;
+        }
+
+        div.mdc-dialog__surface:has(.colored-dialog) {
+            background-color: green;
             background-color: orange;
         }
     </style>
