@@ -30,7 +30,8 @@
     <script type="importmap">
         {
           "imports": {
-            "util-mdc": "http://localhost:8080/public/src/js/mod/util-mdc.js"
+            "util-mdc": "http://localhost:8080/public/src/js/mod/util-mdc.js",
+            "external-images": "http://localhost:8080/temptest/external-images.js"
           }
         }
     </script>
@@ -38,6 +39,17 @@
     <!-- <script src="../public/src/js/mod/util-mdc.js"></script> -->
     <script>
         if (location.href != "http://localhost:8080/temptest/test-moving-lines.html") throw Error("run http-server . in firebase-r10m1h");
+
+        /*
+        The window.requestAnimationFrame() method tells the browser you wish to perform an animation.
+        It requests the browser to call a user-supplied callback function before the next repaint.
+
+        The frequency of calls to the callback function will generally match the display refresh rate.
+        The most common refresh rate is 60hz, (60 cycles/frames per second), though 75hz, 120hz, and 144hz are also widely used.
+        */
+        let numRedraw; // Protect about looping
+        // https://ourcodeworld.com/articles/read/1390/how-to-determine-the-screen-refresh-rate-in-hz-of-the-monitor-with-javascript-in-the-browser#google_vignette
+        const maxRedraw = 120 * 60; // FIX-ME: max 60 seconds 
 
         let isRunning = false;
         function isRunningFun() { return document.documentElement.classList.contains("running"); }
@@ -124,6 +136,12 @@
             return strPatt;
         }
 
+        async function dialogImages() {
+            const modExtImages = await import("external-images");
+            const url = await modExtImages.dialogImages("all-");
+            debugger;
+            return url;
+        }
         async function dialogPattern() {
             const modMdc = await import("util-mdc");
             const divPattList = mkElt("div");
@@ -137,12 +155,11 @@
                 return { pattName: rad.value };
             };
 
-            const bdy = mkElt("div", undefined, [
+            const bdy = mkElt("div", { class: "colored-dialog" }, [
                 mkElt("h2", undefined, "Breathing pattern"),
                 divPattList,
             ]);
             bdy.id = "dialog-pattern";
-            bdy.classList.add("colored-dialog");
             for (const pn in breathPatterns) {
                 console.log({ pn });
                 const rad = mkElt("input", { type: "radio", name: "pattName", value: pn });
@@ -409,8 +426,8 @@
                 animateLines();
             });
 
-            const iconReplay = modMdc.mkMDCicon("replay");
-            const btnReset = modMdc.mkMDCiconButton(iconReplay, "Rewind");
+            const iconReplay = modMdc.mkMDCicon("stop");
+            const btnReset = modMdc.mkMDCiconButton(iconReplay, "Stop");
             // btnReset.classList.add("icon-button-30");
             btnReset.addEventListener("click", evt => {
                 initCurrentPattern();
@@ -455,7 +472,7 @@
             // btnSettings.classList.add("icon-button-30");
             btnSettings.addEventListener("click", async evt => {
                 // dialogPattern();
-                const bdy = mkElt("div", undefined, [
+                const bdy = mkElt("div", { class: "colored-dialog" }, [
                     mkElt("h2", undefined, "Breath speed"),
                     "not implemented yet",
                 ]);
@@ -481,7 +498,7 @@
             fabImages.addEventListener("click", async evt => {
                 // dialogPattern();
                 if (isRunningFun()) { return; }
-                alert("not ready");
+                dialogImages();
             });
             fabImages.style.backgroundColor = "orange";
             fabImages.style.backgroundColor = "#ffa500a1";
@@ -579,17 +596,7 @@
         }
 
 
-        div.mdc-dialog__surface:has(#test-dialog-pattern) {
-            background-color: orange;
-        }
-
-        div.mdc-dialog__surface:has(#testdialog-pattern) {
-            background-color: #333300;
-            color: orange !important;
-        }
-
         div.mdc-dialog__surface:has(.colored-dialog) {
-            background-color: green;
             background-color: orange;
         }
     </style>
@@ -598,6 +605,11 @@
 <body>
     <script>
         setupThings();
+        setTimeout(() => {
+            msStart = document.timeline.currentTime;
+            redraw();
+        }, 100);
+
 
         function redraw() {
             let myPatt = breathPatterns[currentPattern];
@@ -625,19 +637,13 @@
             return true;
         }
 
-        let numRedraw = 0;
-        setTimeout(() => {
-            msStart = document.timeline.currentTime;
-            redraw();
-        }, 100);
-
 
         function animateLines() {
             if (!isRunning) return;
             const ok = checkRedraw();
             if (!ok) return;
             requestAnimationFrame(() => {
-                if (numRedraw++ > 3000) {
+                if (numRedraw++ > maxRedraw) {
                     console.log("stopping sec check", { numRedraw });
                     return;
                 }
