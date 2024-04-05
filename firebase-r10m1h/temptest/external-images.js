@@ -51,11 +51,11 @@ export function dialogReason() {
     modMdc.mkMDCdialogAlert(bdy);
 }
 const KEY = "external-images";
-function getImagesRec(prefix) {
+export function getImagesRec(prefix) {
     if (typeof prefix != "string") throw Error("prefix is not a string");
     if (prefix.length == 0) throw Error("prefix.length == 0");
     const strJson = localStorage.getItem(prefix + KEY);
-    if (!strJson) return;
+    if (!strJson) return [];
     const objJson = JSON.parse(strJson);
     return objJson;
 }
@@ -71,7 +71,7 @@ export function getCurrentImageUrl(prefix) {
     return obj[0];
 }
 
-export async function dialogImages(prefix) {
+export async function dialogImages(prefix, arrBuiltin) {
     let okButton;
     const tellMeOkButton = (btn) => {
         okButton = btn;
@@ -199,50 +199,72 @@ export async function dialogImages(prefix) {
         }
         debounceCheckIsImage(val);
     });
-    const tfURL = modMdc.mkMDCtextField("Link to new image", inpURL);
+    const tfURL = modMdc.mkMDCtextField("Add new image", inpURL);
     tfURL.style = `
         width: 100%;
+        margin-top: 10px;
     `;
 
-    const divOldUrls = mkElt("div");
-    divOldUrls.style = `
+    const styleUrlAlt = `
         display: flex;
         flex-direction: column;
         gap: 10px;
+        background: red;
     `;
+    const divOldUrls = mkElt("div");
+    divOldUrls.style = styleUrlAlt;
+    const divBuiltinUrls = mkElt("div");
+    divBuiltinUrls.style = styleUrlAlt;
+
     const recOld = getImagesRec(prefix);
-    if (!recOld) {
-        divOldUrls.textContent = "No old images.";
+    const numBuiltIn = arrBuiltin ? arrBuiltin.length : 0;
+    if (recOld.length + numBuiltIn == 0) {
+        divOldUrls.textContent = "No images.";
     } else {
         let checked = false;
-        recOld.forEach(url => {
-            // const eltUrl = mkElt("div", undefined, url);
+        let mkImgChoice = (url, isBuiltin) => {
             const eltImg = mkElt("span");
             eltImg.style = `
-                width: 30%;
-                display: inline-block;
-                aspect-ratio: 1.6 / 1;
-                background-image: url(${url});
-                background-size: cover;
-                background-repeat: no-repeat;
-            `;
+            width: 30%;
+            display: inline-block;
+            aspect-ratio: 1.6 / 1;
+            background-image: url(${url});
+            background-size: cover;
+            background-repeat: no-repeat;
+        `;
             const radImg = mkElt("input", { type: "radio", name: "img", value: url });
             if (!checked) {
                 radImg.checked = true;
                 checked = true;
             }
-            const iconDelete = modMdc.mkMDCicon("delete_forever");
-            const btnDelete = modMdc.mkMDCiconButton(iconDelete, "Delete");
-            btnDelete.addEventListener("click", evt => {
-                alert("not implemented yet");
-            })
-            const lblImg = mkElt("label", undefined, [radImg, eltImg, btnDelete]);
+            let eltHandle;
+            if (!isBuiltin) {
+                const iconDelete = modMdc.mkMDCicon("delete_forever");
+                const btnDelete = modMdc.mkMDCiconButton(iconDelete, "Delete");
+                btnDelete.addEventListener("click", evt => {
+                    alert("not implemented yet");
+                });
+                eltHandle = btnDelete;
+            } else {
+                eltHandle = mkElt("span", undefined, "Built in");
+            }
+            const lblImg = mkElt("label", undefined, [radImg, eltImg, eltHandle]);
             lblImg.style = `
                 display: flex;
                 gap: 10px;
             `;
-            const divRec = mkElt("div", undefined, [lblImg]);
+            // const divRec = mkElt("div", undefined, [lblImg]);
+            return mkElt("div", undefined, [lblImg]);
+        }
+
+        recOld.forEach(url => {
+            const divRec = mkImgChoice(url, false);
             divOldUrls.appendChild(divRec);
+        });
+        arrBuiltin.forEach(url => {
+            const divRec = mkImgChoice(url, true);
+            divBuiltinUrls.appendChild(divRec);
+            divBuiltinUrls.style.background = "blue";
         });
     }
 
@@ -251,9 +273,12 @@ export async function dialogImages(prefix) {
     const bdy = mkElt("div", { class: "colored-dialog" }, [
         mkElt("h2", undefined, "Background Images"),
         btnCopyright,
+        mkElt("p", undefined, "Your own:"),
         divOldUrls,
         divNewUrl,
         divNewPreview,
+        mkElt("p", undefined, "Built in:"),
+        divBuiltinUrls,
     ]);
 
     const funHandleResult = () => {
