@@ -2,7 +2,9 @@
 // The user provides the links which I guess will avoid copyright problems.
 
 /////// Google Photos
+//// labnol only works for photos, not videos. Use only in private tab.
 // https://www.labnol.org/embed/google/photos/ (embed iframe, direct link)
+//// Simple instructions to get a link. Not useful here.
 // https://www.picbackman.com/tips-tricks/how-to-get-a-direct-link-to-an-image-in-google-photos/
 
 /////// YouTube
@@ -13,6 +15,16 @@
 console.log("here is external-images.js");
 
 const modMdc = await import("util-mdc");
+
+// https://stackoverflow.com/questions/5845238/javascript-generate-transparent-1x1-pixel-in-dataurl-format
+const createPlaceholderSrc = (w, h) => {
+    // var img = document.createElement('img');
+    // img.setAttribute('style', 'width:'+w+'px;height:'+h+'px;border:none;display:block');
+    // img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
+    // return img;
+    return 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
+}
+
 export function dialogReason() {
     const bdy = mkElt("div", { class: "colored-dialog" }, [
         mkElt("h2", undefined, "Copyright and images"),
@@ -174,7 +186,11 @@ export async function dialogImages(prefix) {
             return;
         }
         */
-        if (val.trim().length < 10) return;
+        if (val.trim().length < 10) {
+            imgNewPreview.src = createPlaceholderSrc(1, 1);
+            inpURL.setCustomValidity("");
+            return;
+        }
         const valid = inpURL.checkValidity();
         if (!valid) {
             evt.stopImmediatePropagation();
@@ -210,7 +226,7 @@ export async function dialogImages(prefix) {
                 background-size: cover;
                 background-repeat: no-repeat;
             `;
-            const radImg = mkElt("input", {type:"radio", name:"img", value:url});
+            const radImg = mkElt("input", { type: "radio", name: "img", value: url });
             if (!checked) {
                 radImg.checked = true;
                 checked = true;
