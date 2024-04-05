@@ -1,18 +1,40 @@
-// Module for linking external images.
+// javascript module for linking external images.
 // The user provides the links which I guess will avoid copyright problems.
+console.log("here is external-images.js");
+
+///////////////////////////////////////////////////////////////////////
+//////////////////////// Images ///////////////////////////////////////
 
 /////// Google Photos
-//// labnol only works for photos, not videos. Use only in private tab.
+//// labnol only works for photos, not videos. Use only in private browser tab!
 // https://www.labnol.org/embed/google/photos/ (embed iframe, direct link)
 //// Simple instructions to get a link. Not useful here.
 // https://www.picbackman.com/tips-tricks/how-to-get-a-direct-link-to-an-image-in-google-photos/
 
-/////// YouTube
+
+
+///////////////////////////////////////////////////////////////////////
+//////////////////////// Videos ///////////////////////////////////////
+
+/////// YouTube (can't be used since it can only be used in an iframe.)
 // https://developers.google.com/youtube/player_parameters
 // https://developers.google.com/youtube/iframe_api_reference
 
+
+////// Videos that can be used (but may be hard to find...)
+//
+//// https://www.pexels.com/
+// https://www.pexels.com/video/a-tiger-inside-a-cage-5495322/
+// https://videos.pexels.com/video-files/5495322/5495322-hd_1920_1080_30fps.mp4
+//
+// https://www.foleon.com/blog/12-sites-for-free-stock-videos
+// 
+//// https://freenaturestock.com/videos/
+// Seems to be completely free to use, beatiful videos
+//
+// https://freenaturestock.com/wp-content/uploads/freenaturestock-rugged-ocean-coast.mp4
+
 // https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image
-console.log("here is external-images.js");
 
 const modMdc = await import("util-mdc");
 
@@ -55,7 +77,7 @@ export function getImagesRec(prefix) {
     if (typeof prefix != "string") throw Error("prefix is not a string");
     if (prefix.length == 0) throw Error("prefix.length == 0");
     const strJson = localStorage.getItem(prefix + KEY);
-    if (!strJson) return [];
+    if (!strJson) return {};
     const objJson = JSON.parse(strJson);
     return objJson;
 }
@@ -66,8 +88,24 @@ function setImagesRec(prefix, objJson) {
     localStorage.setItem(prefix + KEY, strJson);
 }
 
-export function getCurrentImageUrl(prefix) {
-    const obj = getImagesRec(prefix);
+export function getCurrentImageUrl(prefix, arrBuiltin) {
+    const { choice, arr } = getImagesRec(prefix);
+    if (choice == "random") {
+        // const idxGP = Math.floor(Math.random() * arrBuiltin.length);
+
+        const lenB = arrBuiltin.length
+        const numChoices = lenB + arr.length;
+        const a = new Uint32Array(6);
+        self.crypto.getRandomValues(a);
+        const idx1 = a[0] % numChoices
+        if (idx1 < lenB) {
+            return arrBuiltin[idx1]
+        }
+        const idx2 = idx1 % lenB;
+        return arr[idx2];
+        // console.log({ idxGP: idx1 }, arrBuiltin.length, numChoices);
+
+    }
     return obj[0];
 }
 
@@ -86,21 +124,45 @@ export async function dialogImages(prefix, arrBuiltin) {
     // const inpUrlImage = mkElt("input", { type: "url" });
     // const lblUrlImage = mkElt("label", undefined, ["Image url:", inpUrlImage]);
 
+    const videoNewPreview = mkElt("video");
+    videoNewPreview.muted = true;
+    videoNewPreview.autoplay = true;
+    videoNewPreview.loop = true;
+    videoNewPreview.style = `
+        width: 100%;
+        NOheight: 100%;
+        aspect-ratio: 1.6 / 1;
+        display: none;
+    `;
     const imgNewPreview = mkElt("img");
     imgNewPreview.style = `
+        width: 100%;
+        height: 100%;
+        display: none;
+    `;
+    const eltNewContainer = mkElt("div", undefined, [imgNewPreview, videoNewPreview]);
+    eltNewContainer.style = `
         width: 50%;
-        aspect-ratio: 1.6 / 1;
+        aspect-ratio: 1 / 1;
         outline: 1px dotted red;
         background-color: #80808060;
+        overflow: hidden;
     `;
+
     const btnSaveNew = modMdc.mkMDCbutton("Save", "raised");
     btnSaveNew.style.display = "none";
     btnSaveNew.addEventListener("click", evt => {
-        const recs = getImagesRec(prefix) || [];
-        recs.push(inpURL.value.trim());
-        setImagesRec(prefix, recs);
+        const arr = getImagesRec(prefix) || [];
+        arr.push(inpURL.value.trim());
+        const choice = "random";
+        const obj = { choice, arr }
+        setImagesRec(prefix, obj);
     })
-    const divNewPreview = mkElt("div", undefined, [imgNewPreview, btnSaveNew]);
+    const divNewPreview = mkElt("div", undefined, [
+        // imgNewPreview,
+        // videoNewPreview,
+        eltNewContainer,
+        btnSaveNew]);
     divNewPreview.style = `
         display: flex;
         gap: 10px;
@@ -113,15 +175,35 @@ export async function dialogImages(prefix, arrBuiltin) {
             imgNewPreview.src = urlImage;
         });
     }
+    async function isVideo(urlVideo) {
+        return new Promise((resolve, reject) => {
+            // https://stackoverflow.com/questions/57675008/onload-event-of-video-element-is-not-firing
+            videoNewPreview.onloadeddata = () => resolve(true);
+            videoNewPreview.onerror = (err) => { resolve(false); }
+            videoNewPreview.src = urlVideo;
+        });
+    }
+
     const debounceCheckIsImage = debounce(checkIsImage, 700);
 
     const inpURL = modMdc.mkMDCtextFieldInput(undefined, "url");
     async function checkIsImage(urlImage) {
-        const res = await isImage(urlImage);
-        console.log({ res });
+        // if (!inpURL.validity.valid) return;
+        if (!inpURL.checkValidity()) return;
+        let res = await isImage(urlImage);
+        console.log({ res }, "image");
+        if (res) {
+            imgNewPreview.style.display = null;
+        } else {
+            res = await isVideo(urlImage);
+            console.log({ res }, "video");
+            if (res) {
+                videoNewPreview.style.display = null;
+            }
+        }
         if (!res) {
             btnSaveNew.style.display = "none";
-            inpURL.setCustomValidity("Is this an image? Does CORS prevent access to it?");
+            inpURL.setCustomValidity("Is this an image/video? Does CORS prevent access to it?");
             inpURL.reportValidity();
         } else {
             btnSaveNew.style.display = null;
@@ -131,7 +213,7 @@ export async function dialogImages(prefix, arrBuiltin) {
 
     // inpURL.classList.add("remember-url");
     const reportInpURLvalidity = () => inpURL.reportValidity();
-    const debounceReportInpURLvalidity = debounce(reportInpURLvalidity, 700);
+    const debounceReportInpURLvalidity = debounce(reportInpURLvalidity, 3000);
     inpURL.addEventListener("input", evt => {
         const val = inpURL.value.trim();
         // Not possible to put something over the iframe.
@@ -186,11 +268,36 @@ export async function dialogImages(prefix, arrBuiltin) {
             return;
         }
         */
-        if (val.trim().length < 10) {
+        if (val.length < 15) {
             imgNewPreview.src = createPlaceholderSrc(1, 1);
             inpURL.setCustomValidity("");
             return;
         }
+        try {
+            const u = new URL(val);
+            // console.log(u);
+            if (u.protocol != "https:") {
+                console.log("start https:");
+                inpURL.setCustomValidity("Link must start with https://");
+                // inpURL.reportValidity();
+                debounceReportInpURLvalidity();
+                return;
+            }
+            if (u.hostname.search("\\.") == -1) {
+                console.log("top level");
+                inpURL.setCustomValidity("Link must contain a top level domain");
+                // inpURL.reportValidity();
+                debounceReportInpURLvalidity();
+                return;
+            }
+        } catch (err) {
+            console.log("not");
+            inpURL.setCustomValidity("Not a valid URL");
+            // inpURL.reportValidity();
+            debounceReportInpURLvalidity();
+            return;
+        }
+        inpURL.setCustomValidity("");
         const valid = inpURL.checkValidity();
         if (!valid) {
             evt.stopImmediatePropagation();
@@ -209,7 +316,6 @@ export async function dialogImages(prefix, arrBuiltin) {
         display: flex;
         flex-direction: column;
         gap: 10px;
-        background: red;
     `;
     const divOldUrls = mkElt("div");
     divOldUrls.style = styleUrlAlt;
@@ -257,14 +363,14 @@ export async function dialogImages(prefix, arrBuiltin) {
             return mkElt("div", undefined, [lblImg]);
         }
 
-        recOld.forEach(url => {
+        recOld.arr.forEach(url => {
             const divRec = mkImgChoice(url, false);
             divOldUrls.appendChild(divRec);
         });
         arrBuiltin.forEach(url => {
             const divRec = mkImgChoice(url, true);
             divBuiltinUrls.appendChild(divRec);
-            divBuiltinUrls.style.background = "blue";
+            // divBuiltinUrls.style.background = "blue";
         });
     }
 
@@ -273,11 +379,11 @@ export async function dialogImages(prefix, arrBuiltin) {
     const bdy = mkElt("div", { class: "colored-dialog" }, [
         mkElt("h2", undefined, "Background Images"),
         btnCopyright,
-        mkElt("p", undefined, "Your own:"),
+        mkElt("h3", undefined, "Your own:"),
         divOldUrls,
         divNewUrl,
         divNewPreview,
-        mkElt("p", undefined, "Built in:"),
+        mkElt("h3", undefined, "Built in:"),
         divBuiltinUrls,
     ]);
 

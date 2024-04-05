@@ -166,7 +166,7 @@
         async function dialogImages() {
             const modExtImages = await import("external-images");
             const url = await modExtImages.dialogImages("all-", myGooglePhotos);
-            debugger;
+            // debugger;
             return url;
         }
         async function dialogPattern() {
@@ -423,24 +423,17 @@
 
 
             useImage = myGooglePhotos[0];
-            // const idxGP = Math.floor(Math.random() * myGooglePhotos.length);
 
-            const a = new Uint32Array(6);
-            self.crypto.getRandomValues(a);
-            const idxGP = a[0] % myGooglePhotos.length;
-            console.log({ idxGP }, myGooglePhotos.length);
-
-            useImage = myGooglePhotos[idxGP];
-
+            (async () => {
+                const modExtImages = await import("external-images");
+                useImage = modExtImages.getCurrentImageUrl("all-", myGooglePhotos) || useImage;
+                eltCanvas.style.backgroundImage = `url(${useImage})`;
+            })();
             eltCanvas.style = `
                 background-color: darkgoldenrod;
                 outline: 2px dotted darkgoldenrod;
                 width: 100%;
                 aspect-ratio: 1 / 1;
-                NObackground-image: url(https://static-cdn.sr.se/images/83/e295c2fb-fd0b-4b40-b22d-57ec63ab7b67.jpg?preset=1024x576&format=webp);
-                NObackground-image: url("https://static-cdn.sr.se/images/83/5f3f6e55-5d96-489a-853b-e9f9e7702ec5.jpg?preset=1024x576&format=webp");
-                NObackground-image: url(https://static-cdn.sr.se/images/83/ebffc0d1-3bf9-48ad-921f-9449fdc46fcf.jpg?preset=1024x576&format=webp);
-                background-image: url(${useImage});
                 background-size: cover;
                 background-position: center;
             `;
