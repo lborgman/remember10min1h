@@ -122,7 +122,10 @@ export async function dialogImages(prefix) {
     const debounceReportInpURLvalidity = debounce(reportInpURLvalidity, 700);
     inpURL.addEventListener("input", evt => {
         const val = inpURL.value.trim();
-        if (val.startsWith("<iframe")) {
+        // Not possible to put something over the iframe.
+        // And iframe is the only way to link to YouTube.
+        /*
+        if (false && val.startsWith("<iframe")) {
             debugger;
             inpURL.type = "text";
             const tempHtml = mkElt("div");
@@ -133,10 +136,33 @@ export async function dialogImages(prefix) {
             const src = eltIframe.src;
             const srcAuto = src+"&autoplay=1&mute=1"
             eltIframe.src = srcAuto;
-            eltIframe.height = null;
-            eltIframe.width = null;
-            eltIframe.allowfullscreen = null;
+            // eltIframe.height = null;
+            eltIframe.removeAttribute("height");
+            // eltIframe.width = null;
+            eltIframe.removeAttribute("width");
+            // eltIframe.allowfullscreen = null;
+            eltIframe.removeAttribute("allowfullscreen");
+            // eltIframe.allow = null;
+            eltIframe.removeAttribute("allow");
             eltIframe.style = `
+                width: 100%;
+                aspect-ratio: ${w} / ${h};
+            `;
+            const eltOverlay = mkElt("div");
+            eltOverlay.addEventListener("click", evt =>{
+                evt.stopImmediatePropagation();
+                evt.stopPropagation();
+                console.log("clicked eltOverlay");
+            });
+            eltOverlay.style = `
+                position: absolute;
+                background: #f006;
+                width: 100px;
+                height: 100px;
+            `;
+            const eltContainer = mkElt("div", undefined, [eltIframe, eltOverlay]);
+            eltContainer.style = `
+                position: relative;
                 width: 50%;
                 aspect-ratio: ${w} / ${h};
             `;
@@ -144,9 +170,10 @@ export async function dialogImages(prefix) {
             const imgPreview = divNewPreview.firstElementChild;
             imgPreview.remove();
             // divNewPreview.appendChild(eltIframe);
-            divNewPreview.insertBefore(eltIframe, divNewPreview.firstElementChild);
+            divNewPreview.insertBefore(eltContainer, divNewPreview.firstElementChild);
             return;
         }
+        */
         if (val.trim().length < 10) return;
         const valid = inpURL.checkValidity();
         if (!valid) {
