@@ -1,6 +1,14 @@
 // Module for linking external images.
 // The user provides the links which I guess will avoid copyright problems.
 
+/////// Google Photos
+// https://www.labnol.org/embed/google/photos/ (embed iframe, direct link)
+// https://www.picbackman.com/tips-tricks/how-to-get-a-direct-link-to-an-image-in-google-photos/
+
+/////// YouTube
+// https://developers.google.com/youtube/player_parameters
+// https://developers.google.com/youtube/iframe_api_reference
+
 // https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image
 console.log("here is external-images.js");
 
@@ -45,6 +53,12 @@ function setImagesRec(prefix, objJson) {
     const strJson = JSON.stringify(objJson);
     localStorage.setItem(prefix + KEY, strJson);
 }
+
+export function getCurrentImageUrl(prefix) {
+    const obj = getImagesRec(prefix);
+    return obj[0];
+}
+
 export async function dialogImages(prefix) {
     let okButton;
     const tellMeOkButton = (btn) => {
@@ -108,6 +122,31 @@ export async function dialogImages(prefix) {
     const debounceReportInpURLvalidity = debounce(reportInpURLvalidity, 700);
     inpURL.addEventListener("input", evt => {
         const val = inpURL.value.trim();
+        if (val.startsWith("<iframe")) {
+            debugger;
+            inpURL.type = "text";
+            const tempHtml = mkElt("div");
+            tempHtml.innerHTML = val;
+            const eltIframe = tempHtml.firstElementChild;
+            const h = eltIframe.height;
+            const w = eltIframe.width;
+            const src = eltIframe.src;
+            const srcAuto = src+"&autoplay=1&mute=1"
+            eltIframe.src = srcAuto;
+            eltIframe.height = null;
+            eltIframe.width = null;
+            eltIframe.allowfullscreen = null;
+            eltIframe.style = `
+                width: 50%;
+                aspect-ratio: ${w} / ${h};
+            `;
+            // divNewPreview.textContent = "";
+            const imgPreview = divNewPreview.firstElementChild;
+            imgPreview.remove();
+            // divNewPreview.appendChild(eltIframe);
+            divNewPreview.insertBefore(eltIframe, divNewPreview.firstElementChild);
+            return;
+        }
         if (val.trim().length < 10) return;
         const valid = inpURL.checkValidity();
         if (!valid) {
@@ -132,6 +171,7 @@ export async function dialogImages(prefix) {
     if (!recOld) {
         divOldUrls.textContent = "No old images.";
     } else {
+        let checked = false;
         recOld.forEach(url => {
             // const eltUrl = mkElt("div", undefined, url);
             const eltImg = mkElt("span");
@@ -144,6 +184,10 @@ export async function dialogImages(prefix) {
                 background-repeat: no-repeat;
             `;
             const radImg = mkElt("input", {type:"radio", name:"img", value:url});
+            if (!checked) {
+                radImg.checked = true;
+                checked = true;
+            }
             const iconDelete = modMdc.mkMDCicon("delete_forever");
             const btnDelete = modMdc.mkMDCiconButton(iconDelete, "Delete");
             btnDelete.addEventListener("click", evt => {
