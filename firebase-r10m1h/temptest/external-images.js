@@ -348,7 +348,24 @@ export async function dialogImages(prefix, arrBuiltin) {
                 const iconDelete = modMdc.mkMDCicon("delete_forever");
                 const btnDelete = modMdc.mkMDCiconButton(iconDelete, "Delete");
                 btnDelete.addEventListener("click", evt => {
-                    alert("not implemented yet");
+                    const div = btnDelete.closest("div");
+                    const bcrDiv = div.getBoundingClientRect();
+                    div.style.maxHeight = bcrDiv.height + "px";
+                    div.style.opacity = 1;
+                    div.style.transition = "opacity 1.2s 0s, scale 1.2s 0s";
+                    div.style.transformOrigin = "top left";
+                    div.style.opacity = 0;
+                    // div.style.maxHeight = "0px";
+                    div.style.scale = 0.1;
+                    const rad = div.querySelector("input");
+                    console.log(rad);
+                    const valUrl = rad.value;
+                    const objRec = getImagesRec(prefix);
+                    const arr = objRec.arr;
+                    const idx = arr.indexOf(valUrl);
+                    arr.splice(idx, 1);
+                    setImagesRec(prefix, objRec);
+                    setTimeout(() => div.remove(), 1.2 * 1000);
                 });
                 eltHandle = btnDelete;
             } else {
