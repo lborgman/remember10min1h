@@ -78,6 +78,7 @@
         // https://ourcodeworld.com/articles/read/1390/how-to-determine-the-screen-refresh-rate-in-hz-of-the-monitor-with-javascript-in-the-browser#google_vignette
         const maxRedraw = 120 * 60; // FIX-ME: max 60 seconds 
 
+        let secDuration = 19;
         let isRunning = false;
         function isRunningFun() { return document.documentElement.classList.contains("running"); }
         function setStateRunning(on) {
@@ -431,7 +432,8 @@
             })();
             eltCanvas.style = `
                 background-color: darkgoldenrod;
-                outline: 2px dotted darkgoldenrod;
+                NOoutline: 2px dotted darkgoldenrod;
+                border-radius: 10px;
                 width: 100%;
                 aspect-ratio: 1 / 1;
                 background-size: cover;
@@ -466,9 +468,29 @@
             });
             btnReset.id = "replay-button";
 
+            function updateTimeNum() {
+                const elt = document.getElementById("elt-show-time");
+                elt.textContent = `${secDuration} sec`;
+            }
+            setTimeout(() => updateTimeNum(), 1000);
+            const eltShowTimeNum = mkElt("span", undefined, "(time)");
+            eltShowTimeNum.id = "elt-show-time";
+            eltShowTimeNum.style = `
+                    background-color: #0004;
+                    padding: 4px;
+                    width: 50px;
+                    text-align: center;
+                `;
+
+            const divProgress = mkElt("div", { id: "progress" },
+                mkElt("div", { id: "current-progress" }));
             const divChangeTime = (() => {
                 const iconLess = modMdc.mkMDCicon("expand_circle_down");
                 const btnLess = modMdc.mkMDCiconButton(iconLess, "Shorter");
+                btnLess.addEventListener("click", evt => {
+                    secDuration--;
+                    updateTimeNum();
+                })
 
                 // const iconMore = modMdc.mkMDCicon("expand_circle_up");
                 // FIX-ME: For some reason the up version does not work??
@@ -476,16 +498,13 @@
                 const iconMore = modMdc.mkMDCicon("expand_circle_down");
                 iconMore.style.transform = "rotate(180deg)";
                 const btnMore = modMdc.mkMDCiconButton(iconMore, "Longer");
+                btnMore.addEventListener("click", evt => {
+                    secDuration++;
+                    updateTimeNum();
+                })
 
-                const eltShow = mkElt("span", undefined, "time");
-                eltShow.style = `
-                    background-color: #0004;
-                    padding: 4px;
-                    width: 50px;
-                    text-align: center;
-                `;
                 const div = mkElt("div", { class: "mdc-card", id: "set-time" }, [
-                    btnLess, eltShow, btnMore
+                    btnLess, eltShowTimeNum, btnMore
                 ]);
                 div.style = `
                     background-color: rgba(255, 255, 0, 0.2);
@@ -566,10 +585,12 @@
                 btnReset,
                 divChangeTime,
                 btnSettings,
+                divProgress
             ]);
             divControls.style = `
                 display: flex;
                 gap: 5px;
+                align-items: center;
             `;
             container.appendChild(divControls);
         }
@@ -618,6 +639,29 @@
             display: none;
         }
 
+        #current-progress {
+            background-color: yellow;
+            background-color: yellowgreen;
+            width: 5px;
+            height: 100%;
+            border-radius: 5px;
+        }
+
+        #progress {
+            background-color: orange;
+            background-color: green;
+            background-color: #9acd3254;
+            width: 80%;
+            height: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .running #progress {
+            display: inline-block;
+        }
+
+
 
         #replay-button {
             display: none;
@@ -648,10 +692,19 @@
             drawPattern(myPatt, 1.05);
         }
         // checkRedraw();
+        let progressElement;
+        let progressWidth;
         function checkRedraw() {
+            if (!progressElement) {
+                progressElement = document.getElementById("current-progress");
+                const bcr = progressElement.parentElement.getBoundingClientRect();
+                progressWidth = bcr.width;
+            }
             // const ms = Date.now() - msStart;
             const ms = document.timeline.currentTime - msStart;
-            if (ms > 19 * 1000) {
+            const partDone = ms / (secDuration * 1000);
+            progressElement.style.width = `${partDone * progressWidth}px`;
+            if (ms > secDuration * 1000) {
                 console.log("stopping time...");
                 tellState("Finished");
                 drawCurrentPoint("gray");
