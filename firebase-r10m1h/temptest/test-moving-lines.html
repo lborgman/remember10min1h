@@ -295,7 +295,9 @@
                 for (const part in textForParts) {
                     eltCurrentParts.classList.remove(part);
                 }
-                eltCurrentParts.classList.add(statePart);
+                if (txtState != statePart) {
+                    eltCurrentParts.classList.add(statePart);
+                }
             }
         }
         function tellInitialState() {
@@ -689,12 +691,15 @@
         #current-patt-parts.holdLow .holdLow {
             color: yellow;
         }
+
         #current-patt-parts.holdHigh .holdHigh {
             color: yellow;
         }
+
         #current-patt-parts.breathIn .breathIn {
             color: yellow;
         }
+
         #current-patt-parts.breathOut .breathOut {
             color: yellow;
         }
