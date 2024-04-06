@@ -145,7 +145,7 @@
             // const p = breathPatterns[currentPattern].patt;
             // const strPatt = `${p.breathIn}-${p.holdHigh}-${p.breathOut}-${p.holdLow}`;
             const strPatt = mkPattString(currentPattern);
-            const eltPatt = mkElt("span", undefined, strPatt);
+            const eltPatt = mkElt("span", { id: "current-patt-parts" }, strPatt);
             divPatternInfo.appendChild(eltPatt);
             // debugger;
         }
@@ -161,7 +161,24 @@
         function mkPattString(pattName) {
             const p = breathPatterns[pattName].patt;
             const strPatt = `(${p.breathIn}-${p.holdHigh}-${p.breathOut}-${p.holdLow})`;
-            return strPatt;
+            // return strPatt;
+
+            const eltBreathIn = mkElt("span", { class: "breathIn" }, p.breathIn);
+            const eltHoldHigh = mkElt("span", { class: "holdHigh" }, p.holdHigh);
+            const eltBreathOut = mkElt("span", { class: "breathOut" }, p.breathOut);
+            const eltHoldLow = mkElt("span", { class: "holdLow" }, p.holdLow);
+            const eltPatt = mkElt("span", undefined, [
+                "(",
+                eltBreathIn,
+                "-",
+                eltHoldHigh,
+                "-",
+                eltBreathOut,
+                "-",
+                eltHoldLow,
+                ")",
+            ]);
+            return eltPatt;
         }
 
         async function dialogImages() {
@@ -263,17 +280,25 @@
         let msStart = document.timeline.currentTime;
         let canvasSec;
 
-        function tellState(txtState, hideIt) {
+        function tellState(statePart, hideIt) {
             const divInstructions = document.getElementById("elt-instructions");
+            const txtState = textForParts[statePart] || statePart;
             divInstructions.textContent = txtState;
             if (hideIt) {
                 divInstructions.style.visibility = "hidden";
             } else {
                 divInstructions.style.visibility = null;
             }
+            // holdlow
+            const eltCurrentParts = document.getElementById("current-patt-parts");
+            if (eltCurrentParts) {
+                for (const part in textForParts) {
+                    eltCurrentParts.classList.remove(part);
+                }
+                eltCurrentParts.classList.add(statePart);
+            }
         }
         function tellInitialState() {
-            // tellState(`Current pattern: ${currentPattern}`);
             tellState("Not started ", true);
         }
 
@@ -322,9 +347,9 @@
                             const nextY = nextPoint.pointY;
                             const part = (middleCanvasX - lastCanvasX) / (nextCanvasX - lastCanvasX);
                             middleY = lastY + (nextY - lastY) * part;
-                            // eltIn.textContent = lastPoint.part;
-                            const txtState = textForParts[lastPoint.part];
-                            tellState(txtState);
+                            // const txtState = textForParts[lastPoint.part];
+                            // tellState(txtState);
+                            tellState(lastPoint.part);
                         }
                     }
 
@@ -648,9 +673,8 @@
         }
 
         #progress {
-            background-color: orange;
-            background-color: green;
             background-color: #9acd3254;
+            opacity: 0.4;
             width: 80%;
             height: 10px;
             border-radius: 5px;
@@ -661,6 +685,19 @@
             display: inline-block;
         }
 
+
+        #current-patt-parts.holdLow .holdLow {
+            color: yellow;
+        }
+        #current-patt-parts.holdHigh .holdHigh {
+            color: yellow;
+        }
+        #current-patt-parts.breathIn .breathIn {
+            color: yellow;
+        }
+        #current-patt-parts.breathOut .breathOut {
+            color: yellow;
+        }
 
 
         #replay-button {
