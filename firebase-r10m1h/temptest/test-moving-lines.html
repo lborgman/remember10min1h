@@ -586,10 +586,15 @@
             eltPatternInfo.id = "elt-pattern-info";
 
             const eltPatternButtons = mkElt("span", undefined, [
-                fabPattern,
                 fabImages,
+                fabPattern,
             ]);
             eltPatternButtons.id = "pattern-buttons";
+            eltPatternButtons.style = `
+                display: inline-flex;
+                gap: 5px;
+            `;
+
 
             const divPattern = mkElt("p", undefined, [
                 eltPatternButtons,
