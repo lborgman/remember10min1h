@@ -123,6 +123,21 @@
 
 
 
+        // https://www.w3schools.com/tags/tryit.asp?filename=tryhtml5_canvas_textalign
+        function topText(txt) {
+            // ctxCanvas.fillStyle = "red";
+            ctxCanvas.strokeStyle = "black";
+            ctxCanvas.strokeStyle = "yellow";
+            ctxCanvas.fillStyle = "yellowgreen";
+            ctxCanvas.lineWidth = 0.5;
+            ctxCanvas.font = "60px Arial";
+            // ctxCanvas.font = "40px Verdana";
+            ctxCanvas.textAlign = "center";
+            ctxCanvas.fillText("Test", eltCanvas.width / 2, 60);
+            ctxCanvas.strokeText("Test", eltCanvas.width / 2, 60);
+        }
+
+
         const breathPatterns = {
             "Awake": makeBreathPattern(6, 0, 2, 0),
             "Square": makeBreathPattern(4, 4, 4, 4),
@@ -145,6 +160,7 @@
             // const p = breathPatterns[currentPattern].patt;
             // const strPatt = `${p.breathIn}-${p.holdHigh}-${p.breathOut}-${p.holdLow}`;
             const strPatt = mkPattString(currentPattern);
+            topText(strPatt);
             const eltPatt = mkElt("span", { id: "current-patt-parts" }, strPatt);
             divPatternInfo.appendChild(eltPatt);
             // debugger;
@@ -310,6 +326,8 @@
             eltCanvas.height = bcrCanvas.height;
             ctxCanvas.clearRect(0, 0, eltCanvas.width, eltCanvas.height);
 
+            topText("test test");
+
             const points = patt.pattPoints;
             canvasSec = patt.pattW * numPatt;
 
@@ -329,7 +347,7 @@
             let lastPoint;
             middleX = numPatt * patt.pattW / 2;
             const middleCanvasX = pattX2canvasX(middleX);
-            let middleY = 0.2;
+            let middleY = 0.15;
             while (protect++ < 5 && lastCanvasX) {
                 for (let i = 0, len = points.length; i < len; i++) {
                     const pnt = points[i];
@@ -406,8 +424,8 @@
                 return currX * pxPerMs;
             }
             function pattY2canvasY(pattY) {
-                const bottom = bcrCanvas.height * 0.2;
-                const top = bcrCanvas.height * 0.2;
+                const bottom = bcrCanvas.height * 0.15;
+                const top = bcrCanvas.height * 0.25;
                 const height = bcrCanvas.height - top - bottom;
                 const invertY = Math.abs(pattY - 1);
                 // return pattY * height + top;
@@ -721,6 +739,22 @@
 
         div.mdc-dialog__surface:has(.colored-dialog) {
             background-color: orange;
+        }
+
+        div.mdc-dialog__surface:has(.extimg-colored-dialog) {
+            background-color: orange;
+        }
+
+        /*
+        mkElt("div", { id: "extimg-add-new" }[
+        divNewPreview.id = "extimg-new-preview";
+        */
+        #extimg-new-preview {
+            display: none;
+        }
+
+        #extimg-add-new:focus-within #extimg-new-preview {
+            display: flex;
         }
     </style>
 </head>

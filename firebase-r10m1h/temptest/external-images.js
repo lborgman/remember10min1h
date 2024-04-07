@@ -48,7 +48,7 @@ const createPlaceholderSrc = (w, h) => {
 }
 
 export function dialogReason() {
-    const bdy = mkElt("div", { class: "colored-dialog" }, [
+    const bdy = mkElt("div", { class: "extimg-colored-dialog" }, [
         mkElt("h2", undefined, "Copyright and images"),
         mkElt("p", undefined,
             `
@@ -149,22 +149,32 @@ export async function dialogImages(prefix, arrBuiltin) {
         overflow: hidden;
     `;
 
-    const btnSaveNew = modMdc.mkMDCbutton("Save", "raised");
-    btnSaveNew.style.display = "none";
-    btnSaveNew.addEventListener("click", evt => {
-        const arr = getImagesRec(prefix) || [];
-        arr.push(inpURL.value.trim());
-        const choice = "random";
-        const obj = { choice, arr }
-        setImagesRec(prefix, obj);
+    const btnAddNew = modMdc.mkMDCbutton("Add", "raised");
+    btnAddNew.style.display = "none";
+    btnAddNew.addEventListener("click", evt => {
+        const val = inpURL.value.trim();
+        const isVideo = false;
+        let catMark = "";
+        if (isVideo) catMark = "V";
+        addImagesRec(val, catMark);
+        const divRec = mkImgChoice(val, false, true);
+        divOldUrls.appendChild(divRec);
+        function addImagesRec(val, catMark) {
+            if (!["V", ""].includes(catMark)) throw Error(`Unknown category: "${catMark}"`);
+            const valRec = catMark + val;
+            const obj = getImagesRec(prefix) || { choice: "random", arr: [] };
+            obj.arr.push(valRec);
+            setImagesRec(prefix, obj);
+        }
     })
     const divNewPreview = mkElt("div", undefined, [
         // imgNewPreview,
         // videoNewPreview,
         eltNewContainer,
-        btnSaveNew]);
+        btnAddNew]);
+    divNewPreview.id = "extimg-new-preview";
     divNewPreview.style = `
-        display: flex;
+        #display: flex;
         gap: 10px;
         align-items: center;
     `;
@@ -202,11 +212,11 @@ export async function dialogImages(prefix, arrBuiltin) {
             }
         }
         if (!res) {
-            btnSaveNew.style.display = "none";
+            btnAddNew.style.display = "none";
             inpURL.setCustomValidity("Is this an image/video? Does CORS prevent access to it?");
             inpURL.reportValidity();
         } else {
-            btnSaveNew.style.display = null;
+            btnAddNew.style.display = null;
             inpURL.setCustomValidity("");
         }
     }
@@ -306,7 +316,7 @@ export async function dialogImages(prefix, arrBuiltin) {
         }
         debounceCheckIsImage(val);
     });
-    const tfURL = modMdc.mkMDCtextField("Add new image", inpURL);
+    const tfURL = modMdc.mkMDCtextField("Add new image/video link", inpURL);
     tfURL.style = `
         width: 100%;
         margin-top: 10px;
@@ -322,15 +332,9 @@ export async function dialogImages(prefix, arrBuiltin) {
     const divBuiltinUrls = mkElt("div");
     divBuiltinUrls.style = styleUrlAlt;
 
-    const recOld = getImagesRec(prefix);
-    const numBuiltIn = arrBuiltin ? arrBuiltin.length : 0;
-    if (recOld.length + numBuiltIn == 0) {
-        divOldUrls.textContent = "No images.";
-    } else {
-        let checked = false;
-        let mkImgChoice = (url, isBuiltin) => {
-            const eltImg = mkElt("span");
-            eltImg.style = `
+    function mkImgChoice(url, isBuiltin, checked) {
+        const eltImg = mkElt("span");
+        eltImg.style = `
             width: 30%;
             display: inline-block;
             aspect-ratio: 1.6 / 1;
@@ -338,47 +342,57 @@ export async function dialogImages(prefix, arrBuiltin) {
             background-size: cover;
             background-repeat: no-repeat;
         `;
-            const radImg = mkElt("input", { type: "radio", name: "img", value: url });
-            if (!checked) {
-                radImg.checked = true;
-                checked = true;
-            }
-            let eltHandle;
-            if (!isBuiltin) {
-                const iconDelete = modMdc.mkMDCicon("delete_forever");
-                const btnDelete = modMdc.mkMDCiconButton(iconDelete, "Delete");
-                btnDelete.addEventListener("click", evt => {
-                    const div = btnDelete.closest("div");
-                    const bcrDiv = div.getBoundingClientRect();
-                    div.style.maxHeight = bcrDiv.height + "px";
-                    div.style.opacity = 1;
-                    div.style.transition = "opacity 1.2s 0s, scale 1.2s 0s";
-                    div.style.transformOrigin = "top left";
-                    div.style.opacity = 0;
-                    // div.style.maxHeight = "0px";
-                    div.style.scale = 0.1;
-                    const rad = div.querySelector("input");
-                    console.log(rad);
-                    const valUrl = rad.value;
-                    const objRec = getImagesRec(prefix);
-                    const arr = objRec.arr;
-                    const idx = arr.indexOf(valUrl);
-                    arr.splice(idx, 1);
-                    setImagesRec(prefix, objRec);
-                    setTimeout(() => div.remove(), 1.2 * 1000);
-                });
-                eltHandle = btnDelete;
-            } else {
-                eltHandle = mkElt("span", undefined, "Built in");
-            }
-            const lblImg = mkElt("label", undefined, [radImg, eltImg, eltHandle]);
-            lblImg.style = `
+        const radImg = mkElt("input", { type: "radio", name: "img", value: url });
+        if (url == "random") {
+            const eltRandomInfo = "random";
+            const lblRandom = mkElt("label", undefined, [radImg, eltRandomInfo]);
+            return mkElt("div", undefined, [lblRandom]);
+        }
+        // if (!checked) { radImg.checked = true; checked = true; }
+        if (checked) { radImg.checked = true; }
+        let eltHandle;
+        if (!isBuiltin) {
+            const iconDelete = modMdc.mkMDCicon("delete_forever");
+            const btnDelete = modMdc.mkMDCiconButton(iconDelete, "Delete");
+            btnDelete.addEventListener("click", evt => {
+                const div = btnDelete.closest("div");
+                const bcrDiv = div.getBoundingClientRect();
+                div.style.maxHeight = bcrDiv.height + "px";
+                div.style.opacity = 1;
+                div.style.transition = "opacity 1.2s 0s, scale 1.2s 0s";
+                div.style.transformOrigin = "top left";
+                div.style.opacity = 0;
+                // div.style.maxHeight = "0px";
+                div.style.scale = 0.1;
+                const rad = div.querySelector("input");
+                console.log(rad);
+                const valUrl = rad.value;
+                const objRec = getImagesRec(prefix);
+                const arr = objRec.arr;
+                const idx = arr.indexOf(valUrl);
+                arr.splice(idx, 1);
+                setImagesRec(prefix, objRec);
+                setTimeout(() => div.remove(), 1.2 * 1000);
+            });
+            eltHandle = btnDelete;
+        } else {
+            eltHandle = mkElt("span", undefined, "Built in");
+        }
+        const lblImg = mkElt("label", undefined, [radImg, eltImg, eltHandle]);
+        lblImg.style = `
                 display: flex;
                 gap: 10px;
             `;
-            // const divRec = mkElt("div", undefined, [lblImg]);
-            return mkElt("div", undefined, [lblImg]);
-        }
+        // const divRec = mkElt("div", undefined, [lblImg]);
+        return mkElt("div", undefined, [lblImg]);
+    }
+
+    const recOld = getImagesRec(prefix);
+    const numBuiltIn = arrBuiltin ? arrBuiltin.length : 0;
+    if (recOld.length + numBuiltIn == 0) {
+        divOldUrls.textContent = "No images.";
+    } else {
+        let checked = false;
 
         recOld.arr.forEach(url => {
             const divRec = mkImgChoice(url, false);
@@ -393,13 +407,18 @@ export async function dialogImages(prefix, arrBuiltin) {
 
     const divNewUrl = mkElt("div", undefined, tfURL);
 
-    const bdy = mkElt("div", { class: "colored-dialog" }, [
+    const divRandomUrl = mkElt("div", undefined, mkImgChoice("random"));
+
+    const bdy = mkElt("div", { class: "extimg-colored-dialog" }, [
         mkElt("h2", undefined, "Background Images"),
         btnCopyright,
+        divRandomUrl,
         mkElt("h3", undefined, "Your own:"),
         divOldUrls,
-        divNewUrl,
-        divNewPreview,
+        mkElt("div", { id: "extimg-add-new" }, [
+            divNewUrl,
+            divNewPreview,
+        ]),
         mkElt("h3", undefined, "Built in:"),
         divBuiltinUrls,
     ]);
