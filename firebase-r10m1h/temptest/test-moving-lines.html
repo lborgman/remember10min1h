@@ -78,7 +78,8 @@
         // https://ourcodeworld.com/articles/read/1390/how-to-determine-the-screen-refresh-rate-in-hz-of-the-monitor-with-javascript-in-the-browser#google_vignette
         const maxRedraw = 120 * 60; // FIX-ME: max 60 seconds 
 
-        let secDuration = 19;
+        // let secDuration = 19;
+        let secDuration = 9;
         let isRunning = false;
         function isRunningFun() { return document.documentElement.classList.contains("running"); }
         function setStateRunning(on) {
@@ -135,7 +136,7 @@
             const clrPoint = () => isRunning ? "yellow" : "yellowgreen";
             ctxCanvas.fillStyle = clrPoint();
             ctxCanvas.lineWidth = 1;
-            ctxCanvas.font = "60px Arial";
+            ctxCanvas.font = "bold 50px Arial";
             // ctxCanvas.font = "40px Verdana";
             ctxCanvas.textAlign = "center";
             ctxCanvas.fillText(txtState, eltCanvas.width / 2, 60);
@@ -325,7 +326,8 @@
             }
         }
         function tellInitialState() {
-            tellState("Not started ", true);
+            // tellState("Not started ", true);
+            tellState("", true);
         }
 
         function drawPattern(patt, numPatt) {
@@ -432,8 +434,11 @@
                 return currX * pxPerMs;
             }
             function pattY2canvasY(pattY) {
+                // const bottom = bcrCanvas.height * 0.15;
+                // const bottom = bcrCanvas.height * 0.10;
                 const bottom = bcrCanvas.height * 0.15;
-                const top = bcrCanvas.height * 0.25;
+                // const top = bcrCanvas.height * 0.25;
+                const top = bcrCanvas.height * 0.30;
                 const height = bcrCanvas.height - top - bottom;
                 const invertY = Math.abs(pattY - 1);
                 // return pattY * height + top;
