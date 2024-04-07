@@ -124,17 +124,22 @@
 
 
         // https://www.w3schools.com/tags/tryit.asp?filename=tryhtml5_canvas_textalign
-        function topText(txt) {
-            // ctxCanvas.fillStyle = "red";
-            ctxCanvas.strokeStyle = "black";
+        function clearTopText() {
+            ctxCanvas.clearRect(0, 0, eltCanvas.width, 50);
+        }
+        function topText(txtState) {
+            if (!txtState) return;
             ctxCanvas.strokeStyle = "yellow";
-            ctxCanvas.fillStyle = "yellowgreen";
-            ctxCanvas.lineWidth = 0.5;
+            ctxCanvas.strokeStyle = "black";
+            ctxCanvas.fillStyle = "red";
+            const clrPoint = () => isRunning ? "yellow" : "yellowgreen";
+            ctxCanvas.fillStyle = clrPoint();
+            ctxCanvas.lineWidth = 1;
             ctxCanvas.font = "60px Arial";
             // ctxCanvas.font = "40px Verdana";
             ctxCanvas.textAlign = "center";
-            ctxCanvas.fillText("Test", eltCanvas.width / 2, 60);
-            ctxCanvas.strokeText("Test", eltCanvas.width / 2, 60);
+            ctxCanvas.fillText(txtState, eltCanvas.width / 2, 60);
+            ctxCanvas.strokeText(txtState, eltCanvas.width / 2, 60);
         }
 
 
@@ -160,7 +165,7 @@
             // const p = breathPatterns[currentPattern].patt;
             // const strPatt = `${p.breathIn}-${p.holdHigh}-${p.breathOut}-${p.holdLow}`;
             const strPatt = mkPattString(currentPattern);
-            topText(strPatt);
+            // topText(strPatt);
             const eltPatt = mkElt("span", { id: "current-patt-parts" }, strPatt);
             divPatternInfo.appendChild(eltPatt);
             // debugger;
@@ -296,15 +301,18 @@
         let msStart = document.timeline.currentTime;
         let canvasSec;
 
+        let txtState;
         function tellState(statePart, hideIt) {
             const divInstructions = document.getElementById("elt-instructions");
-            const txtState = textForParts[statePart] || statePart;
+            txtState = textForParts[statePart] || statePart;
+            /*
             divInstructions.textContent = txtState;
             if (hideIt) {
                 divInstructions.style.visibility = "hidden";
             } else {
                 divInstructions.style.visibility = null;
             }
+            */
             // holdlow
             const eltCurrentParts = document.getElementById("current-patt-parts");
             if (eltCurrentParts) {
@@ -326,7 +334,7 @@
             eltCanvas.height = bcrCanvas.height;
             ctxCanvas.clearRect(0, 0, eltCanvas.width, eltCanvas.height);
 
-            topText("test test");
+            if (txtState) topText(txtState);
 
             const points = patt.pattPoints;
             canvasSec = patt.pattW * numPatt;
@@ -625,9 +633,9 @@
             container.appendChild(divPattern);
             setTimeout(tellCurrentPattern, 100);
 
-            const divInstructions = mkElt("p", undefined, "Wait ");
-            divInstructions.id = "elt-instructions";
-            container.appendChild(divInstructions);
+            // const divInstructions = mkElt("p", undefined, "Wait ");
+            // divInstructions.id = "elt-instructions";
+            // container.appendChild(divInstructions);
             tellInitialState();
 
             const divControls = mkElt("div", undefined, [
@@ -787,9 +795,11 @@
             progressElement.style.width = `${partDone * progressWidth}px`;
             if (ms > secDuration * 1000) {
                 console.log("stopping time...");
+                clearTopText();
                 tellState("Finished");
                 drawCurrentPoint("gray");
                 setStateRunning(false);
+                topText("Finished");
                 // isRunning = false;
                 stopRedraw = true;
                 return false;
