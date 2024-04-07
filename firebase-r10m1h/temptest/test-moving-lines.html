@@ -1,4 +1,7 @@
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <!-- for MWC, https://github.com/material-components/material-web -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
@@ -156,20 +159,21 @@
 
         function tellCurrentPattern() {
             const divPatternInfo = document.getElementById("elt-pattern-info");
+            divPatternInfo.style = `
+                display: inline-flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                margin-right: 10px;
+            `;
             divPatternInfo.textContent = "";
             const eltName = mkElt("span", undefined, currentPattern);
             eltName.style = `
                     font-weight: bold;
-                    margin-right: 10px;
                 `;
             divPatternInfo.appendChild(eltName);
-            // const p = breathPatterns[currentPattern].patt;
-            // const strPatt = `${p.breathIn}-${p.holdHigh}-${p.breathOut}-${p.holdLow}`;
             const strPatt = mkPattString(currentPattern);
-            // topText(strPatt);
             const eltPatt = mkElt("span", { id: "current-patt-parts" }, strPatt);
             divPatternInfo.appendChild(eltPatt);
-            // debugger;
         }
 
         function initCurrentPattern() {
