@@ -94,7 +94,7 @@
 
         let eltCanvas;
         let ctxCanvas;
-        let bcrCanvas
+        // let bcrCanvas;
 
         let currentPointY = 0;
         let middleX;
@@ -330,10 +330,16 @@
             tellState("", true);
         }
 
-        function drawPattern(patt, numPatt) {
-            bcrCanvas = eltCanvas.getBoundingClientRect();
+        const setCanvasSizes = () => {
+            const bcrCanvas = eltCanvas.getBoundingClientRect();
             eltCanvas.width = bcrCanvas.width;
             eltCanvas.height = bcrCanvas.height;
+        }
+        addEventListener("resize", evt => { setCanvasSizes(); });
+        addEventListener("load", evt => { setCanvasSizes(); });
+        function drawPattern(patt, numPatt) {
+            // setCanvasSizes(); // FIX-ME: move this to event "resize"
+
             ctxCanvas.clearRect(0, 0, eltCanvas.width, eltCanvas.height);
 
             if (txtState) topText(txtState);
@@ -419,29 +425,21 @@
                 return pntC;
             }
             function mkPxPerMs() {
-                pxPerMs = bcrCanvas.width / (patt.pattW * numPatt);
+                pxPerMs = eltCanvas.width / (patt.pattW * numPatt);
             }
             function pattX2canvasX(pattX) {
                 const msElapsed = msLastDraw - msStart;
                 const msInpattern = msElapsed % Math.floor(patt.pattW * 1000);
-                // const currX = pattX - msInpattern / 1000;
                 const currX = pattX - msElapsed / 1000;
                 mkPxPerMs();
-                // return pattX / (patt.pattW * numPatt) * bcrCanvas.width;
-                // return bcrCanvas.width * pattX / (patt.pattW * numPatt);
-                // return pattX * bcrCanvas.width / (patt.pattW * numPatt);
                 return pattX * pxPerMs;
                 return currX * pxPerMs;
             }
             function pattY2canvasY(pattY) {
-                // const bottom = bcrCanvas.height * 0.15;
-                // const bottom = bcrCanvas.height * 0.10;
-                const bottom = bcrCanvas.height * 0.15;
-                // const top = bcrCanvas.height * 0.25;
-                const top = bcrCanvas.height * 0.30;
-                const height = bcrCanvas.height - top - bottom;
+                const bottom = eltCanvas.height * 0.15;
+                const top = eltCanvas.height * 0.30;
+                const height = eltCanvas.height - top - bottom;
                 const invertY = Math.abs(pattY - 1);
-                // return pattY * height + top;
                 return invertY * height + top;
             }
         }
@@ -449,6 +447,16 @@
             // const container = document.body;
             // eltCanvas = document.getElementById("my-canvas");
             eltCanvas = document.createElement("canvas");
+            eltCanvas.style = `
+                background-color: darkgoldenrod;
+                NOoutline: 2px dotted darkgoldenrod;
+                border-radius: 10px;
+                width: 100%;
+                aspect-ratio: 1 / 1;
+                background-size: cover;
+                background-position: center;
+            `;
+
             container.appendChild(eltCanvas)
             // eltCanvas.id = "my-canvas";
 
@@ -488,15 +496,6 @@
                 useImage = modExtImages.getCurrentImageUrl("all-", myGooglePhotos) || useImage;
                 eltCanvas.style.backgroundImage = `url(${useImage})`;
             })();
-            eltCanvas.style = `
-                background-color: darkgoldenrod;
-                NOoutline: 2px dotted darkgoldenrod;
-                border-radius: 10px;
-                width: 100%;
-                aspect-ratio: 1 / 1;
-                background-size: cover;
-                background-position: center;
-            `;
             ctxCanvas = eltCanvas.getContext("2d");
         }
         async function setupControls(container) {
