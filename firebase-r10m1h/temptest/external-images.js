@@ -88,6 +88,8 @@ function setImagesRec(prefix, objJson) {
     localStorage.setItem(prefix + KEY, strJson);
 }
 
+const debounceSetImagesRec = debounce(setImagesRec, 1000);
+
 export function getCurrentImageUrl(prefix, arrBuiltin) {
     const { choice, arr } = getImagesRec(prefix);
     if (choice == "random") {
@@ -106,10 +108,11 @@ export function getCurrentImageUrl(prefix, arrBuiltin) {
         // console.log({ idxGP: idx1 }, arrBuiltin.length, numChoices);
 
     }
-    return obj[0];
+    return choice;
 }
 
 export async function dialogImages(prefix, arrBuiltin) {
+    const oldObj = getImagesRec(prefix);
     let okButton;
     const tellMeOkButton = (btn) => {
         okButton = btn;
@@ -164,7 +167,7 @@ export async function dialogImages(prefix, arrBuiltin) {
             const valRec = catMark + val;
             const obj = getImagesRec(prefix) || { choice: "random", arr: [] };
             obj.arr.push(valRec);
-            setImagesRec(prefix, obj);
+            debounceSetImagesRec(prefix, obj);
         }
     })
     const divNewPreview = mkElt("div", undefined, [
@@ -311,7 +314,6 @@ export async function dialogImages(prefix, arrBuiltin) {
         const valid = inpURL.checkValidity();
         if (!valid) {
             evt.stopImmediatePropagation();
-            // setButtonState(saveButtonHotspot, false);
             debounceReportInpURLvalidity();
         }
         debounceCheckIsImage(val);
@@ -371,7 +373,7 @@ export async function dialogImages(prefix, arrBuiltin) {
                 const arr = objRec.arr;
                 const idx = arr.indexOf(valUrl);
                 arr.splice(idx, 1);
-                setImagesRec(prefix, objRec);
+                debounceSetImagesRec(prefix, objRec);
                 setTimeout(() => div.remove(), 1.2 * 1000);
             });
             eltHandle = btnDelete;
@@ -422,9 +424,21 @@ export async function dialogImages(prefix, arrBuiltin) {
         mkElt("h3", undefined, "Built in:"),
         divBuiltinUrls,
     ]);
+    bdy.addEventListener("change", evt => {
+        const target = evt.target;
+        const val = target.value;
+        const obj = getImagesRec(prefix);
+        console.log("bdy change", evt, target, val, obj);
+        obj.choice = val;
+        debounceSetImagesRec(prefix, obj);
+    })
 
     const funHandleResult = () => {
-        return "not ready";
+        console.log({ oldObj });
+        const newObj = getImagesRec(prefix);
+        if (newObj.choice == oldObj.choice) return;
+        return newObj.choice;
+        // return "not ready";
     };
     return modMdc.mkMDCdialogConfirm(bdy, "Close",
         undefined, true,

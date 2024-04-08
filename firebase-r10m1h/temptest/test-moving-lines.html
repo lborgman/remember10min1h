@@ -214,7 +214,8 @@
             const modExtImages = await import("external-images");
             const url = await modExtImages.dialogImages("all-", myGooglePhotos);
             // debugger;
-            return url;
+            // setBa,useIm
+            if (url) updateCanvasBackground(url);
         }
         async function dialogPattern() {
             const modMdc = await import("util-mdc");
@@ -451,6 +452,36 @@
                 return invertY * height + top;
             }
         }
+
+
+
+        async function setCanvasBackgroundToCurrent() {
+            const modExtImages = await import("external-images");
+            useImage = modExtImages.getCurrentImageUrl("all-", myGooglePhotos) || useImage;
+            // eltCanvas.style.backgroundImage = `url(${useImage})`;
+            updateCanvasBackground(useImage);
+        };
+
+        function updateCanvasBackground(useImage) {
+            // eltCanvas.style.backgroundImage = `url(${useImage})`; return;
+            const clsBg = "canvas-bg";
+            const eltCanvas = document.getElementById("elt-canvas");
+            const eltParent = eltCanvas.parentElement;
+            const eltOldBg = eltParent.firstElementChild;
+            if (eltOldBg?.classList.contains(clsBg)) eltOldBg.remove();
+            const eltBg = mkElt("div", { class: clsBg });
+            eltBg.style.width = "100%";
+            eltBg.style.height = "100%";
+            eltBg.style.borderRadius = "10px"; // FIX-ME:
+            eltBg.style.backgroundPosition = "center";
+            eltBg.style.backgroundSize = "cover";
+            eltBg.style.backgroundRepeat = "no-repeat";
+
+            eltParent.insertBefore(eltBg, eltParent.lastElementChild);
+            console.log("useImage", useImage);
+            eltBg.style.backgroundImage = `url(${useImage})`;
+        }
+
         function setupCanvas(container) {
             const container4canvas = mkElt("div");
             container4canvas.style = `
@@ -466,6 +497,7 @@
             container.appendChild(container4canvas);
 
             eltCanvas = document.createElement("canvas");
+            eltCanvas.id = "elt-canvas";
             eltCanvas.style = `
                 position: absolute;
                 top: 0;
@@ -506,27 +538,7 @@
 
             useImage = myGooglePhotos[0];
 
-            function insertCanvasBackground(useImage) {
-                eltCanvas.style.backgroundImage = `url(${useImage})`;
-                return;
-                const clsBg = "canvas-bg";
-                const eltParent = eltCanvas.parentElement;
-                const eltOldBg = eltParent.firstElemenChild;
-                if (eltOldBg?.classList.contains(clsBg)) eltOldBg.remove();
-                const eltBg = mkElt("div", {class:clsBg});
-                eltBg.style.width = "100%";
-                eltBg.style.height = "100%";
-                eltBg.style.borderRadius = "10px"; // FIX-ME:
-                eltParent.insertBefore(eltBg, eltParent.lastElementChild);
-                console.log("useImage", useImage);
-                eltBg.style.backgroundImage = `url(${useImage})`;
-            }
-            (async () => {
-                const modExtImages = await import("external-images");
-                useImage = modExtImages.getCurrentImageUrl("all-", myGooglePhotos) || useImage;
-                // eltCanvas.style.backgroundImage = `url(${useImage})`;
-                insertCanvasBackground(useImage);
-            })();
+            setCanvasBackgroundToCurrent();
             ctxCanvas = eltCanvas.getContext("2d");
         }
         async function setupControls(container) {
