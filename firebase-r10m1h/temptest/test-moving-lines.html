@@ -128,8 +128,10 @@
 
 
         // https://www.w3schools.com/tags/tryit.asp?filename=tryhtml5_canvas_textalign
+        // 2can
         function clearTopText() {
-            ctxCanvas.clearRect(0, 0, eltCanvas.width, 50);
+            const size = eltCanvas.height / 5;
+            ctxCanvas.clearRect(0, 0, eltCanvas.width, size);
         }
         function topText(txtState) {
             if (!txtState) return;
@@ -139,11 +141,12 @@
             const clrPoint = () => isRunning ? "yellow" : "yellowgreen";
             ctxCanvas.fillStyle = clrPoint();
             ctxCanvas.lineWidth = 1;
-            ctxCanvas.font = "bold 50px Arial";
-            // ctxCanvas.font = "40px Verdana";
+            const size = eltCanvas.height / 5;
+            ctxCanvas.font = `bold ${size}px Arial`;
+            // ctxCanvas.font = `40px Verdana`;
             ctxCanvas.textAlign = "center";
-            ctxCanvas.fillText(txtState, eltCanvas.width / 2, 60);
-            ctxCanvas.strokeText(txtState, eltCanvas.width / 2, 60);
+            ctxCanvas.fillText(txtState, eltCanvas.width / 2, size);
+            ctxCanvas.strokeText(txtState, eltCanvas.width / 2, size);
         }
 
 
@@ -335,7 +338,8 @@
         }
 
         const setCanvasSizes = () => {
-            const bcrCanvas = eltCanvas.getBoundingClientRect();
+            // const bcrCanvas = eltCanvas.getBoundingClientRect();
+            const bcrCanvas = eltCanvas.parentElement.getBoundingClientRect();
             eltCanvas.width = bcrCanvas.width;
             eltCanvas.height = bcrCanvas.height;
         }
@@ -448,10 +452,9 @@
             }
         }
         function setupCanvas(container) {
-            // const container = document.body;
-            // eltCanvas = document.getElementById("my-canvas");
-            eltCanvas = document.createElement("canvas");
-            eltCanvas.style = `
+            const container4canvas = mkElt("div");
+            container4canvas.style = `
+                position: relative;
                 background-color: darkgoldenrod;
                 NOoutline: 2px dotted darkgoldenrod;
                 border-radius: 10px;
@@ -460,9 +463,17 @@
                 background-size: cover;
                 background-position: center;
             `;
+            container.appendChild(container4canvas);
 
-            container.appendChild(eltCanvas)
-            // eltCanvas.id = "my-canvas";
+            eltCanvas = document.createElement("canvas");
+            eltCanvas.style = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                border-radius: 10px;
+            `;
+
+            container4canvas.appendChild(eltCanvas);
 
 
             //// Images that can be used. Copyright??? Ask user?
