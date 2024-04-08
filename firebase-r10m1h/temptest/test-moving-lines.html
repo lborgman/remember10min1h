@@ -506,10 +506,26 @@
 
             useImage = myGooglePhotos[0];
 
+            function insertCanvasBackground(useImage) {
+                eltCanvas.style.backgroundImage = `url(${useImage})`;
+                return;
+                const clsBg = "canvas-bg";
+                const eltParent = eltCanvas.parentElement;
+                const eltOldBg = eltParent.firstElemenChild;
+                if (eltOldBg?.classList.contains(clsBg)) eltOldBg.remove();
+                const eltBg = mkElt("div", {class:clsBg});
+                eltBg.style.width = "100%";
+                eltBg.style.height = "100%";
+                eltBg.style.borderRadius = "10px"; // FIX-ME:
+                eltParent.insertBefore(eltBg, eltParent.lastElementChild);
+                console.log("useImage", useImage);
+                eltBg.style.backgroundImage = `url(${useImage})`;
+            }
             (async () => {
                 const modExtImages = await import("external-images");
                 useImage = modExtImages.getCurrentImageUrl("all-", myGooglePhotos) || useImage;
-                eltCanvas.style.backgroundImage = `url(${useImage})`;
+                // eltCanvas.style.backgroundImage = `url(${useImage})`;
+                insertCanvasBackground(useImage);
             })();
             ctxCanvas = eltCanvas.getContext("2d");
         }
