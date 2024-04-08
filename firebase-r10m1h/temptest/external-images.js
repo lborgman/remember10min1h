@@ -334,7 +334,7 @@ export async function dialogImages(prefix, arrBuiltin) {
     const divBuiltinUrls = mkElt("div");
     divBuiltinUrls.style = styleUrlAlt;
 
-    function mkImgChoice(url, isBuiltin, checked) {
+    function mkImgChoice(url, isBuiltin) {
         const eltImg = mkElt("span");
         eltImg.style = `
             width: 30%;
@@ -347,10 +347,11 @@ export async function dialogImages(prefix, arrBuiltin) {
         const radImg = mkElt("input", { type: "radio", name: "img", value: url });
         if (url == "random") {
             const eltRandomInfo = "random";
+            if (oldObj.choice == "random") radImg.checked = true;
             const lblRandom = mkElt("label", undefined, [radImg, eltRandomInfo]);
             return mkElt("div", undefined, [lblRandom]);
         }
-        // if (!checked) { radImg.checked = true; checked = true; }
+        const checked = url == oldObj.choice;
         if (checked) { radImg.checked = true; }
         let eltHandle;
         if (!isBuiltin) {

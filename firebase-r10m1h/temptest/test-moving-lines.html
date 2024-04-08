@@ -215,7 +215,7 @@
             const url = await modExtImages.dialogImages("all-", myGooglePhotos);
             // debugger;
             // setBa,useIm
-            if (url) updateCanvasBackground(url);
+            if (url && url != "random") updateCanvasBackground(url);
         }
         async function dialogPattern() {
             const modMdc = await import("util-mdc");
