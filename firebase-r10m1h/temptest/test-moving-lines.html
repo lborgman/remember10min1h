@@ -466,15 +466,17 @@
             updateCanvasBackground(useImage);
         };
 
+        let bgStyleSquare = true;
+        bgStyleSquare = false;
+        let usedImage;
         function updateCanvasBackground(useImage) {
+            usedImage = useImage;
             // eltCanvas.style.backgroundImage = `url(${useImage})`; return;
             const clsBg = "canvas-bg";
             const eltCanvas = document.getElementById("elt-canvas");
             const eltParent = eltCanvas.parentElement;
             const eltOldBg = eltParent.firstElementChild;
             if (eltOldBg?.classList.contains(clsBg)) eltOldBg.remove();
-            let bgStyleSquare = true;
-            bgStyleSquare = false;
             console.log({ bgStyleSquare, useImage });
             let eltBg;
             if (bgStyleSquare) {
@@ -569,7 +571,7 @@
             eltFilter.style.height = "100px";
 
             const filters = [];
-            filters.push("brightness(0.7)");
+            filters.push("brightness(0.6)");
             filters.push("blur(1px)");
             eltFilterFilter.style.backdropFilter = filters.join(" ");
 
@@ -775,8 +777,27 @@
                     document.documentElement.classList.remove("use-filter");
                 }
             });
+            chkUseFilter.style.marginRight = "10px";
             const lblUseFilter = mkElt("label", undefined, [chkUseFilter, "Dusk/dawn"]);
-            const divControlFilter = mkElt("div", undefined, lblUseFilter);
+
+
+            const chkSquare = mkElt("input", { type: "checkbox" });
+            chkSquare.addEventListener("input", evt => {
+                bgStyleSquare = chkSquare.checked;
+                updateCanvasBackground(usedImage);
+                setCanvasSizes();
+            });
+            chkSquare.style.marginRight = "10px";
+            const lblSquare = mkElt("label", undefined, [chkSquare, "Square"]);
+
+            const divControlFilter = mkElt("div", undefined, [
+                lblUseFilter,
+                lblSquare
+            ]);
+            divControlFilter.style = `
+                display: flex;
+                gap: 40px;
+            `;
             divControlFilter.id = "div-control-filter";
             container.appendChild(divControlFilter);
         }
