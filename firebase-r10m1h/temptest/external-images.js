@@ -281,12 +281,22 @@ export async function dialogImages(prefix, arrBuiltin) {
     divBuiltinUrls.style = styleUrlAlt;
 
     function mkImgChoice(url, isBuiltin) {
+        let urlPreview = url;
+        if (url.startsWith("https://lh3.googleusercontent.com")) {
+            if (Array.from(url.matchAll("=")).length != 1) { debugger; }
+            const lastEq = url.lastIndexOf("=");
+            const ending = url.slice(lastEq);
+            // Resize to max 200 w/h, works 2024-04-09
+            urlPreview = url.slice(0, lastEq) + "=s200"; // 20 kB
+            // url = newUrl;
+            // debugger;
+        }
         const eltImg = mkElt("span");
         eltImg.style = `
             width: 30%;
             display: inline-block;
             aspect-ratio: 1.6 / 1;
-            background-image: url(${url});
+            background-image: url(${urlPreview});
             background-size: cover;
             background-repeat: no-repeat;
         `;
