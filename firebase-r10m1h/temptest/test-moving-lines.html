@@ -513,6 +513,8 @@
             eltParent.insertBefore(eltBg, eltParent.firstElementChild);
             if (bgStyleSquare) {
                 eltParent.style.aspectRatio = "1 / 1";
+            } else {
+                eltParent.style.aspectRatio = "unset";
             }
             async function showIt() {
                 await wait4mutations(eltParent, 50, undefined, 1000);
