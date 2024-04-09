@@ -140,7 +140,7 @@ export async function dialogImages(prefix, arrBuiltin) {
     const imgNewPreview = mkElt("img");
     imgNewPreview.style = `
         width: 100%;
-        height: 100%;
+        NOheight: 100%;
         display: none;
     `;
     const eltNewContainer = mkElt("div", undefined, [imgNewPreview, videoNewPreview]);
@@ -171,8 +171,6 @@ export async function dialogImages(prefix, arrBuiltin) {
         }
     })
     const divNewPreview = mkElt("div", undefined, [
-        // imgNewPreview,
-        // videoNewPreview,
         eltNewContainer,
         btnAddNew]);
     divNewPreview.id = "extimg-new-preview";
@@ -229,58 +227,6 @@ export async function dialogImages(prefix, arrBuiltin) {
     const debounceReportInpURLvalidity = debounce(reportInpURLvalidity, 3000);
     inpURL.addEventListener("input", evt => {
         const val = inpURL.value.trim();
-        // Not possible to put something over the iframe.
-        // And iframe is the only way to link to YouTube.
-        /*
-        if (false && val.startsWith("<iframe")) {
-            debugger;
-            inpURL.type = "text";
-            const tempHtml = mkElt("div");
-            tempHtml.innerHTML = val;
-            const eltIframe = tempHtml.firstElementChild;
-            const h = eltIframe.height;
-            const w = eltIframe.width;
-            const src = eltIframe.src;
-            const srcAuto = src+"&autoplay=1&mute=1"
-            eltIframe.src = srcAuto;
-            // eltIframe.height = null;
-            eltIframe.removeAttribute("height");
-            // eltIframe.width = null;
-            eltIframe.removeAttribute("width");
-            // eltIframe.allowfullscreen = null;
-            eltIframe.removeAttribute("allowfullscreen");
-            // eltIframe.allow = null;
-            eltIframe.removeAttribute("allow");
-            eltIframe.style = `
-                width: 100%;
-                aspect-ratio: ${w} / ${h};
-            `;
-            const eltOverlay = mkElt("div");
-            eltOverlay.addEventListener("click", evt =>{
-                evt.stopImmediatePropagation();
-                evt.stopPropagation();
-                console.log("clicked eltOverlay");
-            });
-            eltOverlay.style = `
-                position: absolute;
-                background: #f006;
-                width: 100px;
-                height: 100px;
-            `;
-            const eltContainer = mkElt("div", undefined, [eltIframe, eltOverlay]);
-            eltContainer.style = `
-                position: relative;
-                width: 50%;
-                aspect-ratio: ${w} / ${h};
-            `;
-            // divNewPreview.textContent = "";
-            const imgPreview = divNewPreview.firstElementChild;
-            imgPreview.remove();
-            // divNewPreview.appendChild(eltIframe);
-            divNewPreview.insertBefore(eltContainer, divNewPreview.firstElementChild);
-            return;
-        }
-        */
         if (val.length < 15) {
             imgNewPreview.src = createPlaceholderSrc(1, 1);
             inpURL.setCustomValidity("");
