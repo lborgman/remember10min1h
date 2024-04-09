@@ -507,7 +507,8 @@
                 eltParent.style.aspectRatio = "1 / 1";
             }
             async function showIt() {
-                await waitSeconds(0.5);
+                // await waitSeconds(0.5);
+                wait4mutations(eltParent, 50);
                 setCanvasSizes();
                 msStart = document.timeline.currentTime;
                 redraw();
