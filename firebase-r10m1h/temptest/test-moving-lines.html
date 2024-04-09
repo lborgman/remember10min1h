@@ -491,8 +491,16 @@
                 eltBg = mkElt("img");
                 eltBg.style.maxWidth = "100%";
                 eltBg.style.maxWeight = "100%";
-                eltBg.onload = () => {
-                    // setTimeout(() => { showIt(); }, 500);
+                eltBg.onload = () => { showIt(); }
+                let testedTimout = false;
+                eltBg.onerror = () => {
+                    // FIX-ME: There seems to be timeout errors. How to handle them?
+                    console.log("Could not load image", useImage);
+                    if (!testedTimout) {
+                        testedTimout = true;
+                        setTimeout(() => eltBg.src = useImage, 500);
+                        return;
+                    }
                     showIt();
                 }
                 eltBg.src = useImage;
@@ -505,8 +513,7 @@
                 eltParent.style.aspectRatio = "1 / 1";
             }
             async function showIt() {
-                await wait4mutations(eltParent, 50);
-                // await waitSeconds(0.5);
+                await wait4mutations(eltParent, 50, undefined, 1000);
                 setCanvasSizes();
                 msStart = document.timeline.currentTime;
                 redraw();
@@ -538,18 +545,21 @@
             `;
 
             const eltFilterFilter = mkElt("div");
-            eltFilterFilter.style.width = "100%";
-            eltFilterFilter.style.height = "100%";
+            eltFilterFilter.id = "elt-filter-filter";
+            eltFilterFilter.style.width = "inherit";
+            eltFilterFilter.style.height = "inherit";
+            eltFilterFilter.style.borderRadius = "inherit";
 
             const eltFilterColor = mkElt("div");
-            eltFilterFilter.style.position = "absolute";
-            eltFilterFilter.style.top = "0";
-            eltFilterFilter.style.left = "0";
+            eltFilterColor.id = "elt-filter-color";
+            eltFilterColor.style.position = "absolute";
+            eltFilterColor.style.top = "0";
+            eltFilterColor.style.left = "0";
             eltFilterColor.style.width = "inherit";
             eltFilterColor.style.height = "inherit";
+            eltFilterColor.style.borderRadius = "inherit";
 
             eltFilter = mkElt("div", undefined, [eltFilterColor, eltFilterFilter]);
-
             eltFilter.id = "elt-filter";
             eltFilter.style.width = "100%";
             eltFilter.style.position = "absolute";
@@ -741,12 +751,9 @@
             container.appendChild(divPattern);
             setTimeout(tellCurrentPattern, 100);
 
-            // const divInstructions = mkElt("p", undefined, "Wait ");
-            // divInstructions.id = "elt-instructions";
-            // container.appendChild(divInstructions);
             tellInitialState();
 
-            const divControls = mkElt("div", undefined, [
+            const divControls = mkElt("p", undefined, [
                 btnStart,
                 btnReset,
                 divChangeTime,
@@ -759,6 +766,19 @@
                 align-items: center;
             `;
             container.appendChild(divControls);
+
+            const chkUseFilter = mkElt("input", { type: "checkbox" });
+            chkUseFilter.addEventListener("input", evt => {
+                if (chkUseFilter.checked) {
+                    document.documentElement.classList.add("use-filter");
+                } else {
+                    document.documentElement.classList.remove("use-filter");
+                }
+            });
+            const lblUseFilter = mkElt("label", undefined, [chkUseFilter, "Dusk/dawn"]);
+            const divControlFilter = mkElt("div", undefined, lblUseFilter);
+            divControlFilter.id = "div-control-filter";
+            container.appendChild(divControlFilter);
         }
         function setupThings() {
             // const container = document.body;
@@ -795,6 +815,10 @@
         }
 
         .running #settings-button {
+            display: none;
+        }
+
+        .running #div-control-filter {
             display: none;
         }
 
@@ -873,6 +897,14 @@
 
         #extimg-add-new:focus-within #extimg-new-preview {
             display: flex;
+        }
+
+        #elt-filter {
+            opacity: 0;
+        }
+
+        .use-filter #elt-filter {
+            opacity: 1;
         }
     </style>
 </head>
