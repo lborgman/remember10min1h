@@ -97,7 +97,7 @@
 
         let eltCanvas;
         let ctxCanvas;
-        // let bcrCanvas;
+        let eltFilter;
 
         let currentPointY = 0;
         let middleX;
@@ -219,8 +219,6 @@
         async function dialogImages() {
             const modExtImages = await import("external-images");
             const url = await modExtImages.dialogImages("all-", myGooglePhotos);
-            // debugger;
-            // setBa,useIm
             if (url && url != "random") updateCanvasBackground(url);
         }
         async function dialogPattern() {
@@ -345,10 +343,10 @@
         }
 
         const setCanvasSizes = () => {
-            // const bcrCanvas = eltCanvas.getBoundingClientRect();
             const bcrCanvas = eltCanvas.parentElement.getBoundingClientRect();
             eltCanvas.width = bcrCanvas.width;
             eltCanvas.height = bcrCanvas.height;
+            eltFilter.style.height = `${bcrCanvas.height}px`;
         }
         addEventListener("resize", evt => { setCanvasSizes(); });
         addEventListener("load", evt => { setCanvasSizes(); });
@@ -502,13 +500,13 @@
             eltBg.classList.add(clsBg);
             eltBg.style.borderRadius = "10px"; // FIX-ME:
 
-            eltParent.insertBefore(eltBg, eltParent.lastElementChild);
+            eltParent.insertBefore(eltBg, eltParent.firstElementChild);
             if (bgStyleSquare) {
                 eltParent.style.aspectRatio = "1 / 1";
             }
             async function showIt() {
                 // await waitSeconds(0.5);
-                wait4mutations(eltParent, 50);
+                wait4mutations(eltParent, 100);
                 setCanvasSizes();
                 msStart = document.timeline.currentTime;
                 redraw();
@@ -539,6 +537,17 @@
                 border-radius: 10px;
             `;
 
+            eltFilter = mkElt("div");
+            eltFilter.id = "elt-filter";
+            eltFilter.style.width = "100%";
+            eltFilter.style.position = "absolute";
+            eltFilter.style.top = "0";
+            eltFilter.style.left = "0";
+            eltFilter.style.borderRadius = "10px";
+            eltFilter.style.height = "100px";
+            eltFilter.style.backdropFilter = "blur(2px)";
+
+            container4canvas.appendChild(eltFilter);
             container4canvas.appendChild(eltCanvas);
 
 
