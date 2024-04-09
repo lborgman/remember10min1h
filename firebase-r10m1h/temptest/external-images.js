@@ -288,15 +288,15 @@ export async function dialogImages(prefix, arrBuiltin) {
             const ending = url.slice(lastEq);
             // Resize to max 200 w/h, works 2024-04-09
             urlPreview = url.slice(0, lastEq) + "=s200"; // 20 kB
-            // url = newUrl;
-            // debugger;
         }
-        const eltImg = mkElt("span");
-        eltImg.style = `
+        const eltImg = mkElt("img", {src: urlPreview});
+        eltImg.style.width = "100%";
+        const eltImgContainer = mkElt("span", undefined, eltImg);
+        eltImgContainer.style = `
             width: 30%;
             display: inline-block;
-            aspect-ratio: 1.6 / 1;
-            background-image: url(${urlPreview});
+            NOaspect-ratio: 1 / 1;
+            NObackground-image: url(${urlPreview});
             background-size: cover;
             background-repeat: no-repeat;
         `;
@@ -337,7 +337,7 @@ export async function dialogImages(prefix, arrBuiltin) {
         } else {
             eltHandle = mkElt("span", undefined, "Built in");
         }
-        const lblImg = mkElt("label", undefined, [radImg, eltImg, eltHandle]);
+        const lblImg = mkElt("label", undefined, [radImg, eltImgContainer, eltHandle]);
         lblImg.style = `
                 display: flex;
                 gap: 10px;
