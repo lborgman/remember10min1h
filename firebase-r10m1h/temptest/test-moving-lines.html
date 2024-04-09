@@ -537,7 +537,19 @@
                 border-radius: 10px;
             `;
 
-            eltFilter = mkElt("div");
+            const eltFilterFilter = mkElt("div");
+            eltFilterFilter.style.width = "100%";
+            eltFilterFilter.style.height = "100%";
+
+            const eltFilterColor = mkElt("div");
+            eltFilterFilter.style.position = "absolute";
+            eltFilterFilter.style.top = "0";
+            eltFilterFilter.style.left = "0";
+            eltFilterColor.style.width = "inherit";
+            eltFilterColor.style.height = "inherit";
+
+            eltFilter = mkElt("div", undefined, [eltFilterColor, eltFilterFilter]);
+
             eltFilter.id = "elt-filter";
             eltFilter.style.width = "100%";
             eltFilter.style.position = "absolute";
@@ -545,10 +557,13 @@
             eltFilter.style.left = "0";
             eltFilter.style.borderRadius = "10px";
             eltFilter.style.height = "100px";
+
             const filters = [];
             filters.push("brightness(0.7)");
             filters.push("blur(1px)");
-            eltFilter.style.backdropFilter = filters.join(" ");
+            eltFilterFilter.style.backdropFilter = filters.join(" ");
+
+            eltFilterColor.style.backgroundColor = "#f503";
 
             container4canvas.appendChild(eltFilter);
             container4canvas.appendChild(eltCanvas);
