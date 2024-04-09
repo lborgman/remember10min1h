@@ -289,7 +289,7 @@ export async function dialogImages(prefix, arrBuiltin) {
             // Resize to max 200 w/h, works 2024-04-09
             urlPreview = url.slice(0, lastEq) + "=s200"; // 20 kB
         }
-        const eltImg = mkElt("img", {src: urlPreview});
+        const eltImg = mkElt("img", { src: urlPreview });
         eltImg.style.width = "100%";
         const eltImgContainer = mkElt("span", undefined, eltImg);
         eltImgContainer.style = `
@@ -330,6 +330,15 @@ export async function dialogImages(prefix, arrBuiltin) {
                 const arr = objRec.arr;
                 const idx = arr.indexOf(valUrl);
                 arr.splice(idx, 1);
+                if (rad.checked) {
+                    // FIX-ME: check random
+                    debugger;
+                    const radRandom = divRandomUrl.querySelector("input[type=radio]");
+                    radRandom.checked = true;
+                    // radRandom.click();
+                    objRec.choice = "random";
+                    debounceSetImagesRec(prefix, objRec);
+                }
                 debounceSetImagesRec(prefix, objRec);
                 setTimeout(() => div.remove(), 1.2 * 1000);
             });

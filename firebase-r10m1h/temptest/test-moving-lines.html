@@ -128,9 +128,14 @@
 
 
         // https://www.w3schools.com/tags/tryit.asp?filename=tryhtml5_canvas_textalign
-        // 2can
+
+        // FIX-ME: aspect ratio and font size
+        function topTextFontSize() {
+            return Math.min(eltCanvas.height, eltCanvas.width) / 5.2;
+        }
         function clearTopText() {
-            const size = eltCanvas.height / 5;
+            // const size = eltCanvas.height / 5;
+            const size = topTextFontSize();
             ctxCanvas.clearRect(0, 0, eltCanvas.width, size);
         }
         function topText(txtState) {
@@ -141,7 +146,8 @@
             const clrPoint = () => isRunning ? "yellow" : "yellowgreen";
             ctxCanvas.fillStyle = clrPoint();
             ctxCanvas.lineWidth = 1;
-            const size = eltCanvas.height / 5;
+            // const size = eltCanvas.height / 5;
+            const size = topTextFontSize();
             ctxCanvas.font = `bold ${size}px Arial`;
             // ctxCanvas.font = `40px Verdana`;
             ctxCanvas.textAlign = "center";
@@ -469,17 +475,44 @@
             const eltParent = eltCanvas.parentElement;
             const eltOldBg = eltParent.firstElementChild;
             if (eltOldBg?.classList.contains(clsBg)) eltOldBg.remove();
-            const eltBg = mkElt("div", { class: clsBg });
-            eltBg.style.width = "100%";
-            eltBg.style.height = "100%";
+            let bgStyleSquare = true;
+            bgStyleSquare = false;
+            console.log({ bgStyleSquare, useImage });
+            let eltBg;
+            if (bgStyleSquare) {
+                eltBg = mkElt("div");
+                eltBg.style.width = "100%";
+                eltBg.style.height = "100%";
+                eltBg.style.backgroundPosition = "center";
+                eltBg.style.backgroundSize = "cover";
+                eltBg.style.backgroundRepeat = "no-repeat";
+                eltBg.style.backgroundImage = `url(${useImage})`;
+                // setTimeout(() => { showIt(); }, 500);
+                showIt();
+            } else {
+                eltBg = mkElt("img");
+                eltBg.style.maxWidth = "100%";
+                eltBg.style.maxWeight = "100%";
+                eltBg.onload = () => {
+                    // setTimeout(() => { showIt(); }, 500);
+                    showIt();
+                }
+                eltBg.src = useImage;
+            }
+            eltBg.classList.add(clsBg);
             eltBg.style.borderRadius = "10px"; // FIX-ME:
-            eltBg.style.backgroundPosition = "center";
-            eltBg.style.backgroundSize = "cover";
-            eltBg.style.backgroundRepeat = "no-repeat";
 
             eltParent.insertBefore(eltBg, eltParent.lastElementChild);
-            console.log("useImage", useImage);
-            eltBg.style.backgroundImage = `url(${useImage})`;
+            if (bgStyleSquare) {
+                eltParent.style.aspectRatio = "1 / 1";
+            }
+            async function showIt() {
+                await waitSeconds(0.5);
+                setCanvasSizes();
+                msStart = document.timeline.currentTime;
+                redraw();
+                eltParent.closest("section").style.opacity = "1";
+            }
         }
 
         function setupCanvas(container) {
@@ -490,7 +523,7 @@
                 NOoutline: 2px dotted darkgoldenrod;
                 border-radius: 10px;
                 width: 100%;
-                aspect-ratio: 1 / 1;
+                NOaspect-ratio: 1 / 1;
                 background-size: cover;
                 background-position: center;
             `;
@@ -709,6 +742,8 @@
                 aspect-ratio: 1.0 / 1.4;
                 NObackground: gray;
                 margin: 20px auto;
+                opacity: 0;
+                transition: opacity 0.5s;
             `;
             document.body.appendChild(container);
             setupCanvas(container);
@@ -817,10 +852,12 @@
 <body>
     <script>
         setupThings();
+        /*
         setTimeout(() => {
             msStart = document.timeline.currentTime;
             redraw();
         }, 100);
+        */
 
 
         function redraw() {
