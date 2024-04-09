@@ -545,7 +545,10 @@
             eltFilter.style.left = "0";
             eltFilter.style.borderRadius = "10px";
             eltFilter.style.height = "100px";
-            eltFilter.style.backdropFilter = "blur(2px)";
+            const filters = [];
+            filters.push("brightness(0.7)");
+            filters.push("blur(1px)");
+            eltFilter.style.backdropFilter = filters.join(" ");
 
             container4canvas.appendChild(eltFilter);
             container4canvas.appendChild(eltCanvas);
